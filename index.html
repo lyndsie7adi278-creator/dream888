@@ -188,7 +188,7 @@
     const code = localStorage.getItem('myScratchCode');
     if(code) {
         document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('uName').innerText = `ID: P{code}`;
+        document.getElementById('uName').innerText = `ID: ${code}`;
         onValue(ref(db, `users/${code}/balance`), s => {
             document.getElementById('uBalance').innerText = (s.val() || 0).toLocaleString();
         });
@@ -208,4 +208,5 @@
     };
 </script>
 </body>
+
 </html>
