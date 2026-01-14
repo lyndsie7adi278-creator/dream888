@@ -3,180 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>刮刮樂 - <span id="p_display_name_header"></span></title>
+    <title>刮刮樂商城 - 載入中</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { 
-            --primary: #ff8fa3; /* 主色調粉 */
-            --dark: #2c3e50; /* 深色文字 */
-            --gold: #d4a017; /* 金色 */
-            --bg: #f8f9fa; /* 背景淺灰 */
-            --card-bg: white;
-            --shadow: rgba(0,0,0,0.05);
-            --border-light: #eee;
+            --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; 
+            --gold-glow: rgba(255, 215, 0, 0.6); --dark: #2c3e50;
         }
         body { 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            background: var(--bg); margin: 0; padding: 0; 
-            display: flex; flex-direction: column; align-items: center;
-            color: var(--dark);
-            user-select: none;
+            background: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; 
+            padding-bottom: 50px; user-select: none; -webkit-tap-highlight-color: transparent;
         }
         
-        /* 頂部導航 */
+        /* 導航欄 */
         .header { 
-            width: 100%; background: var(--card-bg); padding: 15px 0; 
-            text-align: center; box-shadow: 0 4px 12px var(--shadow); 
-            position: sticky; top: 0; z-index: 100; 
-            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; background: white; padding: 12px 0; text-align: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; 
         }
-        .back-btn { 
-            position: absolute; left: 15px; color: #888; text-decoration: none; 
-            font-size: 0.9rem; padding: 5px 10px; border-radius: 8px;
-            transition: background 0.2s;
-        }
-        .back-btn:hover { background: #f0f0f0; }
-
-        /* 🔴 絕對隱形的管理員觸發區 */
-        .admin-trigger { 
-            position: absolute; right: 0; top: 0; 
-            width: 50px; height: 50px; 
-            background: transparent; border: none; 
-            z-index: 999; cursor: default;
-        }
-        .balance-display { 
-            color: var(--primary); font-weight: bold; font-size: 0.9rem; 
-            margin-left: auto; margin-right: 15px; /* 推到右邊 */
-        }
-        .header-title { 
-            font-weight: 900; color: var(--dark); font-size: 1.1rem; 
-            position: absolute; left: 50%; transform: translateX(-50%);
-        }
+        .back-btn { position: absolute; left: 15px; top: 15px; text-decoration: none; color: #888; font-size: 0.9rem; font-weight: bold; }
+        .admin-trigger { position: absolute; right: 0; top: 0; width: 60px; height: 60px; background: transparent; border: none; z-index: 999; }
 
         /* 進度條 */
-        .progress-box { 
-            width: 92%; max-width: 450px; background: var(--card-bg); 
-            border-radius: 15px; margin: 15px 0 10px 0; padding: 15px; 
-            box-sizing: border-box; border: 1px solid var(--border-light);
-            box-shadow: 0 2px 8px var(--shadow);
-        }
-        .prog-text { 
-            display: flex; justify-content: space-between; font-weight: bold; 
-            font-size: 0.9rem; margin-bottom: 8px; color: #555; 
-        }
-        .prog-bar-bg { width: 100%; height: 10px; background: #eee; border-radius: 10px; overflow: hidden; }
-        .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffb7c5, var(--primary)); transition: width 0.5s ease; }
+        .progress-box { width: 92%; max-width: 450px; background: white; border-radius: 15px; margin: 15px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
+        .prog-text { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; color: #555; }
+        .prog-bar-bg { width: 100%; height: 8px; background: #eee; border-radius: 10px; overflow: hidden; }
+        .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.5s ease; }
 
-        /* 商品資訊面板 */
-        .p_info_panel { 
-            width: 92%; max-width: 450px; background: var(--card-bg); 
-            border-radius: 20px; margin-bottom: 15px; overflow: hidden; 
-            box-shadow: 0 5px 15px var(--shadow); border: 1px solid var(--border-light); 
-        }
+        /* 商品資訊看板 */
+        .p_info_panel { width: 92%; max-width: 450px; background: white; border-radius: 20px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .p_main_img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #eee; }
-        .p_detail { padding: 15px; text-align: center; }
-        .prize-label { font-weight: bold; margin-bottom: 8px; font-size: 1.2rem; color: #333; }
-        .win-tag { 
-            display: inline-block; background: #fff9e6; border: 2px solid var(--gold); 
-            padding: 8px 25px; border-radius: 50px; color: var(--gold); font-weight: 900; 
-            font-size: 1.1rem; animation: gold-glow 2s infinite alternate;
-        }
-        @keyframes gold-glow { from { box-shadow: 0 0 5px rgba(255, 215, 0, 0.4); } to { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); } }
+        .p_detail { padding: 12px; text-align: center; }
+        .win-tag { display: inline-block; background: #fff9e6; border: 2px solid var(--g); padding: 6px 20px; border-radius: 50px; color: #d4a017; font-weight: 900; animation: gold-glow 2s infinite alternate; font-size: 1rem; }
+        @keyframes gold-glow { from { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); } to { box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); } }
 
-        /* 刮刮樂格子 */
-        .g_con { 
-            display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; 
-            width: 92%; max-width: 450px; padding: 15px; background: var(--card-bg); 
-            border-radius: 25px; box-shadow: 0 5px 15px var(--shadow); 
-        }
-        .t_s { 
-            aspect-ratio: 1/1; background: linear-gradient(135deg, #ffb7c5, var(--primary)); 
-            border-radius: 8px; cursor: pointer; border: 2px solid var(--card-bg); 
-            color: white; display: flex; align-items: center; justify-content: center; 
-            font-weight: bold; box-shadow: 0 3px 0 #e67e91; font-size: 1.2rem;
-            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-        }
-        .t_s:active { transform: translateY(2px); box-shadow: 0 1px 0 #e67e91; }
+        /* 格子區 */
+        .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+        .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, var(--p), var(--a)); border-radius: 8px; cursor: pointer; border: 2px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 3px 0 #e67e91; font-size: 1.2rem; }
         .t_s::after { content: "抽"; }
-        .t_s.so { background: #e8e8e8 !important; border-color: #ccc; color: #bbb; box-shadow: none; cursor: default; }
+        .t_s.so { background: #e8e8e8 !important; border-color: #ccc; color: #bbb; box-shadow: none; }
         .t_s.so::after { content: "✔"; }
-        .t_s.rv { font-size: 1.1rem; color: #ccc; background: #f9f9f9 !important; border: 1px solid #eee; box-shadow: none; cursor: default; }
+        .t_s.rv { font-size: 1.1rem; color: #ccc; background: #f9f9f9 !important; border: 1px solid #eee; box-shadow: none; }
         .t_s.rv::after { content: attr(data-val); }
-        .t_s.rv.is-winner { 
-            color: var(--gold) !important; background: #fff3cd !important; 
-            border: 2px solid var(--gold) !important; font-weight: 900 !important; 
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-        }
+        .t_s.rv.is-winner { color: #d4a017 !important; background: #fff3cd !important; border: 2px solid var(--g) !important; font-weight: 900 !important; }
 
+        /* 歷史紀錄 */
+        .history-panel { width: 92%; max-width: 450px; background: white; border-radius: 15px; margin: 20px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
+        .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 5px; }
+        .history-item { background: #f9f9f9; padding: 8px; border-radius: 10px; font-size: 0.75rem; text-align: center; border: 1px solid #eee; display: flex; flex-direction: column; }
+        .history-item.win { background: #fffde7; border-color: var(--g); color: #d4a017; font-weight: bold; }
+        .history-val { font-size: 1.1rem; font-weight: bold; margin: 2px 0; }
+        
         /* 咪牌彈窗 */
-        .overlay { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; 
-            align-items: center; justify-content: center; backdrop-filter: blur(5px);
-        }
-        .s_card { 
-            position: relative; width: 320px; height: 380px; background: var(--card-bg); 
-            border-radius: 24px; overflow: hidden; border: 6px solid #ddd; 
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.3); transition: border-color 0.4s ease-in-out;
-        }
-        .s_res { 
-            position: absolute; width: 100%; height: 100%; display: flex; 
-            flex-direction: column; align-items: center; justify-content: center; 
-            text-align: center; padding: 20px; box-sizing: border-box;
-        }
-        .r_num { font-size: 8rem; font-weight: 900; color: #333; transition: all 0.4s ease-in-out; }
-        .res_img { 
-            width: 180px; height: 180px; object-fit: contain; margin-bottom: 10px; 
-            display: none; opacity: 0; transition: opacity 0.5s ease-in-out;
-        }
-        .res_msg { font-size: 1.5rem; font-weight: bold; margin-top: 5px; display: none; }
-        .btn_c { 
-            display: none; margin-top: 25px; padding: 12px 60px; background: #ff4757; 
-            color: white; border: none; border-radius: 50px; font-weight: bold; 
-            font-size: 1.1rem; cursor: pointer; box-shadow: 0 5px 15px rgba(255,71,87,0.4);
-            transition: transform 0.2s;
-        }
-        .btn_c:active { transform: translateY(2px); box-shadow: 0 2px 8px rgba(255,71,87,0.4); }
-
-
-        /* 🆕 歷史紀錄區塊 */
-        .history-panel {
-            width: 92%; max-width: 450px; background: var(--card-bg);
-            border-radius: 15px; margin: 20px 0 40px 0; padding: 20px;
-            box-sizing: border-box; border: 1px solid var(--border-light);
-            box-shadow: 0 2px 8px var(--shadow);
-        }
-        .history-header {
-            font-weight: bold; font-size: 1.1rem; margin-bottom: 15px;
-            display: flex; align-items: center; color: var(--dark);
-        }
-        .history-header::before { content: "📊"; margin-right: 8px; }
-
-        .history-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); /* 顯示時間、籤號、結果 */
-            gap: 10px; max-height: 250px; overflow-y: auto;
-            padding-right: 10px; /* 留給捲軸空間 */
-        }
-        .history-item {
-            background: #f9f9f9; padding: 10px; border-radius: 10px;
-            font-size: 0.8rem; text-align: center; color: #555;
-            display: flex; flex-direction: column; justify-content: center;
-            border: 1px solid #eee;
-        }
-        .history-item.win { background: #fffde7; border-color: var(--gold); color: var(--gold); font-weight: bold; }
-        .history-item.loss { background: #f0f0f0; border-color: #ddd; color: #888; }
-        .history-time { font-size: 0.7rem; color: #aaa; margin-bottom: 3px; }
-        .history-val { font-size: 1.1rem; font-weight: bold; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .s_card { position: relative; width: 320px; height: 380px; background: white; border-radius: 24px; overflow: hidden; border: 6px solid #ddd; display: flex; justify-content: center; align-items: center; transition: border-color 0.4s; }
+        .s_res { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
+        .r_num { font-size: 8rem; font-weight: 900; color: #333; transition: all 0.4s; }
+        .res_img { width: 180px; height: 180px; object-fit: contain; margin-bottom: 10px; display: none; }
+        .btn_c { display: none; margin-top: 25px; padding: 12px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255,71,87,0.3); }
     </style>
 </head>
 <body>
 
 <div class="header">
     <a href="index.html" class="back-btn">⬅ 返回</a>
-    <span class="header-title" id="p_display_name_header">商品刮刮樂</span>
     <div class="admin-trigger" onclick="_admin_reset()"></div>
-    <div class="balance-display">錢包: $ <span id="curBal">0</span></div>
+    <div style="color:var(--a); font-weight:bold; font-size:0.9rem;">錢包餘額: $ <span id="curBal">0</span></div>
 </div>
 
 <div class="progress-box">
@@ -187,7 +79,7 @@
 <div class="p_info_panel">
     <img id="top_prize_img" src="" class="p_main_img">
     <div class="p_detail">
-        <div id="p_display_name" class="prize-label">載入中...</div>
+        <div id="p_display_name" style="font-weight:bold; margin-bottom:8px; font-size: 1.1rem;">正在載入商品...</div>
         <div class="win-tag" id="winNotice">中獎號碼：--</div>
     </div>
 </div>
@@ -195,18 +87,9 @@
 <div class="g_con" id="g_d"></div>
 
 <div class="history-panel">
-    <div class="history-header">近期刮獎紀錄</div>
+    <div style="font-weight:bold; margin-bottom:10px; font-size: 0.9rem; color: #555;">📊 近期刮獎紀錄</div>
     <div class="history-grid" id="history_grid">
-        <div class="history-item loss">
-            <span class="history-time">12:30</span>
-            <span class="history-val">05</span>
-            <span>沒中</span>
-        </div>
-         <div class="history-item win">
-            <span class="history-time">12:28</span>
-            <span class="history-val">01</span>
-            <span>中獎！</span>
-        </div>
+        <div style="grid-column: span 3; color: #ccc; padding: 20px; font-size: 0.8rem; text-align: center;">暫無紀錄</div>
     </div>
 </div>
 
@@ -215,17 +98,17 @@
         <div class="s_res">
             <div id="w_t" class="r_num">?</div>
             <img id="res_img" class="res_img" src="">
-            <div id="res_msg" class="res_msg"></div>
+            <div id="res_msg" style="font-size:1.5rem; font-weight:bold; margin-top:5px; display:none;"></div>
         </div>
     </div>
-    <button class="btn_c" id="c_btn" onclick="_cl_ov()">領取並繼續</button>
+    <button class="btn_c" id="c_btn" onclick="_cl_ov()">領取並返回</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, runTransaction, onValue, set, get, push, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, runTransaction, onValue, set, get, push, query, limitToLast, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 🔴 請填入您的 Firebase 配置
+    // 🔴 [重要] 請在此處貼上您的 Firebase 配置
     const config = { 
   apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
   authDomain: "dream-169dc.firebaseapp.com",
@@ -245,21 +128,18 @@
           safe = parseInt(urlParams.get('safe')), winGoal = parseInt(urlParams.get('win')), 
           prizeImg = decodeURIComponent(urlParams.get('img')), myCode = localStorage.getItem('myScratchCode');
 
-    const _p_ref = ref(db, `games/${gid}/pool`);
-    const _gh_ref = ref(db, `games/${gid}/god_hand`);
-    const _history_ref = ref(db, `games/${gid}/history`); // 🆕 歷史紀錄參考
-
+    const _p_ref = ref(db, `games/${gid}/pool`), _gh_ref = ref(db, `games/${gid}/god_hand`), _h_ref = ref(db, `games/${gid}/history`);
     let _is_p = false, _sel_i = null, _cvs, _ctx, _is_d = false;
 
     window.onload = () => {
         if(!myCode) return location.href = 'index.html';
+        document.title = gid + " - 刮刮樂"; // 修正標題
         document.getElementById('p_display_name').innerText = gid;
-        document.getElementById('p_display_name_header').innerText = gid; /* 🆕 標題也顯示商品名 */
         document.getElementById('top_prize_img').src = prizeImg;
         document.getElementById('winNotice').innerText = `✨ 中獎號碼：${winGoal.toString().padStart(2,'0')}`;
         onValue(ref(db, `users/${myCode}/balance`), s => document.getElementById('curBal').innerText = (s.val()||0).toLocaleString());
         _init_pool();
-        _listen_history(); // 🆕 監聽歷史紀錄
+        _listen_history();
     };
 
     async function _init_pool() {
@@ -298,48 +178,22 @@
         }).then(res => {
             if(res.committed) {
                 runTransaction(ref(db, `users/${myCode}/balance`), b => b - price);
-                _record_history(window._l_w === winGoal, window._l_w); // 🆕 記錄歷史
+                push(_h_ref, { u: myCode, g: window._l_w, w: window._l_w === winGoal, t: Date.now() });
                 _pp_s();
             } else _is_p = false;
         });
     };
 
-    // 🆕 記錄刮獎歷史
-    function _record_history(isWin, resultNum) {
-        const now = new Date();
-        push(_history_ref, {
-            user: myCode,
-            isWin: isWin,
-            result: resultNum,
-            timestamp: now.getTime()
-        });
-    }
-
-    // 🆕 監聽歷史紀錄並更新介面
     function _listen_history() {
-        const historyGrid = document.getElementById('history_grid');
-        onValue(query(_history_ref, limitToLast(12)), (snapshot) => { // 顯示最近 12 筆
-            const historyData = snapshot.val();
-            let html = '';
-            if (historyData) {
-                const sortedHistory = Object.values(historyData).sort((a, b) => a.timestamp - b.timestamp);
-                sortedHistory.forEach(item => {
-                    const time = new Date(item.timestamp).toLocaleTimeString('zh-TW', {hour: '2-digit', minute:'2-digit'});
-                    const resultText = item.isWin ? '中獎！' : '沒中';
-                    const itemClass = item.isWin ? 'win' : 'loss';
-                    html += `
-                        <div class="history-item ${itemClass}">
-                            <span class="history-time">${time}</span>
-                            <span class="history-val">${item.result.toString().padStart(2,'0')}</span>
-                            <span>${resultText}</span>
-                        </div>
-                    `;
+        onValue(query(_h_ref, limitToLast(12)), s => {
+            const data = s.val(); let html = '';
+            if (data) {
+                Object.values(data).reverse().forEach(item => {
+                    const time = new Date(item.t).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'});
+                    html += `<div class="history-item ${item.w?'win':''}"><span style="color:#aaa; font-size:0.6rem;">${time}</span><span class="history-val">${item.g.toString().padStart(2,'0')}</span><span>${item.w?'中獎':'沒中'}</span></div>`;
                 });
-            } else {
-                html = '<div style="grid-column: 1 / -1; text-align: center; color: #bbb; padding: 20px;">尚無刮獎紀錄</div>';
-            }
-            historyGrid.innerHTML = html;
-            historyGrid.scrollTop = historyGrid.scrollHeight; // 捲動到最新紀錄
+            } else { html = '<div style="grid-column:span 3; color:#ccc; padding:20px; font-size:0.8rem; text-align:center;">暫無紀錄</div>'; }
+            document.getElementById('history_grid').innerHTML = html;
         });
     }
 
@@ -360,7 +214,6 @@
         _ctx.fillStyle = '#C0C0C0'; _ctx.fillRect(0,0,320,380);
         _ctx.font = "bold 22px sans-serif"; _ctx.fillStyle = "#888"; _ctx.textAlign = "center"; _ctx.textBaseline = "middle";
         _ctx.fillText("動手刮開看號碼", 160, 190);
-        
         _cvs.onmousedown = _sS; _cvs.ontouchstart = _sS;
         window.onmousemove = _sM; window.ontouchmove = _sM; 
         window.onmouseup = _sE; window.ontouchend = _sE;
@@ -381,48 +234,35 @@
         let c = 0; for(let i=3; i<d.length; i+=4) if(d[i]==0) c++;
         if(c > (d.length/4)*0.45) { 
             _cvs.style.display = 'none';
-            _show_final_result();
+            const num = window._l_w, w_t = document.getElementById('w_t'), res_img = document.getElementById('res_img'),
+                  res_msg = document.getElementById('res_msg'), s_card = document.querySelector('.s_card');
+            if(num === winGoal) {
+                s_card.style.borderColor = 'var(--g)';
+                w_t.style.fontSize = '4rem'; w_t.style.color = '#ff4757';
+                res_img.src = prizeImg; res_img.style.display = 'block';
+                res_msg.innerText = "⭐ 恭喜中獎 ⭐"; res_msg.style.color = "#d4a017";
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            } else {
+                w_t.style.fontSize = '4rem'; w_t.style.color = '#aaa';
+                res_img.src = "https://i.ibb.co/7t4gt23K/image.png"; 
+                res_img.style.display = 'block';
+                res_msg.innerText = "再接再厲唷！"; res_msg.style.color = "#888";
+            }
+            res_msg.style.display = 'block'; document.getElementById('c_btn').style.display = 'block';
         }
     }
 
-    function _show_final_result() {
-        const num = window._l_w, w_t = document.getElementById('w_t'), res_img = document.getElementById('res_img'),
-              res_msg = document.getElementById('res_msg'), s_card = document.querySelector('.s_card');
-
-        if(num === winGoal) {
-            s_card.style.borderColor = 'var(--gold)';
-            w_t.style.fontSize = '4rem'; w_t.style.color = '#ff4757';
-            res_img.src = prizeImg; res_img.style.display = 'block';
-            res_msg.innerText = "⭐ 恭喜中獎 ⭐"; res_msg.style.color = "var(--gold)";
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-        } else {
-            w_t.style.fontSize = '4rem'; w_t.style.color = '#aaa';
-            res_img.src = "https://i.ibb.co/7t4gt23K/image.png"; 
-            res_img.style.display = 'block';
-            res_msg.innerText = "再接再厲唷！"; res_msg.style.color = "#888";
-        }
-        res_msg.style.display = 'block';
-        document.getElementById('c_btn').style.display = 'block';
-    }
-
-    // 🔴 唯一管理員重置入口 (右上角隱形按鈕)
     window._admin_reset = () => {
         const pw = prompt("管理員身份驗證：");
-        if(pw === "0000") { // 您可以在此修改密碼
-            if(confirm("確定要整盤重置洗牌嗎？此操作將清空所有刮獎紀錄！")) { 
-                _reset_game(); alert("洗牌完成！"); 
-            }
-        }
+        if(pw === "0000") { if(confirm("確定要重置洗牌並清空紀錄嗎？")) _reset_game(); }
     };
-
     function _reset_game() {
         let n = []; for(let i=1; i<=total; i++) n.push(i);
         n.sort(() => Math.random() - 0.5);
         set(_p_ref, n.map(v => ({ grade: v, taken: false })));
-        set(_history_ref, null); // 🆕 重置時清空歷史紀錄
+        remove(_h_ref);
     }
     window._cl_ov = () => { _is_p = false; document.getElementById('ovl').style.display = 'none'; document.getElementById('c_btn').style.display = 'none'; };
 </script>
 </body>
 </html>
-
