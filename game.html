@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>刮刮樂商城 - 載入中</title>
+    <title>夢工廠刮刮樂</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { 
             --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; 
             --gold-glow: rgba(255, 215, 0, 0.6); --dark: #2c3e50;
         }
+        /* 鎖定選擇與手勢 */
+        * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; }
+        
         body { 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
             background: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; 
-            padding-bottom: 50px; user-select: none; -webkit-tap-highlight-color: transparent;
+            padding-bottom: 50px; overflow-x: hidden;
         }
         
-        /* 導航欄 */
-        .header { 
-            width: 100%; background: white; padding: 12px 0; text-align: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; 
-        }
+        /* 導航 */
+        .header { width: 100%; background: white; padding: 12px 0; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .back-btn { position: absolute; left: 15px; top: 15px; text-decoration: none; color: #888; font-size: 0.9rem; font-weight: bold; }
         .admin-trigger { position: absolute; right: 0; top: 0; width: 60px; height: 60px; background: transparent; border: none; z-index: 999; }
 
@@ -30,12 +30,11 @@
         .prog-bar-bg { width: 100%; height: 8px; background: #eee; border-radius: 10px; overflow: hidden; }
         .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.5s ease; }
 
-        /* 商品資訊看板 */
+        /* 商品看板 */
         .p_info_panel { width: 92%; max-width: 450px; background: white; border-radius: 20px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .p_main_img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #eee; }
+        .p_main_img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #f0f0f0; }
         .p_detail { padding: 12px; text-align: center; }
-        .win-tag { display: inline-block; background: #fff9e6; border: 2px solid var(--g); padding: 6px 20px; border-radius: 50px; color: #d4a017; font-weight: 900; animation: gold-glow 2s infinite alternate; font-size: 1rem; }
-        @keyframes gold-glow { from { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); } to { box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); } }
+        .win-tag { display: inline-block; background: #fff9e6; border: 2px solid var(--g); padding: 6px 20px; border-radius: 50px; color: #d4a017; font-weight: 900; font-size: 1rem; animation: gold-glow 2s infinite alternate; }
 
         /* 格子區 */
         .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
@@ -49,21 +48,22 @@
 
         /* 歷史紀錄 */
         .history-panel { width: 92%; max-width: 450px; background: white; border-radius: 15px; margin: 20px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
-        .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 5px; }
-        .history-item { background: #f9f9f9; padding: 8px; border-radius: 10px; font-size: 0.75rem; text-align: center; border: 1px solid #eee; display: flex; flex-direction: column; }
+        .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 180px; overflow-y: auto; }
+        .history-item { background: #f9f9f9; padding: 8px; border-radius: 10px; font-size: 0.75rem; text-align: center; border: 1px solid #eee; }
         .history-item.win { background: #fffde7; border-color: var(--g); color: #d4a017; font-weight: bold; }
-        .history-val { font-size: 1.1rem; font-weight: bold; margin: 2px 0; }
-        
-        /* 咪牌彈窗 */
+
+        /* 彈窗 */
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .s_card { position: relative; width: 320px; height: 380px; background: white; border-radius: 24px; overflow: hidden; border: 6px solid #ddd; display: flex; justify-content: center; align-items: center; transition: border-color 0.4s; }
+        .s_card { position: relative; width: 320px; height: 380px; background: white; border-radius: 24px; overflow: hidden; border: 6px solid #ddd; display: flex; justify-content: center; align-items: center; }
         .s_res { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
-        .r_num { font-size: 8rem; font-weight: 900; color: #333; transition: all 0.4s; }
+        .r_num { font-size: 8rem; font-weight: 900; color: #333; }
         .res_img { width: 180px; height: 180px; object-fit: contain; margin-bottom: 10px; display: none; }
-        .btn_c { display: none; margin-top: 25px; padding: 12px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255,71,87,0.3); }
+        .btn_c { display: none; margin-top: 25px; padding: 12px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; }
+        
+        @keyframes gold-glow { from { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); } to { box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); } }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
 <div class="header">
     <a href="index.html" class="back-btn">⬅ 返回</a>
@@ -79,7 +79,7 @@
 <div class="p_info_panel">
     <img id="top_prize_img" src="" class="p_main_img">
     <div class="p_detail">
-        <div id="p_display_name" style="font-weight:bold; margin-bottom:8px; font-size: 1.1rem;">正在載入商品...</div>
+        <div id="p_display_name" style="font-weight:bold; margin-bottom:8px; font-size: 1.1rem;">加載中...</div>
         <div class="win-tag" id="winNotice">中獎號碼：--</div>
     </div>
 </div>
@@ -88,9 +88,7 @@
 
 <div class="history-panel">
     <div style="font-weight:bold; margin-bottom:10px; font-size: 0.9rem; color: #555;">📊 近期刮獎紀錄</div>
-    <div class="history-grid" id="history_grid">
-        <div style="grid-column: span 3; color: #ccc; padding: 20px; font-size: 0.8rem; text-align: center;">暫無紀錄</div>
-    </div>
+    <div class="history-grid" id="history_grid"></div>
 </div>
 
 <div class="overlay" id="ovl">
@@ -108,18 +106,21 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, runTransaction, onValue, set, get, push, query, limitToLast, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 🔴 [重要] 請在此處貼上您的 Firebase 配置
-    const config = { 
-  apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
+    // 🔴 鎖定 F12 與檢視源碼
+    document.onkeydown = function(e) {
+        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
+            return false;
+        }
+    };
+
+    const config = {   apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
   authDomain: "dream-169dc.firebaseapp.com",
   databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com",
   projectId: "dream-169dc",
   storageBucket: "dream-169dc.firebasestorage.app",
   messagingSenderId: "214137228622",
   appId: "1:214137228622:web:84d14bad85d865ee94e21f",
-  measurementId: "G-7YD4VSW7CZ"
-    };
-
+  measurementId: "G-7YD4VSW7CZ" };
     const app = initializeApp(config);
     const db = getDatabase(app);
 
@@ -133,10 +134,15 @@
 
     window.onload = () => {
         if(!myCode) return location.href = 'index.html';
-        document.title = gid + " - 刮刮樂"; // 修正標題
-        document.getElementById('p_display_name').innerText = gid;
+        
+        // 🔴 修正標題：確保為純文字，不帶標籤
+        const pureTitle = (gid || "刮刮樂").replace(/<[^>]*>?/gm, '');
+        document.title = pureTitle + " - 抽獎中";
+
+        document.getElementById('p_display_name').innerText = pureTitle;
         document.getElementById('top_prize_img').src = prizeImg;
         document.getElementById('winNotice').innerText = `✨ 中獎號碼：${winGoal.toString().padStart(2,'0')}`;
+        
         onValue(ref(db, `users/${myCode}/balance`), s => document.getElementById('curBal').innerText = (s.val()||0).toLocaleString());
         _init_pool();
         _listen_history();
@@ -162,18 +168,23 @@
         const balSnap = await get(ref(db, `users/${myCode}/balance`));
         if((balSnap.val()||0) < price) { alert("餘額不足！"); _is_p = false; return; }
         
-        const ghSnap = await get(_gh_ref); let target = ghSnap.val();
+        const ghSnap = await get(_gh_ref);
+        let target = ghSnap.val();
+
         runTransaction(_p_ref, (p) => {
             if(!p) return p;
-            let win = p[i].grade; const drawn = p.filter(x => x.taken).length;
+            let win = p[i].grade;
+            const drawn = p.filter(x => x.taken).length;
+
             if(target) {
                 let pos = p.findIndex(x => x.grade == target && !x.taken);
-                if(pos!=-1) [p[i].grade, p[pos].grade] = [p[pos].grade, p[i].grade], win = target;
+                if(pos!=-1) { [p[i].grade, p[pos].grade] = [p[pos].grade, p[i].grade]; win = target; }
                 set(_gh_ref, null);
             } else if (drawn < safe && win == winGoal) {
                 let safePos = p.findIndex(x => !x.taken && x.grade != winGoal);
-                if(safePos!=-1) [p[i].grade, p[safePos].grade] = [p[safePos].grade, p[i].grade], win = p[i].grade;
+                if(safePos!=-1) { [p[i].grade, p[safePos].grade] = [p[safePos].grade, p[i].grade]; win = p[i].grade; }
             }
+            
             p[i].taken = true; window._l_w = win; return p;
         }).then(res => {
             if(res.committed) {
@@ -189,10 +200,9 @@
             const data = s.val(); let html = '';
             if (data) {
                 Object.values(data).reverse().forEach(item => {
-                    const time = new Date(item.t).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'});
-                    html += `<div class="history-item ${item.w?'win':''}"><span style="color:#aaa; font-size:0.6rem;">${time}</span><span class="history-val">${item.g.toString().padStart(2,'0')}</span><span>${item.w?'中獎':'沒中'}</span></div>`;
+                    html += `<div class="history-item ${item.w?'win':''}"><b>${item.g.toString().padStart(2,'0')}</b><br>${item.w?'中獎':'沒中'}</div>`;
                 });
-            } else { html = '<div style="grid-column:span 3; color:#ccc; padding:20px; font-size:0.8rem; text-align:center;">暫無紀錄</div>'; }
+            } else { html = '<div style="grid-column:span 3; color:#ccc; text-align:center;">暫無紀錄</div>'; }
             document.getElementById('history_grid').innerHTML = html;
         });
     }
@@ -200,12 +210,10 @@
     function _pp_s() {
         const num = window._l_w, w_t = document.getElementById('w_t'), res_img = document.getElementById('res_img'),
               res_msg = document.getElementById('res_msg'), s_card = document.querySelector('.s_card');
-
         w_t.innerText = num.toString().padStart(2, '0');
         w_t.style.display = 'block'; w_t.style.fontSize = '8rem'; w_t.style.color = '#333';
         res_img.style.display = 'none'; res_msg.style.display = 'none';
         s_card.style.borderColor = '#ddd';
-
         document.getElementById('ovl').style.display = 'flex';
         const c = document.getElementById('c_con'); const o = c.querySelector('canvas'); if(o) o.remove();
         const n = document.createElement('canvas'); n.width = 320; n.height = 380; 
@@ -213,7 +221,7 @@
         c.appendChild(n); _cvs = n; _ctx = n.getContext('2d');
         _ctx.fillStyle = '#C0C0C0'; _ctx.fillRect(0,0,320,380);
         _ctx.font = "bold 22px sans-serif"; _ctx.fillStyle = "#888"; _ctx.textAlign = "center"; _ctx.textBaseline = "middle";
-        _ctx.fillText("動手刮開看號碼", 160, 190);
+        _ctx.fillText("手動刮開看號碼", 160, 190);
         _cvs.onmousedown = _sS; _cvs.ontouchstart = _sS;
         window.onmousemove = _sM; window.ontouchmove = _sM; 
         window.onmouseup = _sE; window.ontouchend = _sE;
@@ -238,13 +246,13 @@
                   res_msg = document.getElementById('res_msg'), s_card = document.querySelector('.s_card');
             if(num === winGoal) {
                 s_card.style.borderColor = 'var(--g)';
-                w_t.style.fontSize = '4rem'; w_t.style.color = '#ff4757';
+                w_t.style.fontSize = '4.5rem'; w_t.style.color = '#ff4757';
                 res_img.src = prizeImg; res_img.style.display = 'block';
                 res_msg.innerText = "⭐ 恭喜中獎 ⭐"; res_msg.style.color = "#d4a017";
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             } else {
-                w_t.style.fontSize = '4rem'; w_t.style.color = '#aaa';
-                res_img.src = "https://i.ibb.co/7t4gt23K/image.png"; 
+                w_t.style.fontSize = '4.5rem'; w_t.style.color = '#aaa';
+                res_img.src = "https://img.icons8.com/color/180/000000/sad--v1.png"; 
                 res_img.style.display = 'block';
                 res_msg.innerText = "再接再厲唷！"; res_msg.style.color = "#888";
             }
