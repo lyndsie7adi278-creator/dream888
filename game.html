@@ -3,41 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>夢工廠刮刮樂</title>
+    <title>刮刮樂商城 - 系統載入中</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { 
-            --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; 
-            --gold-glow: rgba(255, 215, 0, 0.6); --dark: #2c3e50;
-        }
-        /* 鎖定選擇與手勢 */
+        :root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --dark: #2c3e50; }
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; }
-        
-        body { 
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            background: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; 
-            padding-bottom: 50px; overflow-x: hidden;
-        }
-        
-        /* 導航 */
+        body { font-family: sans-serif; background: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; overflow-x: hidden; }
         .header { width: 100%; background: white; padding: 12px 0; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .back-btn { position: absolute; left: 15px; top: 15px; text-decoration: none; color: #888; font-size: 0.9rem; font-weight: bold; }
         .admin-trigger { position: absolute; right: 0; top: 0; width: 60px; height: 60px; background: transparent; border: none; z-index: 999; }
-
-        /* 進度條 */
         .progress-box { width: 92%; max-width: 450px; background: white; border-radius: 15px; margin: 15px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
-        .prog-text { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; color: #555; }
-        .prog-bar-bg { width: 100%; height: 8px; background: #eee; border-radius: 10px; overflow: hidden; }
-        .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.5s ease; }
-
-        /* 商品看板 */
+        .prog-bar-bg { width: 100%; height: 8px; background: #eee; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.5s; }
         .p_info_panel { width: 92%; max-width: 450px; background: white; border-radius: 20px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .p_main_img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #f0f0f0; }
-        .p_detail { padding: 12px; text-align: center; }
-        .win-tag { display: inline-block; background: #fff9e6; border: 2px solid var(--g); padding: 6px 20px; border-radius: 50px; color: #d4a017; font-weight: 900; font-size: 1rem; animation: gold-glow 2s infinite alternate; }
-
-        /* 格子區 */
-        .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+        .p_main_img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+        .win-tag { display: inline-block; background: #fff9e6; border: 2px solid var(--g); padding: 6px 20px; border-radius: 50px; color: #d4a017; font-weight: 900; animation: glow 2s infinite alternate; }
+        @keyframes glow { from { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); } to { box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); } }
+        .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, var(--p), var(--a)); border-radius: 8px; cursor: pointer; border: 2px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 3px 0 #e67e91; font-size: 1.2rem; }
         .t_s::after { content: "抽"; }
         .t_s.so { background: #e8e8e8 !important; border-color: #ccc; color: #bbb; box-shadow: none; }
@@ -45,22 +27,15 @@
         .t_s.rv { font-size: 1.1rem; color: #ccc; background: #f9f9f9 !important; border: 1px solid #eee; box-shadow: none; }
         .t_s.rv::after { content: attr(data-val); }
         .t_s.rv.is-winner { color: #d4a017 !important; background: #fff3cd !important; border: 2px solid var(--g) !important; font-weight: 900 !important; }
-
-        /* 歷史紀錄 */
         .history-panel { width: 92%; max-width: 450px; background: white; border-radius: 15px; margin: 20px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
         .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 180px; overflow-y: auto; }
         .history-item { background: #f9f9f9; padding: 8px; border-radius: 10px; font-size: 0.75rem; text-align: center; border: 1px solid #eee; }
         .history-item.win { background: #fffde7; border-color: var(--g); color: #d4a017; font-weight: bold; }
-
-        /* 彈窗 */
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .s_card { position: relative; width: 320px; height: 380px; background: white; border-radius: 24px; overflow: hidden; border: 6px solid #ddd; display: flex; justify-content: center; align-items: center; }
-        .s_res { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
         .r_num { font-size: 8rem; font-weight: 900; color: #333; }
         .res_img { width: 180px; height: 180px; object-fit: contain; margin-bottom: 10px; display: none; }
         .btn_c { display: none; margin-top: 25px; padding: 12px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; }
-        
-        @keyframes gold-glow { from { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); } to { box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); } }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -68,11 +43,14 @@
 <div class="header">
     <a href="index.html" class="back-btn">⬅ 返回</a>
     <div class="admin-trigger" onclick="_admin_reset()"></div>
-    <div style="color:var(--a); font-weight:bold; font-size:0.9rem;">錢包餘額: $ <span id="curBal">0</span></div>
+    <div style="color:var(--a); font-weight:bold; font-size:0.9rem;">錢包: $ <span id="curBal">0</span></div>
 </div>
 
 <div class="progress-box">
-    <div class="prog-text"><span>已刮 <span id="drawCount">0</span> 抽</span><span>剩餘 <span id="remainCount">0</span> 抽</span></div>
+    <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:bold;">
+        <span>已刮 <span id="drawCount">0</span> 抽</span>
+        <span>剩餘 <span id="remainCount">0</span> 抽</span>
+    </div>
     <div class="prog-bar-bg"><div id="progBar" class="prog-bar-fill"></div></div>
 </div>
 
@@ -87,31 +65,26 @@
 <div class="g_con" id="g_d"></div>
 
 <div class="history-panel">
-    <div style="font-weight:bold; margin-bottom:10px; font-size: 0.9rem; color: #555;">📊 近期刮獎紀錄</div>
+    <div style="font-weight:bold; margin-bottom:10px; font-size: 0.9rem;">📊 近期紀錄</div>
     <div class="history-grid" id="history_grid"></div>
 </div>
 
 <div class="overlay" id="ovl">
     <div class="s_card" id="c_con">
-        <div class="s_res">
+        <div style="display:flex; flex-direction:column; align-items:center;">
             <div id="w_t" class="r_num">?</div>
             <img id="res_img" class="res_img" src="">
             <div id="res_msg" style="font-size:1.5rem; font-weight:bold; margin-top:5px; display:none;"></div>
         </div>
     </div>
-    <button class="btn_c" id="c_btn" onclick="_cl_ov()">領取並返回</button>
+    <button class="btn_c" id="c_btn" onclick="_cl_ov()">領取結果</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, runTransaction, onValue, set, get, push, query, limitToLast, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 🔴 鎖定 F12 與檢視源碼
-    document.onkeydown = function(e) {
-        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
-            return false;
-        }
-    };
+    document.onkeydown = (e) => { if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false; };
 
     const config = {   apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
   authDomain: "dream-169dc.firebaseapp.com",
@@ -135,14 +108,13 @@
     window.onload = () => {
         if(!myCode) return location.href = 'index.html';
         
-        // 🔴 修正標題：確保為純文字，不帶標籤
-        const pureTitle = (gid || "刮刮樂").replace(/<[^>]*>?/gm, '');
-        document.title = pureTitle + " - 抽獎中";
-
-        document.getElementById('p_display_name').innerText = pureTitle;
+        // 🔴 關鍵：修正標題顯示，不使用 HTML 標籤
+        const pureName = (gid || "刮刮樂").replace(/<[^>]*>?/gm, '');
+        document.title = pureName + " - 抽獎中";
+        document.getElementById('p_display_name').innerText = pureName;
+        
         document.getElementById('top_prize_img').src = prizeImg;
         document.getElementById('winNotice').innerText = `✨ 中獎號碼：${winGoal.toString().padStart(2,'0')}`;
-        
         onValue(ref(db, `users/${myCode}/balance`), s => document.getElementById('curBal').innerText = (s.val()||0).toLocaleString());
         _init_pool();
         _listen_history();
@@ -166,25 +138,20 @@
     window._h_ck = async (i, tk) => {
         if(tk || _is_p) return; _is_p = true; _sel_i = i;
         const balSnap = await get(ref(db, `users/${myCode}/balance`));
-        if((balSnap.val()||0) < price) { alert("餘額不足！"); _is_p = false; return; }
+        if((balSnap.val()||0) < price) { alert("餘額不足"); _is_p = false; return; }
         
-        const ghSnap = await get(_gh_ref);
-        let target = ghSnap.val();
-
+        const ghSnap = await get(_gh_ref); let target = ghSnap.val();
         runTransaction(_p_ref, (p) => {
             if(!p) return p;
-            let win = p[i].grade;
-            const drawn = p.filter(x => x.taken).length;
-
+            let win = p[i].grade; const drawn = p.filter(x => x.taken).length;
             if(target) {
                 let pos = p.findIndex(x => x.grade == target && !x.taken);
-                if(pos!=-1) { [p[i].grade, p[pos].grade] = [p[pos].grade, p[i].grade]; win = target; }
+                if(pos!=-1) [p[i].grade, p[pos].grade] = [p[pos].grade, p[i].grade], win = target;
                 set(_gh_ref, null);
             } else if (drawn < safe && win == winGoal) {
                 let safePos = p.findIndex(x => !x.taken && x.grade != winGoal);
-                if(safePos!=-1) { [p[i].grade, p[safePos].grade] = [p[safePos].grade, p[i].grade]; win = p[i].grade; }
+                if(safePos!=-1) [p[i].grade, p[safePos].grade] = [p[safePos].grade, p[i].grade], win = p[i].grade;
             }
-            
             p[i].taken = true; window._l_w = win; return p;
         }).then(res => {
             if(res.committed) {
@@ -261,8 +228,8 @@
     }
 
     window._admin_reset = () => {
-        const pw = prompt("管理員身份驗證：");
-        if(pw === "0000") { if(confirm("確定要重置洗牌並清空紀錄嗎？")) _reset_game(); }
+        const pw = prompt("管理員身分驗證：");
+        if(pw === "0000") { if(confirm("確定重置洗牌？")) _reset_game(); }
     };
     function _reset_game() {
         let n = []; for(let i=1; i<=total; i++) n.push(i);
