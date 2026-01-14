@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>刮刮樂商城 - 咪牌抽獎中</title>
+    <title>刮刮樂商城 - 商城</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { 
@@ -23,13 +23,6 @@
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
             20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
             100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
         .is-shaking { animation: shake 0.5s; animation-iteration-count: 2; }
@@ -44,51 +37,33 @@
 
         .p_info_panel { width: 92%; max-width: 450px; background: white; border-radius: 20px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .p_main_img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+        .p_detail { padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        .p_detail { padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .win-tag { 
             display: inline-block; background: #000; border: 3px solid var(--g); 
             padding: 8px 30px; border-radius: 50px; color: var(--g); font-weight: 900; 
-            font-size: 1.3rem; letter-spacing: 2px;
-            box-shadow: 0 0 15px var(--gold-glow);
-            animation: gold-pulse 1.5s infinite alternate; 
+            font-size: 1.3rem; animation: gold-pulse 1.5s infinite alternate; 
         }
         @keyframes gold-pulse { from { box-shadow: 0 0 5px var(--gold-glow); transform: scale(1); } to { box-shadow: 0 0 20px var(--g); transform: scale(1.05); } }
 
         .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        
-        /* 🔴 關鍵修改：抽獎格子的樣式 */
-        .t_s { 
-            aspect-ratio: 1/1; background: linear-gradient(135deg, var(--p), var(--a)); 
-            border-radius: 8px; cursor: pointer; border: 2px solid #fff; color: white; 
-            display: flex; align-items: center; justify-content: center; font-weight: bold; 
-            box-shadow: 0 3px 0 #e67e91; font-size: 1.1rem; position: relative;
-        }
+        .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, var(--p), var(--a)); border-radius: 8px; cursor: pointer; border: 2px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 3px 0 #e67e91; font-size: 1.1rem; }
         .t_s::after { content: "抽"; }
+        .t_s.so { background: #f0f0f0 !important; border-color: #ddd; color: #bbb; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
+        .t_s.so::after { content: attr(data-num); }
+        .t_s.so.is-win-cell { background: #fff9e6 !important; border: 2px solid var(--g); color: #d4a017; font-weight: 900; box-shadow: 0 0 10px var(--gold-glow); }
 
-        /* 🔴 已刮過狀態：顯示號碼 */
-        .t_s.so { 
-            background: #f0f0f0 !important; border-color: #ddd; color: #bbb; 
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem;
-        }
-        .t_s.so::after { content: attr(data-num); } /* 顯示該格子的號碼 */
-
-        /* 🔴 如果刮開的是大獎：金色發光 */
-        .t_s.so.is-win-cell { 
-            background: #fff9e6 !important; border: 2px solid var(--g); color: #d4a017; font-weight: 900;
-            box-shadow: 0 0 10px var(--gold-glow);
-        }
-
-        .history-panel { width: 92%; max-width: 450px; background: white; border-radius: 15px; margin: 20px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
-        .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 180px; overflow-y: auto; }
-        .history-item { background: #f9f9f9; padding: 8px; border-radius: 10px; font-size: 0.75rem; text-align: center; border: 1px solid #eee; }
-        .history-item.win { background: #fffde7; border-color: var(--g); color: #d4a017; font-weight: bold; }
-
+        /* 彈窗：咪牌核心樣式 */
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .s_card { position: relative; width: 320px; height: 380px; background: white; border-radius: 24px; overflow: hidden; border: 6px solid #ddd; display: flex; justify-content: center; align-items: center; }
-        .r_num { font-size: 8rem; font-weight: 900; color: #333; }
+        
+        /* 🔴 關鍵修改：數字預設透明 */
+        .r_num { 
+            font-size: 8rem; font-weight: 900; color: #333; 
+            opacity: 0; transition: opacity 0.3s ease; /* 咪牌時漸漸浮現 */
+        }
         .res_img { width: 200px; height: 200px; object-fit: contain; margin-bottom: 10px; display: none; }
-        .win-text { color: #ff4757; text-shadow: 0 0 20px rgba(255, 71, 87, 0.8); font-size: 4.5rem !important; }
+        .win-text { color: #ff4757 !important; text-shadow: 0 0 20px rgba(255, 71, 87, 0.8); font-size: 4.5rem !important; }
         .btn_c { display: none; margin-top: 25px; padding: 12px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
@@ -102,8 +77,8 @@
 
 <div class="progress-box">
     <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:bold;">
-        <span>已刮 <span id="drawCount">0</span> 抽</span>
-        <span>剩餘 <span id="remainCount">0</span> 抽</span>
+        <span>已刮 <span id="drawCount">0</span> 刮</span>
+        <span>剩餘 <span id="remainCount">0</span> 刮</span>
     </div>
     <div class="prog-bar-bg"><div id="progBar" class="prog-bar-fill"></div></div>
 </div>
@@ -118,11 +93,6 @@
 
 <div class="g_con" id="g_d"></div>
 
-<div class="history-panel">
-    <div style="font-weight:bold; margin-bottom:10px; font-size: 0.9rem;">📊 歷史開獎號碼</div>
-    <div class="history-grid" id="history_grid"></div>
-</div>
-
 <div class="overlay" id="ovl">
     <div class="s_card" id="c_con">
         <div style="display:flex; flex-direction:column; align-items:center;">
@@ -131,7 +101,7 @@
             <div id="res_msg" style="font-size:1.8rem; font-weight:900; margin-top:5px; display:none;"></div>
         </div>
     </div>
-    <button class="btn_c" id="c_btn" onclick="_cl_ov()">領取並回主畫面</button>
+    <button class="btn_c" id="c_btn" onclick="_cl_ov()">領取結果</button>
 </div>
 
 <script type="module">
@@ -161,14 +131,11 @@
 
     window.onload = () => {
         if(!myCode) return location.href = 'index.html';
-        const pureName = (gid || "刮刮樂").replace(/<[^>]*>?/gm, '');
-        document.title = pureName + " - 正在抽獎";
-        document.getElementById('p_display_name').innerText = pureName;
+        document.getElementById('p_display_name').innerText = gid.replace(/<[^>]*>?/gm, '');
         document.getElementById('top_prize_img').src = prizeImg;
         document.getElementById('winNotice').innerText = `✨ 中獎號碼：${winGoal.toString().padStart(2,'0')}`;
         onValue(ref(db, `users/${myCode}/balance`), s => document.getElementById('curBal').innerText = (s.val()||0).toLocaleString());
         _init_pool();
-        _listen_history();
     };
 
     async function _init_pool() {
@@ -179,14 +146,9 @@
             document.getElementById('drawCount').innerText = drawn;
             document.getElementById('remainCount').innerText = total - drawn;
             document.getElementById('progBar').style.width = (drawn / total * 100) + "%";
-            
-            // 🔴 修改：這裡渲染格子時，將號碼放入 data-num 屬性中
             document.getElementById('g_d').innerHTML = d.map((x, i) => {
-                const valStr = x.grade.toString().padStart(2,'0');
                 const isWin = (parseInt(x.grade) === winGoal);
-                return `<div class="t_s ${x.taken?'so':''} ${x.taken && isWin?'is-win-cell':''}" 
-                             data-num="${valStr}" 
-                             onclick="_h_ck(${i},${x.taken})"></div>`;
+                return `<div class="t_s ${x.taken?'so':''} ${x.taken && isWin?'is-win-cell':''}" data-num="${x.grade.toString().padStart(2,'0')}" onclick="_h_ck(${i},${x.taken})"></div>`;
             }).join('');
         });
     }
@@ -196,56 +158,40 @@
         const balSnap = await get(ref(db, `users/${myCode}/balance`));
         if((balSnap.val()||0) < price) { alert("餘額不足"); _is_p = false; return; }
         
-        const ghSnap = await get(_gh_ref); let target = ghSnap.val();
         runTransaction(_p_ref, (p) => {
             if(!p) return p;
-            let win = p[i].grade; const drawn = p.filter(x => x.taken).length;
-            if(target) {
-                let pos = p.findIndex(x => x.grade == target && !x.taken);
-                if(pos!=-1) [p[i].grade, p[pos].grade] = [p[pos].grade, p[i].grade], win = target;
-                set(_gh_ref, null);
-            } else if (drawn < safe && win == winGoal) {
-                let safePos = p.findIndex(x => !x.taken && x.grade != winGoal);
-                if(safePos!=-1) [p[i].grade, p[safePos].grade] = [p[safePos].grade, p[i].grade], win = p[i].grade;
-            }
+            let win = p[i].grade;
             p[i].taken = true; window._l_w = win; return p;
         }).then(res => {
             if(res.committed) {
                 runTransaction(ref(db, `users/${myCode}/balance`), b => b - price);
-                push(_h_ref, { u: myCode, g: window._l_w, w: window._l_w === winGoal, t: Date.now() });
                 _pp_s();
             } else _is_p = false;
         });
     };
 
-    function _listen_history() {
-        onValue(query(_h_ref, limitToLast(12)), s => {
-            const data = s.val(); let html = '';
-            if (data) {
-                Object.values(data).reverse().forEach(item => {
-                    html += `<div class="history-item ${item.w?'win':''}"><b>${item.g.toString().padStart(2,'0')}</b><br>${item.w?'大獎':'未中'}</div>`;
-                });
-            } else { html = '<div style="grid-column:span 3; color:#ccc; text-align:center;">尚無抽獎紀錄</div>'; }
-            document.getElementById('history_grid').innerHTML = html;
-        });
-    }
-
     function _pp_s() {
-        const num = window._l_w, w_t = document.getElementById('w_t'), res_img = document.getElementById('res_img'),
-              res_msg = document.getElementById('res_msg'), s_card = document.querySelector('.s_card');
+        const num = window._l_w, w_t = document.getElementById('w_t');
         w_t.innerText = num.toString().padStart(2, '0');
-        w_t.style.display = 'block'; w_t.style.fontSize = '8rem'; w_t.style.color = '#333';
+        w_t.style.opacity = '0'; // 🔴 剛開始完全隱藏
         w_t.classList.remove('win-text');
-        res_img.style.display = 'none'; res_msg.style.display = 'none';
-        s_card.style.borderColor = '#ddd';
+        
+        document.getElementById('res_img').style.display = 'none';
+        document.getElementById('res_msg').style.display = 'none';
         document.getElementById('ovl').style.display = 'flex';
-        const c = document.getElementById('c_con'); const o = c.querySelector('canvas'); if(o) o.remove();
-        const n = document.createElement('canvas'); n.width = 320; n.height = 380; 
+
+        const c = document.getElementById('c_con'); 
+        const o = c.querySelector('canvas'); if(o) o.remove();
+        const n = document.createElement('canvas'); 
+        n.width = 320; n.height = 380; 
         n.style.position = 'absolute'; n.style.top = '0'; n.style.left = '0'; n.style.zIndex = '10';
         c.appendChild(n); _cvs = n; _ctx = n.getContext('2d');
+        
+        // 渲染厚實塗層
         _ctx.fillStyle = '#C0C0C0'; _ctx.fillRect(0,0,320,380);
         _ctx.font = "bold 22px sans-serif"; _ctx.fillStyle = "#888"; _ctx.textAlign = "center"; _ctx.textBaseline = "middle";
-        _ctx.fillText("手動刮開看結果", 160, 190);
+        _ctx.fillText("手動咪牌中...", 160, 190);
+        
         _cvs.onmousedown = _sS; _cvs.ontouchstart = _sS;
         window.onmousemove = _sM; window.ontouchmove = _sM; 
         window.onmouseup = _sE; window.ontouchend = _sE;
@@ -259,6 +205,21 @@
         const x = (e.clientX || e.touches[0].clientX) - r.left, y = (e.clientY || e.touches[0].clientY) - r.top;
         _ctx.globalCompositeOperation = 'destination-out';
         _ctx.beginPath(); _ctx.arc(x, y, 35, 0, Math.PI*2); _ctx.fill();
+        
+        // 🔴 咪牌邏輯：根據刮開面積顯示數字透明度
+        _update_visibility();
+    }
+
+    function _update_visibility() {
+        const d = _ctx.getImageData(0,0,320,380).data;
+        let cleared = 0; for(let i=3; i<d.length; i+=4) if(d[i]==0) cleared++;
+        const ratio = cleared / (d.length/4);
+        
+        // 刮開 10% 數字開始浮現，刮開 40% 數字完全顯示
+        const w_t = document.getElementById('w_t');
+        if (ratio > 0.1) {
+            w_t.style.opacity = Math.min(1, (ratio - 0.1) * 3);
+        }
     }
 
     function _ck_s() {
@@ -266,33 +227,28 @@
         let c = 0; for(let i=3; i<d.length; i+=4) if(d[i]==0) c++;
         if(c > (d.length/4)*0.45) { 
             _cvs.style.display = 'none';
-            const num = window._l_w, w_t = document.getElementById('w_t'), res_img = document.getElementById('res_img'),
-                  res_msg = document.getElementById('res_msg'), s_card = document.querySelector('.s_card');
-            
-            if(num === winGoal) {
-                document.body.classList.add('is-shaking');
-                setTimeout(() => document.body.classList.remove('is-shaking'), 1000);
-                s_card.style.borderColor = 'var(--g)';
-                w_t.classList.add('win-text'); 
-                res_img.src = prizeImg; res_img.style.display = 'block';
-                res_msg.innerText = "⭐ 恭喜抽中大獎 ⭐"; res_msg.style.color = "#ff4757";
-                res_msg.style.display = 'block';
-                var duration = 3 * 1000;
-                var end = Date.now() + duration;
-                (function frame() {
-                    confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-                    confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
-                    if (Date.now() < end) requestAnimationFrame(frame);
-                }());
-            } else {
-                w_t.style.fontSize = '4.5rem'; w_t.style.color = '#aaa';
-                res_img.src = "https://i.ibb.co/7t4gt23K/image.png"; 
-                res_img.style.display = 'block';
-                res_msg.innerText = "可惜沒中！再接再厲！"; res_msg.style.color = "#888";
-                res_msg.style.display = 'block';
-            }
-            document.getElementById('c_btn').style.display = 'block';
+            _show_final();
         }
+    }
+
+    function _show_final() {
+        const num = window._l_w, w_t = document.getElementById('w_t'), 
+              res_img = document.getElementById('res_img'), res_msg = document.getElementById('res_msg');
+        
+        w_t.style.opacity = '1';
+        if(num === winGoal) {
+            document.body.classList.add('is-shaking');
+            w_t.classList.add('win-text'); 
+            res_img.src = prizeImg; res_img.style.display = 'block';
+            res_msg.innerText = "⭐ 恭喜抽中大獎 ⭐"; res_msg.style.display = 'block';
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        } else {
+            w_t.style.fontSize = '4.5rem'; w_t.style.color = '#aaa';
+            res_img.src = "https://i.ibb.co/7t4gt23K/image.png"; 
+            res_img.style.display = 'block';
+            res_msg.innerText = "可惜沒中！再接再厲！"; res_msg.style.display = 'block';
+        }
+        document.getElementById('c_btn').style.display = 'block';
     }
 
     window._admin_reset = () => {
