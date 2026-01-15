@@ -14,18 +14,15 @@
         .back-btn { position: absolute; left: 15px; top: 15px; text-decoration: none; color: #888; font-size: 0.9rem; font-weight: bold; }
         .admin-trigger { position: absolute; right: 0; top: 0; width: 60px; height: 60px; background: transparent; border: none; z-index: 999; }
 
-        /* 進度條 */
         .progress-box { width: 92%; max-width: 450px; background: white; border-radius: 15px; margin: 15px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
         .prog-header { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; color: #888; margin-bottom: 8px; }
         .prog-bar-bg { width: 100%; height: 10px; background: #eee; border-radius: 10px; overflow: hidden; }
         .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.8s ease; }
 
-        /* 🆕 上方大獎展示區 (修復點) */
         .p_info_panel { width: 92%; max-width: 450px; background: white; border-radius: 20px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .p_main_img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
         .p_detail { padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        /* 🆕 中獎號碼標籤 (修復點) */
         .win-tag { 
             display: inline-block; background: #000; border: 3px solid var(--g); 
             padding: 8px 30px; border-radius: 50px; color: var(--g); font-weight: 900; 
@@ -33,31 +30,28 @@
         }
         @keyframes gold-pulse { from { box-shadow: 0 0 5px var(--gold-glow); transform: scale(1); } to { box-shadow: 0 0 20px var(--g); transform: scale(1.05); } }
 
-        /* 格子區 */
         .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-shadow: 0 4px 15px rgba(255,183,197,0.2); }
         .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, var(--p), var(--a)); border-radius: 8px; cursor: pointer; border: 2px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 3px 0 #e67e91; }
         .t_s::after { content: "㊗️"; }
         .t_s.so { background: #f0f0f0 !important; border-color: #ddd; box-shadow: none; }
         .t_s.so::after { content: "✔"; }
-        
-        /* 🔴 主畫面號碼：統一紅色粗體 */
         .t_s.rv::after { content: attr(data-num); color: #ff4757 !important; font-size: 1.3rem; font-weight: 900; }
         .t_s.so.is-win-cell { border: 2px solid var(--g) !important; box-shadow: 0 0 10px var(--gold-glow); }
 
-        /* 歷史紀錄 */
         .history-panel { width: 92%; max-width: 450px; background: white; border-radius: 15px; margin: 20px 0; padding: 15px; border: 1px solid #eee; }
         .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 150px; overflow-y: auto; }
         .history-item { background: #f9f9f9; padding: 8px; border-radius: 10px; font-size: 0.75rem; text-align: center; border: 1px solid #eee; }
         .history-item.win { background: #fffde7; border-color: var(--g); color: #ff4757; font-weight: bold; }
 
-        /* 彈窗 */
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .s_card { position: relative; width: 320px; height: 380px; background: white; border-radius: 24px; overflow: hidden; border: 6px solid #ddd; display: flex; justify-content: center; align-items: center; }
+        .s_card { position: relative; width: 320px; height: 400px; background: white; border-radius: 24px; overflow: hidden; border: 6px solid #ddd; display: flex; justify-content: center; align-items: center; }
         
-        /* 🔴 咪牌號碼：統一紅色超大粗體 */
-        .r_num { font-size: 8rem; font-weight: 900; color: #ff4757 !important; display: none; text-shadow: 0 4px 10px rgba(0,0,0,0.1); } 
-        .res_img { width: 220px; height: 220px; object-fit: contain; display: none; margin-bottom: 10px; }
+        .r_num { font-size: 8rem; font-weight: 900; color: #ff4757 !important; display: none; z-index: 1; } 
+        .res_img { width: 220px; height: 220px; object-fit: contain; display: none; margin-bottom: 10px; z-index: 2; }
         .btn_c { display: none; margin-top: 25px; padding: 12px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; }
+        
+        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-5px, 5px); } 50% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, -5px); } }
+        .is-shaking { animation: shake 0.1s infinite; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -65,7 +59,7 @@
 <div class="header">
     <a href="index.html" class="back-btn">⬅ 返回</a>
     <div class="admin-trigger" onclick="_admin_reset()"></div>
-    <div style="color:var(--a); font-weight:bold; font-size:0.9rem;">錢包: $ <span id="curBal">0</span></div>
+    <div style="color:var(--a); font-weight:bold;">錢包: $ <span id="curBal">0</span></div>
 </div>
 
 <div class="progress-box">
@@ -76,7 +70,7 @@
 <div class="p_info_panel">
     <img id="top_prize_img" src="" class="p_main_img">
     <div class="p_detail">
-        <div id="p_display_name" style="font-weight:900; margin-bottom:12px; font-size: 1.2rem; color: #333;">商品載入中...</div>
+        <div id="p_display_name" style="font-weight:900; margin-bottom:12px; font-size: 1.2rem; color: #333;">載入中...</div>
         <div class="win-tag" id="winNotice">中獎號碼：--</div>
     </div>
 </div>
@@ -84,7 +78,7 @@
 <div class="g_con" id="g_d"></div>
 
 <div class="history-panel">
-    <div style="font-weight:bold; margin-bottom:10px; font-size: 0.9rem; color: #555;">📊 實時紀錄</div>
+    <div style="font-weight:bold; margin-bottom:10px; font-size: 0.9rem;">📊 實時紀錄</div>
     <div class="history-grid" id="history_grid"></div>
 </div>
 
@@ -93,22 +87,17 @@
         <div style="display:flex; flex-direction:column; align-items:center;">
             <div id="w_t" class="r_num"></div>
             <img id="res_img" class="res_img" src="">
-            <div id="res_msg" style="font-size:1.8rem; font-weight:900; color:#ff4757; margin-top:5px; display:none;"></div>
+            <div id="res_msg" style="font-size:1.8rem; font-weight:900; color:#ff4757; margin-top:5px; display:none; text-align:center;"></div>
         </div>
     </div>
-    <button class="btn_c" id="c_btn" onclick="_cl_ov()">領取結果</button>
+    <button class="btn_c" id="c_btn" onclick="_cl_ov()">確認並領取</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, runTransaction, onValue, set, get, push, query, limitToLast, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    const config = { 
-        apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
-        databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com",
-        projectId: "dream-169dc",
-        appId: "1:214137228622:web:84d14bad85d865ee94e21f" 
-    };
+    const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const app = initializeApp(config);
     const db = getDatabase(app);
 
@@ -123,15 +112,10 @@
     window.onload = () => {
         if(!myCode) return location.href = 'index.html';
         document.getElementById('totalDisplay').innerText = total;
-        // 移除 gid 中的代碼感，顯示乾淨名稱
         document.getElementById('p_display_name').innerText = gid.replace(/_/g, ' ');
         document.getElementById('top_prize_img').src = prizeImg;
         document.getElementById('winNotice').innerText = `✨ 中獎號碼：${winGoal.toString().padStart(2,'0')}`;
-        
-        onValue(ref(db, `users/${myCode}/balance`), s => {
-            const b = s.val() || 0;
-            document.getElementById('curBal').innerText = b.toLocaleString();
-        });
+        onValue(ref(db, `users/${myCode}/balance`), s => document.getElementById('curBal').innerText = (s.val()||0).toLocaleString());
         _listen_history();
         _init_pool();
     };
@@ -155,25 +139,20 @@
             document.getElementById('progBar').style.width = (drawn / total * 100) + "%";
             document.getElementById('g_d').innerHTML = d.map((x, i) => {
                 const is_settled = x.taken && _drawn_nums.has(parseInt(x.grade)) && (i !== _sel_i);
-                const num = is_settled ? x.grade.toString().padStart(2,'0') : '';
                 return `<div class="t_s ${x.taken?'so':''} ${is_settled?'rv':''} ${is_settled && parseInt(x.grade)===winGoal?'is-win-cell':''}" 
-                             data-num="${num}" onclick="_h_ck(${i},${x.taken})"></div>`;
+                             data-num="${is_settled?x.grade.toString().padStart(2,'0'):''}" onclick="_h_ck(${i},${x.taken})"></div>`;
             }).join('');
         });
     }
 
     window._h_ck = async (i, tk) => {
         if(tk || _is_p) return; _is_p = true; _sel_i = i;
-        const balSnap = await get(ref(db, `users/${myCode}/balance`));
-        if((balSnap.val()||0) < 100) { alert("餘額不足"); _is_p = false; return; }
-        
         runTransaction(_p_ref, (p) => {
             if (!p) return p;
             window._l_w = p[i].grade; p[i].taken = true; return p;
         }).then(res => {
             if(res.committed) {
-                runTransaction(ref(db, `users/${myCode}/balance`), b => b - 100);
-                push(_h_ref, { u: myCode, g: window._l_w, w: window._l_w === winGoal, t: Date.now() });
+                push(_h_ref, { u: myCode, g: window._l_w, w: parseInt(window._l_w) === winGoal, t: Date.now() });
                 _pp_s();
             } else _is_p = false;
         });
@@ -186,11 +165,11 @@
         document.getElementById('res_msg').style.display = 'none';
         document.getElementById('ovl').style.display = 'flex';
         const c = document.getElementById('c_con'); const o = c.querySelector('canvas'); if(o) o.remove();
-        const n = document.createElement('canvas'); n.width = 320; n.height = 380; 
+        const n = document.createElement('canvas'); n.width = 320; n.height = 400; 
         n.style.position = 'absolute'; n.style.zIndex = '10'; c.appendChild(n);
         _cvs = n; _ctx = n.getContext('2d');
-        _ctx.fillStyle = '#C0C0C0'; _ctx.fillRect(0, 0, 320, 380);
-        _ctx.font = "bold 24px sans-serif"; _ctx.fillStyle = "#888"; _ctx.textAlign = "center"; _ctx.fillText("手動刮開看號碼", 160, 190);
+        _ctx.fillStyle = '#C0C0C0'; _ctx.fillRect(0, 0, 320, 400);
+        _ctx.font = "bold 24px sans-serif"; _ctx.fillStyle = "#888"; _ctx.textAlign = "center"; _ctx.fillText("手動刮開看結果", 160, 200);
         _cvs.onmousedown = _sS; _cvs.ontouchstart = _sS;
         window.onmousemove = _sM; window.ontouchmove = _sM; window.onmouseup = _sE; window.ontouchend = _sE;
     }
@@ -203,7 +182,6 @@
         if(w_t.innerText === "") {
             w_t.innerText = window._l_w.toString().padStart(2, '0');
             w_t.style.display = "block";
-            w_t.style.opacity = "1";
         }
         const r = _cvs.getBoundingClientRect();
         const x = (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - r.left, y = (e.clientY || (e.touches ? e.touches[0].clientY : 0)) - r.top;
@@ -212,29 +190,44 @@
     }
 
     function _ck_s() {
-        const d = _ctx.getImageData(0, 0, 320, 380).data;
+        const d = _ctx.getImageData(0, 0, 320, 400).data;
         let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++;
         if (c > (d.length/4)*0.4) {
             _cvs.style.display = 'none';
-            const num = window._l_w, w_t = document.getElementById('w_t'), 
+            const num = parseInt(window._l_w), w_t = document.getElementById('w_t'), 
                   res_img = document.getElementById('res_img'), res_msg = document.getElementById('res_msg');
             w_t.style.fontSize = "5.5rem";
+            
+            // 🔴 修正判斷：確保數字比對正確
             if(num === winGoal) {
+                document.getElementById('c_con').classList.add('is-shaking');
                 res_img.src = prizeImg; res_img.style.display = 'block';
                 res_msg.innerText = "🎊 恭喜抽中大獎 🎊"; res_msg.style.display = 'block';
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                
+                // 🏆 強化噴發效果
+                var count = 200, defaults = { origin: { y: 0.7 } };
+                function fire(particleRatio, opts) { confetti({ ...defaults, ...opts, particleCount: Math.floor(count * particleRatio) }); }
+                fire(0.25, { spread: 26, startVelocity: 55 });
+                fire(0.2, { spread: 60 });
+                fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+                fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+                fire(0.1, { spread: 120, startVelocity: 45 });
             } else {
                 res_img.src = "https://i.ibb.co/7t4gt23K/image.png"; 
                 res_img.style.display = 'block';
-                res_msg.innerText = "再接再厲！"; res_msg.style.display = 'block';
+                res_msg.innerText = "可惜沒中！"; res_msg.style.display = 'block';
             }
             document.getElementById('c_btn').style.display = 'block';
         }
     }
 
-    window._cl_ov = () => { _is_p = false; document.getElementById('ovl').style.display = 'none'; };
+    window._cl_ov = () => { 
+        document.getElementById('c_con').classList.remove('is-shaking');
+        _is_p = false; 
+        document.getElementById('ovl').style.display = 'none'; 
+    };
+
     window._admin_reset = () => { const p = prompt("ADMIN:"); if(p === "0000") { let n = []; for(let i=1; i<=total; i++) n.push(i); n.sort(() => Math.random() - 0.5); set(_p_ref, n.map(v => ({ grade: v, taken: false }))); remove(_h_ref); alert("洗牌完成"); } };
 </script>
 </body>
 </html>
-
