@@ -5,57 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>夢工廠刮刮樂商城</title>
     <style>
-        :root { --primary: #ff8fa3; --dark: #2c3e50; --gold: #d4a017; --bg: #f8f9fa; }
-        * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+        :root { --primary: #ff8fa3; --dark: #2c3e50; --bg: #f8f9fa; }
+        * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
         
-        .top-nav { width: 100%; background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; }
-        
-        /* 跑馬燈樣式 */
+        /* 導覽與跑馬燈 */
+        .top-nav { width: 100%; background: white; padding: 15px 0; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .marquee-container { width: 100%; background: #2c3e50; color: #ff8fa3; padding: 10px 0; overflow: hidden; white-space: nowrap; font-size: 0.85rem; font-weight: bold; border-bottom: 2px solid var(--primary); }
-        .marquee-content { display: inline-block; animation: marquee 25s linear infinite; }
+        .marquee-content { display: inline-block; animation: marquee 20s linear infinite; }
         .marquee-content span { margin-right: 50px; }
         @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
 
-        .user-card { background: linear-gradient(135deg, #2c3e50 0%, #000000 100%); width: 90%; max-width: 450px; border-radius: 20px; padding: 25px; margin: 20px 0; color: white; position: relative; overflow: hidden; }
+        /* 使用者卡片 */
+        .user-card { background: linear-gradient(135deg, #2c3e50 0%, #000000 100%); width: 90%; max-width: 450px; border-radius: 20px; padding: 25px; margin: 20px 10px; color: white; }
         .balance-amount { font-size: 2.2rem; font-weight: 800; color: var(--primary); }
+
+        /* 分類樣式 */
+        .category-scroll { display: flex; overflow-x: auto; padding: 10px 20px; gap: 10px; width: 100%; scrollbar-width: none; }
+        .category-scroll::-webkit-scrollbar { display: none; }
+        .cat-item { flex-shrink: 0; padding: 8px 18px; border-radius: 50px; background: white; border: 1px solid #eee; font-size: 0.85rem; cursor: pointer; transition: 0.3s; color: #7f8c8d; }
+        .cat-item.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* 商品列表 */
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 92%; max-width: 480px; padding: 10px 0; }
-        .p-card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; border: 1px solid #eee; }
-        .p-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .p-card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         .p-info { padding: 12px; text-align: center; }
-        .p-name { font-weight: bold; font-size: 0.95rem; }
-        .p-price { color: var(--primary); font-weight: 800; }
+        .p-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; }
+        .p-price { color: var(--primary); font-weight: 800; font-size: 0.85rem; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .m-box { background: white; padding: 40px 30px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
-        input { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #ddd; margin: 10px 0; text-align: center; font-size: 1.2rem; }
-        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
+        .m-box { background: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 320px; text-align: center; }
+        input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin: 10px 0; text-align: center; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 50px; font-weight: bold; width: 100%; }
     </style>
 </head>
 <body>
 
-<div class="top-nav"><div style="font-weight:900; letter-spacing:2px;">🌟 夢工廠刮刮樂商城 🌟</div></div>
-
-<div class="marquee-container" id="marqueeBox">
-    <div class="marquee-content" id="marqueeText">正在讀取全站最新獲獎動態...</div>
-</div>
+<div class="top-nav"><b>🌟 夢工廠刮刮樂商城 🌟</b></div>
+<div class="marquee-container"><div class="marquee-content" id="marqueeText">正在讀取全站最新獲獎動態...</div></div>
 
 <div class="user-card">
-    <div style="font-size: 0.8rem; opacity: 0.7;">我的餘額</div>
+    <div style="font-size: 0.8rem; opacity: 0.7;">我的點數</div>
     <div class="balance-amount">P <span id="uBalance">0</span></div>
-    <div style="margin-top:10px;"><span id="uName" style="background:rgba(255,255,255,0.1); padding:4px 12px; border-radius:50px; font-size:0.8rem;">ID: GUEST</span></div>
+    <div id="uName" style="margin-top:10px; font-size:0.8rem; opacity:0.6;">ID: GUEST</div>
+</div>
+
+<div class="category-scroll" id="catList">
+    <div class="cat-item active" onclick="filterCat('ALL')">全部</div>
 </div>
 
 <div class="product-grid" id="productGrid"></div>
 
 <div id="loginModal" class="modal">
     <div class="m-box">
-        <h2>MEMBER LOGIN</h2>
-        <p id="loginHint" style="color:#aaa;">請輸入您的通行代碼</p>
+        <h2 style="margin:0;">MEMBER LOGIN</h2>
+        <p id="loginHint" style="font-size:0.8rem; color:#888;">請輸入通行代碼</p>
         <input type="text" id="userCode" placeholder="ENTER CODE">
         <input type="password" id="userPass" placeholder="6-DIGIT PIN" style="display:none;" maxlength="6">
-        <button class="btn" id="loginBtn" onclick="handleLogin()">進入系統</button>
+        <button class="btn" onclick="handleLogin()">進入系統</button>
     </div>
 </div>
 
@@ -72,66 +81,78 @@
     const app = initializeApp(config);
     const db = getDatabase(app);
 
-    // 1. 
+    let allGames = {};
+    let currentCat = 'ALL';
+
+    // 
     function startMarquee() {
         onValue(ref(db, 'games'), (snap) => {
-            const games = snap.val();
             let wins = [];
-            if(games) {
-                for(let gid in games) {
-                    if(games[gid].history) {
-                        Object.values(games[gid].history).forEach(h => {
-                            if(h.w) wins.push(`🎉 恭喜玩家 ${h.u.slice(0,3)}*** 刮中【${gid}】的大獎！`);
+            const data = snap.val();
+            if(data) {
+                for(let gid in data) {
+                    if(data[gid].history) {
+                        Object.values(data[gid].history).forEach(h => {
+                            if(h.w) wins.push(`🎉 恭喜玩家 ${h.u.slice(0,3)}*** 刮中【${gid}】大獎！`);
                         });
                     }
                 }
             }
-            const box = document.getElementById('marqueeText');
-            box.innerHTML = wins.length > 0 ? wins.map(m => `<span>${m}</span>`).join('') : "✨ 祝各位玩家都能刮中頭獎！好運連連！";
-        });
-    }
-
-    // 2. 
-    function loadProducts() {
-        onValue(ref(db, 'gameSettings'), (snap) => {
-            const list = snap.val();
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = '';
-            for(let id in list) {
-                const g = list[id];
-                grid.innerHTML += `
-                    <div class="p-card" onclick="window.location.href='game.html?id=${id}'">
-                        <img src="${g.img}" class="p-img">
-                        <div class="p-info">
-                            <div class="p-name">${id}</div>
-                            <div class="p-price">$ ${g.price} / 抽</div>
-                        </div>
-                    </div>`;
-            }
+            document.getElementById('marqueeText').innerHTML = wins.length > 0 ? wins.map(m=>`<span>${m}</span>`).join('') : "✨ 祝各位玩家都能刮中頭獎！好運連連！";
         });
     }
 
     // 
-    let tempCode = "";
-    let currentStep = 1;
+    function initStore() {
+        onValue(ref(db, 'gameSettings'), (snap) => {
+            allGames = snap.val() || {};
+            renderCats();
+            renderGrid();
+        });
+    }
+
+    function renderCats() {
+        const cats = new Set(['ALL']);
+        Object.values(allGames).forEach(g => { if(g.category) cats.add(g.category); });
+        document.getElementById('catList').innerHTML = Array.from(cats).map(c => `
+            <div class="cat-item ${currentCat===c?'active':''}" onclick="filterCat('${c}')">${c==='ALL'?'全部':c}</div>
+        `).join('');
+    }
+
+    window.filterCat = (c) => { currentCat = c; renderCats(); renderGrid(); };
+
+    function renderGrid() {
+        const grid = document.getElementById('productGrid');
+        grid.innerHTML = '';
+        for(let id in allGames) {
+            const g = allGames[id];
+            if(currentCat !== 'ALL' && g.category !== currentCat) continue;
+            grid.innerHTML += `
+                <div class="p-card" onclick="location.href='game.html?id=${id}'">
+                    <img src="${g.img}" class="p-img">
+                    <div class="p-info">
+                        <div class="p-name">${id}</div>
+                        <div class="p-price">$ ${g.price} / 抽</div>
+                    </div>
+                </div>`;
+        }
+    }
+
+    // 
+    let tempCode = ""; let step = 1;
     window.handleLogin = async () => {
-        const cIn = document.getElementById('userCode');
-        const pIn = document.getElementById('userPass');
-        if(currentStep === 1) {
+        const cIn = document.getElementById('userCode'); const pIn = document.getElementById('userPass');
+        if(step === 1) {
             tempCode = cIn.value.trim().toUpperCase();
             const s = await get(ref(db, `users/${tempCode}`));
-            if(s.exists()) {
-                cIn.style.display="none"; pIn.style.display="block";
-                currentStep = 2; document.getElementById('loginHint').innerText = "輸入6位數密碼";
-            } else { alert("代碼錯誤"); }
+            if(s.exists()) { cIn.style.display="none"; pIn.style.display="block"; step=2; }
+            else alert("代碼錯誤");
         } else {
-            const pin = pIn.value.trim();
-            const s = await get(ref(db, `users/${tempCode}`));
+            const pin = pIn.value.trim(); const s = await get(ref(db, `users/${tempCode}`));
             if(!s.val().pin || s.val().pin === pin) {
                 if(!s.val().pin) await update(ref(db, `users/${tempCode}`), {pin});
-                localStorage.setItem('myScratchCode', tempCode);
-                location.reload();
-            } else { alert("密碼錯誤"); }
+                localStorage.setItem('myScratchCode', tempCode); location.reload();
+            } else alert("密碼錯誤");
         }
     };
 
@@ -140,8 +161,8 @@
         document.getElementById('loginModal').style.display='none';
         document.getElementById('uName').innerText = `ID: ${saved}`;
         onValue(ref(db, `users/${saved}/balance`), s => document.getElementById('uBalance').innerText = (s.val()||0).toLocaleString());
-        loadProducts(); startMarquee();
-    } else { document.getElementById('loginModal').style.display='flex'; }
+        initStore(); startMarquee();
+    } else document.getElementById('loginModal').style.display='flex';
 </script>
 </body>
 </html>
