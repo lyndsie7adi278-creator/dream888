@@ -2,115 +2,55 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>夢工廠控制台 | 旗艦監控版</title>
+    <title>夢工廠控制台 | 旗艦版</title>
     <style>
-        :root { --primary: #ff8fa3; --accent: #7dd3fc; --bg: #0b0f1a; --card: #161e2d; --text: #f1f5f9; }
-        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: none; } /* 密碼驗證前隱藏 */
-        
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; padding: 40px 0; background: linear-gradient(180deg, #1e293b 0%, transparent 100%); border-radius: 0 0 40px 40px; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .header h1 { margin: 0; font-size: 1.8rem; letter-spacing: 4px; color: var(--primary); text-shadow: 0 0 20px rgba(255,143,163,0.3); }
-
-        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
-
-        .card { background: var(--card); padding: 25px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); height: fit-content; }
-        h3 { margin-top: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; color: var(--accent); }
-        
-        label { font-size: 0.75rem; color: #64748b; margin-top: 10px; display: block; }
-        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: 1px solid #2d3748; background: #0b0f1a; color: white; font-size: 0.95rem; box-sizing: border-box; transition: 0.3s; }
-        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px rgba(255,143,163,0.2); }
-        
-        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; transition: 0.3s; }
-        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
-        .btn-secondary { background: #334155; margin-top: 10px; }
-
-        /* 商品監控清單樣式 */
-        .monitor-list { margin-top: 15px; display: flex; flex-direction: column; gap: 12px; }
-        .monitor-item { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
-        .monitor-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
-        .progress-bar { height: 6px; background: #1e293b; border-radius: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary); border-radius: 10px; transition: width 1s ease; }
-        
-        .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 6px; background: var(--primary); color: white; }
-        .badge-blue { background: #3b82f6; }
+        :root { --p: #ff8fa3; --bg: #0b0f1a; --c: #161e2d; }
+        body { font-family: sans-serif; background: var(--bg); color: #f1f5f9; padding: 20px; display: none; }
+        .card { background: var(--c); padding: 25px; border-radius: 24px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        h3 { color: var(--p); border-left: 4px solid var(--p); padding-left: 10px; margin-top: 0; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid #2d3748; background: #0b0f1a; color: white; box-sizing: border-box; }
+        .btn { background: var(--p); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: bold; }
+        .monitor-item { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        .bar { height: 6px; background: #1e293b; border-radius: 10px; margin-top: 8px; overflow: hidden; }
+        .fill { height: 100%; background: var(--p); transition: 0.5s; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>DREAM FACTORY CMS</h1>
-        <p style="font-size: 0.8rem; color: #64748b;">旗艦級數據管理系統 v3.0</p>
+<div style="max-width: 800px; margin: 0 auto;">
+    <h1 style="text-align:center; color:var(--p);">ADMIN SYSTEM</h1>
+
+    <div class="card">
+        <h3>📊 商品即時監控</h3>
+        <div id="monitor">正在連線...</div>
     </div>
 
-    <div class="grid-layout">
-        <div class="column">
-            <div class="card" style="margin-bottom: 20px;">
-                <h3>📊 商品抽數監控</h3>
-                <div id="monitorContainer" class="monitor-list">
-                    <p style="font-size:0.8rem; color:#64748b;">正在連接數據中心...</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>👤 會員帳號管理</h3>
-                <input type="text" id="targetId" placeholder="輸入會員代碼" oninput="this.value = this.value.toUpperCase()">
-                <button class="btn btn-secondary" onclick="queryUser()">🔍 查詢 / 快速建號</button>
-                
-                <div id="userResult" style="display:none; margin-top:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:15px;">
-                    <div style="font-size:0.85rem; margin-bottom:10px;">目前餘額：<span id="uBalDisplay" style="color:var(--primary); font-weight:bold; font-size:1.2rem;">0</span></div>
-                    <input type="text" id="newBal" placeholder="增減點數 (如 +500 或 1000)">
-                    <button class="btn" onclick="saveUserBal()">更新餘額</button>
-                    <button class="btn btn-secondary" onclick="resetUserPin()" style="background:#ef4444; margin-top:8px;">清除 PIN 碼</button>
-                </div>
-            </div>
+    <div class="card">
+        <h3>👤 會員與點數</h3>
+        <input type="text" id="uId" placeholder="會員代碼" oninput="this.value=this.value.toUpperCase()">
+        <button class="btn" style="background:#4a5568;" onclick="checkUser()">查詢 / 建立</button>
+        <div id="uBox" style="display:none; margin-top:15px;">
+            <p>目前點數: <b id="uCur" style="color:var(--p)">0</b></p>
+            <input type="text" id="uAmt" placeholder="增減點數 (如 +500)">
+            <button class="btn" onclick="updatePoints()">確認更新</button>
         </div>
+    </div>
 
-        <div class="column">
-            <div class="card">
-                <h3>📦 遊戲上架設定</h3>
-                <label>遊戲 ID (不可重複)</label>
-                <input type="text" id="gId" placeholder="例如: BOSS_01">
-                
-                <label>分類 (自動生成選單)</label>
-                <input type="text" id="gCat" placeholder="例如: 公仔、點數">
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <div><label>單抽價格</label><input type="number" id="gPrice" placeholder="100"></div>
-                    <div><label>總籤數</label><input type="number" id="gTotal" placeholder="80"></div>
-                </div>
-
-                <label>主圖片網址</label>
-                <input type="text" id="gImg" placeholder="https://...">
-
-                <label>多階級獎項 (JSON 格式)</label>
-                <textarea id="gPrizes">[{"num":8, "name":"頭獎", "img":""}]</textarea>
-
-                <button class="btn" onclick="publishGame()">🚀 發佈商品並洗牌</button>
-            </div>
-        </div>
+    <div class="card">
+        <h3>📦 遊戲發佈 (支援多獎項)</h3>
+        <input type="text" id="gId" placeholder="遊戲 ID">
+        <input type="text" id="gCat" placeholder="分類">
+        <input type="number" id="gPrice" placeholder="價格">
+        <input type="number" id="gTotal" placeholder="總籤數">
+        <input type="text" id="gImg" placeholder="主要圖片網址">
+        <textarea id="gPrizes" placeholder="獎項 JSON">[{"num":8, "name":"頭獎", "img":""}]</textarea>
+        <button class="btn" onclick="publish()">發佈並自動洗牌</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, update, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    // --- 1. 修改後台管理密碼 ---
-    const ADMIN_KEY = "8888"; // 👈 修改這裡
-
-    window.onload = () => {
-        const pass = prompt("DREAM FACTORY ADMIN\n請輸入驗證金鑰：");
-        if(pass !== ADMIN_KEY) {
-            alert("驗證失敗");
-            window.location.href = "index.html";
-        } else {
-            document.body.style.display = "block";
-            initMonitor(); // 啟動監控
-        }
-    };
 
     const config = { 
         apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
@@ -121,90 +61,53 @@
     const app = initializeApp(config);
     const db = getDatabase(app);
 
-    // --- 商品監控功能 ---
-    function initMonitor() {
-        onValue(ref(db, 'gameSettings'), async (snap) => {
-            const settings = snap.val();
-            const monitorContainer = document.getElementById('monitorContainer');
-            monitorContainer.innerHTML = '';
+    // 登入驗證
+    window.onload = () => {
+        const p = prompt("請輸入管理密碼:");
+        if(p === "8888") { 
+            document.body.style.display="block";
+            onValue(ref(db, 'gameSettings'), async s => {
+                const list = s.val(); const box = document.getElementById('monitor'); box.innerHTML='';
+                for(let id in list) {
+                    const pSnap = await get(ref(db, `games/${id}/pool`));
+                    const pool = pSnap.val() || [];
+                    const rem = pool.filter(x => !x.taken).length;
+                    const pct = Math.floor(((list[id].total - rem) / list[id].total) * 100);
+                    box.innerHTML += `<div class="monitor-item"><b>${id}</b> <small>(${list[id].category})</small> | ${list[id].total-rem}/${list[id].total} 抽<div class="bar"><div class="fill" style="width:${pct}%"></div></div></div>`;
+                }
+            });
+        } else { location.href="index.html"; }
+    };
 
-            for(let id in settings) {
-                const s = settings[id];
-                const poolSnap = await get(ref(db, `games/${id}/pool`));
-                const pool = poolSnap.val() || [];
-                const remain = pool.filter(p => !p.taken).length;
-                const total = s.total || pool.length;
-                const percent = Math.floor(((total - remain) / total) * 100);
-
-                monitorContainer.innerHTML += `
-                    <div class="monitor-item">
-                        <div class="monitor-info">
-                            <b>${id} <span class="badge-blue badge">${s.category}</span></b>
-                            <span>${total - remain} / ${total} 抽</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${percent}%"></div>
-                        </div>
-                        <div style="font-size:0.7rem; color:#64748b; margin-top:8px;">
-                            剩餘籤數：${remain} | 單價：P ${s.price}
-                        </div>
-                    </div>
-                `;
-            }
-        });
-    }
-
-    // --- 會員管理功能 ---
-    window.queryUser = async () => {
-        const id = document.getElementById('targetId').value.trim();
-        if(!id) return;
+    window.checkUser = async () => {
+        const id = document.getElementById('uId').value.trim();
         const s = await get(ref(db, `users/${id}`));
-        const resDiv = document.getElementById('userResult');
-        resDiv.style.display = "block";
-        if(s.exists()){
-            document.getElementById('uBalDisplay').innerText = s.val().balance.toLocaleString();
-        } else {
-            if(confirm("查無此人，是否直接新建會員帳號？")){
-                await set(ref(db, `users/${id}`), { balance: 0, pin: "" });
-                queryUser();
-            }
-        }
+        document.getElementById('uBox').style.display="block";
+        if(s.exists()) document.getElementById('uCur').innerText = s.val().balance;
+        else if(confirm("建立新會員？")) { await set(ref(db, `users/${id}`), {balance:0, pin:""}); checkUser(); }
     };
 
-    window.saveUserBal = async () => {
-        const id = document.getElementById('targetId').value.trim();
-        const input = document.getElementById('newBal').value.trim();
+    window.updatePoints = async () => {
+        const id = document.getElementById('uId').value.trim();
+        const amt = document.getElementById('uAmt').value.trim();
         const s = await get(ref(db, `users/${id}`));
-        let cur = s.val().balance || 0;
-        let final = input.startsWith('+') ? cur + parseInt(input.slice(1)) : 
-                    input.startsWith('-') ? cur - parseInt(input.slice(1)) : parseInt(input);
-        await update(ref(db, `users/${id}`), { balance: final });
-        alert("金額已更新");
-        queryUser();
+        let cur = s.val().balance;
+        let fin = amt.startsWith('+') ? cur + parseInt(amt.slice(1)) : amt.startsWith('-') ? cur - parseInt(amt.slice(1)) : parseInt(amt);
+        await update(ref(db, `users/${id}`), {balance: fin}); alert("完成"); checkUser();
     };
 
-    window.resetUserPin = async () => {
-        const id = document.getElementById('targetId').value.trim();
-        if(confirm("確定重置 PIN 碼？")) {
-            await update(ref(db, `users/${id}`), { pin: "" });
-            alert("已重置");
-        }
-    };
-
-    // --- 遊戲發佈功能 ---
-    window.publishGame = async () => {
+    window.publish = async () => {
         const id = document.getElementById('gId').value.trim();
-        const category = document.getElementById('gCat').value.trim() || "未分類";
+        const category = document.getElementById('gCat').value.trim();
         const price = parseInt(document.getElementById('gPrice').value);
         const total = parseInt(document.getElementById('gTotal').value);
-        const img = document.getElementById('gImg').value.trim();
+        const img = document.getElementById('gImg').value;
         const prizes = JSON.parse(document.getElementById('gPrizes').value);
-
-        await set(ref(db, `gameSettings/${id}`), { price, total, prizes, img, category });
-        let pool = Array.from({length: total}, (_, i) => ({ grade: i+1, taken: false }));
+        await set(ref(db, `gameSettings/${id}`), {price, total, img, category, prizes});
+        let pool = Array.from({length: total}, (_, i) => ({grade: i+1, taken: false}));
         pool.sort(() => Math.random() - 0.5);
         await set(ref(db, `games/${id}/pool`), pool);
-        alert("遊戲發佈成功並已洗牌！");
+        alert("發佈並洗牌成功");
     };
 </script>
 </body>
