@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DREAM CMS | 權限與洗牌中控</title>
+    <title>DREAM CMS | 商品監控與洗牌系統</title>
     <style>
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; --border: rgba(255,184,0,0.3); }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: none; }
@@ -14,80 +14,65 @@
         .nav-link { padding: 12px 15px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; color: #666; transition: 0.3s; font-size: 0.9rem; font-weight: bold; }
         .nav-link:hover, .nav-link.active { background: rgba(255,184,0,0.1); color: var(--p); }
 
-        .main { margin-left: 220px; padding: 40px; box-sizing: border-box; }
+        .main { margin-left: 220px; padding: 40px; box-sizing: border-box; min-height: 100vh; }
         .page { display: none; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* 卡片設計 */
-        .card { background: var(--card); border-radius: 15px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 25px; position: relative; }
+        /* 商品卡片設計 */
+        .card { background: var(--card); border-radius: 15px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 25px; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
         .title { font-size: 1.1rem; color: var(--p); margin-bottom: 20px; font-weight: bold; border-bottom: 1px solid #222; padding-bottom: 10px; }
         
-        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
         
-        /* 按鈕樣式 */
-        .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; width: 100%; margin-bottom: 10px; }
+        .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.3s; }
         .btn:hover { background: #fff; box-shadow: 0 0 15px var(--p); }
-        .btn-small { padding: 5px 10px; font-size: 0.7rem; width: auto; margin: 0 2px; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-shuffle { background: #2ecc71; color: white; }
+        .btn-shuffle { background: #2ecc71; color: white; margin-top: 10px; }
+        .btn-danger { background: #ef4444; color: white; margin-top: 5px; }
 
-        /* 表格樣式 */
+        /* 會員表格 */
         table { width: 100%; border-collapse: collapse; }
         th { color: #888; font-size: 0.8rem; padding: 12px; border-bottom: 2px solid #222; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 0.9rem; }
-        .bal-txt { color: var(--p); font-weight: bold; }
-
-        /* 監控狀態標籤 */
-        .status-tag { position: absolute; top: 20px; right: 20px; font-size: 0.7rem; color: var(--p); opacity: 0.8; }
+        
+        .stat-badge { font-size: 0.75rem; color: var(--p); background: rgba(255,184,0,0.1); padding: 4px 10px; border-radius: 5px; float: right; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <div class="logo">DREAM ADMIN</div>
-    <div class="nav-link active" onclick="showPage('mon')">📊 監控與洗牌</div>
+    <div class="nav-link active" onclick="showPage('mon')">📊 商品監控與洗牌</div>
     <div class="nav-link" onclick="showPage('game')">📦 上架新商品</div>
-    <div class="nav-link" onclick="showPage('user')">👤 全體會員</div>
+    <div class="nav-link" onclick="showPage('user')">👤 全體會員名單</div>
 </div>
 
 <div class="main">
     <div id="mon" class="page active">
-        <div class="title">即時商品監控 (點擊洗牌可重新打亂餘籤)</div>
-        <div id="monList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
-            <p style="color:#444;">正在讀取資料庫...</p>
+        <div class="title">即時商品狀態 (支援餘籤重新洗牌)</div>
+        <div id="monList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            <p style="color: #666;">掃描資料庫中...</p>
         </div>
     </div>
 
     <div id="game" class="page">
-        <div class="title">上架新商品</div>
+        <div class="title">發佈新商品</div>
         <div class="card" style="max-width: 600px;">
-            <input type="text" id="gId" placeholder="遊戲 ID (如: PS5_01)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="number" id="gTotal" placeholder="總籤數">
-                <input type="number" id="gPrice" placeholder="單抽點數">
-            </div>
-            <input type="text" id="gImg" placeholder="商品圖 URL">
-            <label style="color:var(--p); font-size:0.8rem;">中獎號碼 JSON</label>
-            <textarea id="gPrizes" rows="2">[{"num":8, "name":"頭獎"}]</textarea>
-            <button class="btn" onclick="publishGame()">確認發佈</button>
+            <input type="text" id="gId" placeholder="遊戲 ID">
+            <input type="number" id="gTotal" placeholder="總籤數">
+            <input type="number" id="gPrice" placeholder="單抽價格">
+            <input type="text" id="gImg" placeholder="主要圖片 URL">
+            <textarea id="gPrizes" rows="2" placeholder='中獎 JSON 如: [{"num":8, "name":"頭獎"}]'></textarea>
+            <button class="btn" onclick="publishGame()">確認發佈商品</button>
         </div>
     </div>
 
     <div id="user" class="page">
-        <div class="title">全體會員清單 (實時連線)</div>
+        <div class="title">會員資產管理</div>
         <div class="card">
             <table>
-                <thead>
-                    <tr>
-                        <th>會員 UID</th>
-                        <th>餘額 (P)</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="userTableBody">
-                    <tr><td colspan="3" style="text-align:center; color:#444;">正在強制同步會員數據...</td></tr>
-                </tbody>
+                <thead><tr><th>會員 ID</th><th>點數餘額</th><th>操作</th></tr></thead>
+                <tbody id="userTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -96,13 +81,6 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, update, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    const MASTER_KEY = "8888";
-    window.onload = () => {
-        const p = prompt("ADMIN PASS:");
-        if(p === MASTER_KEY) { document.body.style.display = "block"; startSync(); }
-        else location.href = "index.html";
-    };
 
     const config = { 
         apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
@@ -113,6 +91,13 @@
     const app = initializeApp(config);
     const db = getDatabase(app);
 
+    const MASTER_KEY = "8888";
+    window.onload = () => {
+        const p = prompt("ADMIN PASS:");
+        if(p === MASTER_KEY) { document.body.style.display = "block"; startSync(); }
+        else location.href = "index.html";
+    };
+
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
@@ -120,117 +105,92 @@
         event.currentTarget.classList.add('active');
     };
 
-    // --- 實時監聽 ---
     function startSync() {
-        // 1. 商品與洗牌監控
+        // 🔴 強化版商品監控 (加入錯誤跳過機制)
         onValue(ref(db, 'gameSettings'), async s => {
-            const data = s.val(); const list = document.getElementById('monList'); list.innerHTML = '';
-            if(!data) return list.innerHTML = '尚無商品';
+            const list = document.getElementById('monList');
+            const data = s.val();
+            if(!data) return list.innerHTML = "目前無商品";
             
+            list.innerHTML = '';
             for(let id in data) {
-                const poolSnap = await get(ref(db, `games/${id}/pool`));
-                const pool = poolSnap.val() || [];
-                const remain = pool.filter(p => !p.taken).length;
-                
-                list.innerHTML += `
-                    <div class="card">
-                        <div class="status-tag">剩餘 ${remain} / ${data[id].total}</div>
-                        <b style="font-size:1.2rem;">${id}</b>
-                        <div style="margin: 15px 0;">
-                            <button class="btn btn-small btn-shuffle" onclick="shuffleExisting('${id}')">🎲 重新洗牌</button>
-                            <button class="btn btn-small" onclick="deleteGame('${id}')">🗑 刪除</button>
-                        </div>
-                        <div style="font-size:0.75rem; color:#666;">價格: ${data[id].price} P | 中獎號碼: ${JSON.stringify(data[id].prizes.map(p=>p.num))}</div>
-                    </div>`;
+                try {
+                    const poolSnap = await get(ref(db, `games/${id}/pool`));
+                    const pool = poolSnap.val() || [];
+                    const remain = pool.filter(p => !p.taken).length;
+                    
+                    list.innerHTML += `
+                        <div class="card">
+                            <span class="stat-badge">剩餘 ${remain} / ${data[id].total}</span>
+                            <b style="font-size:1.2rem;">${id}</b>
+                            <button class="btn btn-shuffle" onclick="shuffleRemain('${id}')">🎲 重新洗牌餘籤</button>
+                            <button class="btn btn-danger" onclick="deleteGame('${id}')">🗑 刪除商品</button>
+                        </div>`;
+                } catch(e) { console.error(`讀取商品 ${id} 出錯:`, e); }
             }
         });
 
-        // 2. 會員讀取 (採用 root 監聽 + 強制更新)
-        const userRef = ref(db, 'users');
-        onValue(userRef, (snapshot) => {
+        // 會員監聽
+        onValue(ref(db, 'users'), s => {
             const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = '';
-            const users = snapshot.val();
-            
-            console.log("偵測到會員資料:", users); // F12 檢查是否有印出
-
-            if (!users) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">資料庫中無任何會員。</td></tr>';
-                return;
-            }
-
-            Object.entries(users).forEach(([uid, userData]) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+            const users = s.val();
+            if(!users) return;
+            Object.keys(users).forEach(uid => {
+                tbody.innerHTML += `<tr>
                     <td><b>${uid}</b></td>
-                    <td class="bal-txt">${(userData.balance || 0).toLocaleString()}</td>
-                    <td>
-                        <button class="btn btn-small" onclick="adjustBal('${uid}')">充值</button>
-                        <button class="btn btn-small btn-danger" onclick="delUser('${uid}')">刪除</button>
-                    </td>
-                `;
-                tbody.innerHTML += tr.innerHTML;
+                    <td style="color:#ffb800; font-weight:bold;">${(users[uid].balance||0).toLocaleString()}</td>
+                    <td><button class="btn" style="width:auto; padding:5px 10px; font-size:0.7rem;" onclick="addBal('${uid}')">充值</button></td>
+                </tr>`;
             });
-        }, (error) => {
-            console.error("讀取會員失敗:", error);
-            document.getElementById('userTableBody').innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">讀取失敗，請檢查資料庫 Rules。</td></tr>';
         });
     }
 
-    // --- 🎲 核心洗牌功能 (不影響已抽出的張數) ---
-    window.shuffleExisting = async (id) => {
-        if(!confirm(`確定要重新洗牌「${id}」剩下的張數嗎？`)) return;
-        
+    // 🔴 核心功能：重新洗牌剩下的籤
+    window.shuffleRemain = async (id) => {
+        if(!confirm(`確定要打亂「${id}」目前剩餘的籤嗎？已抽出的位置不會變動。`)) return;
         const snap = await get(ref(db, `games/${id}/pool`));
         let pool = snap.val() || [];
         
-        // 分離「已抽走」與「還沒抽」的
-        let takenOnes = pool.filter(p => p.taken);
-        let remainOnes = pool.filter(p => !p.taken);
-        
-        // 只把還沒抽走的重新打亂 (Fisher-Yates 洗牌)
-        for (let i = remainOnes.length - 1; i > 0; i--) {
+        let taken = pool.filter(p => p.taken); // 已售出
+        let remain = pool.filter(p => !p.taken); // 未售出
+
+        // 洗牌演算法 (Fisher-Yates)
+        for (let i = remain.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [remainOnes[i], remainOnes[j]] = [remainOnes[j], remainOnes[i]];
+            [remain[i], remain[j]] = [remain[j], remain[i]];
         }
         
-        // 合併回去 (已抽走的在前，未抽走的在後)
-        const newPool = [...takenOnes, ...remainOnes];
-        await set(ref(db, `games/${id}/pool`), newPool);
-        alert("洗牌完成！已抽出的位置不變，未抽出的號碼已重新亂序。");
+        await set(ref(db, `games/${id}/pool`), [...taken, ...remain]);
+        alert("餘籤洗牌成功！");
     };
 
-    // --- 商品管理 ---
     window.publishGame = async () => {
         const id = document.getElementById('gId').value.trim();
         const total = parseInt(document.getElementById('gTotal').value);
-        const prizes = JSON.parse(document.getElementById('gPrizes').value);
-        if(!id || !total) return alert("資訊不全");
-
+        if(!id || !total) return alert("必填 ID 與總數");
+        
         let pool = Array.from({length: total}, (_, i) => ({ grade: i + 1, taken: false }));
         pool.sort(() => Math.random() - 0.5);
 
         await set(ref(db, `gameSettings/${id}`), {
             total, price: parseInt(document.getElementById('gPrice').value),
-            img: document.getElementById('gImg').value, prizes: prizes
+            img: document.getElementById('gImg').value,
+            prizes: JSON.parse(document.getElementById('gPrizes').value)
         });
         await set(ref(db, `games/${id}/pool`), pool);
-        alert("發佈成功");
+        alert("商品上架成功！");
     };
 
-    // --- 會員操作 ---
-    window.adjustBal = async (uid) => {
-        const amt = prompt(`調整 ${uid} 餘額 (+500, -200 或直接數字):`);
+    window.addBal = async (uid) => {
+        const amt = prompt(`幫 ${uid} 調整餘額 (+ 或 -):`);
         if(!amt) return;
-        const s = await get(ref(db, `users/${uid}/balance`));
-        let cur = s.val() || 0;
+        const cur = (await get(ref(db, `users/${uid}/balance`))).val() || 0;
         let fin = amt.startsWith('+') ? cur + parseInt(amt.slice(1)) : amt.startsWith('-') ? cur - parseInt(amt.slice(1)) : parseInt(amt);
         await update(ref(db, `users/${uid}`), { balance: fin });
     };
 
-    window.delUser = async (uid) => { if(confirm("刪除會員?")) remove(ref(db, `users/${uid}`)); };
-    window.deleteGame = async (id) => { if(confirm("刪除遊戲?")) { remove(ref(db, `gameSettings/${id}`)); remove(ref(db, `games/${id}`)); }};
-
+    window.deleteGame = async (id) => { if(confirm("刪除商品？")) { remove(ref(db, `gameSettings/${id}`)); remove(ref(db, `games/${id}`)); } };
 </script>
 </body>
 </html>
