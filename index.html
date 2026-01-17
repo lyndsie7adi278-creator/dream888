@@ -6,18 +6,13 @@
     <title>夢工廠刮刮樂商城</title>
     <style>
         :root { --primary: #ff8fa3; --dark: #2c3e50; --gold: #d4a017; --bg: #f8f9fa; }
-        
-        /* 🔴 核心安全鎖定：禁止文字選取與反白 */
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; }
-        
         body { 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
             background: var(--bg); margin: 0; padding: 0; 
             display: flex; flex-direction: column; align-items: center;
             color: var(--dark); overflow-x: hidden;
         }
-
-        /* 頂部導航與流光餘額板 */
         .top-nav { width: 100%; background: white; padding: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
         .user-card {
             background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
@@ -32,14 +27,10 @@
             animation: rotate 10s linear infinite;
         }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
         .balance-amount { font-size: 2.2rem; font-weight: 800; margin: 10px 0; color: var(--primary); text-shadow: 0 0 15px rgba(255,143,163,0.5); }
         .user-id { font-family: monospace; font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 50px; }
-
-        /* 商品區 */
         .section-title { width: 90%; max-width: 450px; font-weight: bold; margin: 10px 0; display: flex; align-items: center; }
         .section-title::before { content: ""; width: 4px; height: 18px; background: var(--primary); margin-right: 8px; border-radius: 2px; }
-
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 92%; max-width: 480px; padding: 10px 0; }
         .p-card { 
             background: white; border-radius: 18px; overflow: hidden; 
@@ -53,7 +44,6 @@
         .p-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; color: #333; }
         .p-price { color: var(--primary); font-weight: 800; font-size: 0.85rem; }
 
-        /* 🛡️ 系統說明區塊 (已優化內容以避免爭議) */
         .trust-panel {
             width: 90%; max-width: 450px; background: white;
             border-radius: 20px; padding: 25px; margin: 30px 0;
@@ -62,19 +52,17 @@
         }
         .trust-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
         .trust-header span { font-weight: 900; letter-spacing: 1px; color: #7f8c8d; }
-        
         .trust-item { display: flex; margin-bottom: 15px; align-items: flex-start; }
         .trust-icon { background: #f8f9fa; color: #95a5a6; width: 32px; height: 32px; border-radius: 8px; 
                       display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; font-size: 0.8rem; border: 1px solid #eee; }
         .trust-content b { display: block; font-size: 0.9rem; margin-bottom: 2px; color: #34495e; }
         .trust-content p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.4; }
 
-        /* 登入彈窗 */
+        /* 登入彈窗優化 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .m-box { background: white; padding: 40px 30px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
-        input { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #ddd; margin: 20px 0; text-align: center; font-size: 1.2rem; outline: none; box-sizing: border-box; }
+        input { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #ddd; margin: 10px 0; text-align: center; font-size: 1.2rem; outline: none; box-sizing: border-box; }
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
-
         .footer-info { margin: 20px 0 40px 0; font-size: 0.7rem; color: #bbb; text-align: center; line-height: 1.8; }
     </style>
 </head>
@@ -83,9 +71,14 @@
 <div id="loginModal" class="modal">
     <div class="m-box">
         <h2 style="margin:0; color:var(--dark);">MEMBER LOGIN</h2>
-        <p style="color:#aaa; font-size:0.8rem;">請輸入您的專屬抽獎代碼</p>
+        <p id="loginHint" style="color:#aaa; font-size:0.8rem; margin: 10px 0;">請輸入您的專屬抽獎代碼</p>
+        
         <input type="text" id="userCode" placeholder="ENTER CODE">
-        <button class="btn" onclick="login()">進入系統</button>
+        
+        <input type="password" id="userPass" placeholder="6-DIGIT PIN" 
+               style="display:none;" maxlength="6" inputmode="numeric">
+        
+        <button class="btn" id="loginBtn" onclick="handleLogin()">繼續</button>
     </div>
 </div>
 
@@ -122,32 +115,18 @@
 </div>
 
 <div class="trust-panel">
-    <div class="trust-header">
-        <span>系統運作狀態說明</span>
-    </div>
-    
+    <div class="trust-header"><span>系統運作狀態說明</span></div>
     <div class="trust-item">
         <div class="trust-icon">✓</div>
-        <div class="trust-content">
-            <b>雲端實時數據更新</b>
-            <p>系統連結 Firebase Cloud 數據庫，確保點數異動與操作纪录均即時儲存於雲端。</p>
-        </div>
+        <div class="trust-content"><b>雲端實時數據更新</b><p>系統連結 Firebase Cloud 數據庫，確保點數異動與操作紀錄均即時儲存。</p></div>
     </div>
-
     <div class="trust-item">
         <div class="trust-icon">✓</div>
-        <div class="trust-content">
-            <b>專屬代碼授權存取</b>
-            <p>僅限持有有效通行代碼之會員進入，確保個人帳戶數據之隱私與安全性。</p>
-        </div>
+        <div class="trust-content"><b>雙重安全存取驗證</b><p>採用「專屬代碼」配合「自訂 PIN 碼」機制，確保帳戶數據之隱私與安全性。</p></div>
     </div>
-
     <div class="trust-item">
         <div class="trust-icon">✓</div>
-        <div class="trust-content">
-            <b>自動化判定系統</b>
-            <p>抽獎結果與結算由系統程序依據後台數據自動執行，數據處理過程具備高度一致性。</p>
-        </div>
+        <div class="trust-content"><b>自動化判定系統</b><p>抽獎結果依據後台數據自動執行，確保數據處理之一致性。</p></div>
     </div>
 </div>
 
@@ -159,13 +138,10 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 🔴 鎖定 F12 與原始碼快捷鍵
     document.onkeydown = function(e) {
-        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
-            return false;
-        }
+        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
     };
 
     const config = { 
@@ -175,12 +151,72 @@
         projectId: "dream-169dc",
         storageBucket: "dream-169dc.firebasestorage.app",
         messagingSenderId: "214137228622",
-        appId: "1:214137228622:web:84d14bad85d865ee94e21f",
-        measurementId: "G-7YD4VSW7CZ"
+        appId: "1:214137228622:web:84d14bad85d865ee94e21f"
     };
     
     const app = initializeApp(config);
     const db = getDatabase(app);
+
+    let currentStep = 1; 
+    let tempCode = "";
+
+    window.handleLogin = async () => {
+        const cInput = document.getElementById('userCode');
+        const pInput = document.getElementById('userPass');
+        const hint = document.getElementById('loginHint');
+        const btn = document.getElementById('loginBtn');
+
+        if (currentStep === 1) {
+            tempCode = cInput.value.trim().toUpperCase();
+            if (!tempCode) return;
+
+            const s = await get(ref(db, `users/${tempCode}`));
+            if (s.exists()) {
+                const userData = s.val();
+                cInput.style.display = "none";
+                pInput.style.display = "block";
+                currentStep = 2;
+
+                if (!userData.pin) {
+                    hint.innerText = "偵測到初次登入，請設定 6 位數密碼";
+                    btn.innerText = "設定密碼並進入";
+                } else {
+                    hint.innerText = "請輸入您的 6 位數密碼";
+                    btn.innerText = "驗證進入";
+                }
+            } else {
+                alert("驗證失敗：無效的通行碼");
+            }
+        } else {
+            const pin = pInput.value.trim();
+            if (pin.length !== 6 || isNaN(pin)) {
+                alert("請輸入 6 位數字密碼");
+                return;
+            }
+
+            const s = await get(ref(db, `users/${tempCode}`));
+            const userData = s.val();
+
+            if (!userData.pin) {
+                // 初次設定密碼
+                await update(ref(db, `users/${tempCode}`), { pin: pin });
+                saveAndReload(tempCode);
+            } else {
+                // 驗證密碼
+                if (userData.pin === pin) {
+                    saveAndReload(tempCode);
+                } else {
+                    alert("密碼錯誤，請重新輸入");
+                    pInput.value = "";
+                }
+            }
+        }
+    };
+
+    function saveAndReload(c) {
+        localStorage.setItem('myScratchCode', c);
+        location.reload();
+    }
 
     const code = localStorage.getItem('myScratchCode');
     if(code) {
@@ -189,17 +225,11 @@
         onValue(ref(db, `users/${code}/balance`), s => {
             document.getElementById('uBalance').innerText = (s.val() || 0).toLocaleString();
         });
-    } else { document.getElementById('loginModal').style.display = 'flex'; }
+    } else { 
+        document.getElementById('loginModal').style.display = 'flex'; 
+    }
 
-    window.login = async () => {
-        const c = document.getElementById('userCode').value.trim().toUpperCase();
-        if(!c) return;
-        const s = await get(ref(db, `users/${c}`));
-        if(s.exists()){ localStorage.setItem('myScratchCode', c); location.reload(); }
-        else alert("驗證失敗：無效的通行碼");
-    };
     window.logout = () => { localStorage.removeItem('myScratchCode'); location.reload(); };
-
     window.play = (id, price, total, safe, win, img) => {
         window.location.href = `game.html?id=${id}&price=${price}&total=${total}&safe=${safe}&win=${win}&img=${encodeURIComponent(img)}`;
     };
