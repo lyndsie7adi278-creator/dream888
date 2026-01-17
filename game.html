@@ -31,7 +31,6 @@
         .t_s.so { background: #f0f0f0 !important; border-color: #ddd; box-shadow: none; }
         .t_s.so::after { content: "✔"; }
         
-        /* 🔴 關鍵：開獎後的格子數字樣式 - 紅色粗體 */
         .t_s.rv::after { content: attr(data-num); color: #ff4757 !important; font-size: 1.3rem; font-weight: 900; }
         .t_s.rv.is-win-cell { border: 2px solid var(--g) !important; background: #fff9e6 !important; box-shadow: 0 0 10px var(--gold-glow); }
 
@@ -47,9 +46,8 @@
         .res_img { width: 220px; height: 220px; object-fit: contain; display: none; margin-bottom: 10px; z-index: 2; }
         .btn_c { display: none; margin-top: 25px; padding: 12px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; }
         
-        /* 🔴 修正震動：縮短時間、減小力道 */
         @keyframes mini-shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } }
-        .is-shaking { animation: mini-shake 0.1s; animation-iteration-count: 5; } /* 只震動 0.5 秒 */
+        .is-shaking { animation: mini-shake 0.1s; animation-iteration-count: 5; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -93,29 +91,43 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, runTransaction, onValue, set, get, push, query, limitToLast, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, runTransaction, onValue, set, get, push, query, limitToLast, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const app = initializeApp(config);
     const db = getDatabase(app);
 
     const urlParams = new URLSearchParams(window.location.search);
-    const gid = urlParams.get('id'), total = parseInt(urlParams.get('total')) || 50, 
-          winGoal = parseInt(urlParams.get('win')), prizeImg = decodeURIComponent(urlParams.get('img')),
-          myCode = localStorage.getItem('myScratchCode');
+    const gid = urlParams.get('id');
+    const myCode = localStorage.getItem('myScratchCode');
 
+    // 🔴 建立全域配置對象，將由資料庫填充
+    let gameConfig = { total: 0, win: 0, price: 0, img: "" };
     const _p_ref = ref(db, `games/${gid}/pool`), _h_ref = ref(db, `games/${gid}/history`);
     let _is_p = false, _sel_i = null, _cvs, _ctx, _is_d = false, _drawn_nums = new Set();
 
-    window.onload = () => {
-        if(!myCode) return location.href = 'index.html';
-        document.getElementById('totalDisplay').innerText = total;
-        document.getElementById('p_display_name').innerText = gid.replace(/_/g, ' ');
-        document.getElementById('top_prize_img').src = prizeImg;
-        document.getElementById('winNotice').innerText = `✨ 中獎號碼：${winGoal.toString().padStart(2,'0')}`;
-        onValue(ref(db, `users/${myCode}/balance`), s => document.getElementById('curBal').innerText = (s.val()||0).toLocaleString());
-        _listen_history();
-        _init_pool();
+    window.onload = async () => {
+        if(!myCode || !gid) return location.href = 'index.html';
+
+        // 🛡️ 關鍵同步：從資料庫讀取該遊戲 ID 的專屬設定
+        const snap = await get(ref(db, `gameSettings/${gid}`));
+        if (snap.exists()) {
+            gameConfig = snap.val();
+            
+            // 渲染 UI 資訊
+            document.getElementById('totalDisplay').innerText = gameConfig.total;
+            document.getElementById('p_display_name').innerText = gid.replace(/_/g, ' ');
+            document.getElementById('top_prize_img').src = gameConfig.img;
+            document.getElementById('winNotice').innerText = `✨ 中獎號碼：${gameConfig.win.toString().padStart(2,'0')}`;
+            
+            // 載入使用者餘額與池子資料
+            onValue(ref(db, `users/${myCode}/balance`), s => document.getElementById('curBal').innerText = (s.val()||0).toLocaleString());
+            _listen_history();
+            _init_pool();
+        } else {
+            alert("遊戲初始化失敗，請聯絡管理員");
+            location.href = 'index.html';
+        }
     };
 
     function _listen_history() {
@@ -134,13 +146,12 @@
             const d = s.val(); if(!d) return;
             const drawn = d.filter(x => x.taken).length;
             document.getElementById('drawCount').innerText = drawn;
-            document.getElementById('progBar').style.width = (drawn / total * 100) + "%";
+            document.getElementById('progBar').style.width = (drawn / gameConfig.total * 100) + "%";
             document.getElementById('g_d').innerHTML = d.map((x, i) => {
                 const valNum = parseInt(x.grade);
-                // 🔴 修改：確定刮完後，一定要寫入 data-num 屬性供 CSS 顯示
                 const is_settled = x.taken && _drawn_nums.has(valNum) && (i !== _sel_i);
                 const numStr = is_settled ? valNum.toString().padStart(2,'0') : '';
-                return `<div class="t_s ${x.taken?'so':''} ${is_settled?'rv':''} ${is_settled && valNum===winGoal?'is-win-cell':''}" 
+                return `<div class="t_s ${x.taken?'so':''} ${is_settled?'rv':''} ${is_settled && valNum===gameConfig.win?'is-win-cell':''}" 
                              data-num="${numStr}" onclick="_h_ck(${i},${x.taken})"></div>`;
             }).join('');
         });
@@ -149,14 +160,29 @@
     window._h_ck = async (i, tk) => {
         if(tk || _is_p) return; _is_p = true; _sel_i = i;
         const balSnap = await get(ref(db, `users/${myCode}/balance`));
-        if((balSnap.val()||0) < 100) { alert("餘額不足"); _is_p = false; return; }
+        const currentBal = balSnap.val() || 0;
+
+        if(currentBal < gameConfig.price) { alert("餘額不足"); _is_p = false; return; }
+
         runTransaction(_p_ref, (p) => {
             if (!p) return p;
-            window._l_w = p[i].grade; p[i].taken = true; return p;
-        }).then(res => {
+            if (p[i].taken) return; // 防止重複刮取
+            window._l_w = p[i].grade; 
+            p[i].taken = true; 
+            return p;
+        }).then(async res => {
             if(res.committed) {
-                runTransaction(ref(db, `users/${myCode}/balance`), b => b - 100);
-                push(_h_ref, { u: myCode, g: window._l_w, w: parseInt(window._l_w) === winGoal, t: Date.now() });
+                const newBal = currentBal - gameConfig.price;
+                // 更新餘額
+                await set(ref(db, `users/${myCode}/balance`), newBal);
+                // 存入歷史紀錄，包含中獎判定與餘額存證
+                push(_h_ref, { 
+                    u: myCode, 
+                    g: window._l_w, 
+                    w: parseInt(window._l_w) === gameConfig.win, 
+                    t: Date.now(),
+                    b: newBal 
+                });
                 _pp_s();
             } else _is_p = false;
         });
@@ -202,12 +228,11 @@
                   res_img = document.getElementById('res_img'), res_msg = document.getElementById('res_msg');
             w_t.style.fontSize = "5.5rem";
             
-            if(num === winGoal) {
+            if(num === gameConfig.win) {
                 document.getElementById('c_con').classList.add('is-shaking');
-                res_img.src = prizeImg; res_img.style.display = 'block';
+                res_img.src = gameConfig.img; res_img.style.display = 'block';
                 res_msg.innerText = "🎊 恭喜抽中大獎 🎊"; res_msg.style.display = 'block';
                 
-                // 🔴 噴雪花與亮片效果
                 var duration = 3 * 1000;
                 var animationEnd = Date.now() + duration;
                 var skew = 1;
@@ -217,12 +242,10 @@
                   var ticks = Math.max(200, 500 * (timeLeft / duration));
                   skew = Math.max(0.8, skew - 0.001);
                   confetti({ particleCount: 1, startVelocity: 0, ticks: ticks, origin: { x: Math.random(), y: (Math.random() * skew) - 0.2 },
-                    colors: ['#ffffff', '#fffaee', '#e0f7fa'], // 雪白色與淺藍色
-                    shapes: ['circle'], gravity: randomInRange(0.4, 0.6), scalar: randomInRange(0.4, 1), drift: randomInRange(-0.4, 0.4)
+                    colors: ['#ffffff', '#fffaee', '#e0f7fa'], shapes: ['circle'], gravity: randomInRange(0.4, 0.6), scalar: randomInRange(0.4, 1), drift: randomInRange(-0.4, 0.4)
                   });
                   if (timeLeft > 0) { requestAnimationFrame(frame); }
                 }());
-                // 同時噴發彩色紙屑
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             } else {
                 res_img.src = "https://i.ibb.co/7t4gt23K/image.png"; 
@@ -239,8 +262,17 @@
         document.getElementById('ovl').style.display = 'none'; 
     };
 
-    window._admin_reset = () => { const p = prompt("ADMIN:"); if(p === "0000") { let n = []; for(let i=1; i<=total; i++) n.push(i); n.sort(() => Math.random() - 0.5); set(_p_ref, n.map(v => ({ grade: v, taken: false }))); remove(_h_ref); alert("洗牌完成"); } };
+    window._admin_reset = () => { 
+        const p = prompt("ADMIN:"); 
+        if(p === "0000") { 
+            let n = []; 
+            for(let i=1; i<=gameConfig.total; i++) n.push(i); 
+            n.sort(() => Math.random() - 0.5); 
+            set(_p_ref, n.map(v => ({ grade: v, taken: false }))); 
+            remove(_h_ref); 
+            alert("洗牌完成"); 
+        } 
+    };
 </script>
 </body>
 </html>
-
