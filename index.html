@@ -37,7 +37,7 @@
         .user-id { font-family: monospace; font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 50px; }
 
         /* 商品區 */
-        .section-title { width: 90%; max-width: 450px; font-weight: bold; margin: 10px 0; display: flex; align-items: center; }
+        .section-title { width: 90%; max-width: 450px; font-weight: bold; margin: 20px 0 10px; display: flex; align-items: center; }
         .section-title::before { content: ""; width: 4px; height: 18px; background: var(--primary); margin-right: 8px; border-radius: 2px; }
 
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 92%; max-width: 480px; padding: 10px 0; }
@@ -53,28 +53,31 @@
         .p-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; color: #333; }
         .p-price { color: var(--primary); font-weight: 800; font-size: 0.85rem; }
 
-        /* 
-        .trust-panel {
-            width: 90%; max-width: 450px; background: white;
-            border-radius: 20px; padding: 25px; margin: 30px 0;
-            box-sizing: border-box; border-top: 4px solid var(--gold);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        /* 🎨 優化後的系統狀態區塊樣式 */
+        .system-status-container {
+            width: 90%; max-width: 450px;
+            margin: 30px 0; background: #ffffff;
+            border-radius: 24px; padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.05); box-sizing: border-box;
         }
-        .trust-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
-        .trust-header span { font-weight: 900; letter-spacing: 1px; color: #7f8c8d; }
-        
-        .trust-item { display: flex; margin-bottom: 15px; align-items: flex-start; }
-        .trust-icon { background: #f8f9fa; color: #95a5a6; width: 32px; height: 32px; border-radius: 8px; 
-                      display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; font-size: 0.8rem; border: 1px solid #eee; }
-        .trust-content b { display: block; font-size: 0.9rem; margin-bottom: 2px; color: #34495e; }
-        .trust-content p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.4; }
+        .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px; }
+        .status-title { font-size: 0.85rem; font-weight: 900; color: #2c3e50; letter-spacing: 1px; }
+        .live-indicator { display: flex; align-items: center; font-size: 0.7rem; color: #2ecc71; font-weight: bold; background: rgba(46, 204, 113, 0.1); padding: 4px 10px; border-radius: 50px; }
+        .dot { height: 6px; width: 6px; background-color: #2ecc71; border-radius: 50%; margin-right: 6px; box-shadow: 0 0 8px #2ecc71; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+        .status-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .status-card { background: #f8f9fa; border-radius: 16px; padding: 12px; display: flex; align-items: center; transition: all 0.3s ease; border: 1px solid transparent; }
+        .status-card:hover { background: #ffffff; border-color: var(--primary); box-shadow: 0 5px 15px rgba(255,143,163,0.1); transform: translateY(-2px); }
+        .status-icon-box { width: 36px; height: 36px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .status-text b { display: block; font-size: 0.8rem; color: #34495e; margin-bottom: 2px; }
+        .status-text p { margin: 0; font-size: 0.65rem; color: #95a5a6; line-height: 1.4; }
 
         /* 登入彈窗 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .m-box { background: white; padding: 40px 30px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
         input { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #ddd; margin: 10px 0; text-align: center; font-size: 1.2rem; outline: none; box-sizing: border-box; }
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
-
         .footer-info { margin: 20px 0 40px 0; font-size: 0.7rem; color: #bbb; text-align: center; line-height: 1.8; }
     </style>
 </head>
@@ -84,10 +87,8 @@
     <div class="m-box">
         <h2 style="margin:0; color:var(--dark);">MEMBER LOGIN</h2>
         <p id="loginHint" style="color:#aaa; font-size:0.8rem; margin: 10px 0;">請輸入您的專屬抽獎代碼</p>
-        
         <input type="text" id="userCode" placeholder="ENTER CODE">
         <input type="password" id="userPass" placeholder="6-DIGIT PIN" style="display:none;" maxlength="6" inputmode="numeric">
-        
         <button class="btn" id="loginBtn" onclick="handleLogin()">進入系統</button>
     </div>
 </div>
@@ -110,33 +111,32 @@
 <div class="product-grid">
     <div class="p-card" onclick="play('大首領')">
         <img src="https://i.ibb.co/6RDNMdQ2/800x.jpg" class="p-img">
-        <div class="p-info">
-            <div class="p-name">大首領</div>
-            <div class="p-price">$ 100 / 抽</div>
-        </div>
+        <div class="p-info"><div class="p-name">大首領</div><div class="p-price">$ 100 / 抽</div></div>
     </div>
     <div class="p-card" onclick="play('Model_Limited_B')">
         <img src="https://i.ibb.co/0pVRPTpt/33784914-1730327227044400-6918490164012515328-n.jpg" class="p-img">
-        <div class="p-info">
-            <div class="p-name">測試商品</div>
-            <div class="p-price">$ 5000 / 抽</div>
-        </div>
+        <div class="p-info"><div class="p-name">測試商品</div><div class="p-price">$ 5000 / 抽</div></div>
     </div>
 </div>
 
-<div class="trust-panel">
-    <div class="trust-header"><span>系統運作狀態說明</span></div>
-    <div class="trust-item">
-        <div class="trust-icon">✓</div>
-        <div class="trust-content"><b>雲端實時數據更新</b><p>系統連結 Firebase Cloud 數據庫，確保點數異動與操作紀錄均即時同步。</p></div>
+<div class="system-status-container">
+    <div class="status-header">
+        <div class="status-title">SYSTEM MONITOR</div>
+        <div class="live-indicator"><span class="dot"></span> 雲端連線正常</div>
     </div>
-    <div class="trust-item">
-        <div class="trust-icon">✓</div>
-        <div class="trust-content"><b>雙重安全存取驗證</b><p>採用專屬通行碼配合自訂 6 位數 PIN 碼，保護個人帳戶數據隱私。</p></div>
-    </div>
-    <div class="trust-item">
-        <div class="trust-icon">✓</div>
-        <div class="trust-content"><b>自動化判定系統</b><p>所有結果依據後台數據自動執行，數據處理具備高度一致性。</p></div>
+    <div class="status-grid">
+        <div class="status-card">
+            <div class="status-icon-box">📡</div>
+            <div class="status-text"><b>Real-time Sync</b><p>Firebase 實時數據庫驅動，確保數據秒級同步。</p></div>
+        </div>
+        <div class="status-card">
+            <div class="status-icon-box">🛡️</div>
+            <div class="status-text"><b>Secure Access</b><p>採用 ID 與 6-Digit PIN 雙重驗證加密鎖定。</p></div>
+        </div>
+        <div class="status-card">
+            <div class="status-icon-box">⚙️</div>
+            <div class="status-text"><b>Logic Consistency</b><p>結果由系統封閉式判定，數據具備唯一性。</p></div>
+        </div>
     </div>
 </div>
 
@@ -150,7 +150,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 
     document.onkeydown = function(e) {
         if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
     };
@@ -168,10 +167,8 @@
     const app = initializeApp(config);
     const db = getDatabase(app);
 
-    let currentStep = 1; 
-    let tempCode = "";
+    let currentStep = 1; let tempCode = "";
 
-    // 
     window.handleLogin = async () => {
         const cInput = document.getElementById('userCode');
         const pInput = document.getElementById('userPass');
@@ -181,31 +178,20 @@
         if (currentStep === 1) {
             tempCode = cInput.value.trim().toUpperCase();
             if (!tempCode) return;
-
             const s = await get(ref(db, `users/${tempCode}`));
             if (s.exists()) {
                 const userData = s.val();
-                cInput.style.display = "none";
-                pInput.style.display = "block";
-                currentStep = 2;
-                btn.innerText = "驗證進入";
-
-                if (!userData.pin) {
-                    hint.innerText = "初次登入，請設定 6 位數密碼";
-                } else {
-                    hint.innerText = "代碼驗證成功，請輸入密碼";
-                }
+                cInput.style.display = "none"; pInput.style.display = "block";
+                currentStep = 2; btn.innerText = "驗證進入";
+                hint.innerText = !userData.pin ? "初次登入，請設定 6 位數密碼" : "代碼驗證成功，請輸入密碼";
             } else { alert("驗證失敗：無效的通行碼"); }
         } else {
             const pin = pInput.value.trim();
             if (pin.length !== 6 || isNaN(pin)) { alert("請輸入 6 位數字密碼"); return; }
-
             const s = await get(ref(db, `users/${tempCode}`));
             const userData = s.val();
-
             if (!userData.pin) {
-                await update(ref(db, `users/${tempCode}`), { pin: pin });
-                saveAndReload(tempCode);
+                await update(ref(db, `users/${tempCode}`), { pin: pin }); saveAndReload(tempCode);
             } else {
                 if (userData.pin === pin) { saveAndReload(tempCode); }
                 else { alert("密碼錯誤"); pInput.value = ""; }
@@ -213,10 +199,7 @@
         }
     };
 
-    function saveAndReload(c) {
-        localStorage.setItem('myScratchCode', c);
-        location.reload();
-    }
+    function saveAndReload(c) { localStorage.setItem('myScratchCode', c); location.reload(); }
 
     const savedCode = localStorage.getItem('myScratchCode');
     if(savedCode) {
@@ -228,12 +211,7 @@
     } else { document.getElementById('loginModal').style.display = 'flex'; }
 
     window.logout = () => { localStorage.removeItem('myScratchCode'); location.reload(); };
-
-    // 傳參優化：僅跳轉 ID，不再傳遞參數
-    window.play = (id) => {
-        window.location.href = `game.html?id=${id}`;
-    };
+    window.play = (id) => { window.location.href = `game.html?id=${id}`; };
 </script>
 </body>
 </html>
-
