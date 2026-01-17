@@ -6,91 +6,82 @@
     <title>夢工廠 | 幸運選號</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --primary: #ff8fa3; --bg: #0b0f1a; --card: #161e2d; --text: #e2e8f0; }
+        :root { --primary: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; }
         
-        body { 
+        /* 全域設定：禁止頁面彈跳 */
+        html, body { 
             margin: 0; padding: 0; width: 100%; height: 100vh;
             background: var(--bg); color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, sans-serif;
             display: flex; flex-direction: column; overflow: hidden;
+            touch-action: none;
         }
 
-        /* 頁首：極簡化 */
+        /* 頁首 */
         .header { 
             padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; 
-            background: rgba(0,0,0,0.8); z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: #000; border-bottom: 1px solid rgba(255,184,0,0.2); z-index: 100;
         }
         .back-btn { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 4px 12px; border-radius: 50px; cursor: pointer; font-size: 0.8rem; }
         .balance-tag { background: var(--primary); padding: 4px 12px; border-radius: 50px; font-weight: bold; color: #000; font-size: 0.8rem; }
 
-        /* 看板：縮小版 */
+        /* 小型化看板 */
         .billboard { 
-            display: flex; align-items: center; padding: 10px; gap: 12px;
-            background: var(--card); border-bottom: 2px solid var(--primary);
+            display: flex; align-items: center; padding: 10px; gap: 15px; background: var(--card); border-bottom: 2px solid var(--primary);
         }
-        .main-img { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
-        .info-box { flex-grow: 1; overflow: hidden; }
-        .info-box h2 { margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .main-img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #333; flex-shrink: 0; }
+        .info-box h2 { margin: 0; font-size: 1rem; color: #fff; }
         .info-box span { color: var(--primary); font-size: 0.8rem; font-weight: bold; }
 
-        /* 獎項追蹤：更緊湊 */
-        .prize-monitor { 
-            padding: 8px 10px; background: rgba(255,255,255,0.03); font-size: 0.7rem;
-        }
-        .prize-tag-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
-        .prize-tag { 
-            background: #2d3748; padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);
-        }
+        /* 獎項追蹤 */
+        .prize-monitor { padding: 8px 10px; background: rgba(255,255,255,0.02); font-size: 0.7rem; }
+        .prize-tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+        .prize-tag { background: #222; padding: 3px 8px; border-radius: 4px; border: 1px solid #333; }
         .prize-tag.won { text-decoration: line-through; opacity: 0.2; background: #000; }
 
-        /* 🔴 關鍵修正：獨立滾動區 */
+        /* 🔴 核心捲動區 */
         #scroll-area { 
-            flex-grow: 1; /* 自動佔滿剩餘空間 */
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; 
-            padding: 15px 10px 100px; /* 底部留白防止遮擋 */
+            flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; 
+            padding: 15px 10px 100px; touch-action: pan-y;
         }
-        .pool-grid { 
-            display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; 
-            width: 100%; max-width: 500px; margin: 0 auto; 
-        }
+        .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; max-width: 500px; margin: 0 auto; }
+        
+        /* 卡片樣式 */
         .ticket { 
-            aspect-ratio: 1/1; background: linear-gradient(145deg, #1e293b, #111827); 
-            border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            font-size: 0.9rem; cursor: pointer; border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s;
+            aspect-ratio: 1/1; background: #1a1e26; border-radius: 8px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            font-size: 0.9rem; cursor: pointer; position: relative; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
         }
-        .ticket:active { transform: scale(0.95); }
-        .ticket.taken { background: #07090e; border-color: #222; box-shadow: none; }
+        .ticket.taken { background: #000; border-color: #222; }
         .ticket.taken .history-num { color: var(--primary); font-size: 1.1rem; font-weight: 900; }
-        .ticket.taken .small-id { font-size: 0.5rem; position: absolute; top: 4px; left: 6px; color: #444; }
+        .ticket.taken .small-id { font-size: 0.5rem; position: absolute; top: 3px; left: 5px; color: #333; }
+        .ticket.taken .opening-txt { font-size: 0.6rem; color: #444; font-weight: bold; }
 
-        /* 刮刮樂層 */
+        /* 刮刮樂彈窗 */
         .scratch-overlay { 
             display: none; position: fixed; inset: 0; z-index: 500; 
-            align-items: center; justify-content: center; 
-            backdrop-filter: blur(10px); background: rgba(0,0,0,0.85);
-            touch-action: none; 
+            align-items: center; justify-content: center; backdrop-filter: blur(10px); 
+            background: rgba(0,0,0,0.9); touch-action: none;
         }
         .scratch-box { 
-            position: relative; width: 300px; height: 300px; border-radius: 20px; 
-            overflow: hidden; background: white; border: 4px solid #333; box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            position: relative; width: 280px; height: 280px; border-radius: 20px; 
+            overflow: hidden; background: white; border: 4px solid #333;
         }
-        #scratch-canvas { position: absolute; inset: 0; z-index: 10; }
+        #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; }
         #underLayer { position: absolute; inset: 0; background: white; display: flex; align-items: center; justify-content: center; }
         #luckyVal { font-size: 6rem; font-weight: 900; color: #000; margin: 0; }
 
-        /* 結果視窗 */
-        .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); }
-        .res-card { text-align: center; background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--primary); width: 80%; max-width: 300px; }
-        #res_img { width: 100%; max-height: 180px; object-fit: contain; margin-bottom: 15px; border-radius: 10px; }
-        .btn-confirm { background: var(--primary); color: #000; border: none; padding: 12px; border-radius: 50px; font-weight: 800; width: 100%; cursor: pointer; }
+        /* 結果 */
+        .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
+        .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 20px; border: 2px solid var(--primary); width: 80%; max-width: 320px; }
+        #res_img { width: 100%; max-height: 200px; object-fit: contain; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <button class="back-btn" onclick="location.href='index.html'">← 返回</button>
+    <button class="back-btn" onclick="location.href='index.html'">← 離開</button>
     <div class="balance-tag">P <span id="uBal">0</span></div>
 </div>
 
@@ -98,12 +89,12 @@
     <img id="gMainImg" class="main-img" src="">
     <div class="info-box">
         <h2 id="gTitle">載入中...</h2>
-        <span id="gPrice">-- P</span>
+        <span id="gPrice">-- P / 抽</span>
     </div>
 </div>
 
 <div class="prize-monitor">
-    <div style="color: #666;">剩餘獎項追蹤</div>
+    <div style="color: #666; font-size: 0.6rem;">中獎號碼追蹤</div>
     <div class="prize-tag-list" id="prizeTags"></div>
 </div>
 
@@ -113,20 +104,20 @@
 
 <div id="scratchOverlay" class="scratch-overlay">
     <div style="text-align:center;">
-        <div style="margin-bottom:15px; font-weight:bold; letter-spacing:1px;">刮開第 <span id="selNum" style="color:var(--primary)"></span> 號</div>
+        <div style="margin-bottom:15px; font-weight:bold; letter-spacing:1px; color:var(--primary);">刮開第 <span id="selNum"></span> 號</div>
         <div class="scratch-box">
             <div id="underLayer"><h1 id="luckyVal">?</h1></div>
-            <canvas id="scratch-canvas" width="300" height="300"></canvas>
+            <canvas id="scratch-canvas" width="280" height="280"></canvas>
         </div>
-        <button onclick="location.reload()" style="margin-top:30px; color:#666; background:none; border:none; text-decoration:underline; font-size:0.8rem;">離開刮獎</button>
+        <button onclick="location.reload()" style="margin-top:30px; color:#555; background:none; border:none; text-decoration:underline;">放棄並退出</button>
     </div>
 </div>
 
 <div id="resModal" class="result-modal">
     <div class="res-card">
         <img id="res_img" src="">
-        <h2 id="res_msg" style="color:var(--primary); font-size:1.1rem; margin:10px 0;"></h2>
-        <button class="btn-confirm" onclick="location.reload()">確定</button>
+        <h2 id="res_msg" style="color:var(--primary); font-size:1.2rem; margin:15px 0;"></h2>
+        <button onclick="location.reload()" style="background:var(--primary); border:none; padding:12px; border-radius:50px; width:100%; font-weight:800;">確認返回</button>
     </div>
 </div>
 
@@ -150,12 +141,12 @@
     let gData = null;
     if(!gameId || !userId) location.href = 'index.html';
 
-    // 點數監聽
+    // 餘額連動
     onValue(ref(db, `users/${userId}/balance`), s => {
         document.getElementById('uBal').innerText = (s.val()||0).toLocaleString();
     });
 
-    // 遊戲設定監聽
+    // 遊戲數據與即時看板
     onValue(ref(db, `gameSettings/${gameId}`), s => {
         gData = s.val();
         if(gData) {
@@ -163,27 +154,33 @@
             document.getElementById('gMainImg').src = gData.img;
             document.getElementById('gPrice').innerText = `${gData.price} P / 抽`;
             
-            // 監聽籤池數據 (包含看板更新)
+            // 監聽籤表 (防暴雷邏輯)
             onValue(ref(db, `games/${gameId}/pool`), snap => {
                 const pool = snap.val() || [];
                 
-                // 看板顯示
+                // 1. 更新上方看板
                 const prizeTags = document.getElementById('prizeTags');
                 let prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
                 prizeTags.innerHTML = prizes.map(p => {
                     if(!p) return '';
-                    const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.taken);
+                    // 只有當號碼被刮開 (revealed) 且中獎才變黑
+                    const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.revealed);
                     return `<div class="prize-tag ${isWon ? 'won' : ''}">${p.name}: <b>${p.num}</b></div>`;
                 }).join('');
 
-                // 渲染格子
+                // 2. 渲染下方籤表
                 const grid = document.getElementById('poolGrid');
                 grid.innerHTML = '';
                 pool.forEach((t, i) => {
                     const div = document.createElement('div');
                     if(t.taken) {
                         div.className = 'ticket taken';
-                        div.innerHTML = `<span class="small-id">${i+1}</span><span class="history-num">${t.grade}</span>`;
+                        // 🔴 關鍵：只有 revealed 為 true 才會顯示號碼
+                        if(t.revealed) {
+                            div.innerHTML = `<span class="small-id">${i+1}</span><span class="history-num">${t.grade}</span>`;
+                        } else {
+                            div.innerHTML = `<span class="small-id">${i+1}</span><span class="opening-txt">OPENING</span>`;
+                        }
                     } else {
                         div.className = 'ticket';
                         div.innerText = i + 1;
@@ -199,37 +196,44 @@
         const s = await get(ref(db, `users/${userId}/balance`));
         const bal = s.val() || 0;
         if(bal < gData.price) return alert("點數不足！");
-        if(!confirm(`確定購買 ${idx+1} 號？`)) return;
+        if(!confirm(`確認購買第 ${idx+1} 號？`)) return;
 
+        // 先扣點並標記售出 (但此時 revealed 為 false，所以觀眾看不到號碼)
         await update(ref(db, `users/${userId}`), { balance: bal - gData.price });
-        await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true });
-        showScratch(idx + 1, grade);
+        await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true, revealed: false });
+        
+        showScratch(idx + 1, grade, idx);
     }
 
-    function showScratch(displayId, luckyNum) {
-        const overlay = document.getElementById('scratchOverlay');
-        overlay.style.display = 'flex';
+    function showScratch(displayId, luckyNum, poolIdx) {
+        document.getElementById('scratchOverlay').style.display = 'flex';
         document.getElementById('selNum').innerText = displayId;
         document.getElementById('luckyVal').innerText = luckyNum;
 
         const canvas = document.getElementById('scratch-canvas');
         const ctx = canvas.getContext('2d');
         ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0,0,300,300);
+        ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0,0,280,280);
 
         let drawing = false;
         const scratch = (e) => {
             if(!drawing) return;
-            if(e.cancelable) e.preventDefault(); 
+            if(e.cancelable) e.preventDefault();
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
             const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
             ctx.globalCompositeOperation = 'destination-out';
             ctx.beginPath(); ctx.arc(x, y, 25, 0, Math.PI*2); ctx.fill();
 
-            const pix = ctx.getImageData(0,0,300,300).data;
+            // 檢查刮開比例
+            const pix = ctx.getImageData(0,0,280,280).data;
             let clear = 0; for(let i=3; i<pix.length; i+=4) if(pix[i]===0) clear++;
-            if(clear > (300*300*0.6)) { drawing = false; judge(luckyNum); }
+            if(clear > (280*280*0.6)) { 
+                drawing = false; 
+                // 🔴 刮開達標：向資料庫寫入 revealed: true，此時全體觀眾同步看到數字
+                update(ref(db, `games/${gameId}/pool/${poolIdx}`), { revealed: true });
+                judge(luckyNum); 
+            }
         };
 
         canvas.addEventListener('mousedown', () => drawing=true);
@@ -248,7 +252,7 @@
         const msg = document.getElementById('res_msg');
 
         if(hit) {
-            msg.innerText = `🎊 恭喜！抽中 ${hit.name} 🎊`;
+            msg.innerText = `🎊 恭喜抽中：${hit.name} 🎊`;
             img.src = hit.img || gData.img;
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             push(ref(db, `games/${gameId}/history`), { u: userId, w: true, g: hit.name, t: Date.now() });
