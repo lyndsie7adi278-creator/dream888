@@ -6,13 +6,18 @@
     <title>夢工廠刮刮樂商城</title>
     <style>
         :root { --primary: #ff8fa3; --dark: #2c3e50; --gold: #d4a017; --bg: #f8f9fa; }
+        
+        /* 核心安全鎖定：禁止文字選取與反白 */
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; }
+        
         body { 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
             background: var(--bg); margin: 0; padding: 0; 
             display: flex; flex-direction: column; align-items: center;
             color: var(--dark); overflow-x: hidden;
         }
+
+        /* 頂部導航與流光餘額板 */
         .top-nav { width: 100%; background: white; padding: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
         .user-card {
             background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
@@ -27,10 +32,14 @@
             animation: rotate 10s linear infinite;
         }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
         .balance-amount { font-size: 2.2rem; font-weight: 800; margin: 10px 0; color: var(--primary); text-shadow: 0 0 15px rgba(255,143,163,0.5); }
         .user-id { font-family: monospace; font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 50px; }
+
+        /* 商品區 */
         .section-title { width: 90%; max-width: 450px; font-weight: bold; margin: 10px 0; display: flex; align-items: center; }
         .section-title::before { content: ""; width: 4px; height: 18px; background: var(--primary); margin-right: 8px; border-radius: 2px; }
+
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 92%; max-width: 480px; padding: 10px 0; }
         .p-card { 
             background: white; border-radius: 18px; overflow: hidden; 
@@ -44,6 +53,7 @@
         .p-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; color: #333; }
         .p-price { color: var(--primary); font-weight: 800; font-size: 0.85rem; }
 
+        /* 
         .trust-panel {
             width: 90%; max-width: 450px; background: white;
             border-radius: 20px; padding: 25px; margin: 30px 0;
@@ -52,17 +62,19 @@
         }
         .trust-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
         .trust-header span { font-weight: 900; letter-spacing: 1px; color: #7f8c8d; }
+        
         .trust-item { display: flex; margin-bottom: 15px; align-items: flex-start; }
         .trust-icon { background: #f8f9fa; color: #95a5a6; width: 32px; height: 32px; border-radius: 8px; 
                       display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; font-size: 0.8rem; border: 1px solid #eee; }
         .trust-content b { display: block; font-size: 0.9rem; margin-bottom: 2px; color: #34495e; }
         .trust-content p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.4; }
 
-        /* 登入彈窗優化 */
+        /* 登入彈窗 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .m-box { background: white; padding: 40px 30px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
         input { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #ddd; margin: 10px 0; text-align: center; font-size: 1.2rem; outline: none; box-sizing: border-box; }
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
+
         .footer-info { margin: 20px 0 40px 0; font-size: 0.7rem; color: #bbb; text-align: center; line-height: 1.8; }
     </style>
 </head>
@@ -74,11 +86,9 @@
         <p id="loginHint" style="color:#aaa; font-size:0.8rem; margin: 10px 0;">請輸入您的專屬抽獎代碼</p>
         
         <input type="text" id="userCode" placeholder="ENTER CODE">
+        <input type="password" id="userPass" placeholder="6-DIGIT PIN" style="display:none;" maxlength="6" inputmode="numeric">
         
-        <input type="password" id="userPass" placeholder="6-DIGIT PIN" 
-               style="display:none;" maxlength="6" inputmode="numeric">
-        
-        <button class="btn" id="loginBtn" onclick="handleLogin()">繼續</button>
+        <button class="btn" id="loginBtn" onclick="handleLogin()">進入系統</button>
     </div>
 </div>
 
@@ -98,17 +108,17 @@
 <div class="section-title">EXCLUSIVE PRODUCTS</div>
 
 <div class="product-grid">
-    <div class="p-card" onclick="play('大首領', 100, 10, 0, 1, 'https://i.ibb.co/6RDNMdQ2/800x.jpg')">
+    <div class="p-card" onclick="play('Boss_01')">
         <img src="https://i.ibb.co/6RDNMdQ2/800x.jpg" class="p-img">
         <div class="p-info">
             <div class="p-name">大首領</div>
             <div class="p-price">$ 100 / 抽</div>
         </div>
     </div>
-    <div class="p-card" onclick="play('Model_Limited_B', 200, 80, 40, 8, 'https://i.ibb.co/0pVRPTpt/33784914-1730327227044400-6918490164012515328-n.jpg')">
+    <div class="p-card" onclick="play('Model_Limited_B')">
         <img src="https://i.ibb.co/0pVRPTpt/33784914-1730327227044400-6918490164012515328-n.jpg" class="p-img">
         <div class="p-info">
-            <div class="p-name">測試</div>
+            <div class="p-name">測試商品</div>
             <div class="p-price">$ 5000 / 抽</div>
         </div>
     </div>
@@ -118,15 +128,15 @@
     <div class="trust-header"><span>系統運作狀態說明</span></div>
     <div class="trust-item">
         <div class="trust-icon">✓</div>
-        <div class="trust-content"><b>雲端實時數據更新</b><p>系統連結 Firebase Cloud 數據庫，確保點數異動與操作紀錄均即時儲存。</p></div>
+        <div class="trust-content"><b>雲端實時數據更新</b><p>系統連結 Firebase Cloud 數據庫，確保點數異動與操作紀錄均即時同步。</p></div>
     </div>
     <div class="trust-item">
         <div class="trust-icon">✓</div>
-        <div class="trust-content"><b>雙重安全存取驗證</b><p>採用「專屬代碼」配合「自訂 PIN 碼」機制，確保帳戶數據之隱私與安全性。</p></div>
+        <div class="trust-content"><b>雙重安全存取驗證</b><p>採用專屬通行碼配合自訂 6 位數 PIN 碼，保護個人帳戶數據隱私。</p></div>
     </div>
     <div class="trust-item">
         <div class="trust-icon">✓</div>
-        <div class="trust-content"><b>自動化判定系統</b><p>抽獎結果依據後台數據自動執行，確保數據處理之一致性。</p></div>
+        <div class="trust-content"><b>自動化判定系統</b><p>所有結果依據後台數據自動執行，數據處理具備高度一致性。</p></div>
     </div>
 </div>
 
@@ -140,6 +150,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // 
     document.onkeydown = function(e) {
         if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
     };
@@ -160,6 +171,7 @@
     let currentStep = 1; 
     let tempCode = "";
 
+    // 
     window.handleLogin = async () => {
         const cInput = document.getElementById('userCode');
         const pInput = document.getElementById('userPass');
@@ -176,39 +188,27 @@
                 cInput.style.display = "none";
                 pInput.style.display = "block";
                 currentStep = 2;
+                btn.innerText = "驗證進入";
 
                 if (!userData.pin) {
-                    hint.innerText = "偵測到初次登入，請設定 6 位數密碼";
-                    btn.innerText = "設定密碼並進入";
+                    hint.innerText = "初次登入，請設定 6 位數密碼";
                 } else {
-                    hint.innerText = "請輸入您的 6 位數密碼";
-                    btn.innerText = "驗證進入";
+                    hint.innerText = "代碼驗證成功，請輸入密碼";
                 }
-            } else {
-                alert("驗證失敗：無效的通行碼");
-            }
+            } else { alert("驗證失敗：無效的通行碼"); }
         } else {
             const pin = pInput.value.trim();
-            if (pin.length !== 6 || isNaN(pin)) {
-                alert("請輸入 6 位數字密碼");
-                return;
-            }
+            if (pin.length !== 6 || isNaN(pin)) { alert("請輸入 6 位數字密碼"); return; }
 
             const s = await get(ref(db, `users/${tempCode}`));
             const userData = s.val();
 
             if (!userData.pin) {
-                // 初次設定密碼
                 await update(ref(db, `users/${tempCode}`), { pin: pin });
                 saveAndReload(tempCode);
             } else {
-                // 驗證密碼
-                if (userData.pin === pin) {
-                    saveAndReload(tempCode);
-                } else {
-                    alert("密碼錯誤，請重新輸入");
-                    pInput.value = "";
-                }
+                if (userData.pin === pin) { saveAndReload(tempCode); }
+                else { alert("密碼錯誤"); pInput.value = ""; }
             }
         }
     };
@@ -218,20 +218,20 @@
         location.reload();
     }
 
-    const code = localStorage.getItem('myScratchCode');
-    if(code) {
+    const savedCode = localStorage.getItem('myScratchCode');
+    if(savedCode) {
         document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('uName').innerText = `ID: ${code}`;
-        onValue(ref(db, `users/${code}/balance`), s => {
+        document.getElementById('uName').innerText = `ID: ${savedCode}`;
+        onValue(ref(db, `users/${savedCode}/balance`), s => {
             document.getElementById('uBalance').innerText = (s.val() || 0).toLocaleString();
         });
-    } else { 
-        document.getElementById('loginModal').style.display = 'flex'; 
-    }
+    } else { document.getElementById('loginModal').style.display = 'flex'; }
 
     window.logout = () => { localStorage.removeItem('myScratchCode'); location.reload(); };
-    window.play = (id, price, total, safe, win, img) => {
-        window.location.href = `game.html?id=${id}&price=${price}&total=${total}&safe=${safe}&win=${win}&img=${encodeURIComponent(img)}`;
+
+    // 傳參優化：僅跳轉 ID，不再傳遞參數
+    window.play = (id) => {
+        window.location.href = `game.html?id=${id}`;
     };
 </script>
 </body>
