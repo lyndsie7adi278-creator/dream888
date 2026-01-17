@@ -3,47 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>夢工廠 | 旗艦選號籤板</title>
+    <title>夢工廠 | 實體籤板</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { --primary: #ff8fa3; --bg: #0b0f1a; --card: #161e2d; }
         
-        /* 全局防滑動設定 */
+        /* 全局防滑動：禁止頁面捲動 */
         html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow-x: hidden; font-family: sans-serif; background: var(--bg); color: white;
-            touch-action: manipulation;
+            overflow: hidden; font-family: sans-serif; background: var(--bg); color: white;
+            touch-action: none;
         }
 
         .header { width: 100%; padding: 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); position: sticky; top: 0; z-index: 100; box-sizing: border-box; }
         .back-btn { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 5px 15px; border-radius: 50px; cursor: pointer; }
         .balance-tag { background: var(--primary); padding: 5px 15px; border-radius: 50px; font-weight: bold; }
 
-        /* 看板區 */
+        /* 大看板區 */
         .billboard { width: 100%; max-width: 600px; margin: 0 auto; background: var(--card); border-radius: 0 0 30px 30px; overflow: hidden; }
         .main-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-bottom: 3px solid var(--primary); }
         .game-title-box { padding: 15px; text-align: center; }
 
         /* 中獎號碼追蹤看板 */
-        .prize-monitor { background: rgba(255,255,255,0.05); margin: 15px 10px; padding: 15px; border-radius: 20px; text-align: center; }
+        .prize-monitor { background: rgba(255,255,255,0.05); margin: 15px 10px; padding: 15px; border-radius: 20px; text-align: center; overflow: hidden; }
         .prize-tag-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
         .prize-tag { background: #2d3748; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1); }
         .prize-tag.won { text-decoration: line-through; opacity: 0.3; background: #000; color: #666; }
         .prize-tag b { color: var(--primary); }
 
-        /* 籤表網格 */
-        .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 95%; max-width: 500px; margin: 10px auto; padding: 10px; }
+        /* 籤表網格：可滑動區域 */
+        #scroll-area { height: calc(100vh - 400px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 50px; touch-action: pan-y; }
+        .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 95%; max-width: 500px; margin: 0 auto; padding: 10px; }
         .ticket { 
             aspect-ratio: 1/1; background: #1e293b; border-radius: 8px; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             font-size: 0.9rem; cursor: pointer; position: relative; border: 1px solid rgba(255,255,255,0.05);
         }
-        /* 已刮開的紀錄顯示 */
-        .ticket.taken { background: #000; color: #4a5568; cursor: not-allowed; border: 1px solid #334155; }
+        .ticket.taken { background: #000; border: 1px solid #334155; }
         .ticket.taken .history-num { color: var(--primary); font-size: 1.2rem; font-weight: 900; }
         .ticket.taken .small-id { font-size: 0.6rem; position: absolute; top: 2px; left: 4px; color: #334155; }
 
-        /* 刮刮樂彈窗層 */
+        /* 刮刮樂彈窗 */
         .scratch-overlay { 
             display: none; position: fixed; inset: 0; z-index: 500; 
             align-items: center; justify-content: center; 
@@ -53,13 +53,12 @@
         .scratch-box { 
             position: relative; width: 300px; height: 300px; border-radius: 20px; 
             overflow: hidden; background: white; border: 5px solid #333;
-            touch-action: none;
         }
         #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; }
         #underLayer { position: absolute; inset: 0; background: white; display: flex; align-items: center; justify-content: center; }
         #luckyVal { font-size: 6rem; font-weight: 900; color: #1a1c23; margin: 0; }
 
-        /* 結果視窗圖片大小修正 */
+        /* 結果視窗 */
         .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
         .res-card { text-align: center; background: #161e2d; padding: 30px; border-radius: 30px; border: 2px solid var(--primary); width: 85%; max-width: 350px; }
         #res_img { width: 100%; max-height: 250px; object-fit: contain; border-radius: 15px; margin-bottom: 15px; }
@@ -68,24 +67,26 @@
 <body>
 
 <div class="header">
-    <button class="back-btn" onclick="location.href='index.html'">← 返回商城</button>
+    <button class="back-btn" onclick="location.href='index.html'">← 退出</button>
     <div class="balance-tag">P <span id="uBal">0</span></div>
 </div>
 
 <div class="billboard">
     <img id="gMainImg" class="main-img" src="">
     <div class="game-title-box">
-        <h2 id="gTitle" style="margin:0;">正在連線...</h2>
+        <h2 id="gTitle" style="margin:0;">載入數據中...</h2>
         <div id="gPrice" style="color:var(--primary); font-weight:bold; margin-top:5px;"></div>
     </div>
 </div>
 
 <div class="prize-monitor">
-    <div style="font-size: 0.75rem; color: #888; letter-spacing: 1px;">獎項追蹤看板</div>
+    <div style="font-size: 0.75rem; color: #888;">獎項分佈看板</div>
     <div class="prize-tag-list" id="prizeTags"></div>
 </div>
 
-<div class="pool-grid" id="poolGrid"></div>
+<div id="scroll-area">
+    <div class="pool-grid" id="poolGrid"></div>
+</div>
 
 <div id="scratchOverlay" class="scratch-overlay">
     <div style="text-align:center;">
@@ -104,7 +105,7 @@
     <div class="res-card">
         <img id="res_img" src="">
         <h2 id="res_msg" style="color:var(--primary); font-size: 1.3rem;"></h2>
-        <button onclick="location.reload()" style="background:var(--primary); color:white; border:none; padding:15px; border-radius:50px; font-weight:bold; width:100%; cursor:pointer;">回籤表</button>
+        <button onclick="location.reload()" style="background:var(--primary); color:white; border:none; padding:15px; border-radius:50px; font-weight:bold; width:100%;">回到籤表</button>
     </div>
 </div>
 
@@ -136,21 +137,26 @@
             document.getElementById('gMainImg').src = gData.img;
             document.getElementById('gPrice').innerText = `P ${gData.price}`;
             
-            // 監聽籤表狀態並同步看板
+            // 監聽籤表狀態並動態更新看板 (萬能相容版)
             onValue(ref(db, `games/${gameId}/pool`), poolSnap => {
                 const pool = poolSnap.val() || [];
-                
-                // 處理看板：相容單一與多個獎項
                 const prizeTags = document.getElementById('prizeTags');
-                let prizes = [];
-                if(gData.prizes) prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
                 
-                prizeTags.innerHTML = prizes.map(p => {
-                    const isWon = pool.some(item => item.grade === parseInt(p.num) && item.taken);
-                    return `<div class="prize-tag ${isWon ? 'won' : ''}">${p.name}: <b>${p.num}</b></div>`;
+                // 🔴 關鍵修復：強制將獎項資料轉為陣列，解決單一號碼不顯示問題
+                let prizeList = [];
+                if (gData.prizes) {
+                    prizeList = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
+                }
+
+                prizeTags.innerHTML = prizeList.map(p => {
+                    if(!p || p.num === undefined) return '';
+                    const targetNum = parseInt(p.num);
+                    // 在 pool 中尋找是否已被領取
+                    const isWon = pool.some(item => parseInt(item.grade) === targetNum && item.taken);
+                    return `<div class="prize-tag ${isWon ? 'won' : ''}">${p.name || '獎'}: <b>${targetNum}</b></div>`;
                 }).join('');
 
-                // 2. 渲染籤表格子：顯示公開歷史數字
+                // 2. 渲染籤表格子
                 const grid = document.getElementById('poolGrid');
                 grid.innerHTML = '';
                 pool.forEach((t, i) => {
@@ -173,20 +179,21 @@
         document.getElementById('uBal').innerText = (s.val()||0).toLocaleString();
     });
 
+    // 購買函數
     async function buy(idx, grade) {
         const s = await get(ref(db, `users/${userId}/balance`));
         const bal = s.val() || 0;
         if(bal < gData.price) return alert("點數不足！");
-        if(!confirm(`確定花費 ${gData.price} 點購買 ${idx+1} 號？`)) return;
+        if(!confirm(`購買 ${idx+1} 號卡片？`)) return;
 
         await update(ref(db, `users/${userId}`), { balance: bal - gData.price });
         await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true });
         showScratch(idx + 1, grade);
     }
 
+    // 刮刮樂邏輯 (帶防滑動處理)
     function showScratch(displayId, luckyNum) {
         document.getElementById('scratchOverlay').style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // 鎖定背景
         document.getElementById('selNum').innerText = displayId;
         document.getElementById('luckyVal').innerText = luckyNum;
 
@@ -198,10 +205,10 @@
         let drawing = false;
         const scratch = (e) => {
             if(!drawing) return;
-            if(e.cancelable) e.preventDefault();
+            if(e.cancelable) e.preventDefault(); // 阻止滑動
             const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
             ctx.globalCompositeOperation = 'destination-out';
             ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI*2); ctx.fill();
 
@@ -219,8 +226,8 @@
     }
 
     function judge(val) {
-        const prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
-        const hit = prizes.find(p => parseInt(p.num) === val);
+        let prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
+        const hit = prizes.find(p => p && parseInt(p.num) === val);
         const modal = document.getElementById('resModal');
         const img = document.getElementById('res_img');
         const msg = document.getElementById('res_msg');
