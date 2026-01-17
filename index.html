@@ -17,10 +17,8 @@
             color: var(--dark); overflow-x: hidden;
         }
 
-        /* 頂部導航 */
+        /* 頂部導航與流光餘額板 */
         .top-nav { width: 100%; background: white; padding: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
-        
-        /* 還原你的流光餘額板 */
         .user-card {
             background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
             width: 90%; max-width: 450px; border-radius: 20px;
@@ -49,11 +47,27 @@
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid #eee;
         }
-        .p-card:active { transform: scale(0.95); } /* 增加點擊感 */
+        .p-card:hover { transform: translateY(-8px); border-color: var(--primary); }
         .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         .p-info { padding: 12px; text-align: center; }
         .p-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; color: #333; }
         .p-price { color: var(--primary); font-weight: 800; font-size: 0.85rem; }
+
+        /* 🛡️ 系統說明區塊 (已優化內容以避免爭議) */
+        .trust-panel {
+            width: 90%; max-width: 450px; background: white;
+            border-radius: 20px; padding: 25px; margin: 30px 0;
+            box-sizing: border-box; border-top: 4px solid var(--gold);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .trust-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
+        .trust-header span { font-weight: 900; letter-spacing: 1px; color: #7f8c8d; }
+        
+        .trust-item { display: flex; margin-bottom: 15px; align-items: flex-start; }
+        .trust-icon { background: #f8f9fa; color: #95a5a6; width: 32px; height: 32px; border-radius: 8px; 
+                      display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; font-size: 0.8rem; border: 1px solid #eee; }
+        .trust-content b { display: block; font-size: 0.9rem; margin-bottom: 2px; color: #34495e; }
+        .trust-content p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.4; }
 
         /* 登入彈窗 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
@@ -61,7 +75,7 @@
         input { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #ddd; margin: 20px 0; text-align: center; font-size: 1.2rem; outline: none; box-sizing: border-box; }
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
 
-        .footer-info { margin: 40px 0; font-size: 0.7rem; color: #bbb; text-align: center; line-height: 1.8; }
+        .footer-info { margin: 20px 0 40px 0; font-size: 0.7rem; color: #bbb; text-align: center; line-height: 1.8; }
     </style>
 </head>
 <body oncontextmenu="return false;"> 
@@ -91,15 +105,14 @@
 <div class="section-title">EXCLUSIVE PRODUCTS</div>
 
 <div class="product-grid">
-    <div class="p-card" onclick="play('大首領', 100, 10, 'https://i.ibb.co/6RDNMdQ2/800x.jpg')">
+    <div class="p-card" onclick="play('大首領', 100, 10, 0, 1, 'https://i.ibb.co/6RDNMdQ2/800x.jpg')">
         <img src="https://i.ibb.co/6RDNMdQ2/800x.jpg" class="p-img">
         <div class="p-info">
             <div class="p-name">大首領</div>
             <div class="p-price">$ 100 / 抽</div>
         </div>
     </div>
-    
-    <div class="p-card" onclick="play('Model_Limited_B', 5000, 80, 'https://i.ibb.co/0pVRPTpt/33784914-1730327227044400-6918490164012515328-n.jpg')">
+    <div class="p-card" onclick="play('Model_Limited_B', 200, 80, 40, 8, 'https://i.ibb.co/0pVRPTpt/33784914-1730327227044400-6918490164012515328-n.jpg')">
         <img src="https://i.ibb.co/0pVRPTpt/33784914-1730327227044400-6918490164012515328-n.jpg" class="p-img">
         <div class="p-info">
             <div class="p-name">測試</div>
@@ -108,16 +121,47 @@
     </div>
 </div>
 
+<div class="trust-panel">
+    <div class="trust-header">
+        <span>系統運作狀態說明</span>
+    </div>
+    
+    <div class="trust-item">
+        <div class="trust-icon">✓</div>
+        <div class="trust-content">
+            <b>雲端實時數據更新</b>
+            <p>系統連結 Firebase Cloud 數據庫，確保點數異動與操作纪录均即時儲存於雲端。</p>
+        </div>
+    </div>
+
+    <div class="trust-item">
+        <div class="trust-icon">✓</div>
+        <div class="trust-content">
+            <b>專屬代碼授權存取</b>
+            <p>僅限持有有效通行代碼之會員進入，確保個人帳戶數據之隱私與安全性。</p>
+        </div>
+    </div>
+
+    <div class="trust-item">
+        <div class="trust-icon">✓</div>
+        <div class="trust-content">
+            <b>自動化判定系統</b>
+            <p>抽獎結果與結算由系統程序依據後台數據自動執行，數據處理過程具備高度一致性。</p>
+        </div>
+    </div>
+</div>
+
 <div class="footer-info">
     &copy; 2026 PREMIUM SLOTS PLATFORM<br>
-    系統連線狀態：<span style="color:#2ecc71">● 正常加密通訊中</span>
+    數據中心：Firebase Cloud Firestore Node<br>
+    本平台僅供持有授權代碼之會員進行測試與體驗
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 🔴 加強防禦 F12
+    // 🔴 鎖定 F12 與原始碼快捷鍵
     document.onkeydown = function(e) {
         if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
             return false;
@@ -131,7 +175,8 @@
         projectId: "dream-169dc",
         storageBucket: "dream-169dc.firebasestorage.app",
         messagingSenderId: "214137228622",
-        appId: "1:214137228622:web:84d14bad85d865ee94e21f"
+        appId: "1:214137228622:web:84d14bad85d865ee94e21f",
+        measurementId: "G-7YD4VSW7CZ"
     };
     
     const app = initializeApp(config);
@@ -155,9 +200,8 @@
     };
     window.logout = () => { localStorage.removeItem('myScratchCode'); location.reload(); };
 
-    // 🔴 核心修改：只傳 ID、價格、總數、圖片，機率(win)由 game.html 從資料庫讀取，防止被抓包
-    window.play = (id, price, total, img) => {
-        window.location.href = `game.html?id=${id}&price=${price}&total=${total}&img=${encodeURIComponent(img)}`;
+    window.play = (id, price, total, safe, win, img) => {
+        window.location.href = `game.html?id=${id}&price=${price}&total=${total}&safe=${safe}&win=${win}&img=${encodeURIComponent(img)}`;
     };
 </script>
 </body>
