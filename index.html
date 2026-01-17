@@ -1,62 +1,164 @@
-<style>
-    /* ...保留原本樣式... */
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>夢工廠刮刮樂商城</title>
+    <style>
+        :root { --primary: #ff8fa3; --dark: #2c3e50; --gold: #d4a017; --bg: #f8f9fa; }
+        
+        /* 🔴 核心安全鎖定：禁止文字選取與反白 */
+        * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; }
+        
+        body { 
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
+            background: var(--bg); margin: 0; padding: 0; 
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--dark); overflow-x: hidden;
+        }
 
-    /* 替代聲明區塊：改為簡單的服務資訊 */
-    .service-footer {
-        width: 90%; max-width: 450px;
-        margin: 30px 0;
-        padding: 15px;
-        text-align: center;
-        border-top: 1px solid #eee;
-    }
-    .status-dot {
-        display: inline-block;
-        width: 8px; height: 8px;
-        background: #2ecc71;
-        border-radius: 50%;
-        margin-right: 5px;
-        box-shadow: 0 0 5px #2ecc71;
-    }
-    .server-info {
-        font-size: 0.75rem;
-        color: #999;
-        letter-spacing: 0.5px;
-    }
-</style>
+        /* 頂部導航 */
+        .top-nav { width: 100%; background: white; padding: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
+        
+        /* 還原你的流光餘額板 */
+        .user-card {
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+            width: 90%; max-width: 450px; border-radius: 20px;
+            padding: 25px; margin: 20px 0; color: white;
+            position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .user-card::before {
+            content: ""; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .balance-amount { font-size: 2.2rem; font-weight: 800; margin: 10px 0; color: var(--primary); text-shadow: 0 0 15px rgba(255,143,163,0.5); }
+        .user-id { font-family: monospace; font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 50px; }
+
+        /* 商品區 */
+        .section-title { width: 90%; max-width: 450px; font-weight: bold; margin: 10px 0; display: flex; align-items: center; }
+        .section-title::before { content: ""; width: 4px; height: 18px; background: var(--primary); margin-right: 8px; border-radius: 2px; }
+
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 92%; max-width: 480px; padding: 10px 0; }
+        .p-card { 
+            background: white; border-radius: 18px; overflow: hidden; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #eee;
+        }
+        .p-card:active { transform: scale(0.95); } /* 增加點擊感 */
+        .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .p-info { padding: 12px; text-align: center; }
+        .p-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; color: #333; }
+        .p-price { color: var(--primary); font-weight: 800; font-size: 0.85rem; }
+
+        /* 登入彈窗 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .m-box { background: white; padding: 40px 30px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
+        input { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #ddd; margin: 20px 0; text-align: center; font-size: 1.2rem; outline: none; box-sizing: border-box; }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
+
+        .footer-info { margin: 40px 0; font-size: 0.7rem; color: #bbb; text-align: center; line-height: 1.8; }
+    </style>
+</head>
+<body oncontextmenu="return false;"> 
+
+<div id="loginModal" class="modal">
+    <div class="m-box">
+        <h2 style="margin:0; color:var(--dark);">MEMBER LOGIN</h2>
+        <p style="color:#aaa; font-size:0.8rem;">請輸入您的專屬抽獎代碼</p>
+        <input type="text" id="userCode" placeholder="ENTER CODE">
+        <button class="btn" onclick="login()">進入系統</button>
+    </div>
+</div>
+
+<div class="top-nav">
+    <div style="font-weight:900; letter-spacing:2px; margin-top:5px;">🌟 夢工廠刮刮樂商城 🌟</div>
+</div>
+
+<div class="user-card">
+    <div style="font-size: 0.8rem; opacity: 0.7;">我的點數</div>
+    <div class="balance-amount">P <span id="uBalance">0</span></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+        <span class="user-id" id="uName">ID: GUEST</span>
+        <button onclick="logout()" style="background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-size:0.75rem;">登出帳戶</button>
+    </div>
+</div>
+
+<div class="section-title">EXCLUSIVE PRODUCTS</div>
 
 <div class="product-grid">
-    <div class="p-card" onclick="play('Boss_01', 100)">
+    <div class="p-card" onclick="play('大首領', 100, 10, 'https://i.ibb.co/6RDNMdQ2/800x.jpg')">
         <img src="https://i.ibb.co/6RDNMdQ2/800x.jpg" class="p-img">
         <div class="p-info">
-            <div class="p-name">大首領系列</div>
-            <div class="p-price">100 pts / 抽</div>
+            <div class="p-name">大首領</div>
+            <div class="p-price">$ 100 / 抽</div>
+        </div>
+    </div>
+    
+    <div class="p-card" onclick="play('Model_Limited_B', 5000, 80, 'https://i.ibb.co/0pVRPTpt/33784914-1730327227044400-6918490164012515328-n.jpg')">
+        <img src="https://i.ibb.co/0pVRPTpt/33784914-1730327227044400-6918490164012515328-n.jpg" class="p-img">
+        <div class="p-info">
+            <div class="p-name">測試</div>
+            <div class="p-price">$ 5000 / 抽</div>
         </div>
     </div>
 </div>
 
-<div class="service-footer">
-    <div class="server-info">
-        <span class="status-dot"></span> 雲端系統連線正常 | 加密通訊已開啟
-    </div>
+<div class="footer-info">
+    &copy; 2026 PREMIUM SLOTS PLATFORM<br>
+    系統連線狀態：<span style="color:#2ecc71">● 正常加密通訊中</span>
 </div>
 
 <script type="module">
-    /* ...Firebase 配置與登入邏輯保持不變... */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 優化後的跳轉邏輯
-    window.play = (id, price) => {
-        // 核心建議：不要把 total, safe, win 寫在 HTML 標籤裡
-        // 這裡只傳 ID 與價格，內頁再從資料庫抓取機率設定
-        const url = `game.html?id=${id}&price=${price}`;
-        window.location.href = url;
+    // 🔴 加強防禦 F12
+    document.onkeydown = function(e) {
+        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
+            return false;
+        }
     };
 
-    /* 防止他人看原始碼的小技巧：
-       雖然無法 100% 防止，但可以增加難度 
-    */
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'i')) {
-            e.preventDefault();
-        }
-    });
+    const config = { 
+        apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
+        authDomain: "dream-169dc.firebaseapp.com",
+        databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com",
+        projectId: "dream-169dc",
+        storageBucket: "dream-169dc.firebasestorage.app",
+        messagingSenderId: "214137228622",
+        appId: "1:214137228622:web:84d14bad85d865ee94e21f"
+    };
+    
+    const app = initializeApp(config);
+    const db = getDatabase(app);
+
+    const code = localStorage.getItem('myScratchCode');
+    if(code) {
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('uName').innerText = `ID: ${code}`;
+        onValue(ref(db, `users/${code}/balance`), s => {
+            document.getElementById('uBalance').innerText = (s.val() || 0).toLocaleString();
+        });
+    } else { document.getElementById('loginModal').style.display = 'flex'; }
+
+    window.login = async () => {
+        const c = document.getElementById('userCode').value.trim().toUpperCase();
+        if(!c) return;
+        const s = await get(ref(db, `users/${c}`));
+        if(s.exists()){ localStorage.setItem('myScratchCode', c); location.reload(); }
+        else alert("驗證失敗：無效的通行碼");
+    };
+    window.logout = () => { localStorage.removeItem('myScratchCode'); location.reload(); };
+
+    // 🔴 核心修改：只傳 ID、價格、總數、圖片，機率(win)由 game.html 從資料庫讀取，防止被抓包
+    window.play = (id, price, total, img) => {
+        window.location.href = `game.html?id=${id}&price=${price}&total=${total}&img=${encodeURIComponent(img)}`;
+    };
 </script>
+</body>
+</html>
