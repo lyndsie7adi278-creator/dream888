@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DREAM CMS | 旗艦控盤系統</title>
+    <title>DREAM CMS | 即時控盤系統</title>
     <style>
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; --border: rgba(255,184,0,0.3); }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: none; }
@@ -15,13 +15,22 @@
         .page { display: none; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .card { background: var(--card); border-radius: 15px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 25px; position: relative; }
+        
+        /* 即時監控卡片 */
+        .card { background: var(--card); border-radius: 15px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 25px; position: relative; transition: 0.3s; }
+        .card:hover { border-color: var(--p); }
         .title { font-size: 1.1rem; color: var(--p); margin-bottom: 20px; font-weight: bold; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        
+        /* 即時數據樣式 */
+        .live-counter { font-size: 1.5rem; font-weight: 900; color: var(--p); margin: 10px 0; }
+        .progress-bg { height: 8px; background: #000; border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--p), #fff); width: 0%; transition: 1s cubic-bezier(0.075, 0.82, 0.165, 1); }
+
         input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
         .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.3s; margin-bottom: 5px; }
-        .btn:hover { background: #fff; box-shadow: 0 0 15px var(--p); }
-        .btn-shuffle { background: #2ecc71; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
+        .btn-shuffle { background: #2ecc71; color: white; font-size: 0.8rem; }
+        .btn-danger { background: #ef4444; color: white; font-size: 0.8rem; }
+        
         table { width: 100%; border-collapse: collapse; }
         th { color: #888; font-size: 0.8rem; padding: 12px; border-bottom: 2px solid #222; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 0.9rem; }
@@ -30,44 +39,36 @@
 <body>
 
 <div class="sidebar">
-    <div class="logo">DREAM ADMIN</div>
-    <div class="nav-link active" onclick="showPage('mon')">📊 監控與重置</div>
+    <div class="logo">DREAM LIVE</div>
+    <div class="nav-link active" onclick="showPage('mon')">📊 即時監控監聽</div>
     <div class="nav-link" onclick="showPage('game')">📦 商品與控盤</div>
     <div class="nav-link" onclick="showPage('user')">👤 全體會員</div>
 </div>
 
 <div class="main">
     <div id="mon" class="page active">
-        <div class="title">商品監控 (支援全數洗牌重置)</div>
-        <div id="monList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+        <div class="title">即時銷量追蹤 (數據自動更新)</div>
+        <div id="monList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+            <p style="color:#666;">正在建立即時連線...</p>
+        </div>
     </div>
 
     <div id="game" class="page">
         <div class="title">發布新商品與精確控盤</div>
         <div class="card" style="max-width: 600px;">
-            <label>基本設定</label>
             <input type="text" id="gId" placeholder="遊戲 ID">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="number" id="gTotal" placeholder="總籤數 (如 80)">
+                <input type="number" id="gTotal" placeholder="總籤數">
                 <input type="number" id="gPrice" placeholder="單抽價格">
             </div>
             <input type="text" id="gImg" placeholder="圖片連結">
-            
-            <label style="color: var(--p);">獎項設定 (JSON)</label>
             <textarea id="gPrizes" rows="2">[{"num":8, "name":"大獎"}]</textarea>
-
-            <label style="color: var(--p);">🛡️ 控盤模式 (配率設定)</label>
             <select id="rateMode" onchange="toggleRateInput()">
-                <option value="all_random">完全隨機 (1~總張數隨機分佈)</option>
-                <option value="after_n">延遲出現 (前 N 張絕對不出大獎)</option>
+                <option value="all_random">完全隨機</option>
+                <option value="after_n">延遲出現 (前 N 張不出獎)</option>
             </select>
-            
-            <div id="rateDetail" style="display:none;">
-                <label>設定 N 值：前多少張「絕對不出」中獎號碼？</label>
-                <input type="number" id="nValue" placeholder="例如填 20，代表大獎只會出現在 21~80 張之間">
-            </div>
-
-            <button class="btn" onclick="publishGame()">確認發布並執行控盤洗牌</button>
+            <div id="rateDetail" style="display:none;"><input type="number" id="nValue" placeholder="N 值 (例如前 20 張不出)"></div>
+            <button class="btn" onclick="publishGame()">確認發布</button>
         </div>
     </div>
 
@@ -114,24 +115,47 @@
         document.getElementById('rateDetail').style.display = (mode === 'after_n') ? 'block' : 'none';
     };
 
+    // --- 🔴 核心：即時監聽與自動更新邏輯 ---
     function startSync() {
-        onValue(ref(db, 'gameSettings'), async s => {
+        // 第一層：監聽商品列表變動
+        onValue(ref(db, 'gameSettings'), (settingsSnap) => {
             const list = document.getElementById('monList');
-            const data = s.val(); if(!data) return;
+            const settings = settingsSnap.val();
+            if(!settings) return list.innerHTML = "目前無商品";
+            
             list.innerHTML = '';
-            for(let id in data) {
-                const pSnap = await get(ref(db, `games/${id}/pool`));
-                const pool = pSnap.val() || [];
-                const remain = pool.filter(p => !p.taken).length;
-                list.innerHTML += `
-                    <div class="card">
-                        <b>${id}</b> (剩餘 ${remain} / ${data[id].total})
-                        <button class="btn btn-shuffle" style="padding:5px; margin-top:10px; font-size:0.7rem;" onclick="resetShuffle('${id}')">🎲 全數重新洗牌(重置)</button>
-                        <button class="btn btn-danger" style="padding:5px; font-size:0.7rem;" onclick="deleteGame('${id}')">🗑 刪除</button>
+            Object.keys(settings).forEach(id => {
+                // 為每個商品建立一個專屬卡片容器
+                const cardHtml = `
+                    <div class="card" id="card-${id}">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <b>${id.replace(/_/g, ' ')}</b>
+                            <span style="font-size:0.7rem; color:#888;">ID: ${id}</span>
+                        </div>
+                        <div class="live-counter">剩餘 <span id="rem-${id}">--</span> / ${settings[id].total}</div>
+                        <div class="progress-bg"><div class="progress-bar" id="bar-${id}"></div></div>
+                        <button class="btn btn-shuffle" onclick="resetShuffle('${id}')">🎲 全數重置洗牌</button>
+                        <button class="btn btn-danger" onclick="deleteGame('${id}')">🗑 刪除商品</button>
                     </div>`;
-            }
+                list.innerHTML += cardHtml;
+
+                // 第二層：為每個商品的 Pool (籤池) 建立獨立監聽器
+                onValue(ref(db, `games/${id}/pool`), (poolSnap) => {
+                    const pool = poolSnap.val() || [];
+                    const total = settings[id].total;
+                    const remain = pool.filter(p => !p.taken).length;
+                    const percent = ((total - remain) / total) * 100;
+
+                    // 🔴 即時更新 DOM 元素，不需重新整理
+                    const remEl = document.getElementById(`rem-${id}`);
+                    const barEl = document.getElementById(`bar-${id}`);
+                    if(remEl) remEl.innerText = remain;
+                    if(barEl) barEl.style.width = percent + "%";
+                });
+            });
         });
 
+        // 會員即時監聽
         onValue(ref(db, 'users'), s => {
             const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = '';
@@ -142,7 +166,7 @@
         });
     }
 
-    // --- 核心控盤洗牌演算法 ---
+    // --- 控盤洗牌演算法 ---
     function shuffleAlgorithm(total, prizes, mode, nValue) {
         let pool = Array.from({length: total}, (_, i) => ({ grade: i + 1, taken: false }));
         const prizeNums = prizes.map(p => parseInt(p.num));
@@ -150,21 +174,12 @@
         if (mode === 'all_random') {
             pool.sort(() => Math.random() - 0.5);
         } else if (mode === 'after_n') {
-            let n = parseInt(nValue) || 0;
-            if (n >= total) n = total - 1;
-
-            // 挑出中獎號碼與普通號碼
+            let n = Math.min(parseInt(nValue) || 0, total - 1);
             let winItems = pool.filter(item => prizeNums.includes(item.grade));
             let normalItems = pool.filter(item => !prizeNums.includes(item.grade));
-
-            // 打亂普通號碼
             normalItems.sort(() => Math.random() - 0.5);
-
-            // 前 N 張強行放入普通號碼
             let front = normalItems.slice(0, n);
             let back = [...normalItems.slice(n), ...winItems];
-            
-            // 後半段再次打亂，讓大獎隨機出現在 N 張之後
             back.sort(() => Math.random() - 0.5);
             pool = [...front, ...back];
         }
@@ -174,28 +189,24 @@
     window.publishGame = async () => {
         const id = document.getElementById('gId').value.trim();
         const total = parseInt(document.getElementById('gTotal').value);
-        const price = parseInt(document.getElementById('gPrice').value);
-        const img = document.getElementById('gImg').value;
         const prizes = JSON.parse(document.getElementById('gPrizes').value);
         const mode = document.getElementById('rateMode').value;
         const nValue = document.getElementById('nValue').value;
-
         if(!id || !total) return alert("必填");
 
         const pool = shuffleAlgorithm(total, prizes, mode, nValue);
-
-        await set(ref(db, `gameSettings/${id}`), { total, price, img, prizes, rateMode: mode, nValue });
+        await set(ref(db, `gameSettings/${id}`), { total, price: parseInt(document.getElementById('gPrice').value), img: document.getElementById('gImg').value, prizes, rateMode: mode, nValue });
         await set(ref(db, `games/${id}/pool`), pool);
-        alert("發布成功，已套用控盤設定！");
+        alert("發布成功！");
     };
 
     window.resetShuffle = async (id) => {
-        if(!confirm("確定要將此遊戲全數重新洗牌嗎？這會清除所有已抽紀錄！")) return;
+        if(!confirm("確定重置並洗牌？這會清空該遊戲所有紀錄！")) return;
         const s = await get(ref(db, `gameSettings/${id}`));
         const d = s.val();
         const newPool = shuffleAlgorithm(d.total, d.prizes, d.rateMode || 'all_random', d.nValue || 0);
         await set(ref(db, `games/${id}/pool`), newPool);
-        alert("重置洗牌完成！");
+        alert("已重置為全新狀態。");
     };
 
     window.addBal = async (uid) => {
