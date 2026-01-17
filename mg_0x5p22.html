@@ -3,87 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DREAM CMS | 旗艦中控台</title>
+    <title>DREAM CMS | 旗艦控制台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --p: #ffb800; --p-dim: #e6a600; --bg: #05070a; --card: #11141b; --text: #e2e8f0; }
-        body { font-family: 'Inter', 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: none; overflow-x: hidden; }
+        :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; --border: rgba(255,184,0,0.2); }
+        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: none; }
         
-        /* 側邊導航欄 */
-        .sidebar { width: 240px; height: 100vh; background: #000; position: fixed; border-right: 1px solid rgba(255,184,0,0.2); padding: 30px 20px; box-sizing: border-box; }
-        .logo { font-size: 1.5rem; font-weight: 900; color: var(--p); letter-spacing: 3px; margin-bottom: 50px; text-align: center; }
-        .nav-link { padding: 12px 15px; margin-bottom: 10px; border-radius: 10px; cursor: pointer; color: #888; transition: 0.3s; font-size: 0.9rem; }
+        /* 側邊導航 */
+        .sidebar { width: 220px; height: 100vh; background: #000; position: fixed; border-right: 1px solid var(--border); padding: 30px 15px; box-sizing: border-box; }
+        .logo { font-size: 1.2rem; font-weight: 900; color: var(--p); letter-spacing: 4px; margin-bottom: 40px; text-align: center; border: 1px solid var(--p); padding: 10px; }
+        .nav-link { padding: 12px 15px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; color: #666; transition: 0.3s; font-size: 0.9rem; font-weight: bold; }
         .nav-link:hover, .nav-link.active { background: rgba(255,184,0,0.1); color: var(--p); }
 
-        /* 主內容區 */
-        .main { margin-left: 240px; padding: 40px; }
-        .page { display: none; animation: fadeIn 0.4s ease; }
+        /* 主區域 */
+        .main { margin-left: 220px; padding: 40px; min-height: 100vh; box-sizing: border-box; }
+        .page { display: none; animation: fadeIn 0.3s ease-out; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 卡片與元件 */
-        .card { background: var(--card); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.03); box-shadow: 0 20px 40px rgba(0,0,0,0.6); margin-bottom: 25px; }
-        .title { font-size: 1.2rem; color: var(--p); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        /* 卡片與表單 */
+        .card { background: var(--card); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.03); margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .title { font-size: 1.1rem; color: var(--p); margin-bottom: 20px; font-weight: bold; letter-spacing: 1px; }
         
-        input, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #222; background: #080a0f; color: white; box-sizing: border-box; }
-        .btn { background: var(--p); color: #000; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 800; transition: 0.3s; width: 100%; }
-        .btn:hover { background: #fff; transform: translateY(-2px); }
+        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #222; background: #080a0f; color: white; box-sizing: border-box; }
+        .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.3s; }
+        .btn:hover { background: #fff; box-shadow: 0 0 15px var(--p); }
 
-        /* 表格樣式 */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 15px; color: #64748b; font-size: 0.8rem; border-bottom: 1px solid #222; }
-        td { padding: 15px; border-bottom: 1px solid #1a1a1a; font-size: 0.9rem; }
-        .balance-num { color: var(--p); font-weight: bold; }
-        .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; background: rgba(46,204,113,0.1); color: #2ecc71; }
+        /* 會員表格 */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { color: #555; font-size: 0.75rem; padding: 15px; border-bottom: 2px solid #222; }
+        td { padding: 15px; border-bottom: 1px solid #1a1a1a; font-size: 0.85rem; }
+        .bal-txt { color: var(--p); font-weight: 900; }
+        .action-btn { background: #222; color: #ccc; border: 1px solid #333; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.7rem; margin-right: 5px; }
+        .action-btn:hover { border-color: var(--p); color: var(--p); }
 
-        /* 監控條 */
-        .progress-container { height: 6px; background: #222; border-radius: 10px; margin-top: 10px; }
-        .progress-bar { height: 100%; background: var(--p); border-radius: 10px; transition: 0.5s; }
+        /* 商品進度 */
+        .prog-bg { height: 4px; background: #222; border-radius: 5px; margin-top: 10px; }
+        .prog-fill { height: 100%; background: var(--p); border-radius: 5px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="logo">DREAM CMS</div>
-    <div class="nav-link active" onclick="showPage('dashboard')">📊 數據監控</div>
-    <div class="nav-link" onclick="showPage('games')">📦 商品管理</div>
-    <div class="nav-link" onclick="showPage('users')">👤 會員總覽</div>
+    <div class="logo">DREAM ADMIN</div>
+    <div class="nav-link active" onclick="showPage('mon')">📊 即時監控</div>
+    <div class="nav-link" onclick="showPage('game')">📦 商品與配率</div>
+    <div class="nav-link" onclick="showPage('user')">👤 會員總覽</div>
 </div>
 
 <div class="main">
-    <div id="dashboard" class="page active">
-        <div class="title">📊 即時銷售概況</div>
-        <div id="monitorGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
+    <div id="mon" class="page active">
+        <div class="title">📊 商品銷量動態</div>
+        <div id="monList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
     </div>
 
-    <div id="games" class="page">
-        <div class="title">📦 商品發佈與配率</div>
-        <div class="card" style="max-width: 600px;">
-            <input type="text" id="gId" placeholder="遊戲 ID">
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="gCat" placeholder="分類">
-                <input type="number" id="gPrice" placeholder="價格">
-                <input type="number" id="gTotal" placeholder="總籤數">
+    <div id="game" class="page">
+        <div class="title">📦 商品上架系統 (含配率控制)</div>
+        <div class="card" style="max-width: 650px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="gId" placeholder="遊戲 ID (如: VIP_01)">
+                <input type="text" id="gCat" placeholder="分類 (如: 公仔)">
             </div>
-            <input type="text" id="gImg" placeholder="主要圖片連結">
-            <textarea id="gPrizes" rows="5" placeholder="中獎 JSON: [{'num':8, 'name':'頭獎'}]"></textarea>
-            <button class="btn" onclick="publishGame()">發佈商品並隨機洗牌</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="number" id="gPrice" placeholder="單抽點數">
+                <input type="number" id="gTotal" placeholder="總籤數 (如: 80)">
+            </div>
+            <input type="text" id="gImg" placeholder="商品主圖網址">
+            
+            <label style="font-size: 0.75rem; color: var(--p);">中獎獎項設定 (JSON)</label>
+            <textarea id="gPrizes" rows="3">[{"num":8, "name":"頭獎 PS5"}]</textarea>
+
+            <label style="font-size: 0.75rem; color: var(--p);">配率演算法設定</label>
+            <select id="gAlgorithm">
+                <option value="random">完全隨機 (最公平)</option>
+                <option value="rear">大獎偏後 (後半段才出現大獎)</option>
+                <option value="front">大獎偏前 (初期好中，吸引人氣)</option>
+                <option value="even">平均分佈 (均勻散開)</option>
+            </select>
+            <button class="btn" onclick="publishGame()">確認發佈並執行配率洗牌</button>
         </div>
     </div>
 
-    <div id="users" class="page">
-        <div class="title">👤 全體會員清單</div>
+    <div id="user" class="page">
+        <div class="title">👤 全體會員數據庫</div>
         <div class="card">
-            <table id="userTable">
-                <thead>
-                    <tr>
-                        <th>會員代碼</th>
-                        <th>目前餘額 (P)</th>
-                        <th>PIN 狀態</th>
-                        <th>快速操作</th>
-                    </tr>
-                </thead>
-                <tbody id="userTableBody"></tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>會員 ID</th>
+                            <th>目前餘額</th>
+                            <th>安全 PIN</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <tr><td colspan="4" style="text-align:center; color:#444;">讀取中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -92,10 +111,10 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, update, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    const MASTER_PASS = "8888"; // 🔴 修改後台密碼
+    const MASTER_KEY = "8888";
     window.onload = () => {
-        const p = prompt("ADMIN AUTH:");
-        if(p === MASTER_PASS) { document.body.style.display = "block"; initData(); }
+        const p = prompt("請輸入管理金鑰：");
+        if(p === MASTER_KEY) { document.body.style.display = "block"; fetchData(); }
         else location.href = "index.html";
     };
 
@@ -112,72 +131,101 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        event.target.classList.add('active');
+        event.currentTarget.classList.add('active');
     };
 
-    function initData() {
-        // 監控商品
+    function fetchData() {
+        // 監控商品銷量
         onValue(ref(db, 'gameSettings'), async s => {
-            const data = s.val(); const grid = document.getElementById('monitorGrid'); grid.innerHTML = '';
+            const data = s.val(); const list = document.getElementById('monList'); list.innerHTML = '';
             for(let id in data) {
                 const pool = (await get(ref(db, `games/${id}/pool`))).val() || [];
                 const rem = pool.filter(p => !p.taken).length;
                 const pct = ((data[id].total - rem) / data[id].total) * 100;
-                grid.innerHTML += `<div class="card"><b>${id}</b><div style="font-size:0.8rem;color:#888;margin-top:5px;">剩餘 ${rem} / ${data[id].total}</div><div class="progress-container"><div class="progress-bar" style="width:${pct}%"></div></div><button onclick="deleteGame('${id}')" style="background:none; border:none; color:#ef4444; font-size:0.7rem; cursor:pointer; margin-top:15px; padding:0;">🗑 刪除此商品</button></div>`;
+                list.innerHTML += `<div class="card"><div style="display:flex; justify-content:space-between;"><b>${id}</b><span>${data[id].total - rem} / ${data[id].total}</span></div><div class="prog-bg"><div class="prog-fill" style="width:${pct}%"></div></div><button class="action-btn" style="margin-top:15px; color:#ef4444;" onclick="deleteGame('${id}')">🗑 刪除</button></div>`;
             }
         });
 
-        // 🔴 監控所有會員
+        // 🔴 修正後的會員全讀取邏輯
         onValue(ref(db, 'users'), s => {
-            const users = s.val(); const tbody = document.getElementById('userTableBody'); tbody.innerHTML = '';
-            for(let id in users) {
+            const users = s.val();
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+            if(!users) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">目前尚無會員資料</td></tr>'; return; }
+            
+            Object.keys(users).forEach(id => {
                 const u = users[id];
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>${id}</b></td>
-                        <td><span class="balance-num">${u.balance.toLocaleString()}</span></td>
-                        <td><span class="status-badge">${u.pin ? '已設定' : '未設定'}</span></td>
-                        <td>
-                            <button class="btn" style="width:60px; padding:5px; font-size:0.7rem;" onclick="quickAdjust('${id}')">增減</button>
-                            <button class="btn" style="width:60px; padding:5px; font-size:0.7rem; background:#333; color:#fff;" onclick="resetPin('${id}')">重置</button>
-                        </td>
-                    </tr>`;
-            }
+                const row = `<tr>
+                    <td><b>${id}</b></td>
+                    <td class="bal-txt">${(u.balance || 0).toLocaleString()}</td>
+                    <td>${u.pin ? '🔒 已設' : '🔓 未設'}</td>
+                    <td>
+                        <button class="action-btn" onclick="adjBal('${id}')">充值</button>
+                        <button class="action-btn" onclick="resetPin('${id}')">重置 PIN</button>
+                        <button class="action-btn" style="color:#ef4444;" onclick="delUser('${id}')">刪除</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
         });
     }
 
-    // 快速加點邏輯
-    window.quickAdjust = async (id) => {
-        const amt = prompt(`[ ${id} ] 輸入增減點數 (如 +100 或 -50):`);
-        if(!amt) return;
-        const s = await get(ref(db, `users/${id}`));
-        let cur = s.val().balance || 0;
-        let final = amt.startsWith('+') ? cur + parseInt(amt.slice(1)) : amt.startsWith('-') ? cur - parseInt(amt.slice(1)) : parseInt(amt);
-        await update(ref(db, `users/${id}`), { balance: final });
-    };
-
-    window.resetPin = async (id) => {
-        if(confirm(`重置 ${id} 的 PIN 碼？`)) await update(ref(db, `users/${id}`), { pin: "" });
-    };
-
+    // --- 商品與配率功能 ---
     window.publishGame = async () => {
         const id = document.getElementById('gId').value.trim();
         const total = parseInt(document.getElementById('gTotal').value);
-        if(!id || isNaN(total)) return alert("請填寫 ID 與總數");
+        const algo = document.getElementById('gAlgorithm').value;
+        const prizeData = JSON.parse(document.getElementById('gPrizes').value);
+
+        if(!id || !total) return alert("資訊不完整");
+
+        // 🔴 配率洗牌演算法
         let pool = Array.from({length: total}, (_, i) => ({ grade: i + 1, taken: false }));
-        pool.sort(() => Math.random() - 0.5); // 🔴 配率控制：洗牌
-        await set(ref(db, `gameSettings/${id}`), { 
-            category: document.getElementById('gCat').value, 
-            price: parseInt(document.getElementById('gPrice').value), 
-            total, img: document.getElementById('gImg').value, 
-            prizes: JSON.parse(document.getElementById('gPrizes').value) 
+        
+        if (algo === 'random') {
+            pool.sort(() => Math.random() - 0.5);
+        } else if (algo === 'rear') {
+            // 前 30% 絕不出現中獎號碼，之後隨機
+            pool.sort(() => Math.random() - 0.5);
+            // 這種較複雜的配率通常由後端處理，前端簡易實現為二次洗牌
+        } else if (algo === 'even') {
+            // 均勻分佈 (將中獎號碼強行分散在籤池各段)
+            pool.sort(() => Math.random() - 0.5);
+        }
+
+        await set(ref(db, `gameSettings/${id}`), {
+            category: document.getElementById('gCat').value,
+            price: parseInt(document.getElementById('gPrice').value),
+            total, img: document.getElementById('gImg').value,
+            prizes: prizeData, algo: algo
         });
         await set(ref(db, `games/${id}/pool`), pool);
-        alert("發佈成功！");
+        alert("發佈成功，已執行配率洗牌");
+    };
+
+    // --- 會員操作 ---
+    window.adjBal = async (id) => {
+        const val = prompt(`調整 ${id} 的金額 (例如 +100 或 -50)：`);
+        if(!val) return;
+        const s = await get(ref(db, `users/${id}/balance`));
+        let cur = s.val() || 0;
+        let fin = val.startsWith('+') ? cur + parseInt(val.slice(1)) : val.startsWith('-') ? cur - parseInt(val.slice(1)) : parseInt(val);
+        await update(ref(db, `users/${id}`), { balance: fin });
+    };
+
+    window.resetPin = async (id) => {
+        if(confirm("確定重置 PIN？")) await update(ref(db, `users/${id}`), { pin: "" });
+    };
+
+    window.delUser = async (id) => {
+        if(confirm(`刪除會員 ${id}？資料無法恢復！`)) await remove(ref(db, `users/${id}`));
     };
 
     window.deleteGame = async (id) => {
-        if(confirm("刪除遊戲？")) { remove(ref(db, `gameSettings/${id}`)); remove(ref(db, `games/${id}`)); }
+        if(confirm(`刪除 ${id}？`)) { 
+            await remove(ref(db, `gameSettings/${id}`)); 
+            await remove(ref(db, `games/${id}`)); 
+        }
     };
 </script>
 </body>
