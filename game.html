@@ -8,81 +8,70 @@
     <style>
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; }
         body { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; font-family: sans-serif; display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; }
-        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
         
         .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); z-index: 100; }
-        .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; }
+        .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-size: 0.8rem; }
         .balance-tag { background: var(--p); padding: 5px 15px; border-radius: 50px; font-weight: bold; color: #000; }
         
-        .billboard { display: flex; align-items: center; padding: 10px; gap: 12px; background: var(--card); border-bottom: 3px solid var(--p); }
-        .main-img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 2px solid #333; }
+        .billboard { display: flex; align-items: center; padding: 15px; gap: 15px; background: var(--card); border-bottom: 3px solid var(--p); position: relative; }
+        .main-img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 2px solid #333; }
+        .info-box h2 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; }
+        
+        /* 🔴 階梯定價顯示區塊 */
+        .price-display { margin-top: 5px; }
+        .promo-active-tag { background: var(--danger); color: white; font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; font-weight: 900; margin-bottom: 4px; display: inline-block; animation: flash 1.5s infinite; }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         
         .prize-monitor { padding: 8px 10px; background: rgba(255,255,255,0.03); font-size: 0.7rem; border-bottom: 1px solid #222; }
         .prize-tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
         .prize-tag { background: #222; padding: 3px 8px; border-radius: 4px; border: 1px solid #333; }
         .prize-tag.won { text-decoration: line-through; opacity: 0.2; background: #000; }
         
-        #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 100px; touch-action: pan-y; }
+        #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 100px; }
         .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; max-width: 500px; margin: 0 auto; }
         
-        .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
-        .ticket.winner-glow { border: 2px solid var(--win); box-shadow: 0 0 15px var(--win), inset 0 0 10px var(--win); animation: winner-pulse 1.5s infinite ease-in-out; }
+        .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s; }
+        .ticket:active { transform: scale(0.9); background: #333; }
+        .ticket.winner-glow { border: 2px solid var(--win); box-shadow: 0 0 15px var(--win); animation: winner-pulse 1.5s infinite; }
         @keyframes winner-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         
-        .ticket.taken { background: #000; border-color: #222; }
-        .ticket.taken .history-num { color: var(--p); font-size: 1.3rem; font-weight: 900; animation: pop-in 0.4s ease-out; }
-        @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .ticket.taken { background: #000; border-color: #222; cursor: default; }
+        .ticket.taken .history-num { color: var(--p); font-size: 1.2rem; font-weight: 900; }
         
+        /* 刮獎與彈窗 */
         .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
         .scratch-box { position: relative; width: 280px; height: 280px; border-radius: 25px; overflow: hidden; background: white; border: 6px solid #333; }
-        #luckyVal { font-size: 6rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        #luckyVal { font-size: 6.5rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
         
         .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
         .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 85%; max-width: 320px; box-shadow: 0 0 40px var(--p); }
-        
-        /* 🔴 餘額不足專用彈窗樣式 */
         .danger-card { border-color: var(--danger) !important; box-shadow: 0 0 40px var(--danger) !important; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div class="header">
-    <button class="back-btn" onclick="location.href='index.html'">← 返回</button>
+    <button class="back-btn" onclick="location.href='index.html'">← 返回商城</button>
     <div class="balance-tag">P <span id="uBal">0</span></div>
 </div>
 
 <div class="billboard">
     <img id="gMainImg" class="main-img" src="">
     <div class="info-box">
-        <h2 id="gTitle">...</h2>
-        <div id="gPrice">-- P / 抽</div>
+        <h2 id="gTitle">載入中...</h2>
+        <div id="priceArea" class="price-display">
+            </div>
     </div>
 </div>
 
 <div class="prize-monitor">
-    <div style="color: #666; font-size: 0.6rem;">中獎獎項追蹤</div>
+    <div style="color: #666; font-size: 0.6rem; letter-spacing: 1px;">LIVE PRIZE TRACKER / 中獎追蹤</div>
     <div class="prize-tag-list" id="prizeTags"></div>
 </div>
 
-<div id="scroll-area"><div class="pool-grid" id="poolGrid"></div></div>
-
-<div id="scratchOverlay" class="scratch-overlay">
-    <div style="text-align:center;">
-        <div style="margin-bottom:15px; font-weight:900; color:var(--p);">刮開第 <span id="selNum"></span> 號</div>
-        <div class="scratch-box">
-            <div id="luckyVal">?</div>
-            <canvas id="scratch-canvas" width="280" height="280" style="position:absolute;inset:0;z-index:10;"></canvas>
-        </div>
-        <button onclick="location.reload()" style="margin-top:25px; color:#555; background:none; border:none; text-decoration:underline;">放棄離開</button>
-    </div>
-</div>
-
-<div id="resModal" class="result-modal">
-    <div class="res-card">
-        <img id="res_img" src="" style="width:100%; border-radius:15px;">
-        <h2 id="res_msg" style="color:var(--p); margin:15px 0;"></h2>
-        <button onclick="location.reload()" style="background:var(--p); border:none; padding:15px; border-radius:50px; width:100%; font-weight:900;">領取獎勵</button>
-    </div>
+<div id="scroll-area">
+    <div class="pool-grid" id="poolGrid"></div>
 </div>
 
 <div id="noBalModal" class="result-modal">
@@ -90,55 +79,117 @@
         <h2 style="color:var(--danger); margin-bottom: 15px;">⚠️ 餘額不足</h2>
         <p style="color:#eee; font-size: 0.95rem; line-height: 1.6;">
             您的點數不足以支付本次抽獎。<br><br>
-            當前價格：<b id="needP">0</b> P<br>
-            您的餘額：<b id="haveP">0</b> P<br><br>
+            需要點數：<b id="needP" style="color:white; font-size:1.2rem;">0</b> P<br>
+            目前餘額：<b id="haveP">0</b> P<br><br>
             <b>請聯絡官方客服進行儲值</b>
         </p>
-        <button class="back-btn" style="width:100%; margin-top:20px; border-color:var(--danger); color:var(--danger);" onclick="document.getElementById('noBalModal').style.display='none'">我知道了</button>
+        <button class="back-btn" style="width:100%; margin-top:20px; border-color:var(--danger); color:var(--danger); padding:12px;" onclick="document.getElementById('noBalModal').style.display='none'">我知道了</button>
+    </div>
+</div>
+
+<div id="scratchOverlay" class="scratch-overlay">
+    <div style="text-align:center;">
+        <div style="margin-bottom:15px; font-weight:900; color:var(--p); font-size:1.2rem;">NO. <span id="selNum"></span></div>
+        <div class="scratch-box">
+            <div id="luckyVal">??</div>
+            <canvas id="scratch-canvas" width="280" height="280" style="position:absolute;inset:0;z-index:10;"></canvas>
+        </div>
+        <p style="color:#555; margin-top:15px; font-size:0.8rem;">請動手刮開塗層</p>
+    </div>
+</div>
+
+<div id="resModal" class="result-modal">
+    <div class="res-card">
+        <img id="res_img" src="" style="width:100%; border-radius:15px;">
+        <h2 id="res_msg" style="color:var(--p); margin:15px 0;"></h2>
+        <button onclick="location.reload()" style="background:var(--p); border:none; padding:15px; border-radius:50px; width:100%; font-weight:900; color:#000;">領取獎勵</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, get, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
     const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const app = initializeApp(config); const db = getDatabase(app);
     const params = new URLSearchParams(window.location.search); const gameId = params.get('id'); const userId = localStorage.getItem('myScratchCode');
-    let gData = null; if(!gameId || !userId) location.href = 'index.html';
-    document.onkeydown = (e) => { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
     
-    onValue(ref(db, `users/${userId}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
-    
+    let gData = null; 
+    if(!gameId || !userId) location.href = 'index.html';
+
+    // 會員餘額即時更新
+    onValue(ref(db, `users/${userId}/balance`), s => {
+        document.getElementById('uBal').innerText = (s.val()||0).toLocaleString();
+    });
+
+    // 載入遊戲設定與籤池
     onValue(ref(db, `gameSettings/${gameId}`), s => {
         gData = s.val(); if(!gData) return;
-        document.getElementById('gTitle').innerText = gameId.replace(/_/g, ' '); document.getElementById('gMainImg').src = gData.img;
+        document.getElementById('gTitle').innerText = gameId;
+        document.getElementById('gMainImg').src = gData.img;
+
         onValue(ref(db, `games/${gameId}/pool`), snap => {
-            const pool = snap.val() || []; const grid = document.getElementById('poolGrid'); const prizeTags = document.getElementById('prizeTags');
-            let prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes]; const winningNums = prizes.map(p => parseInt(p.num));
+            const pool = snap.val() || [];
             const soldCount = pool.filter(x => x.taken).length;
-            let priceHTML = `<span style="color:var(--p)">${gData.price} P / 抽</span>`;
-            if (gData.promoCount > 0) { if (soldCount < gData.promoCount) priceHTML = `<span style="color:#ff4757;">🔥 優惠價 ${gData.promoPrice} P</span> <span style="font-size:0.65rem; color:#888;">(原價 ${gData.price}P，剩 ${gData.promoCount - soldCount} 張)</span>`; }
-            document.getElementById('gPrice').innerHTML = priceHTML;
-            prizeTags.innerHTML = prizes.map(p => { const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.revealed); return `<div class="prize-tag ${isWon ? 'won' : ''}">${p.name}: <b>${p.num.toString().padStart(2,'0')}</b></div>`; }).join('');
+            const priceArea = document.getElementById('priceArea');
+            
+            // 🔴 階梯價格看板邏輯
+            if(gData.promoCount > 0 && soldCount < gData.promoCount) {
+                priceArea.innerHTML = `
+                    <div class="promo-active-tag">OPENING OFFER / 優惠中</div>
+                    <div style="font-size:1.1rem; color:var(--danger); font-weight:900;">P ${gData.promoPrice} <span style="font-size:0.7rem; color:#666; text-decoration:line-through; margin-left:5px;">(原價 ${gData.price})</span></div>
+                    <div style="font-size:0.65rem; color:#888;">優惠僅剩 ${gData.promoCount - soldCount} 抽，請把握機會！</div>
+                `;
+            } else {
+                priceArea.innerHTML = `<div style="font-size:1.1rem; color:var(--p); font-weight:900;">P ${gData.price}</div>`;
+            }
+
+            // 中獎獎項追蹤
+            const prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
+            const winningNums = prizes.map(p => parseInt(p.num));
+            document.getElementById('prizeTags').innerHTML = prizes.map(p => {
+                const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.revealed);
+                return `<div class="prize-tag ${isWon ? 'won' : ''}">${p.name}: <b>${p.num.toString().padStart(2,'0')}</b></div>`;
+            }).join('');
+
+            // 繪製籤池
+            const grid = document.getElementById('poolGrid');
             grid.innerHTML = '';
             pool.forEach((t, i) => {
                 const div = document.createElement('div');
                 if(t.taken) {
                     div.className = 'ticket taken';
-                    if(t.revealed) { if(winningNums.includes(parseInt(t.grade))) div.classList.add('winner-glow'); div.innerHTML = `<span style="font-size:0.5rem;color:#444;">${(i+1).toString().padStart(2,'0')}</span><span class="history-num">${t.grade.toString().padStart(2,'0')}</span>`; }
-                    else div.innerHTML = `<span style="font-size:0.55rem; color:#444;">OPEN</span>`;
-                } else { div.className = 'ticket'; div.innerText = (i + 1).toString().padStart(2,'0'); div.onclick = () => buy(i, t.grade); }
+                    if(t.revealed) {
+                        if(winningNums.includes(parseInt(t.grade))) div.classList.add('winner-glow');
+                        div.innerHTML = `<span style="font-size:0.5rem;color:#444;">${(i+1).toString().padStart(2,'0')}</span><span class="history-num">${t.grade.toString().padStart(2,'0')}</span>`;
+                    } else {
+                        div.innerHTML = `<span style="font-size:0.55rem; color:#444;">OPEN</span>`;
+                    }
+                } else {
+                    div.className = 'ticket';
+                    div.innerText = (i + 1).toString().padStart(2,'0');
+                    div.onclick = () => buy(i, t.grade);
+                }
                 grid.appendChild(div);
             });
         });
     });
 
     async function buy(idx, grade) {
-        const s = await get(ref(db, `users/${userId}/balance`)); const cur = s.val() || 0;
-        const poolSnap = await get(ref(db, `games/${gameId}/pool`)); const sold = (poolSnap.val() || []).filter(x => x.taken).length;
-        let cost = gData.price; if (gData.promoCount > 0 && sold < gData.promoCount) cost = gData.promoPrice;
+        const s = await get(ref(db, `users/${userId}/balance`));
+        const cur = s.val() || 0;
+        
+        const poolSnap = await get(ref(db, `games/${gameId}/pool`));
+        const poolData = poolSnap.val() || [];
+        const soldCount = poolData.filter(x => x.taken).length;
 
-        // 🟢 餘額不足精美彈窗觸發
+        // 判斷當前該付多少錢
+        let cost = gData.price;
+        if (gData.promoCount > 0 && soldCount < gData.promoCount) {
+            cost = gData.promoPrice;
+        }
+
+        // 🟢 餘額不足精美彈窗
         if(cur < cost) {
             document.getElementById('needP').innerText = cost;
             document.getElementById('haveP').innerText = cur;
@@ -146,38 +197,78 @@
             return;
         }
 
-        if(!confirm(`第 ${sold + 1} 抽，應付 ${cost} P，確認？`)) return;
+        if(!confirm(`第 ${soldCount + 1} 抽，應付 ${cost} P，確認購買？`)) return;
+
+        // 扣款與記錄
         await update(ref(db, `users/${userId}`), { balance: cur - cost });
-        const logRef = push(ref(db, `users/${userId}/logs`)); await set(logRef, { game: gameId.replace(/_/g,' '), cost, time: Date.now() });
+        const logRef = push(ref(db, `users/${userId}/logs`));
+        await set(logRef, { game: gameId, cost, time: Date.now() });
+
+        // 佔位
         await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true, revealed: false });
+        
         showScratch((idx + 1).toString().padStart(2,'0'), grade.toString().padStart(2,'0'), idx);
     }
 
     function showScratch(num, val, poolIdx) {
-        document.getElementById('scratchOverlay').style.display = 'flex'; document.getElementById('selNum').innerText = num; document.getElementById('luckyVal').innerText = val;
-        const canvas = document.getElementById('scratch-canvas'); const ctx = canvas.getContext('2d');
-        ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0,0,280,280);
+        document.getElementById('scratchOverlay').style.display = 'flex';
+        document.getElementById('selNum').innerText = num;
+        document.getElementById('luckyVal').innerText = val;
+        
+        const canvas = document.getElementById('scratch-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#C0C0C0';
+        ctx.fillRect(0,0,280,280);
+
         let drawing = false;
         const scratch = (e) => {
-            if(!drawing) return; e.preventDefault(); const rect = canvas.getBoundingClientRect();
+            if(!drawing) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
             const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
             const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-            ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI*2); ctx.fill();
-            const pix = ctx.getImageData(0,0,280,280).data; let clear = 0; for(let i=3; i<pix.length; i+=4) if(pix[i]===0) clear++;
-            if(clear > (280*280*0.6)) { drawing = false; update(ref(db, `games/${gameId}/pool/${poolIdx}`), { revealed: true }); judge(val); }
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI*2); ctx.fill();
+
+            const pix = ctx.getImageData(0,0,280,280).data;
+            let clear = 0;
+            for(let i=3; i<pix.length; i+=4) if(pix[i]===0) clear++;
+            if(clear > (280*280*0.6)) {
+                drawing = false;
+                update(ref(db, `games/${gameId}/pool/${poolIdx}`), { revealed: true });
+                judge(val);
+            }
         };
-        canvas.addEventListener('mousedown', () => drawing = true); canvas.addEventListener('touchstart', (e) => { drawing = true; if(e.cancelable) e.preventDefault(); }, {passive: false});
-        window.addEventListener('mouseup', () => drawing = false); window.addEventListener('touchend', () => drawing = false);
-        canvas.addEventListener('mousemove', scratch); canvas.addEventListener('touchmove', scratch, {passive: false});
+
+        canvas.addEventListener('mousedown', () => drawing = true);
+        canvas.addEventListener('touchstart', (e) => { drawing = true; if(e.cancelable) e.preventDefault(); }, {passive: false});
+        window.addEventListener('mouseup', () => drawing = false);
+        window.addEventListener('touchend', () => drawing = false);
+        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('touchmove', scratch, {passive: false});
     }
 
     function judge(val) {
-        const prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes]; const hit = prizes.find(p => p && parseInt(p.num) === parseInt(val));
-        const modal = document.getElementById('resModal'); const img = document.getElementById('res_img'); const msg = document.getElementById('res_msg');
-        if(hit) { msg.innerText = `🎊 中獎：${hit.name} 🎊`; img.src = hit.img || gData.img; confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); }
-        else { msg.innerText = "可惜未中獎"; img.src = "https://i.ibb.co/7t4gt23K/image.png"; }
+        const prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
+        const hit = prizes.find(p => p && parseInt(p.num) === parseInt(val));
+        const modal = document.getElementById('resModal');
+        const img = document.getElementById('res_img');
+        const msg = document.getElementById('res_msg');
+
+        if(hit) {
+            msg.innerText = `🎊 中獎：${hit.name} 🎊`;
+            img.src = hit.img || gData.img;
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        } else {
+            msg.innerText = "可惜未中獎";
+            img.src = "https://i.ibb.co/7t4gt23K/image.png"; // 這裡放您的哭臉圖
+        }
         modal.style.display = 'flex';
     }
+
+    // 禁用右鍵與 F12
+    document.onkeydown = (e) => { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
 </script>
 </body>
 </html>
