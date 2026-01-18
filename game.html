@@ -123,7 +123,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, get, update, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, get, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const config = { 
         apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
@@ -152,7 +152,6 @@
         if(gData) {
             document.getElementById('gTitle').innerText = gameId.replace(/_/g, ' ');
             document.getElementById('gMainImg').src = gData.img;
-            document.getElementById('gPrice').innerText = `${gData.price} P / 抽`;
             
             onValue(ref(db, `games/${gameId}/pool`), snap => {
                 const pool = snap.val() || [];
@@ -161,6 +160,14 @@
                 
                 let prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
                 const winningNums = prizes.map(p => parseInt(p.num));
+
+                // 🟢 判斷目前價格顯示
+                const soldCount = pool.filter(x => x.taken).length;
+                let currentPrice = gData.price;
+                if (gData.promoCount > 0 && soldCount < gData.promoCount) {
+                    currentPrice = gData.promoPrice;
+                }
+                document.getElementById('gPrice').innerText = `${currentPrice} P / 抽`;
 
                 // 看板更新
                 prizeTags.innerHTML = prizes.map(p => {
@@ -192,11 +199,20 @@
         }
     });
 
-    // 🔴 核心修改：強化購買提醒
+    // 🔴 核心修改：強化購買提醒與階梯定價判斷
     async function buy(idx, grade) {
         const s = await get(ref(db, `users/${userId}/balance`));
         const currentBal = s.val() || 0;
-        const cost = gData.price;
+        
+        // 🟢 階梯價格判斷
+        const poolSnap = await get(ref(db, `games/${gameId}/pool`));
+        const pool = poolSnap.val() || [];
+        const soldCount = pool.filter(x => x.taken).length;
+        
+        let cost = gData.price;
+        if (gData.promoCount > 0 && soldCount < gData.promoCount) {
+            cost = gData.promoPrice;
+        }
 
         if(currentBal < cost) return alert("❌ 點數不足，請聯繫管理員充值！");
 
@@ -204,6 +220,7 @@
         const confirmMsg = 
             `【購買確認】\n\n` +
             `🔹 選擇號碼：${idx + 1} 號\n` +
+            `🔹 目前第 ${soldCount + 1} 抽 (優惠階段)\n` +
             `🔹 消耗點數：${cost} P\n` +
             `------------------------\n` +
             `💰 剩餘點數將為：${currentBal - cost} P\n\n` +
@@ -211,8 +228,18 @@
 
         if(!confirm(confirmMsg)) return;
 
-        // 執行扣點與佔位
+        // 執行扣點
         await update(ref(db, `users/${userId}`), { balance: currentBal - cost });
+        
+        // 🟢 新增消費紀錄到日誌 (供大廳側邊欄對帳)
+        const logRef = push(ref(db, `users/${userId}/logs`));
+        await set(logRef, {
+            game: gameId.replace(/_/g,' '),
+            cost: cost,
+            time: Date.now()
+        });
+
+        // 執行佔位
         await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true, revealed: false });
         
         showScratch(idx + 1, grade, idx);
