@@ -25,7 +25,7 @@
         .billboard { display: flex; align-items: center; padding: 10px; gap: 12px; background: var(--card); border-bottom: 3px solid var(--p); }
         .main-img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 2px solid #333; flex-shrink: 0; }
         .info-box h2 { margin: 0; font-size: 1rem; }
-        .info-box span { color: var(--p); font-size: 0.8rem; font-weight: bold; }
+        .info-box div { font-size: 0.8rem; font-weight: bold; margin-top: 3px; }
 
         /* 獎項追蹤 */
         .prize-monitor { padding: 8px 10px; background: rgba(255,255,255,0.03); font-size: 0.7rem; border-bottom: 1px solid #222; }
@@ -44,21 +44,15 @@
             transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        /* 中獎格脈衝發光 */
         .ticket.winner-glow {
             border: 2px solid var(--win);
             box-shadow: 0 0 15px var(--win), inset 0 0 10px var(--win);
             animation: winner-pulse 1.5s infinite ease-in-out;
         }
-        @keyframes winner-pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
+        @keyframes winner-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
         .ticket.taken { background: #000; border-color: #222; }
-        .ticket.taken .history-num { color: var(--p); font-size: 1.3rem; font-weight: 900; animation: pop-in 0.4s ease-out; }
-        @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .ticket.taken .history-num { color: var(--p); font-size: 1.3rem; font-weight: 900; }
         .ticket.taken .opening-txt { font-size: 0.55rem; color: #444; font-weight: bold; }
 
         /* 刮刮樂彈窗 */
@@ -74,7 +68,7 @@
 
         /* 結果視窗 */
         .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
-        .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 80%; max-width: 320px; box-shadow: 0 0 40px var(--p); }
+        .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 80%; max-width: 320px; }
         #res_img { width: 100%; border-radius: 15px; margin-bottom: 15px; }
     </style>
 </head>
@@ -89,7 +83,7 @@
     <img id="gMainImg" class="main-img" src="">
     <div class="info-box">
         <h2 id="gTitle">Connecting...</h2>
-        <span id="gPrice">-- P / 抽</span>
+        <div id="gPrice">-- P / 抽</div>
     </div>
 </div>
 
@@ -125,86 +119,68 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, get, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    const config = { 
-        apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
-        databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com",
-        projectId: "dream-169dc",
-        appId: "1:214137228622:web:84d14bad85d865ee94e21f"
-    };
-    const app = initializeApp(config);
-    const db = getDatabase(app);
+    const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
+    const app = initializeApp(config); const db = getDatabase(app);
 
     const params = new URLSearchParams(window.location.search);
-    const gameId = params.get('id');
-    const userId = localStorage.getItem('myScratchCode');
+    const gameId = params.get('id'); const userId = localStorage.getItem('myScratchCode');
+    let gData = null; if(!gameId || !userId) location.href = 'index.html';
 
-    let gData = null;
-    if(!gameId || !userId) location.href = 'index.html';
+    onValue(ref(db, `users/${userId}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
-    // 餘額連動
-    onValue(ref(db, `users/${userId}/balance`), s => {
-        document.getElementById('uBal').innerText = (s.val()||0).toLocaleString();
-    });
-
-    // 遊戲數據監聽
     onValue(ref(db, `gameSettings/${gameId}`), s => {
-        gData = s.val();
-        if(gData) {
-            document.getElementById('gTitle').innerText = gameId.replace(/_/g, ' ');
-            document.getElementById('gMainImg').src = gData.img;
+        gData = s.val(); if(!gData) return;
+        document.getElementById('gTitle').innerText = gameId.replace(/_/g, ' ');
+        document.getElementById('gMainImg').src = gData.img;
+
+        onValue(ref(db, `games/${gameId}/pool`), snap => {
+            const pool = snap.val() || [];
+            const grid = document.getElementById('poolGrid');
+            const prizeTags = document.getElementById('prizeTags');
             
-            onValue(ref(db, `games/${gameId}/pool`), snap => {
-                const pool = snap.val() || [];
-                const grid = document.getElementById('poolGrid');
-                const prizeTags = document.getElementById('prizeTags');
-                
-                let prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
-                const winningNums = prizes.map(p => parseInt(p.num));
+            let prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
+            const winningNums = prizes.map(p => parseInt(p.num));
 
-                // 🟢 判斷目前價格顯示
-                const soldCount = pool.filter(x => x.taken).length;
-                let currentPrice = gData.price;
-                if (gData.promoCount > 0 && soldCount < gData.promoCount) {
-                    currentPrice = gData.promoPrice;
+            // 🔴 階梯價格看板顯示邏輯
+            const soldCount = pool.filter(x => x.taken).length;
+            let priceDesc = `<span style="color:var(--p)">${gData.price} P / 抽</span>`;
+            if (gData.promoCount > 0) {
+                if (soldCount < gData.promoCount) {
+                    priceDesc = `<span style="color:#ff4757;">🔥 優惠價 ${gData.promoPrice} P</span> (剩 ${gData.promoCount - soldCount} 張恢復原價)`;
+                } else {
+                    priceDesc = `<span style="color:#aaa;">原價 ${gData.price} P</span> (優惠已結束)`;
                 }
-                document.getElementById('gPrice').innerText = `${currentPrice} P / 抽`;
+            }
+            document.getElementById('gPrice').innerHTML = priceDesc;
 
-                // 看板更新
-                prizeTags.innerHTML = prizes.map(p => {
-                    if(!p) return '';
-                    const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.revealed);
-                    return `<div class="prize-tag ${isWon ? 'won' : ''}">${p.name}: <b>${p.num}</b></div>`;
-                }).join('');
+            prizeTags.innerHTML = prizes.map(p => {
+                const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.revealed);
+                return `<div class="prize-tag ${isWon ? 'won' : ''}">${p.name}: <b>${p.num}</b></div>`;
+            }).join('');
 
-                // 籤表更新
-                grid.innerHTML = '';
-                pool.forEach((t, i) => {
-                    const div = document.createElement('div');
-                    if(t.taken) {
-                        div.className = 'ticket taken';
-                        if(t.revealed) {
-                            if(winningNums.includes(parseInt(t.grade))) div.classList.add('winner-glow');
-                            div.innerHTML = `<span class="small-id">${i+1}</span><span class="history-num">${t.grade}</span>`;
-                        } else {
-                            div.innerHTML = `<span class="small-id">${i+1}</span><span class="opening-txt">OPENING</span>`;
-                        }
-                    } else {
-                        div.className = 'ticket';
-                        div.innerText = i + 1;
-                        div.onclick = () => buy(i, t.grade);
-                    }
-                    grid.appendChild(div);
-                });
+            grid.innerHTML = '';
+            pool.forEach((t, i) => {
+                const div = document.createElement('div');
+                if(t.taken) {
+                    div.className = 'ticket taken';
+                    if(t.revealed) {
+                        if(winningNums.includes(parseInt(t.grade))) div.classList.add('winner-glow');
+                        div.innerHTML = `<span style="font-size:0.5rem;color:#444;">${i+1}</span><span class="history-num">${t.grade}</span>`;
+                    } else div.innerHTML = `<span class="opening-txt">OPEN</span>`;
+                } else {
+                    div.className = 'ticket'; div.innerText = i + 1;
+                    div.onclick = () => buy(i, t.grade);
+                }
+                grid.appendChild(div);
             });
-        }
+        });
     });
 
-    // 🔴 核心修改：強化購買提醒與階梯定價判斷
     async function buy(idx, grade) {
         const s = await get(ref(db, `users/${userId}/balance`));
         const currentBal = s.val() || 0;
         
-        // 🟢 階梯價格判斷
+        // 🔴 階梯價格精確判斷
         const poolSnap = await get(ref(db, `games/${gameId}/pool`));
         const pool = poolSnap.val() || [];
         const soldCount = pool.filter(x => x.taken).length;
@@ -214,41 +190,23 @@
             cost = gData.promoPrice;
         }
 
-        if(currentBal < cost) return alert("❌ 點數不足，請聯繫管理員充值！");
+        if(currentBal < cost) return alert("❌ 點數不足！");
+        if(!confirm(`第 ${soldCount + 1} 抽\n價格：${cost} P\n確認購買？`)) return;
 
-        // 提醒訊息
-        const confirmMsg = 
-            `【購買確認】\n\n` +
-            `🔹 選擇號碼：${idx + 1} 號\n` +
-            `🔹 目前第 ${soldCount + 1} 抽 (優惠階段)\n` +
-            `🔹 消耗點數：${cost} P\n` +
-            `------------------------\n` +
-            `💰 剩餘點數將為：${currentBal - cost} P\n\n` +
-            `是否確定購買？`;
-
-        if(!confirm(confirmMsg)) return;
-
-        // 執行扣點
         await update(ref(db, `users/${userId}`), { balance: currentBal - cost });
         
-        // 🟢 新增消費紀錄到日誌 (供大廳側邊欄對帳)
+        // 🔴 寫入消費紀錄到對帳日誌
         const logRef = push(ref(db, `users/${userId}/logs`));
-        await set(logRef, {
-            game: gameId.replace(/_/g,' '),
-            cost: cost,
-            time: Date.now()
-        });
+        await set(logRef, { game: gameId.replace(/_/g,' '), cost, time: Date.now() });
 
-        // 執行佔位
         await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true, revealed: false });
-        
         showScratch(idx + 1, grade, idx);
     }
 
-    function showScratch(displayId, luckyNum, poolIdx) {
+    function showScratch(num, val, poolIdx) {
         document.getElementById('scratchOverlay').style.display = 'flex';
-        document.getElementById('selNum').innerText = displayId;
-        document.getElementById('luckyVal').innerText = luckyNum;
+        document.getElementById('selNum').innerText = num;
+        document.getElementById('luckyVal').innerText = val;
         const canvas = document.getElementById('scratch-canvas');
         const ctx = canvas.getContext('2d');
         ctx.globalCompositeOperation = 'source-over';
@@ -256,25 +214,21 @@
 
         let drawing = false;
         const scratch = (e) => {
-            if(!drawing) return;
-            if(e.cancelable) e.preventDefault();
+            if(!drawing) return; e.preventDefault();
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
             const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
             ctx.globalCompositeOperation = 'destination-out';
-            ctx.beginPath(); ctx.arc(x, y, 25, 0, Math.PI*2); ctx.fill();
-
+            ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI*2); ctx.fill();
             const pix = ctx.getImageData(0,0,280,280).data;
             let clear = 0; for(let i=3; i<pix.length; i+=4) if(pix[i]===0) clear++;
             if(clear > (280*280*0.6)) { 
-                drawing = false; 
-                update(ref(db, `games/${gameId}/pool/${poolIdx}`), { revealed: true });
-                judge(luckyNum); 
+                drawing = false; update(ref(db, `games/${gameId}/pool/${poolIdx}`), { revealed: true });
+                judge(val); 
             }
         };
-
         canvas.addEventListener('mousedown', () => drawing=true);
-        canvas.addEventListener('touchstart', (e) => { drawing=true; if(e.cancelable) e.preventDefault(); }, {passive: false});
+        canvas.addEventListener('touchstart', (e) => { drawing=true; }, {passive: false});
         window.addEventListener('mouseup', () => drawing=false);
         window.addEventListener('touchend', () => drawing=false);
         canvas.addEventListener('mousemove', scratch);
@@ -282,19 +236,16 @@
     }
 
     function judge(val) {
-        let prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
+        const prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
         const hit = prizes.find(p => p && parseInt(p.num) === parseInt(val));
         const modal = document.getElementById('resModal');
         const img = document.getElementById('res_img');
         const msg = document.getElementById('res_msg');
-
         if(hit) {
-            msg.innerText = `🎊 恭喜抽中：${hit.name} 🎊`;
-            img.src = hit.img || gData.img;
+            msg.innerText = `🎊 抽中：${hit.name} 🎊`; img.src = hit.img || gData.img;
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         } else {
-            msg.innerText = "可惜沒中！";
-            img.src = "https://i.ibb.co/7t4gt23K/image.png";
+            msg.innerText = "可惜未中獎"; img.src = "https://i.ibb.co/7t4gt23K/image.png";
         }
         modal.style.display = 'flex';
     }
