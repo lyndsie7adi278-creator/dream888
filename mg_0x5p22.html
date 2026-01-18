@@ -61,9 +61,10 @@
 
 <div class="sidebar" id="sidebar">
     <div class="logo">DREAM ADMIN</div>
-    <div class="nav-link active" onclick="showPage('mon')">📊 即時監控</div>
+    <div class="nav-link active" onclick="showPage('mon')">📊 數據監控</div>
     <div class="nav-link" onclick="showPage('game')">📦 商品管理</div>
     <div class="nav-link" onclick="showPage('user')">👤 會員資料</div>
+    <div class="nav-link" onclick="showPage('ann')">📜 公告發佈</div>
 </div>
 
 <div class="main">
@@ -75,37 +76,40 @@
     <div id="game" class="page">
         <div class="title-row"><h2 class="title">發布新商品與控盤</h2></div>
         <div class="card" style="max-width: 550px; margin: 0 auto;">
-            <input type="text" id="gId" placeholder="遊戲 ID (不可重複)">
+            <input type="text" id="gId" placeholder="遊戲 ID">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <input type="number" id="gTotal" placeholder="總籤數">
                 <input type="number" id="gPrice" placeholder="單抽價格">
             </div>
             <input type="text" id="gImg" placeholder="主要圖片 URL">
             <textarea id="gPrizes" rows="2" placeholder='獎項 JSON 如: [{"num":8, "name":"頭獎"}]'></textarea>
-            
-            <label style="color:var(--p); font-size:0.8rem;">控盤模式</label>
             <select id="rateMode" onchange="toggleRateInput()">
-                <option value="all_random">完全隨機 (1~Total 亂序)</option>
-                <option value="after_n">延遲出現 (前 N 張絕對不中)</option>
+                <option value="all_random">完全隨機</option>
+                <option value="after_n">延遲出現 (前 N 張不出)</option>
             </select>
-            <div id="rateDetail" style="display:none;">
-                <input type="number" id="nValue" placeholder="設定 N (前多少張不出)">
-            </div>
-            
+            <div id="rateDetail" style="display:none;"><input type="number" id="nValue" placeholder="設定 N"></div>
             <button class="btn" onclick="publishGame()">確認發布商品</button>
         </div>
     </div>
 
     <div id="user" class="page">
         <div class="title-row">
-            <h2 class="title">全體會員清單</h2>
+            <h2 class="title">全體會員清單與對帳</h2>
             <button class="btn" style="width:auto; padding:8px 20px;" onclick="createUser()">＋ 新增會員</button>
         </div>
         <div class="card table-container">
             <table>
-                <thead><tr><th>會員 UID</th><th>餘額 (P)</th><th>操作</th></tr></thead>
+                <thead><tr><th>暱稱 (UID)</th><th>餘額 (P)</th><th>最近消費紀錄</th><th>操作</th></tr></thead>
                 <tbody id="userTableBody"></tbody>
             </table>
+        </div>
+    </div>
+
+    <div id="ann" class="page">
+        <div class="title-row"><h2 class="title">系統公告管理</h2></div>
+        <div class="card" style="max-width: 550px; margin: 0 auto;">
+            <textarea id="annContent" rows="8" placeholder="輸入要顯示給客人的公告內容..."></textarea>
+            <button class="btn" onclick="saveAnnouncement()">發佈公告</button>
         </div>
     </div>
 </div>
@@ -139,7 +143,12 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(window.innerWidth <= 768) toggleSidebar();
+        // 修正選單點擊後變色
+        const links = document.querySelectorAll('.nav-link');
+        links.forEach(link => {
+            if(link.getAttribute('onclick').includes(id)) link.classList.add('active');
+        });
+        if(window.innerWidth <= 768 && document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
     };
 
     window.toggleRateInput = () => {
@@ -147,7 +156,7 @@
         document.getElementById('rateDetail').style.display = (mode === 'after_n') ? 'block' : 'none';
     };
 
-    // --- 🎲 控盤洗牌核心演算法 ---
+    // 🎲 核心洗牌演算法 (維持原樣)
     function generatePool(total, prizes, mode, nValue) {
         let pool = Array.from({length: total}, (_, i) => ({ grade: i + 1, taken: false, revealed: false }));
         const prizeNums = prizes.map(p => parseInt(p.num));
@@ -158,7 +167,6 @@
             let n = Math.min(parseInt(nValue) || 0, total - 1);
             let winItems = pool.filter(item => prizeNums.includes(item.grade));
             let normalItems = pool.filter(item => !prizeNums.includes(item.grade));
-            
             normalItems.sort(() => Math.random() - 0.5);
             let front = normalItems.slice(0, n);
             let back = [...normalItems.slice(n), ...winItems];
@@ -168,9 +176,12 @@
         return pool;
     }
 
-    // --- 即時監聽與更新 ---
     function startSync() {
-        // 商品與即時進度監聽
+        // 🟢 初始化載入公告
+        get(ref(db, 'settings/announcement')).then(s => {
+            if(s.exists()) document.getElementById('annContent').value = s.val();
+        });
+
         onValue(ref(db, 'gameSettings'), (snap) => {
             const list = document.getElementById('monList');
             const data = snap.val(); if(!data) return list.innerHTML = "無商品";
@@ -184,58 +195,74 @@
                 list.appendChild(card);
                 onValue(ref(db, `games/${id}/pool`), pSnap => {
                     const p = pSnap.val() || [];
-                    document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${data[id].total}`;
+                    const remEl = document.getElementById(`rem-${id}`);
+                    if(remEl) remEl.innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${data[id].total}`;
                 });
             });
         });
 
-        // 會員清單監聽
+        // 🟢 強化會員列表：顯示暱稱與最近紀錄
         onValue(ref(db, 'users'), s => {
             const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = '';
             const users = s.val(); if(!users) return;
             Object.entries(users).forEach(([uid, u]) => {
-                tbody.innerHTML += `<tr><td><b>${uid}</b></td><td style="color:var(--p); font-weight:bold;">${(u.balance||0).toLocaleString()}</td>
+                // 取得最後一筆消費紀錄
+                let lastLogStr = "無紀錄";
+                if(u.logs) {
+                    const logs = Object.values(u.logs);
+                    const lastLog = logs[logs.length - 1];
+                    lastLogStr = `${lastLog.game} (-${lastLog.cost}P)`;
+                }
+
+                tbody.innerHTML += `<tr>
+                    <td><b>${u.nickname || '未設暱稱'}</b><br><small style="color:#666">${uid}</small></td>
+                    <td style="color:var(--p); font-weight:bold;">${(u.balance||0).toLocaleString()}</td>
+                    <td><small>${lastLogStr}</small></td>
                     <td><button class="btn" style="width:auto; padding:5px 10px; font-size:0.7rem;" onclick="addBal('${uid}')">充值</button></td></tr>`;
             });
         });
     }
 
+    // 🟢 新增：儲存公告
+    window.saveAnnouncement = async () => {
+        const content = document.getElementById('annContent').value;
+        await set(ref(db, 'settings/announcement'), content);
+        alert("公告已成功發佈！");
+    };
+
     window.resetShuffle = async (id) => {
-        if(!confirm(`確定要將「${id}」全數重新洗牌？這會清除所有紀錄！`)) return;
+        if(!confirm(`確定要重置「${id}」嗎？`)) return;
         try {
             const s = await get(ref(db, `gameSettings/${id}`));
             const d = s.val();
             const prizes = Array.isArray(d.prizes) ? d.prizes : [d.prizes];
             const newPool = generatePool(parseInt(d.total), prizes, d.rateMode || 'all_random', parseInt(d.nValue) || 0);
             await set(ref(db, `games/${id}/pool`), newPool);
-            alert("洗牌重置完成！");
-        } catch(e) { alert("洗牌失敗：" + e.message); }
+            alert("已成功全數洗牌重置！");
+        } catch(e) { alert("錯誤：" + e.message); }
     };
 
     window.publishGame = async () => {
         const id = document.getElementById('gId').value.trim();
         const total = parseInt(document.getElementById('gTotal').value);
         const prizes = JSON.parse(document.getElementById('gPrizes').value);
-        const mode = document.getElementById('rateMode').value;
-        const nValue = document.getElementById('nValue').value;
-        if(!id || !total) return alert("必填 ID 與總數");
-
-        const pool = generatePool(total, prizes, mode, nValue);
-        await set(ref(db, `gameSettings/${id}`), { total, price: parseInt(document.getElementById('gPrice').value), img: document.getElementById('gImg').value, prizes, rateMode: mode, nValue });
+        if(!id || !total) return alert("資訊不全");
+        const pool = generatePool(total, prizes, document.getElementById('rateMode').value, document.getElementById('nValue').value);
+        await set(ref(db, `gameSettings/${id}`), { total, price: parseInt(document.getElementById('gPrice').value), img: document.getElementById('gImg').value, prizes, rateMode: document.getElementById('rateMode').value, nValue: document.getElementById('nValue').value });
         await set(ref(db, `games/${id}/pool`), pool);
-        alert("發布成功！");
+        alert("發布成功");
     };
 
     window.createUser = async () => {
         const uid = prompt("新會員 UID:"); if(!uid) return;
-        const bal = prompt("初始點數:", "0");
-        await set(ref(db, `users/${uid.toUpperCase()}`), { balance: parseInt(bal) || 0, pin: "" });
-        alert("建立成功");
+        // 🟢 建立會員時預設加入暱稱欄位
+        await set(ref(db, `users/${uid.toUpperCase()}`), { balance: 0, pin: "", nickname: "新玩家" });
+        alert("會員建立成功");
     };
 
     window.addBal = async (uid) => {
-        const amt = prompt(`調整 ${uid} 點數 (+ 或 -):`); if(!amt) return;
+        const amt = prompt(`調整 ${uid} 點數 (+/-):`); if(!amt) return;
         const s = await get(ref(db, `users/${uid}/balance`));
         let cur = s.val() || 0;
         let fin = amt.startsWith('+') ? cur + parseInt(amt.slice(1)) : amt.startsWith('-') ? cur - parseInt(amt.slice(1)) : parseInt(amt);
