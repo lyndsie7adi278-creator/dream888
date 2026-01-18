@@ -3,134 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>夢工廠刮刮樂商城</title>
+    <title>夢工廠 | 極致商城</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; }
+        :root { --primary: #ff8fa3; --dark: #0b0f1a; --bg: #f8f9fc; --card: #ffffff; }
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
-        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+        body { font-family: 'PingFang TC', -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
         
-        /* 頂部導航 */
-        .top-nav { width: 100%; background: white; padding: 15px 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-weight: 900; letter-spacing: 2px; position: sticky; top: 0; z-index: 1000; display: flex; justify-content: center; align-items: center; }
-        .menu-toggle { position: absolute; right: 20px; font-size: 1.2rem; cursor: pointer; color: #7f8c8d; }
+        /* 🔵 1. 頂部導航：移除所有資訊，只留 Logo 與 側欄入口 */
+        .top-nav { 
+            width: 100%; background: white; padding: 18px 25px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; 
+        }
+        .logo-txt { font-weight: 900; letter-spacing: 4px; color: #1a1c23; font-size: 1.1rem; }
+        .menu-toggle { font-size: 1.4rem; cursor: pointer; color: #333; transition: 0.3s; }
+        .menu-toggle:active { transform: scale(0.85); }
 
-        .marquee-container { width: 100%; background: #1a1c23; color: var(--primary); padding: 10px 0; overflow: hidden; white-space: nowrap; font-size: 0.85rem; font-weight: bold; border-bottom: 2px solid var(--primary); }
-        .marquee-content { display: inline-block; animation: marquee 20s linear infinite; }
-        .marquee-content span { margin-right: 50px; }
+        /* 跑馬燈 */
+        .marquee-container { width: 100%; background: #1a1c23; color: var(--primary); padding: 12px 0; overflow: hidden; white-space: nowrap; font-size: 0.8rem; font-weight: bold; }
+        .marquee-content { display: inline-block; animation: marquee 25s linear infinite; }
+        .marquee-content span { margin-right: 60px; }
         @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
 
-        /* 使用者餘額卡片 */
-        .user-card { background: linear-gradient(135deg, #2c3e50 0%, #000000 100%); width: 92%; max-width: 450px; border-radius: 24px; padding: 25px; margin: 20px 0; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
-        .balance-amount { font-size: 2.5rem; font-weight: 800; color: var(--primary); text-shadow: 0 0 15px rgba(255,143,163,0.3); }
-
-        /* 🟢 新增：側邊會員中心 */
-        .side-drawer { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; background: white; z-index: 3000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 40px 20px; box-sizing: border-box; box-shadow: -10px 0 30px rgba(0,0,0,0.1); }
+        /* 🟢 2. 側邊會員中心 (收納所有資訊) */
+        .side-drawer { position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; background: #fff; z-index: 3000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 40px 25px; box-sizing: border-box; box-shadow: -15px 0 40px rgba(0,0,0,0.15); }
         .side-drawer.active { right: 0; }
-        .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2500; backdrop-filter: blur(4px); }
+        .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2500; backdrop-filter: blur(8px); }
         .drawer-overlay.active { display: block; }
-        .drawer-title { font-size: 1.2rem; font-weight: 900; color: #333; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; }
         
-        /* 暱稱與紀錄樣式 */
-        .nick-box { background: #f8f9fa; padding: 15px; border-radius: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
-        .log-title { font-size: 0.75rem; color: #adb5bd; font-weight: 900; margin-bottom: 10px; }
-        .log-list { height: calc(100vh - 400px); overflow-y: auto; }
-        .log-item { padding: 12px 0; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
-        .log-item b { color: #2c3e50; }
+        /* 會員中心內的餘額卡片 */
+        .drawer-balance-card { 
+            background: linear-gradient(135deg, #1a1c23 0%, #000000 100%); 
+            padding: 25px; border-radius: 20px; color: white; margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .bal-val { font-size: 2.2rem; font-weight: 800; color: var(--primary); margin: 5px 0; }
+
+        .log-title { font-size: 0.75rem; color: #adb5bd; font-weight: 900; margin-bottom: 12px; letter-spacing: 1px; }
+        .log-list { height: calc(100vh - 480px); overflow-y: auto; padding-right: 5px; }
+        .log-item { padding: 14px 0; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
         .log-item span { color: var(--primary); font-weight: 800; }
 
-        /* 商品列表 (維持原本) */
-        .category-scroll { display: flex; overflow-x: auto; padding: 10px 20px; gap: 12px; width: 100%; scrollbar-width: none; }
-        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 94%; max-width: 480px; padding: 15px 0; }
-        .p-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        .p-info { padding: 12px; text-align: center; }
-        .p-name { font-weight: bold; font-size: 0.9rem; color: #333; margin-bottom: 5px; }
-        .p-price { color: var(--primary); font-weight: 800; }
+        /* 商品列表 (維持質感) */
+        .category-scroll { display: flex; overflow-x: auto; padding: 20px; gap: 12px; width: 100%; scrollbar-width: none; }
+        .cat-item { flex-shrink: 0; padding: 10px 22px; border-radius: 50px; background: white; border: 1px solid #eee; font-size: 0.8rem; font-weight: bold; transition: 0.3s; color: #888; }
+        .cat-item.active { background: #1a1c23; color: white; border-color: #1a1c23; box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
 
-        /* 🔴 新增：公告彈窗樣式 */
-        .ann-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 4000; align-items: center; justify-content: center; }
-        .ann-box { background: white; padding: 30px; border-radius: 24px; width: 85%; max-width: 350px; text-align: center; border-top: 5px solid var(--primary); }
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; width: 92%; max-width: 500px; padding: 10px 0 40px; }
+        .p-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.03); transition: 0.3s; }
+        .p-card:active { transform: scale(0.96); }
+        .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .p-info { padding: 15px; text-align: center; }
+        .p-name { font-weight: bold; font-size: 0.95rem; color: #2c3e50; margin-bottom: 5px; }
+        .p-price { color: var(--primary); font-weight: 800; font-size: 1rem; }
+
+        /* 🔴 3. 質感聲明區塊 (重新排版) */
+        .security-footer { 
+            width: 100%; background: #1a1c23; color: #6c757d; padding: 40px 25px; 
+            margin-top: 20px; border-radius: 40px 40px 0 0; 
+        }
+        .sec-grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 500px; margin: 0 auto; }
+        .sec-item { display: flex; align-items: flex-start; gap: 15px; }
+        .sec-icon { font-size: 1.2rem; padding-top: 2px; }
+        .sec-text b { display: block; color: var(--primary); font-size: 0.9rem; margin-bottom: 4px; }
+        .sec-text p { margin: 0; font-size: 0.75rem; line-height: 1.6; color: #999; }
         
-        .footer { padding: 20px 0 40px; font-size: 0.7rem; color: #adb5bd; text-align: center; line-height: 1.8; }
-        .btn-sm { background: #f8f9fa; border: none; padding: 6px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: bold; color: #333; }
-        .btn-logout { width: 100%; background: #f1f3f5; color: #ff6b6b; border: none; padding: 15px; border-radius: 50px; font-weight: bold; margin-top: 20px; }
+        .final-copy { text-align: center; margin-top: 40px; border-top: 1px solid #2a2d35; padding-top: 25px; font-size: 0.65rem; color: #444; }
+
+        /* 登入彈窗 (維持原本) */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .m-box { background: white; padding: 40px 30px; border-radius: 35px; width: 85%; max-width: 320px; text-align: center; }
+        input { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #eee; margin: 10px 0; text-align: center; font-size: 1.2rem; background: #f8f9fa; }
+        .btn { background: #1a1c23; color: white; border: none; padding: 16px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div id="annModal" class="ann-modal">
-    <div class="ann-box">
-        <h3 style="margin-top:0;">重要公告</h3>
+<div id="annModal" class="modal" style="display:none; z-index:4000;">
+    <div class="m-box" style="border-top: 5px solid var(--primary);">
+        <h3 style="margin:0;">NEWS</h3>
         <div id="annContent" style="font-size:0.9rem; color:#666; text-align:left; margin:20px 0; line-height:1.6; white-space:pre-wrap;"></div>
-        <button class="btn" onclick="closeAnn()">確認並關閉</button>
+        <button class="btn" style="background:var(--primary)" onclick="closeAnn()">CONFIRM</button>
     </div>
 </div>
 
 <div class="top-nav">
-    DREAM FACTORY
+    <div class="logo-txt">DREAM FACTORY</div>
     <div class="menu-toggle" onclick="toggleDrawer()">👤</div>
 </div>
 
-<div class="marquee-container"><div class="marquee-content" id="mq">正在同步最新獲獎動態...</div></div>
+<div class="marquee-container">
+    <div class="marquee-content" id="mq">✨ 系統同步中，祝您好運連連...</div>
+</div>
 
 <div class="drawer-overlay" id="overlay" onclick="toggleDrawer()"></div>
 <div class="side-drawer" id="drawer">
-    <div class="drawer-title">會員中心 <span style="font-size:0.8rem; font-weight:normal; color:#ccc;" onclick="toggleDrawer()">✕</span></div>
-    
-    <div class="log-title">個人檔案</div>
-    <div class="nick-box">
-        <div>
-            <span style="font-size:0.7rem; color:#adb5bd; display:block;">暱稱 NICKNAME</span>
-            <b id="uNick" style="font-size:1.1rem; color:#2c3e50;">載入中...</b>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <span style="font-weight:900; font-size:1.1rem; letter-spacing:1px;">MY ACCOUNT</span>
+        <span style="cursor:pointer; color:#ccc;" onclick="toggleDrawer()">✕</span>
+    </div>
+
+    <div class="drawer-balance-card">
+        <div style="font-size:0.7rem; opacity:0.6; letter-spacing:1px;">WALLET BALANCE</div>
+        <div class="bal-val">P <span id="uBal">0</span></div>
+        <div id="uNickRow" style="margin-top:15px; font-size:0.9rem; display:flex; justify-content:space-between; align-items:center;">
+            <span id="uNick" style="font-weight:bold;">新玩家</span>
+            <span onclick="editNick()" style="font-size:0.7rem; opacity:0.5; text-decoration:underline;">修改</span>
         </div>
-        <button class="btn-sm" onclick="editNick()">修改</button>
+        <div id="uID" style="font-size:0.6rem; opacity:0.3; margin-top:5px;">ID: LOADING...</div>
     </div>
 
-    <div class="log-title">消費紀錄 HISTORY</div>
+    <div class="log-title">RECENT ACTIVITY</div>
     <div class="log-list" id="hList">
-        <div style="color:#eee; text-align:center; padding-top:20px; font-size:0.8rem;">目前尚無紀錄</div>
+        <div style="color:#eee; text-align:center; padding-top:40px; font-size:0.8rem;">尚無紀錄</div>
     </div>
 
-    <button class="btn-logout" onclick="handleLogout()">登出帳號 SIGNOUT</button>
-</div>
-
-<div class="user-card">
-    <div style="font-size: 0.8rem; opacity: 0.7;">ACCOUNT BALANCE</div>
-    <div class="balance-amount">P <span id="uBal">0</span></div>
-    <div id="uID" style="margin-top:10px; font-size:0.8rem; opacity:0.5;">ID: GUEST</div>
+    <button onclick="handleLogout()" style="width:100%; background:none; border:1px solid #eee; color:#ff6b6b; padding:12px; border-radius:15px; margin-top:30px; font-weight:bold; font-size:0.8rem;">SIGNOUT</button>
 </div>
 
 <div class="category-scroll" id="catList"><div class="cat-item active" onclick="filterCat('ALL')">全部</div></div>
 <div class="product-grid" id="pGrid"></div>
 
-<div class="status-section">
-    <div class="status-header">
-        <div class="status-title">SYSTEM SECURITY</div>
-        <div class="live-tag"><span class="dot"></span> CLOUD ACTIVE</div>
+<div class="security-footer">
+    <div class="sec-grid">
+        <div class="sec-item">
+            <div class="sec-icon">🛡️</div>
+            <div class="sec-text">
+                <b>資產安全保護</b>
+                <p>所有交易數據均經過高強度加密處理。我們與 Firebase 雲端同步技術合作，確保您的點數資產在任何情況下皆受到完整保護。</p>
+            </div>
+        </div>
+        <div class="sec-item">
+            <div class="sec-icon">⚖️</div>
+            <div class="sec-text">
+                <b>公平公正機制</b>
+                <p>本平台刮刮樂系統採用偽隨機演算法，籤池在發布瞬間即完成洗牌鎖定。管理後台具備完整控盤透明度，保證開獎過程公平透明。</p>
+            </div>
+        </div>
     </div>
-    <div class="status-item">
-        <div class="icon-box">🔐</div>
-        <div class="status-text"><b>加密安全訪問</b><p>所有交易經由 SSL 加密，確保點數安全。</p></div>
+    
+    <div class="final-copy">
+        &copy; 2026 PREMIUM D.F. SYSTEM<br>
+        POWERED BY FIREBASE CLOUD INFRASTRUCTURE<br>
+        本站僅供持有專屬代碼之受邀會員使用
     </div>
-</div>
-
-<div class="footer">
-    &copy; 2026 PREMIUM SLOTS & SCRATCH<br>
-    數據中心：Firebase Tokyo Cluster
 </div>
 
 <div id="loginModal" class="modal">
     <div class="m-box">
-        <h2 style="margin:0;">WELCOME</h2>
-        <p id="hint" style="font-size:0.8rem; color:#aaa; margin:10px 0;">輸入您的代碼</p>
-        <input type="text" id="cIn" placeholder="CODE">
-        <input type="password" id="pIn" placeholder="PIN" style="display:none;" maxlength="6">
-        <button class="btn" onclick="handleLogin()">ENTER</button>
+        <h2 style="margin:0; letter-spacing:2px;">DREAM</h2>
+        <p id="hint" style="font-size:0.8rem; color:#adb5bd; margin:10px 0;">請輸入您的專屬登入代碼</p>
+        <input type="text" id="cIn" placeholder="ACCESS CODE">
+        <input type="password" id="pIn" placeholder="SECURITY PIN" style="display:none;" maxlength="6">
+        <button class="btn" onclick="handleLogin()">SIGN IN</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, get, update, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const config = { 
         apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
@@ -144,25 +176,19 @@
     let allG = {}; let curC = 'ALL';
     const saved = localStorage.getItem('myScratchCode');
 
-    // 🔴 側欄與公告控制
     window.toggleDrawer = () => {
         document.getElementById('drawer').classList.toggle('active');
         document.getElementById('overlay').classList.toggle('active');
     };
     window.closeAnn = () => document.getElementById('annModal').style.display = 'none';
-    window.handleLogout = () => {
-        if(confirm("確定要登出帳號並清除本地代碼嗎？")) {
-            localStorage.removeItem('myScratchCode');
-            location.reload();
-        }
-    };
+    window.handleLogout = () => { if(confirm("確定登出？")) { localStorage.removeItem('myScratchCode'); location.reload(); } };
     window.editNick = async () => {
-        const n = prompt("請輸入您的暱稱：");
+        const n = prompt("輸入新暱稱：");
         if(n && n.trim() !== "") await update(ref(db, `users/${saved}`), { nickname: n.trim() });
     };
 
     function init() {
-        // 1. 同步公告
+        // 公告
         get(ref(db, 'settings/announcement')).then(s => {
             if(s.exists() && s.val().trim() !== "") {
                 document.getElementById('annContent').innerText = s.val();
@@ -170,17 +196,15 @@
             }
         });
 
-        // 2. 同步商品 (維持原本)
-        onValue(ref(db, 'gameSettings'), s => {
-            allG = s.val() || {};
-            renderCats(); renderGrid();
-        });
+        // 商品
+        onValue(ref(db, 'gameSettings'), s => { allG = s.val() || {}; renderCats(); renderGrid(); });
 
-        // 3. 同步個人資料與紀錄
+        // 會員與紀錄
         onValue(ref(db, `users/${saved}`), s => {
             const u = s.val(); if(!u) return;
             document.getElementById('uBal').innerText = (u.balance||0).toLocaleString();
             document.getElementById('uNick').innerText = u.nickname || "新玩家";
+            document.getElementById('uID').innerText = `ID: ${saved}`;
             
             const logBox = document.getElementById('hList');
             if(u.logs) {
@@ -194,14 +218,14 @@
             }
         });
 
-        // 4. 跑馬燈獲獎動態 (維持原本)
+        // 跑馬燈
         onValue(ref(db, 'games'), s => {
             let wins = []; const data = s.val();
             if(data) {
                 for(let id in data) {
                     if(data[id].history) {
                         Object.values(data[id].history).forEach(h => {
-                            if(h.w) wins.push(`🎉 恭喜玩家 ${h.u.slice(0,3)}*** 刮中【${id}】大獎！`);
+                            if(h.w) wins.push(`🎉 獲獎動態：玩家 ${h.u.slice(0,3)}*** 刮中【${id}】獎項！`);
                         });
                     }
                 }
@@ -210,7 +234,6 @@
         });
     }
 
-    // --- 原本的渲染邏輯 ---
     function renderCats() {
         const cats = new Set(['ALL']);
         Object.values(allG).forEach(g => { if(g.category) cats.add(g.category); });
@@ -226,27 +249,25 @@
         }
     }
 
-    // --- 登入邏輯 (維持原本) ---
     let step = 1; let code = "";
     window.handleLogin = async () => {
         const c = document.getElementById('cIn'); const p = document.getElementById('pIn');
         if(step === 1) {
             code = c.value.trim().toUpperCase();
             const s = await get(ref(db, `users/${code}`));
-            if(s.exists()) { c.style.display="none"; p.style.display="block"; step=2; document.getElementById('hint').innerText="請輸入 PIN"; }
-            else alert("錯誤代碼");
+            if(s.exists()) { c.style.display="none"; p.style.display="block"; step=2; document.getElementById('hint').innerText="請輸入 6 位數 PIN 碼"; }
+            else alert("無效的代碼");
         } else {
             const pin = p.value.trim(); const s = await get(ref(db, `users/${code}`));
             if(!s.val().pin || s.val().pin === pin) {
                 if(!s.val().pin) await update(ref(db, `users/${code}`), {pin});
                 localStorage.setItem('myScratchCode', code); location.reload();
-            } else alert("密碼錯誤");
+            } else alert("PIN 碼錯誤");
         }
     };
 
     if(saved) {
         document.getElementById('loginModal').style.display='none';
-        document.getElementById('uID').innerText = `ID: ${saved}`;
         init();
     } else document.getElementById('loginModal').style.display='flex';
 </script>
