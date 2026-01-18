@@ -7,9 +7,9 @@
     <style>
         :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; }
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
-        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+        body { font-family: 'PingFang TC', -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
         
-        /* 1. 頂部導航：純淨 Logo 與 側欄按鈕 */
+        /* 頂部導航 */
         .top-nav { width: 100%; background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-weight: 900; letter-spacing: 2px; position: sticky; top: 0; z-index: 1000; }
         .nav-btn { font-size: 1.2rem; cursor: pointer; color: #7f8c8d; }
 
@@ -17,29 +17,36 @@
         .marquee-content { display: inline-block; animation: marquee 20s linear infinite; }
         @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
 
-        /* 🟢 2. 側邊會員中心 (收納所有資料) */
-        .side-drawer { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; background: white; z-index: 3000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 30px 20px; box-sizing: border-box; box-shadow: -10px 0 30px rgba(0,0,0,0.1); }
+        /* 側邊會員中心 */
+        .side-drawer { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; background: white; z-index: 3000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 40px 20px; box-sizing: border-box; box-shadow: -10px 0 30px rgba(0,0,0,0.1); }
         .side-drawer.active { right: 0; }
         .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2500; backdrop-filter: blur(4px); }
         .drawer-overlay.active { display: block; }
         
-        /* 側欄內的資訊卡片 */
         .drawer-user-card { background: linear-gradient(135deg, #2c3e50 0%, #000000 100%); border-radius: 20px; padding: 20px; color: white; margin-bottom: 20px; }
         .bal-amount { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin: 5px 0; }
         .log-list { height: calc(100vh - 400px); overflow-y: auto; font-size: 0.8rem; }
         .log-item { padding: 10px 0; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; }
 
-        /* 分類與網格 (維持原本樣式) */
+        /* 分類選單 */
         .category-scroll { display: flex; overflow-x: auto; padding: 10px 20px; gap: 12px; width: 100%; scrollbar-width: none; }
         .cat-item { flex-shrink: 0; padding: 10px 20px; border-radius: 50px; background: white; border: 1px solid #eee; font-size: 0.85rem; color: #7f8c8d; font-weight: bold; }
         .cat-item.active { background: var(--primary); color: white; border-color: var(--primary); }
 
+        /* 🟢 商品列表：質感升級重點 */
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 94%; max-width: 480px; padding: 15px 0; }
-        .p-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .p-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.3s; }
+        .p-card:active { transform: scale(0.96); }
         .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        .p-info { padding: 12px; text-align: center; }
+        
+        /* 文字質感設計 */
+        .p-info { padding: 15px 10px; text-align: center; }
+        .p-name { font-weight: 900; font-size: 0.95rem; color: #333; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .p-price-label { font-size: 0.7rem; color: #adb5bd; font-weight: bold; letter-spacing: 1px; display: block; margin-bottom: 2px; }
+        .p-price-value { color: var(--primary); font-weight: 900; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 2px; }
+        .p-unit { font-size: 0.75rem; vertical-align: middle; margin-right: 1px; }
 
-        /* 🔴 3. 質感聲明區 (復原並美化) */
+        /* 聲明區塊 */
         .status-section { width: 92%; max-width: 450px; margin: 30px 0 10px; background: white; border-radius: 24px; padding: 20px; border: 1px solid rgba(0,0,0,0.05); }
         .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .status-title { font-size: 0.75rem; font-weight: 900; color: #adb5bd; letter-spacing: 1px; }
@@ -51,7 +58,7 @@
 
         .footer { padding: 20px 0 40px; font-size: 0.7rem; color: #adb5bd; text-align: center; line-height: 1.8; }
 
-        /* 彈窗樣式 (維持原本) */
+        /* 彈窗樣式 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 4000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         .m-box { background: white; padding: 35px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
@@ -62,8 +69,8 @@
 <div id="annModal" class="modal">
     <div class="m-box" style="border-top: 5px solid var(--primary);">
         <h3 style="margin-top:0;">最新公告</h3>
-        <div id="annBody" style="font-size:0.9rem; color:#666; text-align:left; margin:20px 0; line-height:1.6; white-space:pre-wrap;">正在載入公告...</div>
-        <button class="btn" onclick="document.getElementById('annModal').style.display='none'">關閉公告</button>
+        <div id="annBody" style="font-size:0.9rem; color:#666; text-align:left; margin:20px 0; line-height:1.6; white-space:pre-wrap;">載入中...</div>
+        <button class="btn" onclick="document.getElementById('annModal').style.display='none'">關閉</button>
     </div>
 </div>
 
@@ -78,7 +85,6 @@
 <div class="drawer-overlay" id="overlay" onclick="toggleDrawer()"></div>
 <div class="side-drawer" id="drawer">
     <h3 style="margin-top:0; display:flex; justify-content:space-between;">會員中心 <span style="font-weight:normal; color:#ccc;" onclick="toggleDrawer()">✕</span></h3>
-    
     <div class="drawer-user-card">
         <div style="font-size:0.7rem; opacity:0.6;">ACCOUNT BALANCE</div>
         <div class="bal-amount">P <span id="uBal">0</span></div>
@@ -87,16 +93,13 @@
             <span id="uID" style="opacity:0.5;">ID: ----</span>
         </div>
     </div>
-
     <div style="font-size:0.75rem; color:#adb5bd; font-weight:900; margin-bottom:10px;">消費紀錄 HISTORY</div>
-    <div class="log-list" id="hList">
-        <div style="text-align:center; padding-top:20px; color:#eee;">尚無消費紀錄</div>
-    </div>
-
+    <div class="log-list" id="hList"><div style="text-align:center; padding-top:20px; color:#eee;">尚無紀錄</div></div>
     <button style="width:100%; margin-top:20px; background:#f8f9fa; color:#ff6b6b; border:none; padding:12px; border-radius:12px; font-weight:bold;" onclick="localStorage.removeItem('myScratchCode'); location.reload();">登出帳號</button>
 </div>
 
 <div class="category-scroll" id="catList"><div class="cat-item active" onclick="filterCat('ALL')">全部</div></div>
+
 <div class="product-grid" id="pGrid"></div>
 
 <div class="status-section">
@@ -123,7 +126,6 @@
     <div class="m-box">
         <h2 style="margin:0;">WELCOME</h2>
         <input type="text" id="cIn" placeholder="代碼">
-        <input type="password" id="pIn" placeholder="PIN" style="display:none;" maxlength="6">
         <button class="btn" onclick="handleLogin()">ENTER</button>
     </div>
 </div>
@@ -155,15 +157,8 @@
     };
 
     function init() {
-        // 讀取公告
-        get(ref(db, 'settings/announcement')).then(s => {
-            if(s.exists() && s.val().trim() !== "") document.getElementById('annBody').innerText = s.val();
-        });
-
-        // 讀取商品
+        get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annBody').innerText = s.val(); });
         onValue(ref(db, 'gameSettings'), s => { allG = s.val() || {}; renderCats(); renderGrid(); });
-
-        // 同步會員
         onValue(ref(db, `users/${saved}`), s => {
             const u = s.val(); if(!u) return;
             document.getElementById('uBal').innerText = (u.balance||0).toLocaleString();
@@ -172,11 +167,7 @@
             const logBox = document.getElementById('hList');
             if(u.logs) {
                 const arr = Object.values(u.logs).sort((a,b)=>b.time-a.time);
-                logBox.innerHTML = arr.map(l => `
-                    <div class="log-item">
-                        <div><b>${l.game}</b><br><small style="color:#adb5bd">${new Date(l.time).toLocaleTimeString()}</small></div>
-                        <span style="color:var(--primary)">-${l.cost} P</span>
-                    </div>`).join('');
+                logBox.innerHTML = arr.map(l => `<div class="log-item"><div><b>${l.game}</b><br><small>${new Date(l.time).toLocaleTimeString()}</small></div><span style="color:var(--primary)">-${l.cost} P</span></div>`).join('');
             }
         });
     }
@@ -187,21 +178,31 @@
         document.getElementById('catList').innerHTML = Array.from(cats).map(c => `<div class="cat-item ${curC===c?'active':''}" onclick="filterCat('${c}')">${c==='ALL'?'全部':c}</div>`).join('');
     }
     window.filterCat = (c) => { curC = c; renderCats(); renderGrid(); };
+
+    // 🟢 核心渲染優化：質感文字與稱號
     function renderGrid() {
         const g = document.getElementById('pGrid'); g.innerHTML = '';
         for(let id in allG) {
             const item = allG[id];
             if(curC !== 'ALL' && item.category !== curC) continue;
-            g.innerHTML += `<div class="p-card" onclick="location.href='game.html?id=${id}'"><img src="${item.img}" class="p-img"><div class="p-info"><div class="p-name">${id}</div><div class="p-price">$ ${item.price}</div></div></div>`;
+            g.innerHTML += `
+                <div class="p-card" onclick="location.href='game.html?id=${id}'">
+                    <img src="${item.img}" class="p-img">
+                    <div class="p-info">
+                        <div class="p-name">${id}</div>
+                        <div class="p-price-value">
+                            <span class="p-price-label">一刮 / </span>
+                            <span class="p-unit">P</span>${item.price}
+                        </div>
+                    </div>
+                </div>`;
         }
     }
 
-    // 登入邏輯保持原本
-    let step = 1;
     window.handleLogin = async () => {
         const code = document.getElementById('cIn').value.trim().toUpperCase();
         const s = await get(ref(db, `users/${code}`));
-        if(s.exists()) { localStorage.setItem('myScratchCode', code); location.reload(); } else alert("錯誤代碼");
+        if(s.exists()) { localStorage.setItem('myScratchCode', code); location.reload(); } else alert("代碼錯誤");
     };
 
     if(saved) { document.getElementById('loginModal').style.display='none'; init(); } 
