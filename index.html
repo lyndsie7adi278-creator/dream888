@@ -5,106 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>夢工廠 | 遊戲大廳</title>
     <style>
-        :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; }
+        :root { --primary: #ff8fa3; --bg: #0b0f1a; --card: #161e2d; }
+        body { margin: 0; padding: 0; background: var(--bg); color: white; font-family: sans-serif; }
         
-        /* 還原原始大廳背景 */
-        body { 
-            font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); 
-            margin: 0; padding: 0; overflow-x: hidden; 
-        }
+        /* 保持原本 Header 樣式 */
+        .header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 1.2rem; font-weight: bold; color: var(--primary); }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .balance-tag { background: var(--primary); padding: 5px 15px; border-radius: 50px; font-weight: bold; color: #000; font-size: 0.9rem; }
+        .menu-btn { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 8px; cursor: pointer; }
 
-        /* 頂部固定導航列：還原原始質感 */
-        .header {
-            position: sticky; top: 0; background: rgba(0,0,0,0.9); padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid var(--p); z-index: 1000;
-        }
-        .logo-txt { font-size: 1.4rem; font-weight: 900; color: var(--p); letter-spacing: 2px; }
-        
-        /* 右上角快捷區 */
-        .top-right { display: flex; align-items: center; gap: 15px; }
-        .balance-pill { background: var(--p); color: #000; padding: 5px 15px; border-radius: 50px; font-weight: 900; font-size: 0.9rem; }
-        .menu-icon { font-size: 1.5rem; cursor: pointer; color: var(--p); }
+        /* 遊戲列表：回歸原本大圖佈局 */
+        .game-grid { padding: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .game-card { background: var(--card); border-radius: 15px; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        .game-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .game-info { padding: 10px; text-align: center; font-weight: bold; }
 
-        /* 遊戲卡片區域：還原原始寬鬆比例 */
-        .game-container { padding: 20px; }
-        .game-grid { 
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; 
-            max-width: 800px; margin: 0 auto; 
-        }
-        .game-card { 
-            background: var(--card); border-radius: 20px; overflow: hidden; 
-            border: 1px solid #222; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-        .game-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-bottom: 1px solid #222; }
-        .game-info { padding: 12px; text-align: center; font-weight: bold; font-size: 1rem; }
-
-        /* 側邊會員中心 (預設隱藏) */
-        .side-menu { 
-            position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; 
-            background: #000; z-index: 2000; transition: 0.4s; 
-            padding: 40px 20px; box-sizing: border-box; border-left: 2px solid var(--p); 
-        }
+        /* 側邊選單：不擋住主頁，僅在觸發時滑出 */
+        .side-menu { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; background: #000; z-index: 500; transition: 0.3s; padding: 30px 20px; box-sizing: border-box; }
         .side-menu.active { right: 0; }
-        .menu-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1500; backdrop-filter: blur(5px); }
+        .menu-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 400; }
         .menu-overlay.active { display: block; }
 
-        /* 消費紀錄清單樣式 */
-        .history-list { height: calc(100vh - 450px); overflow-y: auto; margin-top: 15px; background: #080808; border-radius: 10px; }
-        .history-item { padding: 12px; border-bottom: 1px solid #111; display: flex; justify-content: space-between; font-size: 0.8rem; }
-        .history-item b { color: var(--p); }
-
-        /* 公告彈窗 */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; padding: 25px; }
-        .modal-card { background: var(--card); border: 2px solid var(--p); border-radius: 25px; padding: 30px; text-align: center; width: 85%; max-width: 350px; }
+        .profile { text-align: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+        .history-list { height: calc(100vh - 400px); overflow-y: auto; font-size: 0.8rem; background: #111; border-radius: 10px; }
+        .history-item { padding: 10px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
         
-        .btn-p { background: var(--p); border: none; padding: 12px; border-radius: 50px; width: 100%; font-weight: 900; cursor: pointer; margin-top: 10px; }
-        .btn-logout { background: #1a1a1a; color: #ff4444; border: 1px solid #333; padding: 10px; border-radius: 10px; width: 100%; margin-top: 30px; cursor: pointer; }
+        /* 公告彈窗：原本的極簡風格 */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--primary); width: 80%; max-width: 350px; text-align: center; }
+        .btn-close { background: var(--primary); border: none; padding: 10px 30px; border-radius: 50px; font-weight: bold; margin-top: 20px; width: 100%; }
+        .logout-btn { background: #333; color: #ff4444; border: none; padding: 10px; width: 100%; border-radius: 10px; margin-top: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="noticeModal" class="modal">
     <div class="modal-card">
-        <h2 style="color:var(--p); margin-top:0;">📢 官方公告</h2>
-        <div id="noticeContent" style="color:#eee; text-align:left; margin-bottom: 25px; white-space: pre-wrap;"></div>
-        <button class="btn-p" onclick="closeNotice()">進入系統</button>
+        <h3 style="color:var(--primary); margin-top:0;">公告</h3>
+        <div id="noticeContent" style="color:#ccc; text-align:left;"></div>
+        <button class="btn-close" onclick="closeNotice()">進入</button>
     </div>
 </div>
 
 <div class="header">
-    <div class="logo-txt">DREAM FACTORY</div>
-    <div class="top-right">
-        <div class="balance-pill">P <span id="uBal">0</span></div>
-        <div class="menu-icon" onclick="toggleMenu()">👤</div>
+    <div class="logo">DREAM</div>
+    <div class="header-right">
+        <div class="balance-tag">P <span id="uBal">0</span></div>
+        <button class="menu-btn" onclick="toggleMenu()">選單</button>
     </div>
 </div>
 
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 <div class="side-menu" id="sideMenu">
-    <div style="text-align:center; padding-bottom:20px; border-bottom:1px solid #222;">
-        <div style="color:var(--p); font-size:1.4rem; font-weight:900;">
+    <div class="profile">
+        <div style="font-size:1.2rem; font-weight:bold; color:var(--primary);">
             <span id="uNick">載入中...</span>
-            <span onclick="editNickname()" style="cursor:pointer; font-size:0.8rem; margin-left:5px;">✏️</span>
+            <span onclick="editNickname()" style="cursor:pointer; font-size:0.8rem;">✏️</span>
         </div>
-        <div style="color:#444; font-size:0.7rem; margin-top:5px;">ID: <span id="uID">----</span></div>
+        <div style="font-size:0.7rem; color:#444; margin-top:5px;">ID: <span id="uID">----</span></div>
     </div>
-
-    <div style="margin: 25px 0;">
-        <div style="font-size:0.7rem; color:#666;">最近消費紀錄</div>
-        <div class="history-list" id="historyList"></div>
-    </div>
-
-    <button class="btn-logout" onclick="logout()">安全登出</button>
+    <div style="font-size:0.8rem; color:#666; margin-bottom:10px;">消費紀錄</div>
+    <div class="history-list" id="historyList"></div>
+    <button class="logout-btn" onclick="logout()">登出</button>
 </div>
 
-<div class="game-container">
-    <div class="game-grid" id="gameGrid"></div>
-</div>
+<div class="game-grid" id="gameGrid"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, get, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const config = { 
         apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
@@ -122,24 +92,19 @@
         document.getElementById('sideMenu').classList.toggle('active');
         document.getElementById('menuOverlay').classList.toggle('active');
     };
-
     window.closeNotice = () => document.getElementById('noticeModal').style.display = 'none';
-
-    window.logout = () => {
-        if(confirm("確定登出帳號？")) { localStorage.removeItem('myScratchCode'); location.href = "login.html"; }
-    };
-
+    window.logout = () => { if(confirm("確定登出？")) { localStorage.removeItem('myScratchCode'); location.href = "login.html"; } };
     window.editNickname = async () => {
-        const n = prompt("輸入您的新暱稱：");
+        const n = prompt("輸入暱稱：");
         if(n) await update(ref(db, `users/${userId}`), { nickname: n });
     };
 
-    // 公告同步
+    // 公告監聽
     onValue(ref(db, 'settings/announcement'), s => {
         if(s.exists() && s.val()){ document.getElementById('noticeContent').innerText = s.val(); document.getElementById('noticeModal').style.display = 'flex'; }
     });
 
-    // 會員同步
+    // 會員與紀錄監聽
     onValue(ref(db, `users/${userId}`), s => {
         const u = s.val(); if(!u) return;
         document.getElementById('uID').innerText = userId;
@@ -147,16 +112,12 @@
         document.getElementById('uNick').innerText = u.nickname || "新玩家";
         const hList = document.getElementById('historyList');
         if(u.logs){
-            const logsArray = Object.values(u.logs).sort((a,b) => b.time - a.time);
-            hList.innerHTML = logsArray.map(l => `
-                <div class="history-item">
-                    <div><b>${l.game.replace(/_/g,' ')}</b><br><small style="color:#333">${new Date(l.time).toLocaleTimeString()}</small></div>
-                    <span style="color:var(--p)">-${l.cost}</span>
-                </div>`).join('');
+            const logsArray = Object.values(u.logs).reverse();
+            hList.innerHTML = logsArray.map(l => `<div class="history-item"><div><b>${l.game}</b><br><small>${new Date(l.time).toLocaleTimeString()}</small></div><span style="color:var(--primary)">-${l.cost}</span></div>`).join('');
         }
     });
 
-    // 遊戲列表同步 (維持原始比例)
+    // 遊戲列表 (還原原始結構)
     onValue(ref(db, 'gameSettings'), s => {
         const games = s.val(); const grid = document.getElementById('gameGrid'); grid.innerHTML = '';
         for(let id in games) {
