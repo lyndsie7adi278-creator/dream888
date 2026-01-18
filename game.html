@@ -7,66 +7,30 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; }
-        
-        body { 
-            margin: 0; padding: 0; width: 100%; height: 100vh;
-            background: var(--bg); color: #fff;
-            font-family: -apple-system, sans-serif;
-            display: flex; flex-direction: column; overflow: hidden;
-            position: fixed; touch-action: none;
-        }
-
+        body { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; }
         * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-
-        /* 頂部導航 */
         .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); z-index: 100; }
         .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; }
         .balance-tag { background: var(--p); padding: 5px 15px; border-radius: 50px; font-weight: bold; color: #000; box-shadow: 0 0 10px var(--p); }
-
-        /* 🟢 復原：看板區與商品圖 */
         .billboard { display: flex; align-items: center; padding: 10px; gap: 12px; background: var(--card); border-bottom: 3px solid var(--p); }
         .main-img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 2px solid #333; flex-shrink: 0; }
         .info-box h2 { margin: 0; font-size: 1rem; }
         .info-box div { font-size: 0.8rem; font-weight: bold; margin-top: 3px; }
-
-        /* 獎項追蹤 */
         .prize-monitor { padding: 8px 10px; background: rgba(255,255,255,0.03); font-size: 0.7rem; border-bottom: 1px solid #222; }
         .prize-tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
         .prize-tag { background: #222; padding: 3px 8px; border-radius: 4px; border: 1px solid #333; }
         .prize-tag.won { text-decoration: line-through; opacity: 0.2; background: #000; color: #444; }
-
-        /* 籤表區 */
         #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 100px; touch-action: pan-y; }
         .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; max-width: 500px; margin: 0 auto; }
-        
-        .ticket { 
-            aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            font-size: 1rem; cursor: pointer; position: relative; border: 1px solid rgba(255,255,255,0.05);
-            transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .ticket.winner-glow {
-            border: 2px solid var(--win);
-            box-shadow: 0 0 15px var(--win), inset 0 0 10px var(--win);
-            animation: winner-pulse 1.5s infinite ease-in-out;
-        }
+        .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; position: relative; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+        .ticket.winner-glow { border: 2px solid var(--win); box-shadow: 0 0 15px var(--win), inset 0 0 10px var(--win); animation: winner-pulse 1.5s infinite ease-in-out; }
         @keyframes winner-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-
-        .ticket.taken { background: #000; border-color: #222; }
+        .ticket.taken { background: #000; border-color: #222; cursor: default; }
         .ticket.taken .history-num { color: var(--p); font-size: 1.3rem; font-weight: 900; }
-
-        /* 🟢 復原：Canvas 刮刮樂彈窗 */
-        .scratch-overlay { 
-            display: none; position: fixed; inset: 0; z-index: 500; 
-            align-items: center; justify-content: center; backdrop-filter: blur(15px); 
-            background: rgba(0,0,0,0.9); touch-action: none;
-        }
+        .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); touch-action: none; }
         .scratch-box { position: relative; width: 280px; height: 280px; border-radius: 25px; overflow: hidden; background: white; border: 6px solid #333; }
         #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; }
         #luckyVal { font-size: 6rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-
-        /* 結果視窗 */
         .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
         .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 85%; max-width: 320px; box-shadow: 0 0 40px var(--p); }
         .danger-card { border-color: var(--danger) !important; box-shadow: 0 0 40px var(--danger) !important; }
@@ -137,15 +101,13 @@
     const params = new URLSearchParams(window.location.search); const gameId = params.get('id'); const userId = localStorage.getItem('myScratchCode');
     let gData = null; if(!gameId || !userId) location.href = 'index.html';
 
-    // 🔒 鎖定 F12
     document.onkeydown = (e) => { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
-
     onValue(ref(db, `users/${userId}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
     onValue(ref(db, `gameSettings/${gameId}`), s => {
         gData = s.val(); if(!gData) return;
         document.getElementById('gTitle').innerText = gameId.replace(/_/g, ' ');
-        document.getElementById('gMainImg').src = gData.img; // 🔴 確保看板圖正確載入
+        document.getElementById('gMainImg').src = gData.img;
 
         onValue(ref(db, `games/${gameId}/pool`), snap => {
             const pool = snap.val() || []; const grid = document.getElementById('poolGrid'); const prizeTags = document.getElementById('prizeTags');
@@ -156,9 +118,7 @@
             const pPrice = gData.promoPrice || gData.pPrice || 0;
 
             let priceHTML = `<span style="color:var(--p)">${gData.price} P / 抽</span>`;
-            if (pCount > 0 && soldCount < pCount) {
-                priceHTML = `<span style="color:#ff4757;">🔥 優惠價 ${pPrice} P</span> <span style="font-size:0.65rem; color:#888;">(原價 ${gData.price}P，剩 ${pCount - soldCount} 張)</span>`;
-            }
+            if (pCount > 0 && soldCount < pCount) priceHTML = `<span style="color:#ff4757;">🔥 優惠價 ${pPrice} P</span> <span style="font-size:0.65rem; color:#888;">(剩 ${pCount - soldCount} 張)</span>`;
             document.getElementById('gPrice').innerHTML = priceHTML;
 
             prizeTags.innerHTML = prizes.map(p => {
@@ -174,8 +134,10 @@
                     div.className = 'ticket taken';
                     if(t.revealed) {
                         if(winningNums.includes(parseInt(t.grade))) div.classList.add('winner-glow');
-                        div.innerHTML = `<span style="font-size:0.5rem;color:#444;">${displayIdx}</span><span class="history-num">${t.grade.toString().padStart(2,'0')}</span>`;
-                    } else div.innerHTML = `<span style="font-size:0.55rem; color:#444;">OPEN</span>`;
+                        // 🔴 關鍵更新：顯示刮出的號碼，並在左上角保留序號
+                        const gradeStr = t.grade.toString().padStart(2, '0');
+                        div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:5px;left:5px;">${displayIdx}</span><span class="history-num">${gradeStr}</span>`;
+                    } else div.innerHTML = `<span style="font-size:0.55rem; color:#444;">OPENING</span>`;
                 } else {
                     div.className = 'ticket'; div.innerText = displayIdx;
                     div.onclick = () => buy(i, t.grade);
@@ -188,7 +150,6 @@
     async function buy(idx, grade) {
         const s = await get(ref(db, `users/${userId}/balance`)); const cur = s.val() || 0;
         const poolSnap = await get(ref(db, `games/${gameId}/pool`)); const sold = (poolSnap.val() || []).filter(x => x.taken).length;
-        
         const pCount = gData.promoCount || gData.pCount || 0;
         const pPrice = gData.promoPrice || gData.pPrice || 0;
         let cost = gData.price; if (pCount > 0 && sold < pCount) cost = pPrice;
@@ -223,10 +184,7 @@
             const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
             ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI*2); ctx.fill();
             const pix = ctx.getImageData(0,0,280,280).data; let clear = 0; for(let i=3; i<pix.length; i+=4) if(pix[i]===0) clear++;
-            if(clear > (280*280*0.6)) { 
-                drawing = false; update(ref(db, `games/${gameId}/pool/${poolIdx}`), { revealed: true });
-                judge(val); 
-            }
+            if(clear > (280*280*0.6)) { drawing = false; update(ref(db, `games/${gameId}/pool/${poolIdx}`), { revealed: true }); judge(val); }
         };
         canvas.addEventListener('mousedown', () => drawing = true);
         canvas.addEventListener('touchstart', (e) => { drawing = true; if(e.cancelable) e.preventDefault(); }, {passive: false});
