@@ -3,107 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>夢工廠刮刮樂商城</title>
+    <title>夢工廠 | 遊戲大廳</title>
     <style>
-        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; }
-        * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
-        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+        :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; --border: rgba(255,184,0,0.3); }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
         
-        /* 頂部導航與跑馬燈 */
-        .top-nav { width: 100%; background: white; padding: 15px 0; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-weight: 900; letter-spacing: 2px; }
-        .marquee-container { width: 100%; background: #1a1c23; color: var(--primary); padding: 10px 0; overflow: hidden; white-space: nowrap; font-size: 0.85rem; font-weight: bold; border-bottom: 2px solid var(--primary); }
-        .marquee-content { display: inline-block; animation: marquee 20s linear infinite; }
-        .marquee-content span { margin-right: 50px; }
-        @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+        /* 右上角功能鈕 */
+        .top-bar { position: fixed; top: 15px; right: 15px; z-index: 1000; }
+        .menu-btn { background: var(--p); border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 1.4rem; box-shadow: 0 0 15px rgba(255,184,0,0.4); }
 
-        /* 使用者餘額卡片 */
-        .user-card { background: linear-gradient(135deg, #2c3e50 0%, #000000 100%); width: 92%; max-width: 450px; border-radius: 24px; padding: 25px; margin: 20px 0; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .balance-amount { font-size: 2.5rem; font-weight: 800; color: var(--primary); text-shadow: 0 0 15px rgba(255,143,163,0.3); }
+        /* 會員中心側邊欄 */
+        .side-menu { position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; background: #000; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 40px 20px; box-sizing: border-box; border-left: 1px solid var(--border); }
+        .side-menu.active { right: 0; }
+        .menu-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1500; backdrop-filter: blur(5px); }
+        .menu-overlay.active { display: block; }
 
-        /* 分類選單 */
-        .category-scroll { display: flex; overflow-x: auto; padding: 10px 20px; gap: 12px; width: 100%; scrollbar-width: none; }
-        .category-scroll::-webkit-scrollbar { display: none; }
-        .cat-item { flex-shrink: 0; padding: 10px 20px; border-radius: 50px; background: white; border: 1px solid #eee; font-size: 0.85rem; color: #7f8c8d; font-weight: bold; transition: 0.3s; }
-        .cat-item.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(255,143,163,0.3); }
+        .profile-box { text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #222; }
+        .nick-display { font-size: 1.3rem; font-weight: 900; color: var(--p); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .uid-tag { font-size: 0.7rem; color: #444; margin-top: 5px; letter-spacing: 1px; }
 
-        /* 商品列表 */
-        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 94%; max-width: 480px; padding: 15px 0; }
-        .p-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; animation: fadeIn 0.6s ease; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-        .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        .p-info { padding: 12px; text-align: center; }
-        .p-name { font-weight: bold; font-size: 0.9rem; color: #333; margin-bottom: 5px; }
-        .p-price { color: var(--primary); font-weight: 800; }
+        .balance-box { background: linear-gradient(145deg, #111, #000); padding: 20px; border-radius: 15px; margin-bottom: 25px; border: 1px solid var(--border); text-align: center; }
+        
+        /* 消費紀錄區 */
+        .history-title { font-size: 0.8rem; color: #666; margin-bottom: 10px; padding-left: 5px; }
+        .history-list { height: calc(100vh - 420px); overflow-y: auto; background: #080808; border-radius: 10px; padding: 5px; }
+        .history-item { padding: 12px; border-bottom: 1px solid #151515; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+        .history-item b { color: #fff; }
+        .history-item span { color: var(--p); font-weight: bold; }
 
-        /* 質感聲明區塊 */
-        .status-section { width: 92%; max-width: 450px; margin: 30px 0; background: white; border-radius: 24px; padding: 20px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
-        .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .status-title { font-size: 0.75rem; font-weight: 900; color: #adb5bd; letter-spacing: 1px; }
-        .live-tag { font-size: 0.7rem; color: #2ecc71; background: rgba(46,204,113,0.1); padding: 4px 12px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; }
-        .dot { height: 6px; width: 6px; background: #2ecc71; border-radius: 50%; margin-right: 6px; animation: blink 1.5s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-        .status-item { display: flex; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 16px; margin-bottom: 10px; }
-        .icon-box { width: 32px; height: 32px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .status-text b { display: block; font-size: 0.8rem; color: #2c3e50; }
-        .status-text p { margin: 0; font-size: 0.65rem; color: #95a5a6; }
+        /* 遊戲列表網格 */
+        .game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 85px 15px 30px; }
+        .game-card { background: var(--card); border-radius: 18px; overflow: hidden; border: 1px solid #222; transition: 0.3s; }
+        .game-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .game-info { padding: 12px; text-align: center; font-weight: bold; }
 
-        .footer { padding: 20px 0 40px; font-size: 0.7rem; color: #adb5bd; text-align: center; line-height: 1.8; }
-
-        /* 登入彈窗 */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .m-box { background: white; padding: 35px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
-        input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #eee; margin: 10px 0; text-align: center; font-size: 1.1rem; }
-        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
+        /* 公告彈窗 */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-card { background: var(--card); border: 2px solid var(--p); border-radius: 25px; padding: 30px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 0 30px var(--p); }
+        .logout-btn { background: #333; color: #ff4444; border: 1px solid #444; padding: 12px; width: 100%; border-radius: 12px; margin-top: 25px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="top-nav">DREAM FACTORY</div>
-<div class="marquee-container"><div class="marquee-content" id="mq">正在同步最新獲獎動態...</div></div>
-
-<div class="user-card">
-    <div style="font-size: 0.8rem; opacity: 0.7;">ACCOUNT BALANCE</div>
-    <div class="balance-amount">P <span id="uBal">0</span></div>
-    <div id="uID" style="margin-top:10px; font-size:0.8rem; opacity:0.5;">ID: GUEST</div>
-</div>
-
-<div class="category-scroll" id="catList"><div class="cat-item active" onclick="filterCat('ALL')">全部</div></div>
-<div class="product-grid" id="pGrid"></div>
-
-<div class="status-section">
-    <div class="status-header">
-        <div class="status-title">SYSTEM SECURITY</div>
-        <div class="live-tag"><span class="dot"></span> CLOUD ACTIVE</div>
-    </div>
-    <div class="status-item">
-        <div class="icon-box">🔐</div>
-        <div class="status-text"><b>加密安全訪問</b><p>所有交易經由 256-bit SSL 加密，確保點數安全。</p></div>
-    </div>
-    <div class="status-item">
-        <div class="icon-box">🎲</div>
-        <div class="status-text"><b>公平洗牌算法</b><p>籤池於發佈時由伺服器端隨機洗牌，公正公開。</p></div>
+<div id="noticeModal" class="modal">
+    <div class="modal-card">
+        <h2 style="color:var(--p); margin-top:0;">📜 官方公告</h2>
+        <div id="noticeContent" style="color:#eee; line-height:1.6; text-align:left; margin: 20px 0; font-size: 0.9rem;"></div>
+        <button onclick="closeNotice()" style="background:var(--p); border:none; padding:12px 40px; border-radius:50px; font-weight:bold; cursor:pointer; width:100%;">進入遊戲大廳</button>
     </div>
 </div>
 
-<div class="footer">
-    &copy; 2026 PREMIUM SLOTS & SCRATCH<br>
-    數據中心：Firebase Tokyo Cluster<br>
-    本平台僅供持有授權代碼之會員進行體驗。
+<div class="top-bar"><button class="menu-btn" onclick="toggleMenu()">👤</button></div>
+
+<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+<div class="side-menu" id="sideMenu">
+    <div class="profile-box">
+        <div class="nick-display">
+            <span id="uNick">載入中...</span>
+            <button onclick="editNickname()" style="background:none; border:none; color:var(--p); font-size:1rem; cursor:pointer;">✏️</button>
+        </div>
+        <div class="uid-tag">ACCOUNT ID: <span id="uID">----</span></div>
+    </div>
+    <div class="balance-box">
+        <div style="font-size: 0.7rem; color: #666; margin-bottom: 5px;">WALLET BALANCE</div>
+        <div style="font-size: 1.8rem; font-weight: 900; color: var(--p);">P <span id="uBal">0</span></div>
+    </div>
+    <div class="history-title">🕒 刮刮樂消費紀錄</div>
+    <div class="history-list" id="historyList"></div>
+    <button class="logout-btn" onclick="logout()">安全登出</button>
 </div>
 
-<div id="loginModal" class="modal">
-    <div class="m-box">
-        <h2 style="margin:0;">WELCOME</h2>
-        <p id="hint" style="font-size:0.8rem; color:#aaa; margin:10px 0;">輸入您的代碼</p>
-        <input type="text" id="cIn" placeholder="CODE">
-        <input type="password" id="pIn" placeholder="PIN" style="display:none;" maxlength="6">
-        <button class="btn" onclick="handleLogin()">ENTER</button>
-    </div>
-</div>
+<div class="game-grid" id="gameGrid"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const config = { 
         apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
@@ -114,69 +88,52 @@
     const app = initializeApp(config);
     const db = getDatabase(app);
 
-    let allG = {}; let curC = 'ALL';
+    const userId = localStorage.getItem('myScratchCode');
+    if(!userId) location.href = "login.html";
 
-    function init() {
-        onValue(ref(db, 'gameSettings'), s => {
-            allG = s.val() || {};
-            renderCats(); renderGrid();
-        });
-        onValue(ref(db, 'games'), s => {
-            let wins = []; const data = s.val();
-            if(data) {
-                for(let id in data) {
-                    if(data[id].history) {
-                        Object.values(data[id].history).forEach(h => {
-                            if(h.w) wins.push(`🎉 恭喜玩家 ${h.u.slice(0,3)}*** 刮中【${id}】大獎！`);
-                        });
-                    }
-                }
-            }
-            document.getElementById('mq').innerHTML = wins.length > 0 ? wins.map(m=>`<span>${m}</span>`).join('') : "✨ 祝各位玩家都能刮中頭獎！好運連連！";
-        });
-    }
-
-    function renderCats() {
-        const cats = new Set(['ALL']);
-        Object.values(allG).forEach(g => { if(g.category) cats.add(g.category); });
-        document.getElementById('catList').innerHTML = Array.from(cats).map(c => `<div class="cat-item ${curC===c?'active':''}" onclick="filterCat('${c}')">${c==='ALL'?'全部':c}</div>`).join('');
-    }
-
-    window.filterCat = (c) => { curC = c; renderCats(); renderGrid(); };
-
-    function renderGrid() {
-        const g = document.getElementById('pGrid'); g.innerHTML = '';
-        for(let id in allG) {
-            const item = allG[id];
-            if(curC !== 'ALL' && item.category !== curC) continue;
-            g.innerHTML += `<div class="p-card" onclick="location.href='game.html?id=${id}'"><img src="${item.img}" class="p-img"><div class="p-info"><div class="p-name">${id}</div><div class="p-price">$ ${item.price}</div></div></div>`;
-        }
-    }
-
-    let step = 1; let code = "";
-    window.handleLogin = async () => {
-        const c = document.getElementById('cIn'); const p = document.getElementById('pIn');
-        if(step === 1) {
-            code = c.value.trim().toUpperCase();
-            const s = await get(ref(db, `users/${code}`));
-            if(s.exists()) { c.style.display="none"; p.style.display="block"; step=2; document.getElementById('hint').innerText="請輸入 PIN"; }
-            else alert("錯誤代碼");
-        } else {
-            const pin = p.value.trim(); const s = await get(ref(db, `users/${code}`));
-            if(!s.val().pin || s.val().pin === pin) {
-                if(!s.val().pin) await update(ref(db, `users/${code}`), {pin});
-                localStorage.setItem('myScratchCode', code); location.reload();
-            } else alert("密碼錯誤");
-        }
+    window.toggleMenu = () => {
+        document.getElementById('sideMenu').classList.toggle('active');
+        document.getElementById('menuOverlay').classList.toggle('active');
     };
 
-    const saved = localStorage.getItem('myScratchCode');
-    if(saved) {
-        document.getElementById('loginModal').style.display='none';
-        document.getElementById('uID').innerText = `ID: ${saved}`;
-        onValue(ref(db, `users/${saved}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
-        init();
-    } else document.getElementById('loginModal').style.display='flex';
+    window.closeNotice = () => document.getElementById('noticeModal').style.display = 'none';
+
+    window.logout = () => {
+        if(confirm("確定要登出帳號嗎？")) { localStorage.removeItem('myScratchCode'); location.href = "login.html"; }
+    };
+
+    window.editNickname = async () => {
+        const n = prompt("請輸入您的暱稱：");
+        if(n) await update(ref(db, `users/${userId}`), { nickname: n });
+    };
+
+    // 數據同步
+    onValue(ref(db, 'settings/announcement'), s => {
+        if(s.exists()){ document.getElementById('noticeContent').innerText = s.val(); document.getElementById('noticeModal').style.display = 'flex'; }
+    });
+
+    onValue(ref(db, `users/${userId}`), s => {
+        const u = s.val(); if(!u) return;
+        document.getElementById('uID').innerText = userId;
+        document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
+        document.getElementById('uNick').innerText = u.nickname || "新玩家";
+        const hList = document.getElementById('historyList');
+        if(u.logs){
+            hList.innerHTML = Object.values(u.logs).reverse().map(l => `
+                <div class="history-item">
+                    <div><b>${l.game}</b><br><small style="color:#444">${new Date(l.time).toLocaleTimeString()}</small></div>
+                    <span>-${l.cost} P</span>
+                </div>`).join('');
+        } else { hList.innerHTML = '<div style="color:#222; text-align:center; padding-top:20px;">尚無紀錄</div>'; }
+    });
+
+    onValue(ref(db, 'gameSettings'), s => {
+        const games = s.val(); const grid = document.getElementById('gameGrid'); grid.innerHTML = '';
+        for(let id in games) {
+            grid.innerHTML += `<div class="game-card" onclick="location.href='game.html?id=${id}'">
+                <img class="game-img" src="${games[id].img}"><div class="game-info">${id.replace(/_/g,' ')}</div></div>`;
+        }
+    });
 </script>
 </body>
 </html>
