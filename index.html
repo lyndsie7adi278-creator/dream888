@@ -9,10 +9,11 @@
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
         
-        /* 頂部導航 */
+        /* 頂部導航：增加公告文字 */
         .top-nav { width: 100%; background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-weight: 900; letter-spacing: 2px; position: sticky; top: 0; z-index: 1000; }
-        .nav-btn { font-size: 1.2rem; cursor: pointer; color: #7f8c8d; transition: 0.2s; }
-        .nav-btn:active { transform: scale(0.9); opacity: 0.7; }
+        .nav-left { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #7f8c8d; }
+        .nav-left span { font-size: 0.8rem; font-weight: bold; letter-spacing: 0; }
+        .nav-btn { font-size: 1.2rem; cursor: pointer; color: #7f8c8d; }
 
         .marquee-container { width: 100%; background: #1a1c23; color: var(--primary); padding: 10px 0; overflow: hidden; white-space: nowrap; font-size: 0.85rem; font-weight: bold; border-bottom: 2px solid var(--primary); }
         .marquee-content { display: inline-block; animation: marquee 20s linear infinite; }
@@ -23,26 +24,21 @@
         .side-drawer.active { right: 0; }
         .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2500; backdrop-filter: blur(4px); }
         .drawer-overlay.active { display: block; }
-        
-        .drawer-user-card { background: linear-gradient(135deg, #2c3e50 0%, #000000 100%); border-radius: 20px; padding: 20px; color: white; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+        .drawer-user-card { background: linear-gradient(135deg, #2c3e50 0%, #000000 100%); border-radius: 20px; padding: 20px; color: white; margin-bottom: 20px; }
         .bal-amount { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin: 5px 0; }
-        .log-list { height: calc(100vh - 400px); overflow-y: auto; font-size: 0.8rem; padding-right: 5px; }
-        .log-item { padding: 12px 0; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; }
+        .log-list { height: calc(100vh - 400px); overflow-y: auto; font-size: 0.8rem; }
+        .log-item { padding: 10px 0; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; }
 
-        /* 商品網格與階梯定價樣式 */
+        /* 商品網格 */
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 94%; max-width: 480px; padding: 15px 0; }
-        .p-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.2s; position: relative; }
+        .p-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.2s; }
         .p-card:active { transform: scale(0.96); }
         .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         .p-info { padding: 15px 10px; text-align: center; }
         .p-name { font-weight: 900; font-size: 0.95rem; color: #333; margin-bottom: 8px; }
         .p-price-value { color: var(--primary); font-weight: 900; font-size: 1.1rem; }
-        .p-price-label { font-size: 0.7rem; color: #adb5bd; }
-        .promo-tag { background: #ff4757; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; animation: blink 1.5s infinite; }
-        .promo-info { font-size: 0.65rem; color: #adb5bd; margin-top: 5px; font-weight: bold; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .promo-tag { background: #ff4757; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
 
-        /* 底部聲明區塊 */
         .status-section { width: 92%; max-width: 450px; margin: 30px 0 10px; background: white; border-radius: 24px; padding: 20px; border: 1px solid rgba(0,0,0,0.05); }
         .status-item { display: flex; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 16px; margin-bottom: 10px; }
         .status-text b { display: block; font-size: 0.8rem; color: #2c3e50; }
@@ -54,9 +50,7 @@
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
     </style>
 </head>
-<body>
-
-<div id="annModal" class="modal">
+<body oncontextmenu="return false;"> <div id="annModal" class="modal">
     <div class="m-box">
         <h3 style="margin-top:0;">最新公告</h3>
         <div id="annBody" style="font-size:0.9rem; color:#666; text-align:left; margin:20px 0; white-space:pre-wrap;">載入中...</div>
@@ -65,49 +59,36 @@
 </div>
 
 <div class="top-nav">
-    <div class="nav-btn" onclick="document.getElementById('annModal').style.display='flex'">📜</div>
+    <div class="nav-left" onclick="document.getElementById('annModal').style.display='flex'">
+        <span style="font-size: 1.2rem;">📜</span>
+        <span>最新公告</span>
+    </div>
     <div style="letter-spacing: 3px;">DREAM FACTORY</div>
     <div class="nav-btn" onclick="toggleDrawer()">👤</div>
 </div>
 
-<div class="marquee-container"><div class="marquee-content" id="mq">正在同步最新獲獎動態...</div></div>
+<div class="marquee-container"><div class="marquee-content" id="mq">祝各位玩家都能刮中頭獎！好運連連！</div></div>
 
 <div class="drawer-overlay" id="overlay" onclick="toggleDrawer()"></div>
 <div class="side-drawer" id="drawer">
-    <h3 style="margin:0; display:flex; justify-content:space-between; align-items:center;">會員中心 <span style="font-weight:normal; color:#ccc; cursor:pointer;" onclick="toggleDrawer()">✕</span></h3>
-    
+    <h3 style="margin:0; display:flex; justify-content:space-between;">會員中心 <span onclick="toggleDrawer()">✕</span></h3>
     <div class="drawer-user-card">
-        <div style="font-size:0.7rem; opacity:0.6;">ACCOUNT BALANCE</div>
+        <div style="font-size:0.7rem; opacity:0.6;">BALANCE</div>
         <div class="bal-amount">P <span id="uBal">0</span></div>
         <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:0.8rem;">
-            <b id="uNick" onclick="editNick()" style="cursor:pointer;">設定暱稱 ✏️</b>
-            <span id="uID">ID: ----</span>
+            <b id="uNick" onclick="editNick()">設定暱稱 ✏️</b>
+            <span id="uID">----</span>
         </div>
     </div>
-
-    <div style="font-size:0.75rem; color:#adb5bd; font-weight:900; margin-bottom:10px; letter-spacing:1px;">消費紀錄 HISTORY</div>
-    <div class="log-list" id="hList">
-        <div style="text-align:center; padding-top:20px; color:#ccc; font-size:0.8rem;">尚無紀錄</div>
-    </div>
-
-    <button style="width:100%; margin-top:20px; background:#f8f9fa; color:#ff6b6b; border:none; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer;" onclick="handleLogout()">登出帳號</button>
+    <div class="log-list" id="hList"></div>
+    <button style="width:100%; margin-top:20px; background:#f8f9fa; color:#ff6b6b; border:none; padding:12px; border-radius:12px; font-weight:bold;" onclick="localStorage.removeItem('myScratchCode'); location.reload();">登出帳號</button>
 </div>
 
 <div class="product-grid" id="pGrid"></div>
 
 <div class="status-section">
-    <div class="status-item"><div class="status-text"><b>加密安全訪問</b><p>所有交易經由 256-bit SSL 加密，確保點數安全。</p></div></div>
-    <div class="status-item"><div class="status-text"><b>公平洗牌算法</b><p>籤池於發佈時由伺服器端隨機洗牌，公正公開。</p></div></div>
-</div>
-
-<div class="footer"> &copy; 2026 PREMIUM SLOTS & SCRATCH<br>Firebase Tokyo Cluster </div>
-
-<div id="loginModal" class="modal">
-    <div class="m-box">
-        <h2 style="margin:0;">WELCOME</h2>
-        <input type="text" id="cIn" placeholder="您的專屬代碼" style="width:100%; padding:15px; margin:20px 0; border:1px solid #eee; border-radius:12px; text-align:center;">
-        <button class="btn" onclick="handleLogin()">ENTER</button>
-    </div>
+    <div class="status-item"><div class="status-text"><b>加密安全訪問</b><p>所有交易經由 SSL 加密保護。</p></div></div>
+    <div class="status-item"><div class="status-text"><b>公平洗牌算法</b><p>籤池於發佈時隨機洗牌，公正公開。</p></div></div>
 </div>
 
 <script type="module">
@@ -118,15 +99,19 @@
     const app = initializeApp(config); const db = getDatabase(app);
     const saved = localStorage.getItem('myScratchCode');
 
+    // 🔒 鎖定 F12 與相關按鈕
+    document.onkeydown = function(e) {
+        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+            return false;
+        }
+    };
+
     window.toggleDrawer = () => { document.getElementById('drawer').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); };
-    window.handleLogout = () => { if(confirm("確定要登出？")) { localStorage.removeItem('myScratchCode'); location.reload(); } };
-    window.editNick = async () => { const n = prompt("請輸入您的新暱稱："); if(n && n.trim() !== "") await update(ref(db, `users/${saved}`), { nickname: n }); };
+    window.editNick = async () => { const n = prompt("請輸入您的暱稱："); if(n) await update(ref(db, `users/${saved}`), { nickname: n }); };
 
     function init() {
-        // 讀取公告
-        get(ref(db, 'settings/announcement')).then(s => { if(s.exists() && s.val().trim() !== "") document.getElementById('annBody').innerText = s.val(); });
-
-        // 同步商品與動態價格
+        get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annBody').innerText = s.val(); });
+        
         onValue(ref(db, 'gameSettings'), s => {
             const allG = s.val() || {};
             const grid = document.getElementById('pGrid'); grid.innerHTML = '';
@@ -135,60 +120,35 @@
                 onValue(ref(db, `games/${id}/pool`), pSnap => {
                     const pool = pSnap.val() || [];
                     const sold = pool.filter(x => x.taken).length;
-                    
                     let price = item.price;
                     let tag = "";
-                    let promoInfo = "";
-
-                    if(item.promoCount > 0) {
-                        if(sold < item.promoCount) {
-                            price = item.promoPrice;
-                            tag = `<span class="promo-tag">開盤優惠</span>`;
-                        }
-                        promoInfo = `<div class="promo-info">前${item.promoCount}刮 P${item.promoPrice} / 之後 P${item.price}</div>`;
+                    if(item.promoCount > 0 && sold < item.promoCount) {
+                        price = item.promoPrice; tag = `<span class="promo-tag">開盤優惠</span>`;
                     }
-
                     const cardId = `p-card-${id.replace(/\s/g, '')}`;
-                    let cardEl = document.getElementById(cardId);
-                    const html = `
-                        <img src="${item.img}" class="p-img">
-                        <div class="p-info">
-                            <div class="p-name">${id}${tag}</div>
-                            <div class="p-price-value"><span class="p-price-label">一刮 / </span>P${price}</div>
-                            ${promoInfo}
-                        </div>`;
-                    
-                    if(!cardEl) {
-                        cardEl = document.createElement('div'); cardEl.id = cardId; cardEl.className = 'p-card';
-                        cardEl.onclick = () => location.href = `game.html?id=${id}`;
-                        grid.appendChild(cardEl);
-                    }
-                    cardEl.innerHTML = html;
+                    let card = document.getElementById(cardId);
+                    const html = `<img src="${item.img}" class="p-img"><div class="p-info"><div class="p-name">${id}${tag}</div><div class="p-price-value"><span style="font-size:0.7rem;color:#adb5bd">一刮 / </span>P${price}</div></div>`;
+                    if(!card) { card = document.createElement('div'); card.id = cardId; card.className = 'p-card'; card.onclick = () => location.href = `game.html?id=${id}`; grid.appendChild(card); }
+                    card.innerHTML = html;
                 });
             }
         });
 
-        // 同步會員
         onValue(ref(db, `users/${saved}`), s => {
             const u = s.val(); if(!u) return;
             document.getElementById('uBal').innerText = (u.balance||0).toLocaleString();
-            document.getElementById('uNick').innerText = u.nickname || "新玩家 ✏️";
+            document.getElementById('uNick').innerText = u.nickname || "設定暱稱 ✏️";
             document.getElementById('uID').innerText = `ID: ${saved}`;
             const hBox = document.getElementById('hList');
             if(u.logs) {
                 const arr = Object.values(u.logs).sort((a,b)=>b.time-a.time);
-                hBox.innerHTML = arr.map(l => `
-                    <div class="log-item">
-                        <div><b>${l.game}</b><br><small style="color:#adb5bd">${new Date(l.time).toLocaleTimeString()}</small></div>
-                        <span style="color:var(--primary)">-${l.cost} P</span>
-                    </div>`).join('');
+                hBox.innerHTML = arr.map(l => `<div class="log-item"><div><b>${l.game}</b><br><small>${new Date(l.time).toLocaleTimeString()}</small></div><span>-${l.cost} P</span></div>`).join('');
             }
         });
     }
 
     window.handleLogin = async () => {
         const code = document.getElementById('cIn').value.trim().toUpperCase();
-        if(!code) return alert("請輸入代碼");
         const s = await get(ref(db, `users/${code}`));
         if(s.exists()) { localStorage.setItem('myScratchCode', code); location.reload(); } else alert("查無此代碼");
     };
