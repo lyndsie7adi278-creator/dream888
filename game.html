@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>夢工廠 | 幸運選號</title>
+    <title>夢工廠 | 刮刮樂</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; }
@@ -21,7 +21,6 @@
         .info-box h2 { margin: 0; font-size: 1rem; }
         .info-box div { font-size: 0.8rem; font-weight: bold; margin-top: 3px; }
 
-        /* 🔴 質感優化：中獎獎號追蹤區 */
         .prize-monitor { padding: 12px 15px; background: linear-gradient(180deg, rgba(255,184,0,0.1) 0%, rgba(0,0,0,0) 100%); border-bottom: 1px solid #222; }
         .monitor-title { color: var(--p); font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; display: flex; align-items: center; gap: 5px; }
         .monitor-title::before { content: "🏆"; }
@@ -34,7 +33,7 @@
             padding: 8px 12px; 
             border-radius: 8px; 
             border: 1px solid #444; 
-            font-size: 1.2rem; /* 號碼放大 */
+            font-size: 1.2rem; 
             font-weight: 900; 
             min-width: 50px;
             text-align: center;
@@ -45,13 +44,11 @@
             align-items: center;
         }
         
-        /* 號碼上方的小賞稱 (如: A賞) */
         .prize-label { font-size: 0.55rem; color: var(--p); margin-bottom: 2px; opacity: 0.8; }
 
-        /* 🔴 關鍵修改：中獎後的刪除線樣式 */
         .prize-tag.won { 
             border-color: #555;
-            background: #1a1e26; /* 保持原色不變深 */
+            background: #1a1e26; 
         }
         .prize-tag.won::after {
             content: "";
@@ -60,14 +57,13 @@
             top: 55%;
             width: 80%;
             height: 3px;
-            background: var(--danger); /* 紅色刪除線 */
+            background: var(--danger); 
             transform: rotate(-15deg);
             box-shadow: 0 0 5px var(--danger);
             border-radius: 5px;
             z-index: 5;
         }
 
-        /* 籤表區 */
         #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 100px; touch-action: pan-y; }
         .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; max-width: 500px; margin: 0 auto; }
         .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; position: relative; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -76,13 +72,11 @@
         .ticket.taken { background: #000; border-color: #222; cursor: default; }
         .ticket.taken .history-num { color: var(--p); font-size: 1.3rem; font-weight: 900; }
 
-        /* 刮刮樂彈窗 */
         .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); touch-action: none; }
         .scratch-box { position: relative; width: 280px; height: 280px; border-radius: 25px; overflow: hidden; background: white; border: 6px solid #333; }
         #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; }
         #luckyVal { font-size: 6rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-        
-        /* 結果彈窗 */
+
         .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
         .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 85%; max-width: 320px; box-shadow: 0 0 40px var(--p); }
         .danger-card { border-color: var(--danger) !important; box-shadow: 0 0 40px var(--danger) !important; }
@@ -104,7 +98,7 @@
 </div>
 
 <div class="prize-monitor">
-    <div class="monitor-title">大獎號碼追蹤</div>
+    <div class="monitor-title">中獎號碼</div>
     <div class="prize-tag-list" id="prizeTags"></div>
 </div>
 
@@ -173,17 +167,14 @@
             if (pCount > 0 && soldCount < pCount) priceHTML = `<span style="color:#ff4757;">🔥 優惠價 ${pPrice} P</span> <span style="font-size:0.65rem; color:#888;">(剩 ${pCount - soldCount} 張)</span>`;
             document.getElementById('gPrice').innerHTML = priceHTML;
 
-            // 🔴 渲染強化質感的獎號追蹤區
-            prizeTags.innerHTML = prizes.map(p => {
-                const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.revealed);
-                const numStr = p.num.toString().padStart(2,'0');
-                const label = p.name.includes("賞") ? p.name.split("賞")[0] + "賞" : p.name.substring(0,2);
-                return `
-                    <div class="prize-tag ${isWon ? 'won' : ''}">
-                        <div class="prize-label">${label}</div>
-                        ${numStr}
-                    </div>`;
-            }).join('');
+prizeTags.innerHTML = prizes.map(p => {
+    const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.revealed);
+    const numStr = p.num.toString().padStart(2,'0');
+    return `
+        <div class="prize-tag ${isWon ? 'won' : ''}">
+            ${numStr}
+        </div>`;
+}).join('');
 
             grid.innerHTML = '';
             pool.forEach((t, i) => {
@@ -267,3 +258,4 @@
 </script>
 </body>
 </html>
+
