@@ -46,15 +46,11 @@
         .btn-shuffle { background: #2ecc71; color: white; font-size: 0.8rem; }
         .btn-danger { background: #ef4444; color: white; font-size: 0.8rem; }
 
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        table { width: 100%; border-collapse: collapse; }
         th { color: #888; font-size: 0.8rem; padding: 12px; border-bottom: 2px solid #222; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 0.9rem; }
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 900; }
         .overlay.active { display: block; }
-        
-        /* 🟢 新增調價小標籤 */
-        .adjust-input { margin: 5px 0; padding: 8px !important; font-size: 0.8rem !important; }
     </style>
 </head>
 <body>
@@ -77,34 +73,29 @@
     </div>
 
     <div id="game" class="page">
-        <div class="title-row"><h2 class="title">發布新商品與階梯定價</h2></div>
+        <div class="title-row"><h2 class="title">發布新商品 (含階梯價)</h2></div>
         <div class="card" style="max-width: 550px; margin: 0 auto;">
             <input type="text" id="gId" placeholder="遊戲 ID">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <input type="number" id="gTotal" placeholder="總籤數">
-                <input type="number" id="gPrice" placeholder="單抽價格">
+                <input type="number" id="gPrice" placeholder="正常價格">
             </div>
             
             <div style="background: rgba(255,184,0,0.05); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px dashed var(--p);">
-                <div style="font-size: 0.75rem; color: var(--p); margin-bottom: 10px;">🆕 階梯優惠：前 N 抽改為優惠價</div>
+                <div style="font-size: 0.75rem; color: var(--p); margin-bottom: 10px;">🔥 階梯定價：前 N 抽優惠</div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <input type="number" id="promoCount" placeholder="前幾抽 (例: 10)" style="margin:0;">
-                    <input type="number" id="promoPrice" placeholder="優惠價 (例: 100)" style="margin:0;">
+                    <input type="number" id="pCount" placeholder="前幾張優惠 (例: 10)" style="margin:0;">
+                    <input type="number" id="pPrice" placeholder="優惠價格 (例: 100)" style="margin:0;">
                 </div>
             </div>
 
             <input type="text" id="gImg" placeholder="主要圖片 URL">
-            <textarea id="gPrizes" rows="2" placeholder='獎項 JSON 如: [{"num":8, "name":"頭獎"}]'></textarea>
-            <select id="rateMode" onchange="toggleRateInput()">
-                <option value="all_random">完全隨機</option>
-                <option value="after_n">延遲出現 (前 N 張不出)</option>
-            </select>
-            <div id="rateDetail" style="display:none;"><input type="number" id="nValue" placeholder="設定 N"></div>
+            <textarea id="gPrizes" rows="2" placeholder='獎項 JSON'></textarea>
             <button class="btn" onclick="publishGame()">確認發布商品</button>
         </div>
 
-        <div class="title-row" style="margin-top:40px;"><h2 class="title">現有商品即時調價 (不需重新上架)</h2></div>
-        <div id="quickAdjustList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px;"></div>
+        <div class="title-row" style="margin-top:40px;"><h2 class="title">現有商品即時調價 (同步生效)</h2></div>
+        <div id="adjustList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px;"></div>
     </div>
 
     <div id="user" class="page">
@@ -112,19 +103,19 @@
             <h2 class="title">全體會員清單與對帳</h2>
             <button class="btn" style="width:auto; padding:8px 20px;" onclick="createUser()">＋ 新增會員</button>
         </div>
-        <div class="card table-container">
+        <div class="card" style="overflow-x: auto;">
             <table>
-                <thead><tr><th>暱稱 (UID)</th><th>餘額 (P)</th><th>最近消費紀錄</th><th>操作</th></tr></thead>
+                <thead><tr><th>暱稱 (UID)</th><th>餘額 (P)</th><th>最近消費</th><th>操作</th></tr></thead>
                 <tbody id="userTableBody"></tbody>
             </table>
         </div>
     </div>
 
     <div id="ann" class="page">
-        <div class="title-row"><h2 class="title">系統公告管理</h2></div>
+        <div class="title-row"><h2 class="title">系統公告發佈</h2></div>
         <div class="card" style="max-width: 550px; margin: 0 auto;">
-            <textarea id="annContent" rows="8" placeholder="輸入要顯示給客人的公告內容..."></textarea>
-            <button class="btn" onclick="saveAnnouncement()">發佈公告</button>
+            <textarea id="annContent" rows="10" placeholder="在此輸入公告內容..."></textarea>
+            <button class="btn" onclick="saveAnnouncement()">發佈至主頁</button>
         </div>
     </div>
 </div>
@@ -133,181 +124,102 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, update, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    const config = { 
-        apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",
-        databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com",
-        projectId: "dream-169dc",
-        appId: "1:214137228622:web:84d14bad85d865ee94e21f"
-    };
-    const app = initializeApp(config);
-    const db = getDatabase(app);
+    const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
+    const app = initializeApp(config); const db = getDatabase(app);
 
-    const MASTER_KEY = "8888";
-    window.onload = () => {
-        const p = prompt("ADMIN PASS:");
-        if(p === MASTER_KEY) { document.body.style.display = "block"; startSync(); }
-        else location.href = "index.html";
-    };
-
-    window.toggleSidebar = () => {
-        document.getElementById('sidebar').classList.toggle('active');
-        document.getElementById('overlay').classList.toggle('active');
-    };
+    window.onload = () => { if(prompt("ADMIN PASS:") === "8888") { document.body.style.display = "block"; startSync(); } else location.href = "index.html"; };
 
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         const links = document.querySelectorAll('.nav-link');
-        links.forEach(link => {
-            if(link.getAttribute('onclick').includes(id)) link.classList.add('active');
-        });
-        if(window.innerWidth <= 768 && document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
+        links.forEach(link => { if(link.getAttribute('onclick').includes(id)) link.classList.add('active'); });
+        if(window.innerWidth <= 768) toggleSidebar();
     };
 
-    window.toggleRateInput = () => {
-        const mode = document.getElementById('rateMode').value;
-        document.getElementById('rateDetail').style.display = (mode === 'after_n') ? 'block' : 'none';
-    };
-
-    function generatePool(total, prizes, mode, nValue) {
-        let pool = Array.from({length: total}, (_, i) => ({ grade: i + 1, taken: false, revealed: false }));
-        const prizeNums = prizes.map(p => parseInt(p.num));
-        if (mode === 'all_random') {
-            pool.sort(() => Math.random() - 0.5);
-        } else if (mode === 'after_n') {
-            let n = Math.min(parseInt(nValue) || 0, total - 1);
-            let winItems = pool.filter(item => prizeNums.includes(item.grade));
-            let normalItems = pool.filter(item => !prizeNums.includes(item.grade));
-            normalItems.sort(() => Math.random() - 0.5);
-            let front = normalItems.slice(0, n);
-            let back = [...normalItems.slice(n), ...winItems];
-            back.sort(() => Math.random() - 0.5);
-            pool = [...front, ...back];
-        }
-        return pool;
-    }
+    window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); };
 
     function startSync() {
-        get(ref(db, 'settings/announcement')).then(s => {
-            if(s.exists()) document.getElementById('annContent').value = s.val();
-        });
+        // 載入公告
+        get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annContent').value = s.val(); });
 
-        // 🟢 監聽調價列表與銷售監控
-        onValue(ref(db, 'gameSettings'), (snap) => {
+        // 監聽商品數據 (銷量 + 調價面板)
+        onValue(ref(db, 'gameSettings'), snap => {
             const list = document.getElementById('monList');
-            const adjList = document.getElementById('quickAdjustList');
-            const data = snap.val(); if(!data) return list.innerHTML = "無商品";
-            list.innerHTML = ''; adjList.innerHTML = '';
+            const adj = document.getElementById('adjustList');
+            const data = snap.val() || {};
+            list.innerHTML = ''; adj.innerHTML = '';
 
-            Object.keys(data).forEach(id => {
-                const g = data[id];
-                // 1. 原始銷量監控卡片
-                const card = document.createElement('div');
-                card.className = 'card';
+            Object.entries(data).forEach(([id, g]) => {
+                // 銷量監控卡片
+                const card = document.createElement('div'); card.className = 'card';
                 card.innerHTML = `<b>${id}</b><div id="rem-${id}" style="color:var(--p); font-size:1.3rem; margin:10px 0;">--</div>
                     <button class="btn btn-shuffle" onclick="resetShuffle('${id}')">🎲 全數重置洗牌</button>
                     <button class="btn btn-danger" onclick="deleteGame('${id}')">🗑 刪除</button>`;
                 list.appendChild(card);
-                
                 onValue(ref(db, `games/${id}/pool`), pSnap => {
                     const p = pSnap.val() || [];
-                    const remEl = document.getElementById(`rem-${id}`);
-                    if(remEl) remEl.innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${data[id].total}`;
+                    document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`;
                 });
 
-                // 2. 🟢 新增調價卡片
-                const adjCard = document.createElement('div');
-                adjCard.className = 'card';
-                adjCard.innerHTML = `
-                    <b style="color:var(--p)">${id} 調價面板</b>
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px;">
-                        <div><small>一般價</small><input type="number" value="${g.price}" class="adjust-input" onchange="quickUpdate('${id}','price',this.value)"></div>
-                        <div><small>前N張</small><input type="number" value="${g.promoCount||0}" class="adjust-input" onchange="quickUpdate('${id}','promoCount',this.value)"></div>
-                        <div><small>優惠價</small><input type="number" value="${g.promoPrice||0}" class="adjust-input" onchange="quickUpdate('${id}','promoPrice',this.value)"></div>
-                    </div>`;
-                adjList.appendChild(adjCard);
+                // 調價卡片
+                const adjCard = document.createElement('div'); adjCard.className = 'card';
+                adjCard.innerHTML = `<b>${id} 調價</b><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:10px;">
+                    <div><small>原價</small><input type="number" value="${g.price}" style="margin:0; padding:5px;" onchange="qUpd('${id}','price',this.value)"></div>
+                    <div><small>前N</small><input type="number" value="${g.promoCount||0}" style="margin:0; padding:5px;" onchange="qUpd('${id}','promoCount',this.value)"></div>
+                    <div><small>優惠價</small><input type="number" value="${g.promoPrice||0}" style="margin:0; padding:5px;" onchange="qUpd('${id}','promoPrice',this.value)"></div></div>`;
+                adj.appendChild(adjCard);
             });
         });
 
+        // 監聽會員 (顯示暱稱與紀錄)
         onValue(ref(db, 'users'), s => {
-            const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = '';
-            const users = s.val(); if(!users) return;
+            const tbody = document.getElementById('userTableBody'); tbody.innerHTML = '';
+            const users = s.val() || {};
             Object.entries(users).forEach(([uid, u]) => {
-                let lastLogStr = "無紀錄";
-                if(u.logs) {
-                    const logs = Object.values(u.logs);
-                    const lastLog = logs[logs.length - 1];
-                    lastLogStr = `${lastLog.game} (-${lastLog.cost}P)`;
-                }
-                tbody.innerHTML += `<tr>
-                    <td><b>${u.nickname || '未設暱稱'}</b><br><small style="color:#666">${uid}</small></td>
+                const logs = u.logs ? Object.values(u.logs) : [];
+                const last = logs.length > 0 ? logs[logs.length-1] : {game:'無'};
+                tbody.innerHTML += `<tr><td><b>${u.nickname||'未設'}</b><br><small>${uid}</small></td>
                     <td style="color:var(--p); font-weight:bold;">${(u.balance||0).toLocaleString()}</td>
-                    <td><small>${lastLogStr}</small></td>
+                    <td><small>${last.game}</small></td>
                     <td><button class="btn" style="width:auto; padding:5px 10px; font-size:0.7rem;" onclick="addBal('${uid}')">充值</button></td></tr>`;
             });
         });
     }
 
-    // 🟢 新增調價執行
-    window.quickUpdate = (id, field, val) => {
-        update(ref(db, `gameSettings/${id}`), { [field]: parseInt(val) });
-    };
-
-    window.saveAnnouncement = async () => {
-        const content = document.getElementById('annContent').value;
-        await set(ref(db, 'settings/announcement'), content);
-        alert("公告已成功發佈！");
-    };
-
-    window.resetShuffle = async (id) => {
-        if(!confirm(`確定要重置「${id}」嗎？`)) return;
-        try {
-            const s = await get(ref(db, `gameSettings/${id}`));
-            const d = s.val();
-            const prizes = Array.isArray(d.prizes) ? d.prizes : [d.prizes];
-            const newPool = generatePool(parseInt(d.total), prizes, d.rateMode || 'all_random', parseInt(d.nValue) || 0);
-            await set(ref(db, `games/${id}/pool`), newPool);
-            alert("已成功全數洗牌重置！");
-        } catch(e) { alert("錯誤：" + e.message); }
-    };
-
+    window.qUpd = (id, f, v) => update(ref(db, `gameSettings/${id}`), { [f]: parseInt(v) });
+    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告已發佈"); };
+    
     window.publishGame = async () => {
         const id = document.getElementById('gId').value.trim();
         const total = parseInt(document.getElementById('gTotal').value);
         const prizes = JSON.parse(document.getElementById('gPrizes').value);
-        // 🟢 加入階梯定價參數抓取
-        const pCount = parseInt(document.getElementById('promoCount').value) || 0;
-        const pPrice = parseInt(document.getElementById('promoPrice').value) || 0;
+        const pCount = parseInt(document.getElementById('pCount').value) || 0;
+        const pPrice = parseInt(document.getElementById('pPrice').value) || 0;
 
-        if(!id || !total) return alert("資訊不全");
-        const pool = generatePool(total, prizes, document.getElementById('rateMode').value, document.getElementById('nValue').value);
-        await set(ref(db, `gameSettings/${id}`), { 
-            total, 
-            price: parseInt(document.getElementById('gPrice').value), 
-            promoCount: pCount,
-            promoPrice: pPrice,
-            img: document.getElementById('gImg').value, 
-            prizes, 
-            rateMode: document.getElementById('rateMode').value, 
-            nValue: document.getElementById('nValue').value 
-        });
-        await set(ref(db, `games/${id}/pool`), pool);
-        alert("發布成功");
+        let pool = Array.from({length: total}, (_, i) => ({ grade: i + 1, taken: false, revealed: false }));
+        pool.sort(() => Math.random() - 0.5);
+        await set(ref(db, `gameSettings/${id}`), { total, price: parseInt(document.getElementById('gPrice').value), img: document.getElementById('gImg').value, prizes, promoCount: pCount, promoPrice: pPrice });
+        await set(ref(db, `games/${id}/pool`), pool); alert("發布完成");
+    };
+
+    window.resetShuffle = async (id) => {
+        if(!confirm("重置？")) return;
+        const s = await get(ref(db, `gameSettings/${id}`)); const d = s.val();
+        let pool = Array.from({length: d.total}, (_, i) => ({ grade: i + 1, taken: false, revealed: false }));
+        pool.sort(() => Math.random() - 0.5);
+        await set(ref(db, `games/${id}/pool`), pool); alert("重置完成");
     };
 
     window.createUser = async () => {
-        const uid = prompt("新會員 UID:"); if(!uid) return;
-        await set(ref(db, `users/${uid.toUpperCase()}`), { balance: 0, pin: "", nickname: "新玩家" });
-        alert("會員建立成功");
+        const uid = prompt("UID:"); if(uid) await set(ref(db, `users/${uid.toUpperCase()}`), { balance: 0, nickname: "新玩家" });
     };
 
     window.addBal = async (uid) => {
-        const amt = prompt(`調整 ${uid} 點數 (+/-):`); if(!amt) return;
-        const s = await get(ref(db, `users/${uid}/balance`));
-        let cur = s.val() || 0;
-        let fin = amt.startsWith('+') ? cur + parseInt(amt.slice(1)) : amt.startsWith('-') ? cur - parseInt(amt.slice(1)) : parseInt(amt);
+        const amt = prompt("調整餘額(+/-):"); if(!amt) return;
+        const s = await get(ref(db, `users/${uid}/balance`)); let cur = s.val() || 0;
+        let fin = amt.startsWith('+')?cur+parseInt(amt.slice(1)):amt.startsWith('-')?cur-parseInt(amt.slice(1)):parseInt(amt);
         await update(ref(db, `users/${uid}`), { balance: fin });
     };
 
