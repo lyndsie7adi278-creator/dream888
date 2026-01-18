@@ -9,7 +9,6 @@
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
         
-        /* 頂部導航：增加公告文字 */
         .top-nav { width: 100%; background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-weight: 900; letter-spacing: 2px; position: sticky; top: 0; z-index: 1000; }
         .nav-left { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #7f8c8d; }
         .nav-left span { font-size: 0.8rem; font-weight: bold; letter-spacing: 0; }
@@ -30,30 +29,32 @@
         .log-item { padding: 10px 0; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; }
 
         /* 商品網格 */
-        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 94%; max-width: 480px; padding: 15px 0; }
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 94%; max-width: 480px; padding: 15px 0; min-height: 200px; }
         .p-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.2s; }
         .p-card:active { transform: scale(0.96); }
-        .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #f9f9f9; }
         .p-info { padding: 15px 10px; text-align: center; }
         .p-name { font-weight: 900; font-size: 0.95rem; color: #333; margin-bottom: 8px; }
         .p-price-value { color: var(--primary); font-weight: 900; font-size: 1.1rem; }
         .promo-tag { background: #ff4757; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+        .promo-info { font-size: 0.65rem; color: #adb5bd; margin-top: 5px; font-weight: bold; }
 
         .status-section { width: 92%; max-width: 450px; margin: 30px 0 10px; background: white; border-radius: 24px; padding: 20px; border: 1px solid rgba(0,0,0,0.05); }
         .status-item { display: flex; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 16px; margin-bottom: 10px; }
         .status-text b { display: block; font-size: 0.8rem; color: #2c3e50; }
         .status-text p { margin: 0; font-size: 0.65rem; color: #95a5a6; line-height: 1.4; }
 
-        .footer { padding: 20px 0 40px; font-size: 0.7rem; color: #adb5bd; text-align: center; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 4000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         .m-box { background: white; padding: 35px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
     </style>
 </head>
-<body oncontextmenu="return false;"> <div id="annModal" class="modal">
+<body oncontextmenu="return false;">
+
+<div id="annModal" class="modal">
     <div class="m-box">
         <h3 style="margin-top:0;">最新公告</h3>
-        <div id="annBody" style="font-size:0.9rem; color:#666; text-align:left; margin:20px 0; white-space:pre-wrap;">載入中...</div>
+        <div id="annBody" style="font-size:0.9rem; color:#666; text-align:left; margin:20px 0; white-space:pre-wrap;">尚無最新公告</div>
         <button class="btn" onclick="document.getElementById('annModal').style.display='none'">我知道了</button>
     </div>
 </div>
@@ -80,6 +81,7 @@
             <span id="uID">----</span>
         </div>
     </div>
+    <div style="font-size:0.75rem; color:#adb5bd; font-weight:900; margin-bottom:10px;">消費紀錄 HISTORY</div>
     <div class="log-list" id="hList"></div>
     <button style="width:100%; margin-top:20px; background:#f8f9fa; color:#ff6b6b; border:none; padding:12px; border-radius:12px; font-weight:bold;" onclick="localStorage.removeItem('myScratchCode'); location.reload();">登出帳號</button>
 </div>
@@ -99,41 +101,67 @@
     const app = initializeApp(config); const db = getDatabase(app);
     const saved = localStorage.getItem('myScratchCode');
 
-    // 🔒 鎖定 F12 與相關按鈕
-    document.onkeydown = function(e) {
-        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
-            return false;
-        }
-    };
+    // 🔒 鎖定開發者工具
+    document.onkeydown = (e) => { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
 
     window.toggleDrawer = () => { document.getElementById('drawer').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); };
     window.editNick = async () => { const n = prompt("請輸入您的暱稱："); if(n) await update(ref(db, `users/${saved}`), { nickname: n }); };
 
     function init() {
-        get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annBody').innerText = s.val(); });
-        
+        // 1. 公告
+        get(ref(db, 'settings/announcement')).then(s => { if(s.exists() && s.val()) document.getElementById('annBody').innerText = s.val(); });
+
+        // 2. 核心：穩定版商品渲染 (加入 try-catch 與 預設值防止消失)
         onValue(ref(db, 'gameSettings'), s => {
-            const allG = s.val() || {};
-            const grid = document.getElementById('pGrid'); grid.innerHTML = '';
-            for(let id in allG) {
-                const item = allG[id];
-                onValue(ref(db, `games/${id}/pool`), pSnap => {
-                    const pool = pSnap.val() || [];
-                    const sold = pool.filter(x => x.taken).length;
-                    let price = item.price;
-                    let tag = "";
-                    if(item.promoCount > 0 && sold < item.promoCount) {
-                        price = item.promoPrice; tag = `<span class="promo-tag">開盤優惠</span>`;
-                    }
-                    const cardId = `p-card-${id.replace(/\s/g, '')}`;
-                    let card = document.getElementById(cardId);
-                    const html = `<img src="${item.img}" class="p-img"><div class="p-info"><div class="p-name">${id}${tag}</div><div class="p-price-value"><span style="font-size:0.7rem;color:#adb5bd">一刮 / </span>P${price}</div></div>`;
-                    if(!card) { card = document.createElement('div'); card.id = cardId; card.className = 'p-card'; card.onclick = () => location.href = `game.html?id=${id}`; grid.appendChild(card); }
-                    card.innerHTML = html;
-                });
-            }
+            try {
+                const allG = s.val() || {};
+                const grid = document.getElementById('pGrid');
+                
+                // 清空舊內容
+                grid.innerHTML = '';
+                
+                for(let id in allG) {
+                    const item = allG[id];
+                    // 先建立卡片容器
+                    const cardId = `p-card-${id.replace(/\s+/g, '')}`;
+                    const cardEl = document.createElement('div');
+                    cardEl.id = cardId;
+                    cardEl.className = 'p-card';
+                    cardEl.onclick = () => location.href = `game.html?id=${id}`;
+                    grid.appendChild(cardEl);
+
+                    // 監聽該遊戲即時池子以更新價格
+                    onValue(ref(db, `games/${id}/pool`), pSnap => {
+                        try {
+                            const pool = pSnap.val() || [];
+                            const sold = pool.filter(x => x.taken).length;
+                            
+                            let price = item.price || 0;
+                            let tag = "";
+                            let promoInfo = "";
+
+                            if(item.promoCount > 0 && item.promoPrice > 0) {
+                                if(sold < item.promoCount) {
+                                    price = item.promoPrice;
+                                    tag = `<span class="promo-tag">開盤優惠</span>`;
+                                }
+                                promoInfo = `<div class="promo-info">前${item.promoCount}刮 P${item.promoPrice} / 之後 P${item.price}</div>`;
+                            }
+
+                            cardEl.innerHTML = `
+                                <img src="${item.img || ''}" class="p-img">
+                                <div class="p-info">
+                                    <div class="p-name">${id}${tag}</div>
+                                    <div class="p-price-value"><span style="font-size:0.7rem;color:#adb5bd">一刮 / </span>P${price}</div>
+                                    ${promoInfo}
+                                </div>`;
+                        } catch (err) { console.error("渲染單個卡片失敗:", err); }
+                    });
+                }
+            } catch (globalErr) { console.error("商品列表加載失敗:", globalErr); }
         });
 
+        // 3. 會員中心
         onValue(ref(db, `users/${saved}`), s => {
             const u = s.val(); if(!u) return;
             document.getElementById('uBal').innerText = (u.balance||0).toLocaleString();
@@ -142,13 +170,14 @@
             const hBox = document.getElementById('hList');
             if(u.logs) {
                 const arr = Object.values(u.logs).sort((a,b)=>b.time-a.time);
-                hBox.innerHTML = arr.map(l => `<div class="log-item"><div><b>${l.game}</b><br><small>${new Date(l.time).toLocaleTimeString()}</small></div><span>-${l.cost} P</span></div>`).join('');
+                hBox.innerHTML = arr.slice(0, 20).map(l => `<div class="log-item"><div><b>${l.game}</b><br><small>${new Date(l.time).toLocaleTimeString()}</small></div><span>-${l.cost} P</span></div>`).join('');
             }
         });
     }
 
     window.handleLogin = async () => {
         const code = document.getElementById('cIn').value.trim().toUpperCase();
+        if(!code) return;
         const s = await get(ref(db, `users/${code}`));
         if(s.exists()) { localStorage.setItem('myScratchCode', code); location.reload(); } else alert("查無此代碼");
     };
