@@ -94,7 +94,12 @@
             box-shadow: 0 12px 25px rgba(0,0,0,0.2); 
         }
         .bal-amount { font-size: 2rem; font-weight: 900; color: var(--primary); margin: 8px 0; }
-        .log-list { height: calc(100vh - 420px); overflow-y: auto; padding-right: 5px; }
+        
+        /* 📜 紀錄列表優化 */
+        .record-section-title { font-size: 0.8rem; color: #666; font-weight: 900; margin: 15px 0 10px; letter-spacing: 1px; display: flex; align-items: center; }
+        .record-section-title::before { content: ""; width: 3px; height: 12px; background: var(--primary); margin-right: 8px; border-radius: 10px; }
+        
+        .log-list { height: 180px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; border-bottom: 1px dashed #eee; }
         .log-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
 
         /* 7. 旗艦級聲明區塊 (完全復原) */
@@ -180,9 +185,16 @@
                 <span id="uID" style="opacity:0.6;">ID: ----</span>
             </div>
         </div>
-        <div style="font-size:0.8rem; color:#666; font-weight:900; margin-bottom:12px; letter-spacing:1px;">消費紀錄 HISTORY</div>
-        <div class="log-list" id="hList"></div>
-        <button style="width:100%; margin-top:25px; background:#fff1f3; color:#ff6b6b; border:none; padding:14px; border-radius:15px; font-weight:bold; cursor:pointer;" onclick="handleLogout()">登出帳號</button>
+
+        <div class="record-section-title">中獎存根 PRIZE HISTORY</div>
+        <div class="log-list" id="winList" style="height: 120px; border-bottom: none;">
+            <div style="color:#ccc; text-align:center; padding:20px; font-size:0.8rem;">尚無中獎紀錄</div>
+        </div>
+
+        <div class="record-section-title">消費紀錄 HISTORY</div>
+        <div class="log-list" id="hList" style="height: 150px;"></div>
+        
+        <button style="width:100%; margin-top:10px; background:#fff1f3; color:#ff6b6b; border:none; padding:14px; border-radius:15px; font-weight:bold; cursor:pointer;" onclick="handleLogout()">登出帳號</button>
     </div>
     <div id="visitorArea" style="display:none; text-align:center; padding-top:50px;">
         <div style="font-size:4rem;">👋</div>
@@ -256,17 +268,40 @@
             document.getElementById('userInfoArea').style.display = 'block';
             document.getElementById('visitorArea').style.display = 'none';
             document.getElementById('drawerTitle').innerText = '會員中心';
+            
+            // 👤 監聽會員數據
             onValue(ref(db, `users/${saved}`), s => {
                 const u = s.val(); if(!u) return;
                 document.getElementById('uBal').innerText = (u.balance||0).toLocaleString();
                 document.getElementById('uNick').innerText = u.nickname || "新玩家 ✏️";
                 document.getElementById('uID').innerText = `ID: ${saved}`;
+                
+                // 💳 消費紀錄渲染
                 const hBox = document.getElementById('hList');
                 if(u.logs) {
                     const arr = Object.values(u.logs).sort((a,b)=>b.time-a.time);
                     hBox.innerHTML = arr.map(l => `<div class="log-item"><div><b>${l.game}</b><br><small style="color:#adb5bd">${new Date(l.time).toLocaleTimeString()}</small></div><span style="color:var(--primary); font-weight:900;">-${l.cost} P</span></div>`).join('');
                 }
             });
+
+            // 🏆 監聽中獎紀錄
+            onValue(ref(db, 'winLogs'), snap => {
+                const wBox = document.getElementById('winList');
+                const logs = snap.val() || {};
+                const myWins = Object.values(logs).filter(l => l.user === saved).sort((a,b)=>b.time-a.time);
+                
+                if(myWins.length > 0) {
+                    wBox.innerHTML = myWins.map(w => `
+                        <div class="log-item">
+                            <div><b>${w.prize}</b><br><small style="color:#adb5bd">${w.game}</small></div>
+                            <span style="color:#27ae60; font-size:0.75rem; font-weight:bold;">已紀錄</span>
+                        </div>
+                    `).join('');
+                } else {
+                    wBox.innerHTML = '<div style="color:#ccc; text-align:center; padding:20px; font-size:0.8rem;">尚無中獎紀錄</div>';
+                }
+            });
+
         } else {
             document.getElementById('userInfoArea').style.display = 'none';
             document.getElementById('visitorArea').style.display = 'block';
