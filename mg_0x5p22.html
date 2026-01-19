@@ -8,7 +8,6 @@
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; --border: rgba(255,184,0,0.3); }
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: none; overflow-x: hidden; }
         
-        /* 側邊欄摺疊設計 */
         .sidebar { width: 240px; height: 100vh; background: #000; position: fixed; border-right: 1px solid var(--border); padding: 30px 15px; box-sizing: border-box; z-index: 1000; transition: 0.3s; left: 0; }
         .main { margin-left: 240px; padding: 20px; padding-top: 65px; transition: 0.3s; }
         
@@ -31,21 +30,26 @@
         .title { font-size: 1.1rem; color: var(--p); font-weight: bold; margin-bottom: 20px; display: block; }
         
         input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; font-size: 0.9rem; }
-        .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; }
+        .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
         .btn-sm { padding: 8px 12px; font-size: 0.85rem; margin-right: 5px; margin-top: 5px; }
 
         .user-item { background: #0a0c10; border: 1px solid #222; border-radius: 12px; margin-bottom: 10px; }
         .user-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .user-balance { color: var(--p); font-weight: 900; }
         .user-content { display: none; padding: 15px; background: #0d1016; border-top: 1px solid #222; }
         .user-content.show { display: block; }
 
+        /* 彈窗樣式 */
         .log-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .log-box { background: var(--card); width: 95%; max-width: 500px; border-radius: 20px; border: 1px solid var(--p); padding: 25px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
         .log-list { overflow-y: auto; flex-grow: 1; margin-top: 15px; }
 
         .safe-box { border: 1px solid #ff4757; padding: 15px; border-radius: 12px; background: rgba(255,71,87,0.05); margin-bottom: 15px; }
-        .adj-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        
+        /* 🏆 中獎紀錄表格樣式 */
+        .win-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        .win-table th { text-align: left; color: var(--p); padding: 12px; border-bottom: 2px solid #222; }
+        .win-table td { padding: 12px; border-bottom: 1px solid #222; }
     </style>
 </head>
 <body>
@@ -66,6 +70,7 @@
     <div class="logo">DREAM ADMIN</div>
     <div class="nav-link active" onclick="switchTab('mon')">📊 數據監控</div>
     <div class="nav-link" onclick="switchTab('game')">📦 商品管理</div>
+    <div class="nav-link" onclick="switchTab('win_logs')">🏆 中獎紀錄</div>
     <div class="nav-link" onclick="switchTab('user')">👤 會員資料</div>
     <div class="nav-link" onclick="switchTab('ann')">📜 公告發佈</div>
 </div>
@@ -77,31 +82,31 @@
     </div>
 
     <div id="game" class="page">
-        <span class="title">發布新商品 (戰略控制)</span>
+        <span class="title">商品發布與戰略配率</span>
         <div class="card" style="max-width: 500px; margin: 0 auto;">
-            <input type="text" id="gId" placeholder="遊戲 ID (如: PK_01)">
-            <input type="text" id="gCat" placeholder="分類 (如: 一番賞)">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <input type="number" id="gTotal" placeholder="總籤數">
-                <input type="number" id="gPrice" placeholder="單抽原價">
-            </div>
-
+            <input type="text" id="gId" placeholder="遊戲 ID">
+            <input type="text" id="gCat" placeholder="分類">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="gTotal" placeholder="總籤數"><input type="number" id="gPrice" placeholder="原價"></div>
             <div class="safe-box">
-                <b style="color:#ff4757; font-size:0.8rem;">🛡️ 戰略切盤：前 N 張不中獎設定</b>
-                <input type="number" id="gSafeZone" placeholder="輸入前 N 張不出獎" style="border-color:#ff4757; margin-top:10px;">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:5px;">
-                    <input type="number" id="pCount" placeholder="優惠張數" style="margin:0;">
-                    <input type="number" id="pPrice" placeholder="優惠價" style="margin:0;">
-                </div>
+                <input type="number" id="gSafeZone" placeholder="保護區 (前 N 張不出獎)">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;"><input type="number" id="pCount" placeholder="優惠張數"><input type="number" id="pPrice" placeholder="優惠價格"></div>
             </div>
-
-            <input type="text" id="gImg" placeholder="圖片 URL">
-            <textarea id="gPrizes" rows="3" placeholder='獎項 JSON: [{"num":8, "name":"A獎"}]'></textarea>
-            <button class="btn" style="width:100%" onclick="publishGame()">發布商品並執行分層洗牌</button>
+            <input type="text" id="gImg" placeholder="封面圖 URL">
+            <textarea id="gPrizes" rows="3" placeholder='獎項 JSON'></textarea>
+            <button class="btn" style="width:100%" onclick="publishGame()">發布商品並洗牌</button>
         </div>
-        
         <hr style="border:0; border-top:1px solid #222; margin:30px 0;">
         <div id="quickAdjustList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 15px;"></div>
+    </div>
+
+    <div id="win_logs" class="page">
+        <span class="title">全服中獎即時紀錄</span>
+        <div class="card">
+            <table class="win-table">
+                <thead><tr><th>時間</th><th>玩家</th><th>商品</th><th>獎項</th></tr></thead>
+                <tbody id="globalWinItems"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="user" class="page">
@@ -112,11 +117,7 @@
         <div id="userListContainer"></div>
     </div>
 
-    <div id="ann" class="page">
-        <span class="title">公告發佈</span>
-        <textarea id="annContent" rows="10"></textarea>
-        <button class="btn" style="width:100%" onclick="saveAnnouncement()">同步公告</button>
-    </div>
+    <div id="ann" class="page"><textarea id="annContent" rows="10"></textarea><button class="btn" style="width:100%" onclick="saveAnnouncement()">同步公告</button></div>
 </div>
 
 <script type="module">
@@ -140,36 +141,52 @@
     window.closeLog = () => document.getElementById('logModal').style.display = 'none';
 
     function startSync() {
+        // 商品與監控
         onValue(ref(db, 'gameSettings'), snap => {
             const list = document.getElementById('monList'); const adj = document.getElementById('quickAdjustList');
             const data = snap.val() || {}; list.innerHTML = ''; adj.innerHTML = '';
             Object.entries(data).forEach(([id, g]) => {
                 const mon = document.createElement('div'); mon.className = 'card';
-                mon.innerHTML = `<b>${id}</b><div id="rem-${id}" style="color:var(--p);font-size:1.5rem;">--</div>
+                mon.innerHTML = `<b>${id}</b><div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0;">--</div>
                     <button class="btn btn-sm" onclick="resetShuffle('${id}')">戰略洗牌</button>
                     <button class="btn btn-sm" style="background:#ef4444" onclick="deleteGame('${id}')">刪除</button>`;
                 list.appendChild(mon);
                 onValue(ref(db, `games/${id}/pool`), ps => {
                     const p = ps.val() || []; document.getElementById(`rem-${id}`).innerText = `剩 ${p.filter(x=>!x.taken).length} / ${g.total}`;
                 });
-
                 const adjCard = document.createElement('div'); adjCard.className = 'card';
-                adjCard.innerHTML = `<b>${id} 調控</b><div class="adj-grid" style="margin-top:10px;">
-                    <div><small>原價</small><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)"></div>
-                    <div><small>保護區</small><input type="number" value="${g.safeZone||0}" onchange="updNum('${id}','safeZone',this.value)"></div>
-                    <div><small>優惠張數</small><input type="number" value="${g.promoCount||0}" onchange="updNum('${id}','promoCount',this.value)"></div>
-                    <div><small>優惠價</small><input type="number" value="${g.promoPrice||0}" onchange="updNum('${id}','promoPrice',this.value)"></div>
+                adjCard.innerHTML = `<b>${id} 調控</b><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+                    <input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="原價">
+                    <input type="number" value="${g.safeZone||0}" onchange="updNum('${id}','safeZone',this.value)" title="保護區">
+                    <input type="number" value="${g.promoCount||0}" onchange="updNum('${id}','promoCount',this.value)" title="優惠張數">
+                    <input type="number" value="${g.promoPrice||0}" onchange="updNum('${id}','promoPrice',this.value)" title="優惠價">
                 </div>`;
                 adj.appendChild(adjCard);
             });
         });
 
+        // 🏆 監聽全服中獎紀錄
+        onValue(ref(db, 'winLogs'), snap => {
+            const list = document.getElementById('globalWinItems');
+            list.innerHTML = '';
+            const logs = snap.val() || {};
+            Object.values(logs).reverse().slice(0, 50).forEach(l => {
+                list.innerHTML += `<tr>
+                    <td><small>${new Date(l.time).toLocaleString()}</small></td>
+                    <td><b>${l.user}</b></td>
+                    <td>${l.game}</td>
+                    <td style="color:var(--p)">${l.prize}</td>
+                </tr>`;
+            });
+        });
+
+        // 會員資料
         onValue(ref(db, 'users'), s => {
             const container = document.getElementById('userListContainer'); container.innerHTML = '';
             Object.entries(s.val()||{}).forEach(([uid, u]) => {
                 const item = document.createElement('div'); item.className = 'user-item';
-                item.innerHTML = `<div class="user-header" onclick="toggleUser('${uid}')"><div>${u.nickname}</div><div class="user-balance">${(u.balance||0).toLocaleString()} P ▼</div></div>
-                    <div class="user-content" id="content-${uid}">UID: ${uid} | PIN: ${u.pin||'無'}<br>
+                item.innerHTML = `<div class="user-header" onclick="toggleUser('${uid}')"><div>${u.nickname}</div><div style="color:var(--p)">${(u.balance||0).toLocaleString()} P ▼</div></div>
+                    <div class="user-content" id="content-${uid}">UID: ${uid}<br>PIN: ${u.pin||'無'}<br>
                     <div style="margin-top:10px;"><button class="btn btn-sm" onclick="showLogs('${uid}','${u.nickname}')">歷史紀錄</button>
                     <button class="btn btn-sm" onclick="addBal('${uid}')">充點數</button><button class="btn btn-sm" onclick="editPin('${uid}')">改 PIN</button></div></div>`;
                 container.appendChild(item);
@@ -177,49 +194,31 @@
         });
     }
 
-    // 🔴 核心分層洗牌邏輯：保證前 N 張不出獎
+    // 洗牌邏輯 (分層鎖死)
     window.publishGame = async () => {
         const id = document.getElementById('gId').value.trim();
         const total = Number(document.getElementById('gTotal').value);
-        const safeZone = Number(document.getElementById('gSafeZone').value) || 0;
+        const safe = Number(document.getElementById('gSafeZone').value) || 0;
         const prizes = JSON.parse(document.getElementById('gPrizes').value);
-        const prizeNums = prizes.map(p => Number(p.num));
-
-        if(!id || !total) return alert("資料不全");
-
-        // 1. 生成白籤池與中獎池
-        let losePool = []; 
-        for(let i=1; i<=total; i++) { if(!prizeNums.includes(i)) losePool.push(i); }
-        let winPool = prizeNums;
-
-        // 2. 打亂白籤池
-        losePool.sort(() => Math.random() - 0.5);
-
-        // 3. 抽取 SafeZone 數量的白籤放在最前面
-        let front = losePool.splice(0, safeZone);
-
-        // 4. 將剩下的白籤與所有中獎籤混合，再打亂
-        let back = [...losePool, ...winPool].sort(() => Math.random() - 0.5);
-
-        // 5. 合併成最終 1-N 序列
-        let finalPool = [...front, ...back].map(num => ({ grade: num, taken: false, revealed: false }));
-
-        await set(ref(db, `gameSettings/${id}`), { total, price: Number(document.getElementById('gPrice').value), prizes, safeZone, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value), promoPrice: Number(document.getElementById('pPrice').value), category: document.getElementById('gCat').value });
-        await set(ref(db, `games/${id}/pool`), finalPool);
-        alert(`發布成功！前 ${safeZone} 張絕對不出大獎。`);
+        const pNums = prizes.map(p => Number(p.num));
+        let lose = []; for(let i=1; i<=total; i++) if(!pNums.includes(i)) lose.push(i);
+        lose.sort(() => Math.random() - 0.5);
+        let front = lose.splice(0, safe);
+        let back = [...lose, ...winPool].sort(() => Math.random() - 0.5); // 注意此處變量名
+        let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
+        await set(ref(db, `gameSettings/${id}`), { total, price: Number(document.getElementById('gPrice').value), prizes, safeZone: safe, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value), promoPrice: Number(document.getElementById('pPrice').value), category: document.getElementById('gCat').value });
+        await set(ref(db, `games/${id}/pool`), pool); alert("發布成功");
     };
 
     window.resetShuffle = async (id) => {
-        if(!confirm("確定戰略重新洗牌？")) return;
         const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
         const pNums = g.prizes.map(p => Number(p.num));
-        let lose = []; for(let i=1; i<=g.total; i++) { if(!pNums.includes(i)) lose.push(i); }
+        let lose = []; for(let i=1; i<=g.total; i++) if(!pNums.includes(i)) lose.push(i);
         lose.sort(() => Math.random() - 0.5);
         let front = lose.splice(0, g.safeZone || 0);
         let back = [...lose, ...pNums].sort(() => Math.random() - 0.5);
         let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
-        await set(ref(db, `games/${id}/pool`), pool);
-        alert("戰略洗牌完成！");
+        await set(ref(db, `games/${id}/pool`), pool); alert("洗牌完成");
     };
 
     window.showLogs = async (uid, name) => {
