@@ -3,51 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>夢工廠 | 旗艦選號系統</title>
+    <title>夢工廠 | 幸運選號系統</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; }
-        body { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; font-family: sans-serif; display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; }
+        body { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; }
+        
+        /* 頂部導航 */
         .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); z-index: 100; }
         .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; }
-        .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; }
+        .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
+
+        /* 商品資訊 */
         .billboard { display: flex; align-items: center; padding: 12px; gap: 15px; background: var(--card); border-bottom: 2px solid #222; }
         .main-img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 1px solid #333; }
         .info-box h2 { margin: 0; font-size: 1.1rem; color: #fff; }
+
+        /* 優惠提示橫幅 */
         .promo-banner { background: linear-gradient(90deg, #ff4757, #ff6b81); color: white; padding: 10px; font-size: 0.9rem; font-weight: bold; text-align: center; display: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        /* 獎號監控 */
         .prize-monitor { padding: 12px 15px; background: rgba(255,184,0,0.05); border-bottom: 1px solid #222; }
         .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
         .prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
-        .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); }
+        .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); box-shadow: 0 0 5px var(--danger); }
+
+        /* 遊戲格 */
         #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 120px; touch-action: pan-y; }
         .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%; max-width: 500px; margin: 0 auto; }
         .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; }
         .ticket.taken { background: #000; color: var(--p); border: 1px solid rgba(255,184,0,0.3); }
         .ticket.taken .history-num { font-size: 1.5rem; font-weight: 900; }
         .ticket.winner-glow { border-color: var(--win); box-shadow: 0 0 10px var(--win); }
+
+        /* 遮罩層 */
         .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
         .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; margin: 20px 0; border: 5px solid var(--p); }
         #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
         #luckyVal { font-size: 8rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+        /* 結果彈窗 */
         .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
         .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 85%; max-width: 340px; }
-        
-        /* 🔴 強制置頂按鈕 */
-        .res-btn { 
-            background: var(--p); color: #000; border: none; padding: 16px; width: 100%; 
-            border-radius: 50px; font-weight: 900; font-size: 1.2rem; margin-top: 25px; 
-            cursor: pointer; position: relative; z-index: 9999 !important;
-        }
+        .res-btn { background: var(--p); color: #000; border: none; padding: 16px; width: 100%; border-radius: 50px; font-weight: 900; font-size: 1.2rem; margin-top: 25px; cursor: pointer; }
     </style>
 </head>
 <body oncontextmenu="return false;">
-
-<script>
-    function forceCloseAll() {
-        console.log("Attempting to close overlays...");
-        window.location.reload();
-    }
-</script>
 
 <div class="header">
     <button class="back-btn" onclick="location.href='index.html'">← 返回</button>
@@ -56,22 +57,29 @@
 
 <div class="billboard">
     <img id="gMainImg" class="main-img" src="">
-    <div class="info-box"><h2 id="gTitle">載入中...</h2><div id="gPrice" style="color:var(--p); font-weight:bold; margin-top:5px;">-- P</div></div>
+    <div class="info-box">
+        <h2 id="gTitle">載入中...</h2>
+        <div id="gPrice" style="color:var(--p); font-weight:bold; margin-top:5px;">-- P / 抽</div>
+    </div>
 </div>
 
 <div id="promoBanner" class="promo-banner"></div>
 
 <div class="prize-monitor">
-    <div style="color:var(--p); font-size:0.8rem; margin-bottom:8px; font-weight:bold;">中獎獎號追蹤</div>
     <div class="prize-tag-list" id="prizeTags"></div>
 </div>
 
-<div id="scroll-area"><div class="pool-grid" id="poolGrid"></div></div>
+<div id="scroll-area">
+    <div class="pool-grid" id="poolGrid"></div>
+</div>
 
 <div id="scratchOverlay" class="scratch-overlay">
     <div style="text-align:center;">
         <div style="color:var(--p); font-weight:900; font-size:1.4rem;">選號 NO. <span id="selNum">--</span></div>
-        <div class="scratch-box"><div id="luckyVal">?</div><canvas id="scratch-canvas" width="300" height="300"></canvas></div>
+        <div class="scratch-box">
+            <div id="luckyVal">?</div>
+            <canvas id="scratch-canvas" width="300" height="300"></canvas>
+        </div>
     </div>
 </div>
 
@@ -79,7 +87,7 @@
     <div class="res-card">
         <img id="res_img" style="width:100%; border-radius:18px; margin-bottom:18px;">
         <h2 id="res_msg" style="color:var(--p); margin:0; font-size:1.8rem;">判定中...</h2>
-        <button class="res-btn" onclick="forceCloseAll()">確認並繼續</button>
+        <button class="res-btn" onclick="closeAllModals()">確認並繼續</button>
     </div>
 </div>
 
@@ -89,18 +97,30 @@
 
     const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const app = initializeApp(config); const db = getDatabase(app);
+    
     const params = new URLSearchParams(window.location.search);
-    const gameId = params.get('id'); const userId = localStorage.getItem('myScratchCode');
+    const gameId = params.get('id');
+    const userId = localStorage.getItem('myScratchCode');
     let gData = null;
 
     if(!gameId) location.href = 'index.html';
 
-    onValue(ref(db, `users/${userId}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
+    // 🔴 修正：將關閉視窗函數暴露給全局，且不重整頁面
+    window.closeAllModals = function() {
+        document.getElementById('resModal').style.display = 'none';
+        document.getElementById('scratchOverlay').style.display = 'none';
+    };
+
+    // 餘額實時監聽
+    onValue(ref(db, `users/${userId}/balance`), s => {
+        document.getElementById('uBal').innerText = (s.val() || 0).toLocaleString();
+    });
 
     onValue(ref(db, `gameSettings/${gameId}`), s => {
         gData = s.val(); if(!gData) return;
         document.getElementById('gTitle').innerText = gameId;
         document.getElementById('gMainImg').src = gData.img;
+
         onValue(ref(db, `games/${gameId}/pool`), snap => {
             const pool = snap.val() || []; const grid = document.getElementById('poolGrid');
             const prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
@@ -143,7 +163,7 @@
         const pSnap = await get(ref(db, `games/${gameId}/pool`)); const sold = (pSnap.val() || []).filter(x => x.taken).length;
         let price = (gData.promoCount > 0 && sold < gData.promoCount) ? gData.promoPrice : gData.price;
         if(cur < price) return alert("點數不足");
-        if(!confirm(`支付 ${price} P 購買編號 ${(idx+1)}？`)) return;
+        if(!confirm(`支付 ${price} P？`)) return;
 
         await update(ref(db, `users/${userId}`), { balance: cur - price });
         await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true, revealed: false });
@@ -161,8 +181,8 @@
         let drawing = false;
         const draw = (e) => {
             if(!drawing) return; e.preventDefault(); const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
             ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
             const pix = ctx.getImageData(0, 0, 300, 300).data; let clear = 0;
             for (let i = 3; i < pix.length; i += 4) { if (pix[i] === 0) clear++; }
