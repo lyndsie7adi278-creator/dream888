@@ -5,53 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>夢工廠 | 旗艦管理後台</title>
     <style>
-        :root { --p: #ff8fa3; --bg: #f4f7f9; --dark: #2c3e50; --success: #2ecc71; --danger: #e74c3c; }
+        :root { --p: #ff8fa3; --bg: #f4f7f9; --dark: #2c3e50; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--dark); }
-        .container { max-width: 1100px; margin: 0 auto; }
-        .section { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; }
-        h2 { border-left: 6px solid var(--p); padding-left: 15px; margin-top: 0; margin-bottom: 25px; font-size: 1.4rem; }
-        
-        /* 表格樣式 */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f0f0f0; }
-        th { background: #f8f9fa; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* 輸入元件 */
-        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--p); box-shadow: 0 0 8px rgba(255,143,163,0.2); }
-        textarea { font-family: monospace; resize: vertical; }
-        
-        /* 按鈕系統 */
-        .btn { background: var(--p); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,143,163,0.3); }
-        .btn-sm { padding: 6px 12px; font-size: 0.8rem; margin-right: 5px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .section { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        h2 { border-left: 5px solid var(--p); padding-left: 15px; margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: #7f8c8d; font-size: 0.85rem; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn:hover { opacity: 0.9; }
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; margin-right: 5px; }
         .btn-blue { background: #3498db; }
-        .btn-danger { background: var(--danger); }
-        
-        .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
-        .badge-pin { background: #ebf5ff; color: #3498db; border: 1px solid #d0e7ff; }
+        .btn-danger { background: #ff4757; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .badge-pin { background: #e8f4fd; color: #3498db; border: 1px solid #3498db; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 style="text-align:center; color: var(--dark); margin-bottom: 40px; letter-spacing: 2px;">DREAM FACTORY <span style="color:var(--p)">ADMIN</span></h1>
+    <h1>DREAM FACTORY 管理系統</h1>
 
     <div class="section">
-        <h2>會員帳戶管理 MEMBER CONTROL</h2>
-        <div style="margin-bottom: 20px; display: flex; gap: 15px;">
-            <input type="text" id="newUserId" placeholder="輸入新會員 ID (如: VIP888)" style="flex: 2;">
-            <button class="btn" onclick="addUser()">新增會員</button>
+        <h2>會員帳戶管理</h2>
+        <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+            <input type="text" id="newUserId" placeholder="新會員代碼" style="flex: 2;">
+            <button class="btn" onclick="addUser()">新增帳號</button>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th>會員代碼</th>
+                    <th>代碼</th>
                     <th>暱稱</th>
                     <th>餘額 (P)</th>
-                    <th>安全性 PIN</th>
-                    <th>管理操作</th>
+                    <th>PIN 碼</th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody id="userTable"></tbody>
@@ -59,55 +49,20 @@
     </div>
 
     <div class="section">
-        <h2>發布新商品 PUBLISH GAME</h2>
-        <div class="input-group">
-            <div>
-                <label>商品名稱 (需唯一)</label>
-                <input type="text" id="gId" placeholder="例如: 聖誕限定一番賞">
-            </div>
-            <div>
-                <label>商品分類</label>
-                <input type="text" id="gCat" placeholder="例如: 一番賞, 盲盒, 3C">
-            </div>
+        <h2>發布新商品</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div><label>商品名稱</label><input type="text" id="gId"></div>
+            <div><label>分類</label><input type="text" id="gCat"></div>
+            <div><label>一刮價格 (P)</label><input type="number" id="gPrice"></div>
+            <div><label>商品封面圖網址</label><input type="text" id="gImg"></div>
+            <div><label>前 N 刮優惠張數</label><input type="number" id="pCount" placeholder="不優惠請填 0"></div>
+            <div><label>優惠價格 (P)</label><input type="number" id="pPrice" placeholder="不優惠請填 0"></div>
         </div>
-        <div class="input-group">
-            <div>
-                <label>原價 (單抽 P)</label>
-                <input type="number" id="gPrice" placeholder="例如: 100">
-            </div>
-            <div>
-                <label>商品封面圖片網址</label>
-                <input type="text" id="gImg" placeholder="https://...">
-            </div>
-        </div>
-        
-        <div style="background: #fff5f6; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px dashed var(--p);">
-            <h4 style="margin-top:0; color:var(--danger);">🔴 開盤階梯優惠設定 (若無優惠請填 0)</h4>
-            <div class="input-group" style="margin-bottom:0;">
-                <div>
-                    <label>前 N 抽優惠</label>
-                    <input type="number" id="pCount" placeholder="例如: 10 (前10刮)">
-                </div>
-                <div>
-                    <label>優惠價格 (P)</label>
-                    <input type="number" id="pPrice" placeholder="例如: 50">
-                </div>
-            </div>
-        </div>
-
-        <label>獎項內容 (JSON 格式)</label>
-        <textarea id="gPrizes" rows="6" placeholder='[
-  {"name":"A賞 - iPhone 15","num":1},
-  {"name":"B賞 - 無線耳機","num":3},
-  {"name":"C賞 - 隨身碟","num":5}
-]'></textarea>
-        
-        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <label>總籤數 (需大於等於獎項總數)：</label>
-                <input type="number" id="gTotal" style="width: 120px; display: inline-block;">
-            </div>
-            <button class="btn" onclick="publishGame()">發布至商城並洗牌</button>
+        <label>獎項 JSON (範例：[{"name":"A賞","num":1},{"name":"B賞","num":5}])</label>
+        <textarea id="gPrizes" rows="4"></textarea>
+        <div style="margin-top:10px;">
+            <label>總抽數：</label> <input type="number" id="gTotal" style="width:100px;">
+            <button class="btn" style="float:right;" onclick="publishGame()">確認發布商品</button>
         </div>
     </div>
 </div>
@@ -119,9 +74,9 @@
     const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const app = initializeApp(config); const db = getDatabase(app);
 
-    // --- 會員管理 ---
-    onValue(ref(db, 'users'), (snap) => {
-        const users = snap.val() || {};
+    // --- 會員管理：確保對齊 PIN 碼與餘額修改 ---
+    onValue(ref(db, 'users'), (snapshot) => {
+        const users = snapshot.val() || {};
         const tbody = document.getElementById('userTable');
         tbody.innerHTML = '';
         for (let id in users) {
@@ -130,7 +85,7 @@
             tr.innerHTML = `
                 <td><b>${id}</b></td>
                 <td>${u.nickname || '--'}</td>
-                <td><input type="number" value="${u.balance || 0}" onchange="updateBalance('${id}', this.value)" style="width:100px;"></td>
+                <td><input type="number" value="${u.balance || 0}" onchange="updateBalance('${id}', this.value)" style="width:80px;"></td>
                 <td><span class="badge badge-pin">${u.pin || '未設定'}</span></td>
                 <td>
                     <button class="btn btn-sm btn-blue" onclick="editPin('${id}', '${u.pin || ''}')">修改 PIN</button>
@@ -153,64 +108,56 @@
     };
 
     window.editPin = async (id, currentPin) => {
-        const newPin = prompt(`修改 [${id}] 的 PIN\n目前：${currentPin || '無'}\n\n輸入 4-6 位數字修改，留白則重置(清空)：`);
+        const newPin = prompt(`修改 [${id}] 的 PIN\n目前：${currentPin || '未設定'}\n\n請輸入 4-6 位數字 (留白則清空)：`);
         if (newPin === null) return;
         if (newPin === "") {
             await update(ref(db, `users/${id}`), { pin: null });
-            alert("已清空，客人下次登入可自行重新設定。");
+            alert("PIN 碼已清空，客人下次登入可自行重新設定。");
         } else if (newPin.length >= 4 && newPin.length <= 6) {
             await update(ref(db, `users/${id}`), { pin: newPin });
             alert("修改成功！");
-        } else alert("格式錯誤！");
+        } else alert("請輸入 4-6 位數字！");
     };
 
     window.deleteUser = async (id) => {
         if(confirm(`確定刪除 ${id}？`)) await remove(ref(db, `users/${id}`));
     };
 
-    // --- 商品發布 ---
+    // --- 商品發布：確保自動洗牌與欄位對齊 ---
     window.publishGame = async () => {
         const id = document.getElementById('gId').value.trim();
         const total = parseInt(document.getElementById('gTotal').value);
-        if(!id || isNaN(total)) return alert("請填寫商品名稱與總張數");
+        if(!id || !total) return alert("資訊不完整");
 
         try {
             const prizesRaw = JSON.parse(document.getElementById('gPrizes').value);
             let pool = [];
-            let prizeTotal = 0;
-            
-            prizesRaw.forEach((p, idx) => {
-                prizeTotal += p.num;
+            prizesRaw.forEach(p => {
                 for(let i=0; i < p.num; i++) {
-                    pool.push({ grade: (idx + 1), name: p.name, taken: false, revealed: false });
+                    pool.push({ grade: p.name, taken: false, revealed: false });
                 }
             });
-
-            if(prizeTotal > total) return alert("獎項總數不能大於總抽數！");
-
             while(pool.length < total) {
-                pool.push({ grade: "沒中獎", name: "銘謝惠顧", taken: false, revealed: false });
+                pool.push({ grade: "沒中獎", taken: false, revealed: false });
             }
-
-            // 隨機洗牌 Shuffle
+            
+            // 隨機洗牌
             pool = pool.sort(() => Math.random() - 0.5);
 
-            // 儲存設定 (對齊前台變數)
+            // 🟢 儲存設定：確保使用與 index.html 對齊的 promoCount / promoPrice
             await set(ref(db, `gameSettings/${id}`), {
-                price: parseInt(document.getElementById('gPrice').value) || 0,
-                category: document.getElementById('gCat').value || "未分類",
-                img: document.getElementById('gImg').value || "",
+                price: parseInt(document.getElementById('gPrice').value),
+                category: document.getElementById('gCat').value,
+                img: document.getElementById('gImg').value,
                 promoCount: parseInt(document.getElementById('pCount').value) || 0,
                 promoPrice: parseInt(document.getElementById('pPrice').value) || 0,
                 prizes: prizesRaw,
                 total: total
             });
-
-            // 儲存實體籤池
             await set(ref(db, `games/${id}/pool`), pool);
-            alert("商品發布成功！已完成洗牌。");
+            alert("商品發布成功並已完成洗牌！");
         } catch(e) {
-            alert("獎項 JSON 格式有誤，請檢查標點符號。");
+            alert("JSON 格式錯誤，請檢查獎項內容。");
         }
     };
 </script>
