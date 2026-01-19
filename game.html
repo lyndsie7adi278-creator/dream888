@@ -9,34 +9,41 @@
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; }
         body { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; }
         
+        /* 頂部導航 */
         .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); z-index: 100; }
         .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; }
         .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; }
 
+        /* 商品資訊 */
         .billboard { display: flex; align-items: center; padding: 12px; gap: 15px; background: var(--card); border-bottom: 2px solid #222; }
         .main-img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 1px solid #333; }
         .info-box h2 { margin: 0; font-size: 1.1rem; color: #fff; }
 
+        /* 優惠提示橫幅 */
         .promo-banner { background: linear-gradient(90deg, #ff4757, #ff6b81); color: white; padding: 10px; font-size: 0.9rem; font-weight: bold; text-align: center; display: none; }
 
+        /* 獎號監控 */
         .prize-monitor { padding: 12px 15px; background: rgba(255,184,0,0.05); border-bottom: 1px solid #222; }
         .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
         .prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
-        .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); }
+        .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); box-shadow: 0 0 5px var(--danger); }
 
+        /* 遊戲格 */
         #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 120px; touch-action: pan-y; }
         .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%; max-width: 500px; margin: 0 auto; }
         
         .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; }
         .ticket.taken { background: #000; color: var(--p); border: 1px solid rgba(255,184,0,0.3); }
-        .ticket.taken .history-num { font-size: 1.5rem; font-weight: 900; }
-        .ticket.winner-glow { border-color: var(--win); box-shadow: 0 0 10px var(--win); }
+        .ticket.taken .history-num { font-size: 1.5rem; font-weight: 900; color: var(--p); text-shadow: 0 0 10px rgba(255,184,0,0.5); }
+        .ticket.winner-glow { border-color: var(--win); box-shadow: inset 0 0 15px rgba(255,215,0,0.3), 0 0 10px var(--win); }
 
+        /* 刮刮互動層 */
         .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
         .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; margin: 20px 0; border: 5px solid var(--p); }
         #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
         #luckyVal { font-size: 8rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 
+        /* 結果彈窗 */
         .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
         .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 85%; max-width: 340px; }
         .res-btn { background: var(--p); color: #000; border: none; padding: 16px; width: 100%; border-radius: 50px; font-weight: 900; font-size: 1.2rem; margin-top: 25px; cursor: pointer; }
@@ -53,7 +60,7 @@
     <img id="gMainImg" class="main-img" src="">
     <div class="info-box">
         <h2 id="gTitle">載入中...</h2>
-        <div id="priceDisplay" style="color:var(--p); font-weight:bold; margin-top:5px;">載入中...</div>
+        <div id="priceDisplay" style="color:var(--p); font-weight:bold; margin-top:5px;">-- P / 抽</div>
     </div>
 </div>
 
@@ -63,9 +70,7 @@
     <div class="prize-tag-list" id="prizeTags"></div>
 </div>
 
-<div id="scroll-area">
-    <div class="pool-grid" id="poolGrid"></div>
-</div>
+<div id="scroll-area"><div class="pool-grid" id="poolGrid"></div></div>
 
 <div id="scratchOverlay" class="scratch-overlay">
     <div style="text-align:center;">
@@ -74,12 +79,13 @@
             <div id="luckyVal">?</div>
             <canvas id="scratch-canvas" width="300" height="300"></canvas>
         </div>
+        <div style="color:#aaa; font-size:0.8rem; margin-top:10px;">請動手刮開區域</div>
     </div>
 </div>
 
 <div id="resModal" class="result-modal">
     <div class="res-card">
-        <img id="res_img" style="width:100%; border-radius:18px; margin-bottom:18px;">
+        <img id="res_img" style="width:100%; border-radius:18px; margin-bottom:18px; border:1px solid #333;">
         <h2 id="res_msg" style="color:var(--p); margin:0; font-size:1.8rem;">判定中...</h2>
         <button class="res-btn" onclick="closeAll()">確認並繼續</button>
     </div>
@@ -97,7 +103,6 @@
 
     if(!gameId) location.href = 'index.html';
 
-    // 🔴 修正：關閉函數
     window.closeAll = function() {
         document.getElementById('resModal').style.display = 'none';
         document.getElementById('scratchOverlay').style.display = 'none';
@@ -111,7 +116,6 @@
         gData = s.val(); if(!gData) return;
         document.getElementById('gTitle').innerText = gameId;
         document.getElementById('gMainImg').src = gData.img;
-        // 🔴 補回金額顯示邏輯
         document.getElementById('priceDisplay').innerText = `${gData.price} P / 抽`;
 
         onValue(ref(db, `games/${gameId}/pool`), snap => {
@@ -119,7 +123,6 @@
             const prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
             const winningNums = prizes.map(p => Number(p.num));
 
-            // 優惠 banner
             const soldCount = pool.filter(x => x.taken).length;
             const banner = document.getElementById('promoBanner');
             if(gData.promoCount > 0 && soldCount < gData.promoCount) {
@@ -137,11 +140,14 @@
                 const div = document.createElement('div'); const gridIdx = (i + 1).toString().padStart(2, '0');
                 if(t.taken) {
                     div.className = 'ticket taken';
+                    // 🔴 關鍵修正：只有 revealed 為 true 才能看到數字，taken 只會看到「刮開中」
                     if(t.revealed) {
                         const gradeVal = Number(t.grade);
                         if(winningNums.includes(gradeVal)) div.classList.add('winner-glow');
                         div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${gridIdx}</span><span class="history-num">${gradeVal.toString().padStart(2, '0')}</span>`;
-                    } else { div.innerHTML = `<span style="font-size:0.55rem;color:#666;">刮開中</span>`; }
+                    } else { 
+                        div.innerHTML = `<span style="font-size:0.6rem;color:#666;">刮開中</span>`; 
+                    }
                 } else {
                     div.className = 'ticket'; div.innerText = gridIdx;
                     div.onclick = () => buy(i, t.grade);
@@ -152,12 +158,15 @@
     });
 
     async function buy(idx, grade) {
+        if(!userId) return alert("未登入");
         const s = await get(ref(db, `users/${userId}/balance`)); const cur = s.val() || 0;
         const pSnap = await get(ref(db, `games/${gameId}/pool`)); const sold = (pSnap.val() || []).filter(x => x.taken).length;
         let price = (gData.promoCount > 0 && sold < gData.promoCount) ? gData.promoPrice : gData.price;
+        
         if(cur < price) return alert("點數不足");
-        if(!confirm(`支付 ${price} P？`)) return;
+        if(!confirm(`支付 ${price} P 購買編號 ${(idx+1)}？`)) return;
 
+        // 🟢 先扣款並標記 taken，但不標記 revealed
         await update(ref(db, `users/${userId}`), { balance: cur - price });
         await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true, revealed: false });
         await set(push(ref(db, `users/${userId}/logs`)), { game: gameId, cost: price, time: Date.now() });
@@ -179,6 +188,7 @@
             ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
             const pix = ctx.getImageData(0, 0, 300, 300).data; let clear = 0;
             for (let i = 3; i < pix.length; i += 4) { if (pix[i] === 0) clear++; }
+            // 🟢 刮開超過 55% 區域，才觸發完成
             if (clear > (300 * 300 * 0.55)) { drawing = false; finish(poolIdx, val); }
         };
         canvas.onmousedown = () => drawing = true; canvas.ontouchstart = (e) => { drawing = true; e.preventDefault(); };
@@ -187,6 +197,7 @@
     }
 
     async function finish(idx, val) {
+        // 🟢 刮完後，才將 revealed 寫入資料庫，這時格子才會變出數字
         update(ref(db, `games/${gameId}/pool/${idx}`), { revealed: true });
         const hit = gData.prizes.find(p => Number(p.num) === Number(val));
         const resModal = document.getElementById('resModal');
