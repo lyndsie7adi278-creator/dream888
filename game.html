@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>夢工廠 | 刮刮樂</title>
+    <title>夢工廠 | 幸運選號</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; }
@@ -21,49 +21,29 @@
         .info-box h2 { margin: 0; font-size: 1rem; }
         .info-box div { font-size: 0.8rem; font-weight: bold; margin-top: 3px; }
 
+        /* 🔴 質感優化：中獎獎號追蹤區 */
         .prize-monitor { padding: 12px 15px; background: linear-gradient(180deg, rgba(255,184,0,0.1) 0%, rgba(0,0,0,0) 100%); border-bottom: 1px solid #222; }
-        .monitor-title { color: var(--p); font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; display: flex; align-items: center; gap: 5px; }
-        .monitor-title::before { content: "🏆"; }
+        .monitor-title { color: var(--p); font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; }
         
         .prize-tag-list { display: flex; flex-wrap: wrap; gap: 10px; }
-        
         .prize-tag { 
-            background: #1a1e26; 
-            color: #fff;
-            padding: 8px 12px; 
-            border-radius: 8px; 
-            border: 1px solid #444; 
-            font-size: 1.8rem; 
-            font-weight: 900; 
-            min-width: 50px;
-            text-align: center;
+            background: #1a1e26; color: #fff; padding: 10px 15px; 
+            border-radius: 8px; border: 1px solid #444; 
+            font-size: 1.5rem; font-weight: 900; 
+            min-width: 55px; text-align: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            position: relative; display: flex; align-items: center; justify-content: center;
         }
-        
-        .prize-label { font-size: 0.55rem; color: var(--p); margin-bottom: 2px; opacity: 0.8; }
 
-        .prize-tag.won { 
-            border-color: #555;
-            background: #1a1e26; 
-        }
+        /* 🔴 中獎後的紅色發光刪除線 */
+        .prize-tag.won { border-color: #555; }
         .prize-tag.won::after {
-            content: "";
-            position: absolute;
-            left: 10%;
-            top: 55%;
-            width: 80%;
-            height: 3px;
-            background: var(--danger); 
-            transform: rotate(-15deg);
-            box-shadow: 0 0 5px var(--danger);
-            border-radius: 5px;
-            z-index: 5;
+            content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px;
+            background: var(--danger); transform: rotate(-15deg);
+            box-shadow: 0 0 5px var(--danger); border-radius: 5px; z-index: 5;
         }
 
+        /* 籤表區 */
         #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 100px; touch-action: pan-y; }
         .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; max-width: 500px; margin: 0 auto; }
         .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; position: relative; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -72,14 +52,15 @@
         .ticket.taken { background: #000; border-color: #222; cursor: default; }
         .ticket.taken .history-num { color: var(--p); font-size: 1.3rem; font-weight: 900; }
 
+        /* 刮刮樂彈窗 */
         .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); touch-action: none; }
         .scratch-box { position: relative; width: 280px; height: 280px; border-radius: 25px; overflow: hidden; background: white; border: 6px solid #333; }
         #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; }
         #luckyVal { font-size: 6rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-
+        
+        /* 結果彈窗 */
         .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
         .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 85%; max-width: 320px; box-shadow: 0 0 40px var(--p); }
-        .danger-card { border-color: var(--danger) !important; box-shadow: 0 0 40px var(--danger) !important; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -98,7 +79,7 @@
 </div>
 
 <div class="prize-monitor">
-    <div class="monitor-title">中獎號碼</div>
+    <div class="monitor-title">中獎號碼追蹤</div>
     <div class="prize-tag-list" id="prizeTags"></div>
 </div>
 
@@ -125,19 +106,6 @@
     </div>
 </div>
 
-<div id="noBalModal" class="result-modal">
-    <div class="res-card danger-card">
-        <h2 style="color:var(--danger); margin-bottom: 15px;">⚠️ 餘額不足</h2>
-        <p style="color:#eee; font-size: 0.95rem; line-height: 1.6;">
-            您的點數不足以支付本次抽獎。<br><br>
-            當前價格：<b id="needP">0</b> P<br>
-            您的餘額：<b id="haveP">0</b> P<br><br>
-            <b>請聯絡官方客服進行儲值</b>
-        </p>
-        <button class="back-btn" style="width:100%; margin-top:20px; border-color:var(--danger); color:var(--danger);" onclick="document.getElementById('noBalModal').style.display='none'">我知道了</button>
-    </div>
-</div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, get, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -145,7 +113,7 @@
     const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const app = initializeApp(config); const db = getDatabase(app);
     const params = new URLSearchParams(window.location.search); const gameId = params.get('id'); const userId = localStorage.getItem('myScratchCode');
-    let gData = null; if(!gameId || !userId) location.href = 'index.html';
+    let gData = null; if(!gameId) location.href = 'index.html';
 
     document.onkeydown = (e) => { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
     onValue(ref(db, `users/${userId}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
@@ -162,19 +130,15 @@
             const soldCount = pool.filter(x => x.taken).length;
             const pCount = gData.promoCount || gData.pCount || 0;
             const pPrice = gData.promoPrice || gData.pPrice || 0;
-
             let priceHTML = `<span style="color:var(--p)">${gData.price} P / 抽</span>`;
             if (pCount > 0 && soldCount < pCount) priceHTML = `<span style="color:#ff4757;">🔥 優惠價 ${pPrice} P</span> <span style="font-size:0.65rem; color:#888;">(剩 ${pCount - soldCount} 張)</span>`;
             document.getElementById('gPrice').innerHTML = priceHTML;
 
-prizeTags.innerHTML = prizes.map(p => {
-    const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.revealed);
-    const numStr = p.num.toString().padStart(2,'0');
-    return `
-        <div class="prize-tag ${isWon ? 'won' : ''}">
-            ${numStr}
-        </div>`;
-}).join('');
+            // 🔴 渲染純數字、大字刪除線獎號追蹤
+            prizeTags.innerHTML = prizes.map(p => {
+                const isWon = pool.some(item => parseInt(item.grade) === parseInt(p.num) && item.revealed);
+                return `<div class="prize-tag ${isWon ? 'won' : ''}">${p.num.toString().padStart(2,'0')}</div>`;
+            }).join('');
 
             grid.innerHTML = '';
             pool.forEach((t, i) => {
@@ -197,20 +161,19 @@ prizeTags.innerHTML = prizes.map(p => {
     });
 
     async function buy(idx, grade) {
+        if(!userId) {
+            alert("⚠️ 您目前為遊客模式\n\n請先返回主頁點擊右上角「👤」圖示登入帳號，方可開始抽獎！");
+            location.href = 'index.html'; return;
+        }
         const s = await get(ref(db, `users/${userId}/balance`)); const cur = s.val() || 0;
         const poolSnap = await get(ref(db, `games/${gameId}/pool`)); const sold = (poolSnap.val() || []).filter(x => x.taken).length;
         const pCount = gData.promoCount || gData.pCount || 0;
         const pPrice = gData.promoPrice || gData.pPrice || 0;
         let cost = gData.price; if (pCount > 0 && sold < pCount) cost = pPrice;
 
-        if(cur < cost) {
-            document.getElementById('needP').innerText = cost;
-            document.getElementById('haveP').innerText = cur;
-            document.getElementById('noBalModal').style.display = 'flex';
-            return;
-        }
+        if(cur < cost) return alert("❌ 餘額不足，請聯繫客服儲值！");
 
-        if(!confirm(`下單確認：\n第 ${sold + 1} 抽，應付 ${cost} P，確認？`)) return;
+        if(!confirm(`下單確認：\n第 ${sold + 1} 抽，支付 ${cost} P，確認？`)) return;
         await update(ref(db, `users/${userId}`), { balance: cur - cost });
         const logRef = push(ref(db, `users/${userId}/logs`)); await set(logRef, { game: gameId.replace(/_/g,' '), cost, time: Date.now() });
         await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true, revealed: false });
@@ -258,5 +221,3 @@ prizeTags.innerHTML = prizes.map(p => {
 </script>
 </body>
 </html>
-
-
