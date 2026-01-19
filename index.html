@@ -16,7 +16,7 @@
             overflow-x: hidden; padding-bottom: 100px;
         }
 
-        /* 2. 頂部導航欄 (質感完全復原) */
+        /* 2. 頂部導航欄 (質感復原) */
         .top-nav { 
             width: 100%; background: white; padding: 15px 20px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -26,7 +26,7 @@
         .nav-left { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #7f8c8d; font-weight: bold; }
         .logo-txt { font-weight: 900; letter-spacing: 4px; color: #333; font-size: 1.1rem; }
 
-        /* 3. 跑馬燈 (質感完全復原) */
+        /* 3. 跑馬燈 (質感復原) */
         .marquee-container { 
             width: 100%; background: #1a1c23; color: var(--primary); 
             padding: 12px 0; overflow: hidden; white-space: nowrap; 
@@ -35,7 +35,7 @@
         .marquee-content { display: inline-block; animation: marquee 25s linear infinite; }
         @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
 
-        /* 4. 分類滾動選單 (質感完全復原) */
+        /* 4. 分類滾動選單 (質感復原) */
         .category-scroll { 
             display: flex; overflow-x: auto; padding: 15px 20px; gap: 12px; 
             width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; 
@@ -51,7 +51,7 @@
             box-shadow: 0 4px 12px rgba(255,143,163,0.4); 
         }
 
-        /* 5. 商品卡片網格 (質感完全復原) */
+        /* 5. 商品卡片網格 (質感復原) */
         .product-grid { 
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; 
             width: 94%; max-width: 500px; padding: 15px 0; 
@@ -68,10 +68,10 @@
         .p-price-value { color: var(--primary); font-weight: 900; font-size: 1.15rem; }
 
         .promo-tag { background: #ff4757; color: white; font-size: 0.65rem; padding: 3px 8px; border-radius: 6px; margin-left: 6px; vertical-align: middle; animation: promo-blink 1.2s infinite; }
-        @keyframes promo-blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.95); } }
+        @keyframes promo-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .promo-info { font-size: 0.7rem; color: #ff8fa3; margin-top: 6px; font-weight: 900; }
 
-        /* 6. 會員中心側欄 (質感完全復原) */
+        /* 6. 會員中心側欄 (質感復原) */
         .side-drawer { 
             position: fixed; top: 0; right: -310px; width: 300px; height: 100vh; 
             background: white; z-index: 3000; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
@@ -91,33 +91,43 @@
         
         .record-section-title { font-size: 0.8rem; color: #666; font-weight: 900; margin: 15px 0 10px; letter-spacing: 1px; display: flex; align-items: center; }
         .record-section-title::before { content: ""; width: 3px; height: 12px; background: var(--primary); margin-right: 8px; border-radius: 10px; }
-        .log-list { height: 160px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; border-bottom: 1px dashed #eee; }
+        .log-list { height: 150px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; border-bottom: 1px dashed #eee; }
         .log-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
 
-        /* 🟢 LINE 懸浮客服圖標 (新增) */
-        .line-float {
+        /* 🟢 LINE 懸浮客服與對話氣泡 (新增優化) */
+        .line-wrapper {
             position: fixed; bottom: 30px; right: 20px; z-index: 2000;
+            display: flex; flex-direction: column; align-items: flex-end;
+            animation: float-breath 2s infinite ease-in-out;
+        }
+        .line-bubble {
+            background: white; color: #333; padding: 10px 15px;
+            border-radius: 15px; font-size: 0.8rem; font-weight: 900;
+            margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            position: relative; white-space: nowrap; border: 1px solid #eee;
+        }
+        .line-bubble::after {
+            content: ""; position: absolute; bottom: -8px; right: 20px;
+            border-left: 8px solid transparent; border-right: 8px solid transparent;
+            border-top: 8px solid white;
+        }
+        .line-float {
             width: 60px; height: 60px; background: var(--line);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 8px 25px rgba(6,199,85,0.4);
-            cursor: pointer; text-decoration: none;
-            animation: float-breath 2s infinite ease-in-out;
+            box-shadow: 0 8px 25px rgba(6,199,85,0.4); cursor: pointer;
         }
         .line-float img { width: 35px; height: 35px; }
         @keyframes float-breath {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-10px) scale(1.05); }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         /* 7. 彈窗與按鈕 (質感完全復原) */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 4000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .m-box { background: white; padding: 40px 30px; border-radius: 35px; width: 88%; max-width: 340px; text-align: center; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #ccc; cursor: pointer; transition: 0.3s; }
-        .close-modal:hover { color: #888; }
-        input { width: 100%; padding: 18px; margin: 15px 0; border: 1px solid #eee; border-radius: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; color: var(--primary); outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--primary); background: #fff9fa; }
-        .btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 50px; font-weight: 900; width: 100%; cursor: pointer; font-size: 1.05rem; box-shadow: 0 8px 20px rgba(255,143,163,0.3); transition: 0.3s; }
-        .btn:active { transform: scale(0.95); }
+        input { width: 100%; padding: 18px; margin: 15px 0; border: 1px solid #eee; border-radius: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; color: var(--primary); outline: none; }
+        .btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 50px; font-weight: 900; width: 100%; cursor: pointer; font-size: 1.05rem; box-shadow: 0 8px 20px rgba(255,143,163,0.3); }
         .footer { padding: 50px 0; font-size: 0.75rem; color: #95a5a6; text-align: center; line-height: 2; letter-spacing: 1px; }
 
         /* 狀態聲明區 (質感完全復原) */
@@ -130,9 +140,12 @@
 </head>
 <body oncontextmenu="return false;">
 
-<a href="https://line.me/ti/p/@dream8" class="line-float" target="_blank">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE">
-</a>
+<div class="line-wrapper" onclick="window.open('https://line.me/ti/p/@您的LINE_ID', '_blank')">
+    <div class="line-bubble">儲值/問題請點我 💬</div>
+    <div class="line-float">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE">
+    </div>
+</div>
 
 <div id="annModal" class="modal">
     <div class="m-box">
@@ -174,18 +187,13 @@
                 <span id="uID" style="opacity:0.6;">ID: ----</span>
             </div>
         </div>
-
         <div class="record-section-title">中獎存根 PRIZE HISTORY</div>
         <div class="log-list" id="winList" style="height: 120px; border-bottom: none;"></div>
-
         <div class="record-section-title">消費紀錄 HISTORY</div>
         <div class="log-list" id="hList" style="height: 150px;"></div>
-        
         <button style="width:100%; margin-top:10px; background:#fff1f3; color:#ff6b6b; border:none; padding:14px; border-radius:15px; font-weight:bold; cursor:pointer;" onclick="handleLogout()">登出帳號</button>
     </div>
     <div id="visitorArea" style="display:none; text-align:center; padding-top:50px;">
-        <div style="font-size:4rem;">👋</div>
-        <p style="color:#7f8c8d; line-height:1.6;">目前為遊客模式</p>
         <button class="btn" style="margin-top:20px;" onclick="openLogin()">登入帳號 LOGIN</button>
     </div>
 </div>
@@ -319,4 +327,3 @@
 </script>
 </body>
 </html>
-
