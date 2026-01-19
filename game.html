@@ -240,7 +240,10 @@
         update(ref(db, `games/${gameId}/pool/${idx}`), { revealed: true });
         const hit = gData.prizes.find(p => Number(p.num) === Number(val));
         const resModal = document.getElementById('resModal');
-        
+        <div class="prize-monitor">
+<div style="color:var(--p); font-size:0.9rem; margin-bottom:8px; font-weight:bold;">🏆 中獎號碼對照：</div>
+    <div class="prize-tag-list" id="prizeTags"></div>
+</div>
         if(hit) {
             document.getElementById('res_msg').innerHTML = `🎊 恭喜中獎！ 🎊<br>${hit.name}`;
             document.getElementById('res_img').src = hit.img || gData.img;
@@ -257,3 +260,4 @@
 </script>
 </body>
 </html>
+
