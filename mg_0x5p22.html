@@ -12,10 +12,9 @@
         .sidebar { 
             width: 240px; height: 100vh; background: #000; position: fixed; 
             border-right: 1px solid var(--border); padding: 30px 15px; 
-            box-sizing: border-box; z-index: 1000; transition: 0.3s;
-            left: 0;
+            box-sizing: border-box; z-index: 1000; transition: 0.3s; left: 0;
         }
-        .main { margin-left: 240px; padding: 20px; padding-top: 60px; transition: 0.3s; }
+        .main { margin-left: 240px; padding: 20px; padding-top: 65px; transition: 0.3s; }
         
         @media screen and (max-width: 768px) {
             .sidebar { left: -240px; } 
@@ -40,16 +39,21 @@
         .card { background: var(--card); border-radius: 15px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
         .title { font-size: 1.1rem; color: var(--p); font-weight: bold; margin-bottom: 20px; display: block; }
         
-        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
+        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; font-size: 0.9rem; }
         .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; }
         .btn-sm { padding: 8px 12px; font-size: 0.85rem; margin-right: 5px; margin-top: 5px; }
 
+        /* 會員摺疊卡片 */
         .user-item { background: #0a0c10; border: 1px solid #222; border-radius: 12px; margin-bottom: 10px; }
         .user-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .user-balance { color: var(--p); font-weight: 900; }
         .user-content { display: none; padding: 15px; background: #0d1016; border-top: 1px solid #222; }
         .user-content.show { display: block; }
-        
+
+        /* 快速調價區專用樣式 */
+        .adj-card b { color: var(--p); font-size: 1rem; }
+        .adj-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .adj-label { font-size: 0.7rem; color: #666; margin-bottom: 2px; }
+
         .log-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .log-box { background: var(--card); width: 95%; max-width: 500px; border-radius: 20px; border: 1px solid var(--p); padding: 25px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
     </style>
@@ -61,10 +65,10 @@
 <div id="logModal" class="log-modal">
     <div class="log-box">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 id="logUserName" style="margin:0; color:var(--p);">詳細對帳紀錄</h3>
+            <h3 id="logUserName" style="margin:0; color:var(--p);">對帳紀錄</h3>
             <button class="btn btn-sm" onclick="closeLog()">關閉</button>
         </div>
-        <div class="log-list" id="logItems"></div>
+        <div class="log-list" id="logItems" style="overflow-y:auto; margin-top:10px;"></div>
     </div>
 </div>
 
@@ -78,34 +82,34 @@
 
 <div class="main">
     <div id="mon" class="page active">
-        <span class="title">即時銷量與洗牌</span>
+        <span class="title">即時銷量與快速洗牌</span>
         <div id="monList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;"></div>
     </div>
 
     <div id="game" class="page">
-        <span class="title">發布新商品 (全功能版)</span>
+        <span class="title">發布新商品 (1-N 唯一編號)</span>
         <div class="card" style="max-width: 500px; margin: 0 auto;">
-            <input type="text" id="gId" placeholder="遊戲 ID">
+            <input type="text" id="gId" placeholder="遊戲 ID (如: Pokemon_01)">
             <input type="text" id="gCat" placeholder="商品分類">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <input type="number" id="gTotal" placeholder="總籤數">
                 <input type="number" id="gPrice" placeholder="單抽價格">
             </div>
-            
             <div style="border:1px solid var(--border); padding:10px; border-radius:10px; margin-bottom:15px;">
-                <small style="color:var(--p)">階梯優惠 (控制銷量配率)</small>
+                <small style="color:var(--p)">階梯優惠設定</small>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:5px;">
                     <input type="number" id="pCount" placeholder="前 N 張" style="margin:0;">
                     <input type="number" id="pPrice" placeholder="優惠價" style="margin:0;">
                 </div>
             </div>
-
             <input type="text" id="gImg" placeholder="封面圖片 URL">
-            
-            <textarea id="gPrizes" rows="3" placeholder='獎項設定 JSON'>[{"num":8, "name":"獎"}]</textarea>
-            <button class="btn" style="width:100%" onclick="publishGame()">發布並生成 1-N 號</button>
+            <textarea id="gPrizes" rows="3" placeholder='獎項設定 JSON: [{"num":8, "name":"A獎"}]'></textarea>
+            <button class="btn" style="width:100%" onclick="publishGame()">發布商品</button>
         </div>
-        <div id="quickAdjustList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-top:30px;"></div>
+        
+        <hr style="border:0; border-top:1px solid #222; margin:30px 0;">
+        <span class="title">快速調價與即時更動區</span>
+        <div id="quickAdjustList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 15px;"></div>
     </div>
 
     <div id="user" class="page">
@@ -145,25 +149,49 @@
     window.toggleUser = (uid) => document.getElementById(`content-${uid}`).classList.toggle('show');
     window.closeLog = () => document.getElementById('logModal').style.display = 'none';
 
+    let categories = ["一番賞", "3C", "盲盒", "模型"];
+
     function startSync() {
         onValue(ref(db, 'gameSettings'), snap => {
             const list = document.getElementById('monList'); const adj = document.getElementById('quickAdjustList');
             const data = snap.val() || {}; list.innerHTML = ''; adj.innerHTML = '';
+            
+            Object.values(data).forEach(g => { if(g.category && !categories.includes(g.category)) categories.push(g.category); });
+
             Object.entries(data).forEach(([id, g]) => {
-                const card = document.createElement('div'); card.className = 'card';
-                card.innerHTML = `<b>${id}</b><div id="rem-${id}" style="color:var(--p);font-size:1.3rem;margin:10px 0;">--</div>
+                // 1. 監控卡片
+                const monCard = document.createElement('div'); monCard.className = 'card';
+                monCard.innerHTML = `<b>${id}</b><div id="rem-${id}" style="color:var(--p);font-size:1.3rem;margin:10px 0;">--</div>
                     <button class="btn btn-sm" onclick="resetShuffle('${id}')">洗牌 (1-${g.total})</button>
                     <button class="btn btn-sm" style="background:#ef4444" onclick="deleteGame('${id}')">刪除</button>`;
-                list.appendChild(card);
+                list.appendChild(monCard);
                 onValue(ref(db, `games/${id}/pool`), pSnap => {
                     const p = pSnap.val() || []; document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`;
                 });
-                const adjCard = document.createElement('div'); adjCard.className = 'card';
-                adjCard.innerHTML = `<b>${id} 調價</b><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:5px;">
-                        <input type="number" value="${g.price}" onchange="qUpd('${id}','price',this.value)" title="單抽價">
-                        <input type="number" value="${g.promoCount||0}" onchange="qUpd('${id}','promoCount',this.value)" title="前N張">
-                        <input type="number" value="${g.promoPrice||0}" onchange="qUpd('${id}','promoPrice',this.value)" title="優惠價">
-                    </div>`;
+
+                // 2. 🟢 增強型快速調價卡片
+                const adjCard = document.createElement('div'); adjCard.className = 'card adj-card';
+                let catOptions = categories.map(c => `<option value="${c}" ${g.category === c ? 'selected' : ''}>${c}</option>`).join('');
+                
+                adjCard.innerHTML = `
+                    <b>${id} 即時更動</b>
+                    <div class="adj-label" style="margin-top:10px;">分類管理</div>
+                    <select onchange="qUpdStr('${id}','category',this.value)">
+                        ${catOptions}<option value="NEW">＋ 新增分類...</option>
+                    </select>
+                    
+                    <div class="adj-label">封面圖片 URL</div>
+                    <input type="text" value="${g.img||''}" onchange="qUpdStr('${id}','img',this.value)" placeholder="圖片連結">
+
+                    <div class="adj-grid">
+                        <div><div class="adj-label">單抽價格</div><input type="number" value="${g.price}" onchange="qUpdNum('${id}','price',this.value)"></div>
+                        <div><div class="adj-label">前N張</div><input type="number" value="${g.promoCount||0}" onchange="qUpdNum('${id}','promoCount',this.value)"></div>
+                        <div><div class="adj-label">優惠價</div><input type="number" value="${g.promoPrice||0}" onchange="qUpdNum('${id}','promoPrice',this.value)"></div>
+                    </div>
+
+                    <div class="adj-label" style="margin-top:5px;">獎項 JSON (即時更名)</div>
+                    <textarea style="font-size:0.75rem; height:60px;" onchange="qUpdJson('${id}',this.value)">${JSON.stringify(g.prizes)}</textarea>
+                `;
                 adj.appendChild(adjCard);
             });
         });
@@ -172,12 +200,11 @@
             const container = document.getElementById('userListContainer');
             container.innerHTML = '';
             Object.entries(s.val()||{}).forEach(([uid, u]) => {
-                const item = document.createElement('div');
-                item.className = 'user-item';
+                const item = document.createElement('div'); item.className = 'user-item';
                 item.innerHTML = `
                     <div class="user-header" onclick="toggleUser('${uid}')">
                         <div class="user-name">${u.nickname||'未設'}</div>
-                        <div class="user-balance">${(u.balance||0).toLocaleString()} P ▼</div>
+                        <div style="color:var(--p);font-weight:900;">${(u.balance||0).toLocaleString()} P ▼</div>
                     </div>
                     <div class="user-content" id="content-${uid}">
                         <div style="font-size:0.85rem;color:#888;">UID: ${uid} | PIN: ${u.pin||'無'}</div>
@@ -192,15 +219,26 @@
         });
     }
 
-    // 核心 1-N 邏輯 (完全保留)
+    // --- 核心邏輯與快速更新函數 ---
+    window.qUpdNum = (id, f, v) => update(ref(db, `gameSettings/${id}`), { [f]: Number(v) });
+    window.qUpdStr = (id, f, v) => {
+        if(f === 'category' && v === "NEW") {
+            const n = prompt("輸入新分類名稱:");
+            if(n) { if(!categories.includes(n)) categories.push(n); update(ref(db, `gameSettings/${id}`), { category: n }); }
+        } else { update(ref(db, `gameSettings/${id}`), { [f]: v }); }
+    };
+    window.qUpdJson = (id, v) => {
+        try { const j = JSON.parse(v); update(ref(db, `gameSettings/${id}`), { prizes: j }); }
+        catch(e) { alert("JSON 格式錯誤，更新失敗"); }
+    };
+
     window.publishGame = async () => {
-        const id = document.getElementById('gId').value; const total = Number(document.getElementById('gTotal').value);
+        const id = document.getElementById('gId').value.trim(); const total = Number(document.getElementById('gTotal').value);
         if(!id || !total) return alert("資料不全");
         let pool = []; for(let i=1; i<=total; i++) pool.push({ grade: i, taken: false, revealed: false });
         pool.sort(() => Math.random() - 0.5);
         await set(ref(db, `gameSettings/${id}`), { 
-            total, 
-            category: document.getElementById('gCat').value, 
+            total, category: document.getElementById('gCat').value, 
             price: Number(document.getElementById('gPrice').value), 
             img: document.getElementById('gImg').value, 
             prizes: JSON.parse(document.getElementById('gPrizes').value),
@@ -217,7 +255,6 @@
         await set(ref(db, `games/${id}/pool`), pool); alert("洗牌完成");
     };
 
-    window.qUpd = (id, f, v) => update(ref(db, `gameSettings/${id}`), { [f]: parseInt(v) });
     window.addBal = async (uid) => {
         const amt = prompt("調整餘額 (+/-):"); if(!amt) return;
         const s = await get(ref(db, `users/${uid}/balance`)); let cur = s.val() || 0;
@@ -230,11 +267,11 @@
     window.showUserLogs = async (uid, name) => {
         const s = await get(ref(db, `users/${uid}/logs`)); const logs = s.val() || {};
         const list = document.getElementById('logItems'); list.innerHTML = '';
-        Object.values(logs).reverse().forEach(l => { list.innerHTML += `<div class="log-item"><b>${l.game}</b><span>-${l.cost} P</span></div>`; });
+        Object.values(logs).reverse().forEach(l => { list.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; font-size:0.8rem; display:flex; justify-content:space-between;"><span>${l.game}<br><small>${new Date(l.time).toLocaleString()}</small></span><b style="color:var(--p)">-${l.cost} P</b></div>`; });
         document.getElementById('logModal').style.display = 'flex';
     };
     window.deleteGame = async (id) => { if(confirm(`徹底刪除 ${id}？`)) { await remove(ref(db, `gameSettings/${id}`)); await remove(ref(db, `games/${id}`)); } };
-    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告同步完成"); };
+    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告已更新"); };
     window.createUser = async () => {
         const uid = prompt("新會員 UID:"); if(uid) await set(ref(db, `users/${uid.toUpperCase()}`), { balance: 0, nickname: "新玩家", pin: null });
     };
