@@ -1,42 +1,63 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>夢工廠 | 幸運選號</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>夢工廠 | 幸運選號系統</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; }
-        body { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; }
+        
+        body { 
+            margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; 
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
+            display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; 
+        }
+
+        /* 頂部區域 */
         .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); z-index: 100; }
-        .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; }
-        .balance-tag { background: var(--p); padding: 5px 15px; border-radius: 50px; font-weight: bold; color: #000; }
-        .billboard { display: flex; align-items: center; padding: 12px; gap: 12px; background: var(--card); border-bottom: 2px solid #222; }
-        .main-img { width: 65px; height: 65px; object-fit: cover; border-radius: 10px; border: 1px solid #333; }
-        .info-box h2 { margin: 0; font-size: 1rem; color: #fff; }
-        .price-text { color: var(--p); font-weight: bold; font-size: 0.9rem; margin-top: 4px; }
+        .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .back-btn:active { background: var(--p); color: #000; }
+        .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
+
+        /* 商品資訊看板 */
+        .billboard { display: flex; align-items: center; padding: 12px; gap: 15px; background: var(--card); border-bottom: 2px solid #222; }
+        .main-img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 1px solid #333; }
+        .info-box h2 { margin: 0; font-size: 1.1rem; color: #fff; letter-spacing: 1px; }
+        .price-text { color: var(--p); font-weight: bold; font-size: 1rem; margin-top: 5px; }
+
+        /* 獎號追蹤區 */
         .prize-monitor { padding: 12px 15px; background: rgba(255,184,0,0.05); border-bottom: 1px solid #222; }
         .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
-        .prize-tag { background: #1a1e26; color: #fff; padding: 8px 12px; border-radius: 6px; border: 1px solid #444; font-size: 1.2rem; font-weight: 900; position: relative; min-width: 40px; text-align: center; }
+        .prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
         .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); box-shadow: 0 0 5px var(--danger); }
+
+        /* 滾動遊戲區 */
         #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 120px; touch-action: pan-y; }
-        .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; max-width: 500px; margin: 0 auto; }
-        .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.1rem; color: #888; }
-        .ticket.taken { background: #000; color: var(--p); border: 1px solid rgba(255,184,0,0.2); }
-        .ticket.taken .history-num { font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px rgba(255,184,0,0.3); }
-        .ticket.winner-glow { border-color: var(--win); box-shadow: inset 0 0 10px var(--win); }
+        .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%; max-width: 500px; margin: 0 auto; }
+        
+        /* 卡片樣式 */
+        .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; transition: 0.2s; }
+        .ticket.taken { background: #000; color: var(--p); border: 1px solid rgba(255,184,0,0.3); }
+        .ticket.taken .history-num { font-size: 1.5rem; font-weight: 900; text-shadow: 0 0 10px rgba(255,184,0,0.5); }
+        .ticket.winner-glow { border-color: var(--win); box-shadow: inset 0 0 15px rgba(255,215,0,0.4), 0 0 10px var(--win); }
+
+        /* 刮刮樂覆蓋層 */
         .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
-        .scratch-box { position: relative; width: 280px; height: 280px; border-radius: 25px; overflow: hidden; background: white; margin: 20px 0; }
-        #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; }
-        #luckyVal { font-size: 7rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; margin: 20px 0; border: 5px solid var(--p); }
+        #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
+        #luckyVal { font-size: 8rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+        /* 結果彈窗 */
         .result-modal { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); }
-        .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 85%; max-width: 320px; }
-        .res-btn { background: var(--p); color: #000; border: none; padding: 15px; width: 100%; border-radius: 50px; font-weight: 900; margin-top: 20px; cursor: pointer; }
+        .res-card { text-align: center; background: var(--card); padding: 30px; border-radius: 30px; border: 3px solid var(--p); width: 85%; max-width: 340px; }
+        .res-btn { background: var(--p); color: #000; border: none; padding: 16px; width: 100%; border-radius: 50px; font-weight: 900; font-size: 1.1rem; margin-top: 25px; cursor: pointer; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div class="header">
-    <button class="back-btn" onclick="location.href='index.html'">← 返回</button>
+    <button class="back-btn" onclick="location.href='index.html'">← 返回商城</button>
     <div class="balance-tag">P <span id="uBal">0</span></div>
 </div>
 
@@ -49,28 +70,30 @@
 </div>
 
 <div class="prize-monitor">
-    <div style="color:var(--p); font-size:0.75rem; margin-bottom:8px; font-weight:bold;">中獎獎號剩餘狀態</div>
+    <div style="color:var(--p); font-size:0.8rem; margin-bottom:8px; font-weight:bold; letter-spacing:1px;">中獎獎號追蹤紀錄</div>
     <div class="prize-tag-list" id="prizeTags"></div>
 </div>
 
-<div id="scroll-area"><div class="pool-grid" id="poolGrid"></div></div>
+<div id="scroll-area">
+    <div class="pool-grid" id="poolGrid"></div>
+</div>
 
 <div id="scratchOverlay" class="scratch-overlay">
     <div style="text-align:center;">
-        <div style="color:var(--p); font-weight:900; font-size:1.2rem;">選號 NO. <span id="selNum">--</span></div>
+        <div style="color:var(--p); font-weight:900; font-size:1.4rem; text-shadow: 0 0 10px rgba(255,184,0,0.5);">選號 NO. <span id="selNum">--</span></div>
         <div class="scratch-box">
             <div id="luckyVal">?</div>
-            <canvas id="scratch-canvas" width="280" height="280"></canvas>
+            <canvas id="scratch-canvas" width="300" height="300"></canvas>
         </div>
-        <div style="color:#666; font-size:0.9rem;">請動手刮開灰色區域</div>
+        <div style="color:#aaa; font-size:0.9rem; letter-spacing:2px; animation: pulse 1.5s infinite;">—— 請滑動刮開區域 ——</div>
     </div>
 </div>
 
 <div id="resModal" class="result-modal">
     <div class="res-card">
-        <img id="res_img" style="width:100%; border-radius:15px; margin-bottom:15px;">
-        <h2 id="res_msg" style="color:var(--p); margin:0;">結果判定中...</h2>
-        <button class="res-btn" onclick="location.reload()">確認並繼續</button>
+        <img id="res_img" style="width:100%; border-radius:18px; margin-bottom:18px; border: 1px solid #333;">
+        <h2 id="res_msg" style="color:var(--p); margin:0; font-size:1.8rem;">結果判定中...</h2>
+        <button class="res-btn" onclick="location.reload()">確認領取</button>
     </div>
 </div>
 
@@ -80,6 +103,7 @@
 
     const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const app = initializeApp(config); const db = getDatabase(app);
+    
     const params = new URLSearchParams(window.location.search);
     const gameId = params.get('id');
     const userId = localStorage.getItem('myScratchCode');
@@ -87,12 +111,12 @@
 
     if(!gameId) location.href = 'index.html';
 
-    // 會員餘額
+    // 實時更新餘額
     onValue(ref(db, `users/${userId}/balance`), s => {
         document.getElementById('uBal').innerText = (s.val() || 0).toLocaleString();
     });
 
-    // 遊戲數據同步
+    // 載入遊戲與監控數據
     onValue(ref(db, `gameSettings/${gameId}`), s => {
         gData = s.val();
         if(!gData) return;
@@ -106,31 +130,37 @@
             const prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
             const winningNums = prizes.map(p => Number(p.num));
 
-            // 更新獎號追蹤
+            // 更新頂部獎號追蹤
             document.getElementById('prizeTags').innerHTML = prizes.map(p => {
                 const isWon = pool.some(item => Number(item.grade) === Number(p.num) && item.revealed);
                 return `<div class="prize-tag ${isWon ? 'won' : ''}">${Number(p.num).toString().padStart(2,'0')}</div>`;
             }).join('');
 
-            // 渲染格子
+            // 渲染格子 (1-N 邏輯)
             grid.innerHTML = '';
             pool.forEach((t, i) => {
                 const div = document.createElement('div');
-                const displayIdx = (i + 1).toString().padStart(2, '0');
+                const gridIdx = (i + 1).toString().padStart(2, '0'); // 格子顯示序號
+                
                 if(t.taken) {
                     div.className = 'ticket taken';
                     if(t.revealed) {
-                        const gradeVal = parseInt(t.grade) || 0;
-                        // 🔴 關鍵修正：取消判斷 X 的邏輯，全部補零顯示數字
-                        const displayGrade = gradeVal.toString().padStart(2, '0');
+                        const gradeVal = Number(t.grade);
+                        const displayGrade = gradeVal.toString().padStart(2, '0'); // 顯示刮出的真實號碼
                         
-                        if(winningNums.includes(gradeVal) && gradeVal !== 0) div.classList.add('winner-glow');
-                        div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${displayIdx}</span><span class="history-num">${displayGrade}</span>`;
+                        // 中獎發光效果
+                        if(winningNums.includes(gradeVal)) div.classList.add('winner-glow');
+                        
+                        div.innerHTML = `
+                            <span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${gridIdx}</span>
+                            <span class="history-num">${displayGrade}</span>
+                        `;
                     } else { 
                         div.innerHTML = `<span style="font-size:0.55rem;color:#666;">刮開中</span>`; 
                     }
                 } else {
-                    div.className = 'ticket'; div.innerText = displayIdx;
+                    div.className = 'ticket'; 
+                    div.innerText = gridIdx;
                     div.onclick = () => buy(i, t.grade);
                 }
                 grid.appendChild(div);
@@ -138,42 +168,50 @@
         });
     });
 
+    // 購買邏輯 (含餘額不足通知)
     async function buy(idx, grade) {
-        if(!userId) { alert("請先登入！"); return; }
-        const s = await get(ref(db, `users/${userId}/balance`));
-        const cur = s.val() || 0;
+        if(!userId) { alert("請先登入帳號！"); return; }
         
+        const s = await get(ref(db, `users/${userId}/balance`));
+        const curBalance = s.val() || 0;
+        
+        // 判定階梯價格
         const poolSnap = await get(ref(db, `games/${gameId}/pool`));
         const soldCount = (poolSnap.val() || []).filter(x => x.taken).length;
         let finalPrice = gData.price;
         if(gData.promoCount > 0 && soldCount < gData.promoCount) finalPrice = gData.promoPrice;
 
-        // 🔴 餘額檢查通知
-        if(cur < finalPrice) {
-            alert(`【額度不足】\n\n您目前剩餘：${cur} P\n本抽需要：${finalPrice} P\n\n請聯繫管理員充值！`);
+        // 餘額不足攔截
+        if(curBalance < finalPrice) {
+            alert(`【 餘額不足提醒 】\n\n您目前剩餘：${curBalance} P\n本次購買需要：${finalPrice} P\n\n請聯繫管理員進行充值。`);
             return;
         }
-        if(!confirm(`支付 ${finalPrice} P 購買編號 ${(idx+1)}？`)) return;
 
-        await update(ref(db, `users/${userId}`), { balance: cur - finalPrice });
+        if(!confirm(`確認支付 ${finalPrice} P 購買編號 ${(idx+1)}？`)) return;
+
+        // 扣款與紀錄
+        await update(ref(db, `users/${userId}`), { balance: curBalance - finalPrice });
         await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true, revealed: false });
         await set(push(ref(db, `users/${userId}/logs`)), { game: gameId, cost: finalPrice, time: Date.now() });
 
-        // 啟動刮卡介面，強制顯示補零數字
-        const displayVal = parseInt(grade).toString().padStart(2, '0');
+        // 啟動刮卡介面，顯示補零後的真實號碼
+        const displayVal = Number(grade).toString().padStart(2, '0');
         showScratch((idx+1).toString().padStart(2,'0'), displayVal, idx);
     }
 
+    // 刮刮樂互動邏輯
     function showScratch(no, val, poolIdx) {
         const overlay = document.getElementById('scratchOverlay');
         const canvas = document.getElementById('scratch-canvas');
         const ctx = canvas.getContext('2d');
+        
         document.getElementById('selNum').innerText = no;
         document.getElementById('luckyVal').innerText = val;
         overlay.style.display = 'flex';
 
         ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0, 0, 280, 280);
+        ctx.fillStyle = '#C0C0C0'; // 經典灰色刮層
+        ctx.fillRect(0, 0, 300, 300);
 
         let isDrawing = false;
         const scratch = (e) => {
@@ -182,37 +220,52 @@
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
             const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
 
-            const pixels = ctx.getImageData(0, 0, 280, 280).data;
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x, y, 40, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 計算刮開進度
+            const pixels = ctx.getImageData(0, 0, 300, 300).data;
             let transparent = 0;
             for (let i = 3; i < pixels.length; i += 4) { if (pixels[i] === 0) transparent++; }
-            if (transparent > (280 * 280 * 0.5)) { isDrawing = false; finishScratch(poolIdx, val); }
+            if (transparent > (300 * 300 * 0.55)) { 
+                isDrawing = false; 
+                finishScratch(poolIdx, val); 
+            }
         };
 
         canvas.onmousedown = () => isDrawing = true;
-        canvas.ontouchstart = (e) => { isDrawing = true; e.preventDefault(); };
+        canvas.ontouchstart = (e) => { isDrawing = true; if(e.cancelable) e.preventDefault(); };
         window.onmouseup = () => isDrawing = false;
         window.ontouchend = () => isDrawing = false;
         canvas.onmousemove = scratch;
         canvas.ontouchmove = scratch;
     }
 
+    // 中獎判定與結果展示
     async function finishScratch(idx, val) {
         await update(ref(db, `games/${gameId}/pool/${idx}`), { revealed: true });
-        const hit = gData.prizes.find(p => Number(p.num) === Number(val) && Number(val) !== 0);
+        
+        const prizes = Array.isArray(gData.prizes) ? gData.prizes : [gData.prizes];
+        const hit = prizes.find(p => Number(p.num) === Number(val));
         const resModal = document.getElementById('resModal');
+        
         if(hit) {
-            document.getElementById('res_msg').innerHTML = `🎉 恭喜中獎！<br>${hit.name}`;
+            document.getElementById('res_msg').innerHTML = `<span style="font-size:1.2rem;color:#fff;">🎊 恭喜抽中 🎊</span><br>${hit.name}`;
             document.getElementById('res_img').src = hit.img || gData.img;
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            confetti({ particleCount: 180, spread: 80, origin: { y: 0.6 } });
         } else {
-            document.getElementById('res_msg').innerText = "銘謝惠顧";
+            document.getElementById('res_msg').innerText = "銘謝惠顧，下次加油！";
             document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png";
         }
         resModal.style.display = 'flex';
     }
 </script>
+
+<style>
+    @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+</style>
 </body>
 </html>
