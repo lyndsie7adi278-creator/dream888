@@ -6,7 +6,7 @@
     <title>DREAM CMS | 旗艦中控台</title>
     <style>
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; --border: rgba(255,184,0,0.3); }
-        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: none; overflow-x: hidden; }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: none; overflow-x: hidden; }
         
         /* 📱 側邊欄摺疊邏輯 */
         .sidebar { 
@@ -16,13 +16,15 @@
         }
         .main { margin-left: 240px; padding: 20px; padding-top: 65px; transition: 0.3s; }
         
+        /* 手機端樣式修正 */
         @media screen and (max-width: 768px) {
-            .sidebar { left: -240px; } 
-            .sidebar.open { left: 0; } 
-            .main { margin-left: 0; }
+            .sidebar { left: -240px; } /* 預設隱藏 */
+            .sidebar.open { left: 0; } /* 點擊後展開 */
+            .main { margin-left: 0; padding: 15px; padding-top: 70px; }
             .menu-toggle { display: block !important; }
         }
 
+        /* 漢堡選單按鈕 */
         .menu-toggle {
             display: none; position: fixed; top: 15px; left: 15px; 
             z-index: 1100; background: var(--p); color: #000;
@@ -33,29 +35,32 @@
         .nav-link { padding: 12px 15px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; color: #666; transition: 0.3s; font-size: 0.9rem; font-weight: bold; }
         .nav-link:hover, .nav-link.active { background: rgba(255,184,0,0.1); color: var(--p); }
 
+        /* 內容卡片 */
         .page { display: none; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .card { background: var(--card); border-radius: 15px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
         .title { font-size: 1.1rem; color: var(--p); font-weight: bold; margin-bottom: 20px; display: block; }
         
-        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; font-size: 0.9rem; }
+        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
         .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; }
         .btn-sm { padding: 8px 12px; font-size: 0.85rem; margin-right: 5px; margin-top: 5px; }
 
         /* 會員摺疊卡片 */
         .user-item { background: #0a0c10; border: 1px solid #222; border-radius: 12px; margin-bottom: 10px; }
         .user-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .user-balance { color: var(--p); font-weight: 900; }
         .user-content { display: none; padding: 15px; background: #0d1016; border-top: 1px solid #222; }
         .user-content.show { display: block; }
 
-        /* 快速調價區專用樣式 */
-        .adj-card b { color: var(--p); font-size: 1rem; }
-        .adj-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
-        .adj-label { font-size: 0.7rem; color: #666; margin-bottom: 2px; }
+        /* 配率控制輸入框樣式 */
+        .control-box { border: 1px solid #ff4757; padding: 15px; border-radius: 12px; background: rgba(255,71,87,0.05); margin-bottom: 15px; }
+        .control-title { color: #ff4757; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; display: block; }
 
+        /* 對帳視窗 */
         .log-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .log-box { background: var(--card); width: 95%; max-width: 500px; border-radius: 20px; border: 1px solid var(--p); padding: 25px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
+        .log-list { overflow-y: auto; flex-grow: 1; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -68,7 +73,7 @@
             <h3 id="logUserName" style="margin:0; color:var(--p);">對帳紀錄</h3>
             <button class="btn btn-sm" onclick="closeLog()">關閉</button>
         </div>
-        <div class="log-list" id="logItems" style="overflow-y:auto; margin-top:10px;"></div>
+        <div id="logItems" class="log-list"></div>
     </div>
 </div>
 
@@ -87,28 +92,31 @@
     </div>
 
     <div id="game" class="page">
-        <span class="title">發布新商品 (1-N 唯一編號)</span>
+        <span class="title">發布新商品 (全功能配率版)</span>
         <div class="card" style="max-width: 500px; margin: 0 auto;">
-            <input type="text" id="gId" placeholder="遊戲 ID (如: Pokemon_01)">
-            <input type="text" id="gCat" placeholder="商品分類">
+            <input type="text" id="gId" placeholder="遊戲 ID (如: PK_01)">
+            <input type="text" id="gCat" placeholder="分類 (如: 一番賞)">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <input type="number" id="gTotal" placeholder="總籤數">
-                <input type="number" id="gPrice" placeholder="單抽價格">
+                <input type="number" id="gPrice" placeholder="單抽原價">
             </div>
-            <div style="border:1px solid var(--border); padding:10px; border-radius:10px; margin-bottom:15px;">
-                <small style="color:var(--p)">階梯優惠設定</small>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:5px;">
-                    <input type="number" id="pCount" placeholder="前 N 張" style="margin:0;">
-                    <input type="number" id="pPrice" placeholder="優惠價" style="margin:0;">
+
+            <div class="control-box">
+                <span class="control-title">🛡️ 戰略配率控制 (切盤)</span>
+                <input type="number" id="gSafeZone" placeholder="前 N 張不准出現大獎 (例如: 20)" style="border-color:#ff4757; margin-bottom:10px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <input type="number" id="pCount" placeholder="前N張優惠張數" style="margin:0;">
+                    <input type="number" id="pPrice" placeholder="優惠價格" style="margin:0;">
                 </div>
             </div>
+
             <input type="text" id="gImg" placeholder="封面圖片 URL">
-            <textarea id="gPrizes" rows="3" placeholder='獎項設定 JSON: [{"num":8, "name":"A獎"}]'></textarea>
-            <button class="btn" style="width:100%" onclick="publishGame()">發布商品</button>
+            <textarea id="gPrizes" rows="3" placeholder='中獎號碼 JSON: [{"num":8, "name":"A獎"}]'></textarea>
+            <button class="btn" style="width:100%" onclick="publishGame()">發布商品並執行分層洗牌</button>
         </div>
         
         <hr style="border:0; border-top:1px solid #222; margin:30px 0;">
-        <span class="title">快速調價與即時更動區</span>
+        <span class="title">即時調價與分類修改</span>
         <div id="quickAdjustList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 15px;"></div>
     </div>
 
@@ -121,10 +129,10 @@
     </div>
 
     <div id="ann" class="page">
-        <span class="title">公告管理</span>
+        <span class="title">系統公告發佈</span>
         <div class="card">
             <textarea id="annContent" rows="10"></textarea>
-            <button class="btn" style="width:100%" onclick="saveAnnouncement()">同步公告</button>
+            <button class="btn" style="width:100%" onclick="saveAnnouncement()">同步所有前端公告</button>
         </div>
     </div>
 </div>
@@ -138,6 +146,7 @@
 
     window.onload = () => { if(prompt("ADMIN:")==="8888") { document.body.style.display="block"; startSync(); } else location.href="index.html"; };
     
+    // 側邊欄控制
     window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
     window.switchTab = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -146,6 +155,8 @@
         event.currentTarget.classList.add('active');
         if(window.innerWidth <= 768) toggleSidebar(); 
     };
+    
+    // 會員摺疊控制
     window.toggleUser = (uid) => document.getElementById(`content-${uid}`).classList.toggle('show');
     window.closeLog = () => document.getElementById('logModal').style.display = 'none';
 
@@ -159,122 +170,108 @@
             Object.values(data).forEach(g => { if(g.category && !categories.includes(g.category)) categories.push(g.category); });
 
             Object.entries(data).forEach(([id, g]) => {
-                // 1. 監控卡片
+                // 監控卡片
                 const monCard = document.createElement('div'); monCard.className = 'card';
                 monCard.innerHTML = `<b>${id}</b><div id="rem-${id}" style="color:var(--p);font-size:1.3rem;margin:10px 0;">--</div>
-                    <button class="btn btn-sm" onclick="resetShuffle('${id}')">洗牌 (1-${g.total})</button>
+                    <button class="btn btn-sm" onclick="resetShuffle('${id}')">重置洗牌</button>
                     <button class="btn btn-sm" style="background:#ef4444" onclick="deleteGame('${id}')">刪除</button>`;
                 list.appendChild(monCard);
                 onValue(ref(db, `games/${id}/pool`), pSnap => {
                     const p = pSnap.val() || []; document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`;
                 });
 
-                // 2. 🟢 增強型快速調價卡片
-                const adjCard = document.createElement('div'); adjCard.className = 'card adj-card';
+                // 快速調整
+                const adjCard = document.createElement('div'); adjCard.className = 'card';
                 let catOptions = categories.map(c => `<option value="${c}" ${g.category === c ? 'selected' : ''}>${c}</option>`).join('');
-                
-                adjCard.innerHTML = `
-                    <b>${id} 即時更動</b>
-                    <div class="adj-label" style="margin-top:10px;">分類管理</div>
-                    <select onchange="qUpdStr('${id}','category',this.value)">
-                        ${catOptions}<option value="NEW">＋ 新增分類...</option>
-                    </select>
-                    
-                    <div class="adj-label">封面圖片 URL</div>
-                    <input type="text" value="${g.img||''}" onchange="qUpdStr('${id}','img',this.value)" placeholder="圖片連結">
-
-                    <div class="adj-grid">
-                        <div><div class="adj-label">單抽價格</div><input type="number" value="${g.price}" onchange="qUpdNum('${id}','price',this.value)"></div>
-                        <div><div class="adj-label">前N張</div><input type="number" value="${g.promoCount||0}" onchange="qUpdNum('${id}','promoCount',this.value)"></div>
-                        <div><div class="adj-label">優惠價</div><input type="number" value="${g.promoPrice||0}" onchange="qUpdNum('${id}','promoPrice',this.value)"></div>
-                    </div>
-
-                    <div class="adj-label" style="margin-top:5px;">獎項 JSON (即時更名)</div>
-                    <textarea style="font-size:0.75rem; height:60px;" onchange="qUpdJson('${id}',this.value)">${JSON.stringify(g.prizes)}</textarea>
-                `;
+                adjCard.innerHTML = `<b>${id} 調節</b>
+                    <select onchange="updateStr('${id}','category',this.value)" style="margin-top:10px;">${catOptions}<option value="NEW">＋ 新增分類</option></select>
+                    <input type="text" value="${g.img||''}" onchange="updateStr('${id}','img',this.value)" placeholder="圖片URL">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                        <input type="number" value="${g.price}" onchange="updateNum('${id}','price',this.value)" title="價格">
+                        <input type="number" value="${g.safeZone||0}" onchange="updateNum('${id}','safeZone',this.value)" title="保護區">
+                    </div>`;
                 adj.appendChild(adjCard);
             });
         });
 
         onValue(ref(db, 'users'), s => {
-            const container = document.getElementById('userListContainer');
-            container.innerHTML = '';
+            const container = document.getElementById('userListContainer'); container.innerHTML = '';
             Object.entries(s.val()||{}).forEach(([uid, u]) => {
                 const item = document.createElement('div'); item.className = 'user-item';
-                item.innerHTML = `
-                    <div class="user-header" onclick="toggleUser('${uid}')">
-                        <div class="user-name">${u.nickname||'未設'}</div>
-                        <div style="color:var(--p);font-weight:900;">${(u.balance||0).toLocaleString()} P ▼</div>
-                    </div>
-                    <div class="user-content" id="content-${uid}">
-                        <div style="font-size:0.85rem;color:#888;">UID: ${uid} | PIN: ${u.pin||'無'}</div>
-                        <div style="margin-top:10px;">
-                            <button class="btn btn-sm" onclick="showUserLogs('${uid}','${u.nickname||uid}')">對帳</button>
-                            <button class="btn btn-sm" onclick="addBal('${uid}')">充點</button>
-                            <button class="btn btn-sm" style="background:#3498db" onclick="editPin('${uid}')">改PIN</button>
-                        </div>
-                    </div>`;
+                item.innerHTML = `<div class="user-header" onclick="toggleUser('${uid}')"><div>${u.nickname||'未設'}</div><div class="user-balance">${(u.balance||0).toLocaleString()} P ▼</div></div>
+                    <div class="user-content" id="content-${uid}">UID: ${uid} | PIN: ${u.pin||'無'}<br>
+                    <button class="btn btn-sm" onclick="addBal('${uid}')">充點</button><button class="btn btn-sm" onclick="editPin('${uid}')">改PIN</button><button class="btn btn-sm" onclick="showUserLogs('${uid}','${u.nickname||uid}')">紀錄</button></div>`;
                 container.appendChild(item);
             });
         });
     }
 
-    // --- 核心邏輯與快速更新函數 ---
-    window.qUpdNum = (id, f, v) => update(ref(db, `gameSettings/${id}`), { [f]: Number(v) });
-    window.qUpdStr = (id, f, v) => {
-        if(f === 'category' && v === "NEW") {
-            const n = prompt("輸入新分類名稱:");
-            if(n) { if(!categories.includes(n)) categories.push(n); update(ref(db, `gameSettings/${id}`), { category: n }); }
-        } else { update(ref(db, `gameSettings/${id}`), { [f]: v }); }
-    };
-    window.qUpdJson = (id, v) => {
-        try { const j = JSON.parse(v); update(ref(db, `gameSettings/${id}`), { prizes: j }); }
-        catch(e) { alert("JSON 格式錯誤，更新失敗"); }
-    };
-
+    // 🔴 核心分層洗牌邏輯 (1-N 且前 N 不出獎)
     window.publishGame = async () => {
-        const id = document.getElementById('gId').value.trim(); const total = Number(document.getElementById('gTotal').value);
+        const id = document.getElementById('gId').value.trim();
+        const total = Number(document.getElementById('gTotal').value);
+        const safeZone = Number(document.getElementById('gSafeZone').value) || 0;
+        const prizes = JSON.parse(document.getElementById('gPrizes').value);
+        const prizeNums = prizes.map(p => Number(p.num));
+
         if(!id || !total) return alert("資料不全");
-        let pool = []; for(let i=1; i<=total; i++) pool.push({ grade: i, taken: false, revealed: false });
-        pool.sort(() => Math.random() - 0.5);
+
+        let allNums = []; for(let i=1; i<=total; i++) allNums.push(i);
+        let winList = allNums.filter(n => prizeNums.includes(n));
+        let loseList = allNums.filter(n => !prizeNums.includes(n));
+
+        loseList.sort(() => Math.random() - 0.5);
+        let frontPool = loseList.splice(0, safeZone);
+        let backPool = [...loseList, ...winList].sort(() => Math.random() - 0.5);
+        let finalPool = [...frontPool, ...backPool].map(num => ({ grade: num, taken: false, revealed: false }));
+
         await set(ref(db, `gameSettings/${id}`), { 
             total, category: document.getElementById('gCat').value, 
             price: Number(document.getElementById('gPrice').value), 
-            img: document.getElementById('gImg').value, 
-            prizes: JSON.parse(document.getElementById('gPrizes').value),
+            img: document.getElementById('gImg').value, prizes, safeZone,
             promoCount: Number(document.getElementById('pCount').value)||0,
             promoPrice: Number(document.getElementById('pPrice').value)||0
         });
-        await set(ref(db, `games/${id}/pool`), pool); alert("發布成功");
+        await set(ref(db, `games/${id}/pool`), finalPool);
+        alert(`發布成功！前 ${safeZone} 抽已鎖定不中獎。`);
     };
 
     window.resetShuffle = async (id) => {
+        if(!confirm(`確定重新洗牌 ${id}？`)) return;
         const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
-        let pool = []; for(let i=1; i<=g.total; i++) pool.push({ grade: i, taken: false, revealed: false });
-        pool.sort(() => Math.random() - 0.5);
-        await set(ref(db, `games/${id}/pool`), pool); alert("洗牌完成");
+        const prizeNums = g.prizes.map(p => Number(p.num));
+        let allNums = []; for(let i=1; i<=g.total; i++) allNums.push(i);
+        let winList = allNums.filter(n => prizeNums.includes(n));
+        let loseList = allNums.filter(n => !prizeNums.includes(n));
+        loseList.sort(() => Math.random() - 0.5);
+        let frontPool = loseList.splice(0, g.safeZone || 0);
+        let backPool = [...loseList, ...winList].sort(() => Math.random() - 0.5);
+        let finalPool = [...frontPool, ...backPool].map(num => ({ grade: num, taken: false, revealed: false }));
+        await set(ref(db, `games/${id}/pool`), finalPool);
+        alert("洗牌完成");
     };
 
+    window.updateNum = (id, f, v) => update(ref(db, `gameSettings/${id}`), { [f]: Number(v) });
+    window.updateStr = (id, f, v) => {
+        if(f==='category' && v==='NEW') { const n=prompt("新分類:"); if(n) update(ref(db,`gameSettings/${id}`),{category:n}); }
+        else update(ref(db, `gameSettings/${id}`), { [f]: v });
+    };
     window.addBal = async (uid) => {
         const amt = prompt("調整餘額 (+/-):"); if(!amt) return;
         const s = await get(ref(db, `users/${uid}/balance`)); let cur = s.val() || 0;
         let fin = amt.startsWith('+') ? cur + parseInt(amt.slice(1)) : amt.startsWith('-') ? cur - parseInt(amt.slice(1)) : parseInt(amt);
         await update(ref(db, `users/${uid}`), { balance: fin });
     };
-    window.editPin = async (uid) => {
-        const p = prompt("新 PIN:"); if(p !== null) await update(ref(db, `users/${uid}`), { pin: p === "" ? null : p });
-    };
+    window.editPin = async (uid) => { const p=prompt("新PIN:"); if(p!==null) update(ref(db,`users/${uid}`),{pin:p===""?null:p}); };
     window.showUserLogs = async (uid, name) => {
         const s = await get(ref(db, `users/${uid}/logs`)); const logs = s.val() || {};
         const list = document.getElementById('logItems'); list.innerHTML = '';
-        Object.values(logs).reverse().forEach(l => { list.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; font-size:0.8rem; display:flex; justify-content:space-between;"><span>${l.game}<br><small>${new Date(l.time).toLocaleString()}</small></span><b style="color:var(--p)">-${l.cost} P</b></div>`; });
+        Object.values(logs).reverse().forEach(l => { list.innerHTML += `<div style="padding:10px;border-bottom:1px solid #222;font-size:0.8rem;display:flex;justify-content:space-between;"><span>${l.game}<br><small>${new Date(l.time).toLocaleString()}</small></span><b>-${l.cost}P</b></div>`; });
         document.getElementById('logModal').style.display = 'flex';
     };
-    window.deleteGame = async (id) => { if(confirm(`徹底刪除 ${id}？`)) { await remove(ref(db, `gameSettings/${id}`)); await remove(ref(db, `games/${id}`)); } };
-    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告已更新"); };
-    window.createUser = async () => {
-        const uid = prompt("新會員 UID:"); if(uid) await set(ref(db, `users/${uid.toUpperCase()}`), { balance: 0, nickname: "新玩家", pin: null });
-    };
+    window.deleteGame = async (id) => { if(confirm(`徹底刪除 ${id}？`)) { remove(ref(db, `gameSettings/${id}`)); remove(ref(db, `games/${id}`)); } };
+    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告同步完成"); };
+    window.createUser = async () => { const uid=prompt("新UID:"); if(uid) set(ref(db,`users/${uid.toUpperCase()}`),{balance:0,nickname:"新玩家",pin:null}); };
 </script>
 </body>
 </html>
