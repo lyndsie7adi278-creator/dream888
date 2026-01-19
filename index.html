@@ -2,10 +2,10 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>夢工廠 | 刮刮樂商城</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>夢工廠 | 旗艦選號商城</title>
     <style>
-        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; }
+        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --line: #06c755; }
         
         /* 1. 全域鎖定與基礎設定 */
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
@@ -13,10 +13,10 @@
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
             background: var(--bg); margin: 0; padding: 0; 
             display: flex; flex-direction: column; align-items: center; 
-            overflow-x: hidden; 
+            overflow-x: hidden; padding-bottom: 100px;
         }
 
-        /* 2. 頂部導航欄 */
+        /* 2. 頂部導航欄 (質感完全復原) */
         .top-nav { 
             width: 100%; background: white; padding: 15px 20px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -26,16 +26,16 @@
         .nav-left { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #7f8c8d; font-weight: bold; }
         .logo-txt { font-weight: 900; letter-spacing: 4px; color: #333; font-size: 1.1rem; }
 
-        /* 3. 跑馬燈 */
+        /* 3. 跑馬燈 (質感完全復原) */
         .marquee-container { 
             width: 100%; background: #1a1c23; color: var(--primary); 
-            padding: 10px 0; overflow: hidden; white-space: nowrap; 
+            padding: 12px 0; overflow: hidden; white-space: nowrap; 
             font-size: 0.85rem; font-weight: bold; border-bottom: 2px solid var(--primary); 
         }
         .marquee-content { display: inline-block; animation: marquee 25s linear infinite; }
         @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
 
-        /* 4. 分類滾動選單 */
+        /* 4. 分類滾動選單 (質感完全復原) */
         .category-scroll { 
             display: flex; overflow-x: auto; padding: 15px 20px; gap: 12px; 
             width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; 
@@ -51,7 +51,7 @@
             box-shadow: 0 4px 12px rgba(255,143,163,0.4); 
         }
 
-        /* 5. 商品卡片網格 */
+        /* 5. 商品卡片網格 (質感完全復原) */
         .product-grid { 
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; 
             width: 94%; max-width: 500px; padding: 15px 0; 
@@ -67,87 +67,72 @@
         .p-name { font-weight: 900; font-size: 0.95rem; color: #2c3e50; margin-bottom: 8px; line-height: 1.3; }
         .p-price-value { color: var(--primary); font-weight: 900; font-size: 1.15rem; }
 
-        .promo-tag { 
-            background: #ff4757; color: white; font-size: 0.65rem; 
-            padding: 3px 8px; border-radius: 6px; margin-left: 6px; 
-            vertical-align: middle; animation: promo-blink 1.2s infinite; 
-        }
+        .promo-tag { background: #ff4757; color: white; font-size: 0.65rem; padding: 3px 8px; border-radius: 6px; margin-left: 6px; vertical-align: middle; animation: promo-blink 1.2s infinite; }
         @keyframes promo-blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.95); } }
         .promo-info { font-size: 0.7rem; color: #ff8fa3; margin-top: 6px; font-weight: 900; }
 
-        /* 6. 會員中心側欄 */
+        /* 6. 會員中心側欄 (質感完全復原) */
         .side-drawer { 
-            position: fixed; top: 0; right: -300px; width: 295px; height: 100vh; 
+            position: fixed; top: 0; right: -310px; width: 300px; height: 100vh; 
             background: white; z-index: 3000; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
             padding: 35px 20px; box-shadow: -10px 0 35px rgba(0,0,0,0.15); 
         }
         .side-drawer.active { right: 0; }
-        .drawer-overlay { 
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
-            z-index: 2500; backdrop-filter: blur(5px); 
-        }
+        .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2500; backdrop-filter: blur(5px); }
         .drawer-overlay.active { display: block; }
+        
         .drawer-user-card { 
             background: linear-gradient(145deg, #2c3e50 0%, #000000 100%); 
             border-radius: 24px; padding: 25px; color: white; margin-bottom: 25px; 
             box-shadow: 0 12px 25px rgba(0,0,0,0.2); 
         }
         .bal-amount { font-size: 2rem; font-weight: 900; color: var(--primary); margin: 8px 0; }
-        
-        /* 🔴 總消統計樣式 */
-        .total-spent-tag { 
-            background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; 
-            font-size: 0.75rem; margin-top: 10px; display: inline-block; color: #adb5bd;
-        }
+        .total-spent-tag { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; margin-top: 10px; display: inline-block; color: #adb5bd; }
         
         .record-section-title { font-size: 0.8rem; color: #666; font-weight: 900; margin: 15px 0 10px; letter-spacing: 1px; display: flex; align-items: center; }
         .record-section-title::before { content: ""; width: 3px; height: 12px; background: var(--primary); margin-right: 8px; border-radius: 10px; }
-        
-        .log-list { height: 150px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; border-bottom: 1px dashed #eee; }
+        .log-list { height: 160px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; border-bottom: 1px dashed #eee; }
         .log-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
 
-        /* 7. 聲明區塊 */
-        .status-section { 
-            width: 92%; max-width: 460px; margin: 35px 0 15px; 
-            background: white; border-radius: 28px; padding: 25px; 
-            border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 5px 20px rgba(0,0,0,0.03); 
+        /* 🟢 LINE 懸浮客服圖標 (新增) */
+        .line-float {
+            position: fixed; bottom: 30px; right: 20px; z-index: 2000;
+            width: 60px; height: 60px; background: var(--line);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 25px rgba(6,199,85,0.4);
+            cursor: pointer; text-decoration: none;
+            animation: float-breath 2s infinite ease-in-out;
         }
-        .status-item { 
-            display: flex; align-items: flex-start; background: #f9fafb; 
-            padding: 18px; border-radius: 20px; margin-bottom: 15px; 
+        .line-float img { width: 35px; height: 35px; }
+        @keyframes float-breath {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
         }
-        .status-icon { font-size: 1.6rem; margin-right: 18px; margin-top: 3px; }
-        .status-text b { display: block; font-size: 0.9rem; color: #1a1c23; margin-bottom: 5px; letter-spacing: 0.5px; }
-        .status-text p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.6; }
 
-        /* 8. 彈窗 */
-        .modal { 
-            display: none; position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.88); z-index: 4000; 
-            align-items: center; justify-content: center; backdrop-filter: blur(10px); 
-        }
-        .m-box { 
-            background: white; padding: 40px 30px; border-radius: 35px; 
-            width: 88%; max-width: 340px; text-align: center; position: relative; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3); 
-        }
-        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #ccc; cursor: pointer; }
-        input { 
-            width: 100%; padding: 18px; margin: 15px 0; border: 1px solid #eee; 
-            border-radius: 15px; text-align: center; font-size: 1.2rem; 
-            font-weight: bold; color: var(--primary); outline: none; transition: 0.3s; 
-        }
+        /* 7. 彈窗與按鈕 (質感完全復原) */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 4000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .m-box { background: white; padding: 40px 30px; border-radius: 35px; width: 88%; max-width: 340px; text-align: center; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #ccc; cursor: pointer; transition: 0.3s; }
+        .close-modal:hover { color: #888; }
+        input { width: 100%; padding: 18px; margin: 15px 0; border: 1px solid #eee; border-radius: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; color: var(--primary); outline: none; transition: 0.3s; }
         input:focus { border-color: var(--primary); background: #fff9fa; }
-        .btn { 
-            background: var(--primary); color: white; border: none; 
-            padding: 16px; border-radius: 50px; font-weight: 900; 
-            width: 100%; cursor: pointer; font-size: 1.05rem; 
-            box-shadow: 0 8px 20px rgba(255,143,163,0.3); transition: 0.3s; 
-        }
-        .footer { padding: 30px 0 50px; font-size: 0.75rem; color: #95a5a6; text-align: center; line-height: 2; letter-spacing: 1px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 50px; font-weight: 900; width: 100%; cursor: pointer; font-size: 1.05rem; box-shadow: 0 8px 20px rgba(255,143,163,0.3); transition: 0.3s; }
+        .btn:active { transform: scale(0.95); }
+        .footer { padding: 50px 0; font-size: 0.75rem; color: #95a5a6; text-align: center; line-height: 2; letter-spacing: 1px; }
+
+        /* 狀態聲明區 (質感完全復原) */
+        .status-section { width: 92%; max-width: 460px; margin: 35px 0 15px; background: white; border-radius: 28px; padding: 25px; border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 5px 20px rgba(0,0,0,0.03); }
+        .status-item { display: flex; align-items: flex-start; background: #f9fafb; padding: 18px; border-radius: 20px; margin-bottom: 15px; }
+        .status-icon { font-size: 1.6rem; margin-right: 18px; margin-top: 3px; }
+        .status-text b { display: block; font-size: 0.9rem; color: #1a1c23; margin-bottom: 5px; }
+        .status-text p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.6; }
     </style>
 </head>
 <body oncontextmenu="return false;">
+
+<a href="https://line.me/ti/p/@您的LINE_ID" class="line-float" target="_blank">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE">
+</a>
 
 <div id="annModal" class="modal">
     <div class="m-box">
@@ -184,7 +169,6 @@
             <div style="font-size:0.75rem; opacity:0.7; letter-spacing:1.5px;">ACCOUNT BALANCE</div>
             <div class="bal-amount">P <span id="uBal">0</span></div>
             <div class="total-spent-tag">總計累計消費：<span id="uTotalSpent">0</span> P</div>
-            
             <div style="display:flex; justify-content:space-between; margin-top:15px; font-size:0.85rem;">
                 <b id="uNick" onclick="editNick()" style="cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.3);">設定暱稱 ✏️</b>
                 <span id="uID" style="opacity:0.6;">ID: ----</span>
@@ -192,10 +176,10 @@
         </div>
 
         <div class="record-section-title">中獎存根 PRIZE HISTORY</div>
-        <div class="log-list" id="winList" style="height: 100px; border-bottom: none;"></div>
+        <div class="log-list" id="winList" style="height: 120px; border-bottom: none;"></div>
 
         <div class="record-section-title">消費紀錄 HISTORY</div>
-        <div class="log-list" id="hList" style="height: 120px;"></div>
+        <div class="log-list" id="hList" style="height: 150px;"></div>
         
         <button style="width:100%; margin-top:10px; background:#fff1f3; color:#ff6b6b; border:none; padding:14px; border-radius:15px; font-weight:bold; cursor:pointer;" onclick="handleLogout()">登出帳號</button>
     </div>
@@ -211,11 +195,11 @@
 <div class="status-section">
     <div class="status-item">
         <div class="status-icon">🛡️</div>
-        <div class="status-text"><b>加密安全訪問系統</b><p>數據經 SSL 高級加密。</p></div>
+        <div class="status-text"><b>加密安全訪問系統</b><p>數據經 SSL 高級加密，守護隱私。</p></div>
     </div>
     <div class="status-item">
         <div class="status-icon">🎰</div>
-        <div class="status-text"><b>公平隨機洗牌算法</b><p>籤池發佈即隨機排序。</p></div>
+        <div class="status-text"><b>公平隨機洗牌算法</b><p>籤池發佈即隨機排序，公正透明。</p></div>
     </div>
 </div>
 
@@ -224,7 +208,7 @@
 <div id="loginModal" class="modal">
     <div class="m-box">
         <div class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">✕</div>
-        <h2 id="loginStepTitle">LOGIN</h2>
+        <h2 id="loginStepTitle" style="margin:0; letter-spacing:2px;">LOGIN</h2>
         <div id="step1">
             <input type="text" id="cIn" placeholder="專屬代碼">
             <button class="btn" onclick="checkCode()">下一步 NEXT</button>
@@ -247,9 +231,9 @@
     let allG = {}; let curC = 'ALL'; let tempUser = null;
 
     window.toggleDrawer = () => { document.getElementById('drawer').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); };
-    window.openLogin = () => { document.getElementById('loginModal').style.display = 'flex'; };
+    window.openLogin = () => { document.getElementById('loginModal').style.display = 'flex'; if(document.getElementById('drawer').classList.contains('active')) toggleDrawer(); };
     window.handleLogout = () => { localStorage.removeItem('myScratchCode'); location.reload(); };
-    window.editNick = async () => { const n = prompt("新暱稱："); if(n) await update(ref(db, `users/${saved}`), { nickname: n.trim() }); };
+    window.editNick = async () => { const n = prompt("輸入新暱稱："); if(n && n.trim()) await update(ref(db, `users/${saved}`), { nickname: n.trim() }); };
 
     function init() {
         get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annBody').innerText = s.val(); });
@@ -263,14 +247,9 @@
                 document.getElementById('uBal').innerText = (u.balance||0).toLocaleString();
                 document.getElementById('uNick').innerText = u.nickname || "新玩家 ✏️";
                 document.getElementById('uID').innerText = `ID: ${saved}`;
-                
-                // 💳 消費紀錄與總計消費計算
-                const hBox = document.getElementById('hList');
                 if(u.logs) {
                     const arr = Object.values(u.logs).sort((a,b)=>b.time-a.time);
-                    hBox.innerHTML = arr.map(l => `<div class="log-item"><div><b>${l.game}</b><br><small style="color:#adb5bd">${new Date(l.time).toLocaleTimeString()}</small></div><span style="color:var(--primary); font-weight:900;">-${l.cost} P</span></div>`).join('');
-                    
-                    // 🔴 計算總消費
+                    document.getElementById('hList').innerHTML = arr.map(l => `<div class="log-item"><div><b>${l.game}</b><br><small style="color:#adb5bd">${new Date(l.time).toLocaleTimeString()}</small></div><span style="color:var(--primary); font-weight:900;">-${l.cost} P</span></div>`).join('');
                     const total = Object.values(u.logs).reduce((sum, log) => sum + (log.cost || 0), 0);
                     document.getElementById('uTotalSpent').innerText = total.toLocaleString();
                 }
@@ -279,7 +258,7 @@
             onValue(ref(db, 'winLogs'), snap => {
                 const wBox = document.getElementById('winList');
                 const myWins = Object.values(snap.val()||{}).filter(l => l.user === saved).sort((a,b)=>b.time-a.time);
-                wBox.innerHTML = myWins.length > 0 ? myWins.map(w => `<div class="log-item"><div><b>${w.prize}</b><br><small style="color:#adb5bd">${w.game}</small></div><span style="color:#27ae60; font-size:0.75rem; font-weight:bold;">已紀錄</span></div>`).join('') : '<div style="color:#ccc; text-align:center; padding:20px; font-size:0.8rem;">尚無中獎紀錄</div>';
+                wBox.innerHTML = myWins.length > 0 ? myWins.map(w => `<div class="log-item"><div><b>${w.prize}</b><br><small style="color:#adb5bd">${w.game}</small></div><span style="color:#27ae60; font-size:0.75rem; font-weight:bold;">已紀錄</span></div>`).join('') : '<div style="color:#ccc; text-align:center; padding:20px; font-size:0.8rem;">尚無紀錄</div>';
             });
         } else {
             document.getElementById('userInfoArea').style.display = 'none';
@@ -289,6 +268,7 @@
 
     window.checkCode = async () => {
         const code = document.getElementById('cIn').value.trim().toUpperCase();
+        if(!code) return;
         const s = await get(ref(db, `users/${code}`));
         if(!s.exists()) return alert("代碼不存在");
         tempUser = { id: code, data: s.val() };
@@ -300,7 +280,8 @@
         const pin = document.getElementById('pinIn').value.trim();
         if(!tempUser.data.pin) await update(ref(db, `users/${tempUser.id}`), { pin: pin });
         else if(tempUser.data.pin !== pin) return alert("PIN 錯誤");
-        localStorage.setItem('myScratchCode', tempUser.id); location.reload();
+        localStorage.setItem('myScratchCode', tempUser.id);
+        location.reload();
     };
 
     function renderCats() {
@@ -324,9 +305,12 @@
                 const pool = pSnap.val() || []; const sold = pool.filter(x => x.taken).length;
                 const cCount = item.promoCount || item.pCount || 0; const cPrice = item.promoPrice || item.pPrice || 0;
                 if(cCount > 0 && sold < cCount) {
-                    document.getElementById(`name-${safeId}`).innerHTML = `${id}<span class="promo-tag">開盤優惠</span>`;
-                    document.getElementById(`price-${safeId}`).innerHTML = `<span style="font-size:0.75rem;color:#adb5bd">一刮 / </span>P${cPrice}`;
-                    document.getElementById(`promo-${safeId}`).innerHTML = `<div class="promo-info">前${cCount.toString().padStart(2,'0')}刮 P${cPrice} / 之後 P${item.price}</div>`;
+                    const nEl = document.getElementById(`name-${safeId}`);
+                    const pEl = document.getElementById(`price-${safeId}`);
+                    const prEl = document.getElementById(`promo-${safeId}`);
+                    if(nEl) nEl.innerHTML = `${id}<span class="promo-tag">開盤優惠</span>`;
+                    if(pEl) pEl.innerHTML = `<span style="font-size:0.75rem;color:#adb5bd">一刮 / </span>P${cPrice}`;
+                    if(prEl) prEl.innerHTML = `<div class="promo-info">前${cCount.toString().padStart(2,'0')}刮 P${cPrice} / 之後 P${item.price}</div>`;
                 }
             });
         }
