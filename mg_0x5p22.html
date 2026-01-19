@@ -66,7 +66,7 @@
         <span class="title">發布新商品與調價</span>
         <div class="card" style="max-width: 500px; margin: 0 auto;">
             <input type="text" id="gId" placeholder="遊戲 ID">
-            <input type="text" id="gCat" placeholder="商品分類 (例如: 一番賞, 3C, 盒玩)">
+            <input type="text" id="gCat" placeholder="商品分類">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <input type="number" id="gTotal" placeholder="總籤數">
                 <input type="number" id="gPrice" placeholder="價格">
@@ -79,7 +79,7 @@
                 </div>
             </div>
             <input type="text" id="gImg" placeholder="封面圖片 URL">
-            <textarea id="gPrizes" rows="3" placeholder='獎項設定 (JSON)'>[{"num":1, "name":"A賞"},{"num":5, "name":"B賞"}]</textarea>
+            <textarea id="gPrizes" rows="3">[{"num":8, "name":"獎"}]</textarea>
             <button class="btn" style="width:100%" onclick="publishGame()">發布商品</button>
         </div>
         <div id="quickAdjustList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-top:30px;"></div>
@@ -101,7 +101,7 @@
     <div id="ann" class="page">
         <span class="title">系統公告管理</span>
         <div class="card">
-            <textarea id="annContent" rows="10" placeholder="輸入內容..."></textarea>
+            <textarea id="annContent" rows="10" placeholder="輸入公告內容..."></textarea>
             <button class="btn" style="width:100%" onclick="saveAnnouncement()">發佈公告</button>
         </div>
     </div>
@@ -118,7 +118,6 @@
     window.showPage = (id) => { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active')); document.getElementById(id).classList.add('active'); event.currentTarget.classList.add('active'); };
     window.closeLog = () => { document.getElementById('logModal').style.display = 'none'; };
 
-    // 全局分類列表，用於生成下拉選單
     let categories = ["一番賞", "3C", "盲盒", "模型", "公仔"]; 
 
     function startSync() {
@@ -128,11 +127,9 @@
             const list = document.getElementById('monList'); const adj = document.getElementById('quickAdjustList');
             const data = snap.val() || {}; list.innerHTML = ''; adj.innerHTML = '';
             
-            // 🔴 更新分類邏輯：從現有數據動態抓取分類
             Object.values(data).forEach(g => { if(g.category && !categories.includes(g.category)) categories.push(g.category); });
 
             Object.entries(data).forEach(([id, g]) => {
-                // 數據監控卡片
                 const card = document.createElement('div'); card.className = 'card';
                 card.innerHTML = `<div style="display:flex; justify-content:space-between;"><b style="color:white">${id}</b> <small style="color:var(--p)">${g.category||'未分類'}</small></div>
                     <div id="rem-${id}" style="color:var(--p); font-size:1.3rem; margin:10px 0;">--</div>
@@ -144,10 +141,8 @@
                     const p = pSnap.val() || []; document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`;
                 });
 
-                // 🔴 商品調價卡片：增加分類下拉選單
                 const adjCard = document.createElement('div'); adjCard.className = 'card';
                 let catOptions = categories.map(c => `<option value="${c}" ${g.category === c ? 'selected' : ''}>${c}</option>`).join('');
-                
                 adjCard.innerHTML = `<b>${id} 調價與分類</b>
                     <select onchange="qUpdStr('${id}','category',this.value)" style="margin-top:10px; border-color:var(--p);">
                         ${catOptions}
@@ -180,104 +175,94 @@
         });
     }
 
-    // 更新數值欄位 (Price, Count)
-    window.qUpd = (id, f, v) => update(ref(db, `gameSettings/${id}`), { [f]: parseInt(v) });
-    
-    // 🔴 更新字串欄位 (Category) 並處理新增分類
-    window.qUpdStr = (id, f, v) => {
-        if(v === "NEW") {
-            const n = prompt("輸入新分類名稱:");
-            if(n) {
-                if(!categories.includes(n)) categories.push(n);
-                update(ref(db, `gameSettings/${id}`), { [f]: n });
-            }
-        } else {
-            update(ref(db, `gameSettings/${id}`), { [f]: v });
-        }
-    };
-
+    // 🔴 核心修正：發布商品邏輯 (確保總抽數對齊)
     window.publishGame = async () => {
         const id = document.getElementById('gId').value;
         const cat = document.getElementById('gCat').value || "未分類";
         const total = parseInt(document.getElementById('gTotal').value);
         const prizes = JSON.parse(document.getElementById('gPrizes').value);
-        if(!id || !total) return alert("資訊不完整");
+        if(!id || isNaN(total)) return alert("資訊不完整");
         
         let pool = [];
-        prizes.forEach(p => { for(let i=0; i<p.num; i++) pool.push({ grade: p.name, taken: false, revealed: false }); });
+        let pTotal = 0;
+        prizes.forEach(p => { 
+            pTotal += parseInt(p.num);
+            for(let i=0; i<parseInt(p.num); i++) pool.push({ grade: p.name, taken: false, revealed: false }); 
+        });
+
+        if(pTotal > total) return alert(`獎項總數(${pTotal})不能大於總抽數(${total})`);
+
         while(pool.length < total) pool.push({ grade: "銘謝惠顧", taken: false, revealed: false });
         pool.sort(() => Math.random() - 0.5);
 
         await set(ref(db, `gameSettings/${id}`), { 
-            total, 
-            category: cat, // 🔴 儲存分類
-            price: parseInt(document.getElementById('gPrice').value), 
-            img: document.getElementById('gImg').value, 
-            prizes, 
+            total, category: cat, price: parseInt(document.getElementById('gPrice').value), 
+            img: document.getElementById('gImg').value, prizes, 
             promoCount: parseInt(document.getElementById('pCount').value)||0, 
             promoPrice: parseInt(document.getElementById('pPrice').value)||0 
         });
         await set(ref(db, `games/${id}/pool`), pool);
-        alert("發佈成功");
+        alert("發佈成功並已洗牌");
     };
 
+    // 🔴 核心修正：重置洗牌邏輯 (確保總抽數對齊)
+    window.resetShuffle = async (id) => {
+        if(!confirm(`確定要重置 ${id} 嗎？`)) return;
+        const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
+        if(!g) return;
+
+        let pool = [];
+        let pTotal = 0;
+        g.prizes.forEach(p => { 
+            pTotal += parseInt(p.num);
+            for(let i=0; i<parseInt(p.num); i++) pool.push({ grade: p.name, taken: false, revealed: false }); 
+        });
+
+        if(pTotal > g.total) return alert("錯誤：獎項總數大於設定總抽數");
+
+        while(pool.length < g.total) pool.push({ grade: "銘謝惠顧", taken: false, revealed: false });
+        pool.sort(() => Math.random() - 0.5);
+        await set(ref(db, `games/${id}/pool`), pool);
+        alert("重置完成，籤池已重新對齊總抽數");
+    };
+
+    window.qUpd = (id, f, v) => update(ref(db, `gameSettings/${id}`), { [f]: parseInt(v) });
+    window.qUpdStr = (id, f, v) => {
+        if(v === "NEW") {
+            const n = prompt("輸入新分類:");
+            if(n) { if(!categories.includes(n)) categories.push(n); update(ref(db, `gameSettings/${id}`), { [f]: n }); }
+        } else { update(ref(db, `gameSettings/${id}`), { [f]: v }); }
+    };
+    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告同步完成"); };
     window.showUserLogs = async (uid, name) => {
         const s = await get(ref(db, `users/${uid}/logs`));
         const logs = s.val() || {};
-        document.getElementById('logUserName').innerText = `${name} 的歷史紀錄`;
+        document.getElementById('logUserName').innerText = `${name} 歷史紀錄`;
         const list = document.getElementById('logItems'); list.innerHTML = '';
         const arr = Object.values(logs).reverse();
-        if(arr.length === 0) list.innerHTML = '<div style="text-align:center; padding:20px;">無紀錄</div>';
-        arr.forEach(l => {
-            list.innerHTML += `<div class="log-item">
-                <div><b>${l.game}</b><br><small style="color:#666">${new Date(l.time).toLocaleString()}</small></div>
-                <div style="color:var(--p)">-${l.cost} P</div>
-            </div>`;
-        });
+        arr.forEach(l => { list.innerHTML += `<div class="log-item"><div><b>${l.game}</b><br><small>${new Date(l.time).toLocaleString()}</small></div><div style="color:var(--p)">-${l.cost} P</div></div>`; });
         document.getElementById('logModal').style.display = 'flex';
     };
-
     window.editPin = async (uid) => {
-        const newPin = prompt(`修改 [${uid}] 的 PIN:`);
+        const newPin = prompt(`修改 [${uid}] PIN:`);
         if(newPin === null) return;
         await update(ref(db, `users/${uid}`), { pin: newPin === "" ? null : newPin });
-        alert("PIN 已更新");
+        alert("PIN 更新完成");
     };
-
-    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告已發佈"); };
-    
     window.addBal = async (uid) => {
-        const amt = prompt("調整餘額:");
+        const amt = prompt("調整餘額 (+/-):");
         if(amt === null) return;
         const s = await get(ref(db, `users/${uid}/balance`)); let cur = s.val() || 0;
         let fin = amt.startsWith('+') ? cur + parseInt(amt.slice(1)) : amt.startsWith('-') ? cur - parseInt(amt.slice(1)) : parseInt(amt);
         await update(ref(db, `users/${uid}`), { balance: fin });
     };
-
-    window.resetShuffle = async (id) => {
-        if(!confirm(`洗牌重置 ${id}？`)) return;
-        const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
-        let pool = [];
-        g.prizes.forEach(p => { for(let i=0; i<p.num; i++) pool.push({ grade: p.name, taken: false, revealed: false }); });
-        while(pool.length < g.total) pool.push({ grade: "銘謝惠顧", taken: false, revealed: false });
-        pool.sort(() => Math.random() - 0.5);
-        await set(ref(db, `games/${id}/pool`), pool);
-        alert("重置完成");
-    };
-
-    window.deleteGame = async (id) => {
-        if(!confirm(`刪除 ${id}？`)) return;
-        await remove(ref(db, `gameSettings/${id}`));
-        await remove(ref(db, `games/${id}`));
-    };
-
+    window.deleteGame = async (id) => { if(confirm(`徹底刪除 ${id}？`)) { await remove(ref(db, `gameSettings/${id}`)); await remove(ref(db, `games/${id}`)); } };
     window.createUser = async () => {
-        const uid = prompt("輸入新會員 UID:");
+        const uid = prompt("新會員 UID:");
         if(!uid) return;
         const s = await get(ref(db, `users/${uid}`));
-        if(s.exists()) return alert("此 UID 已存在");
+        if(s.exists()) return alert("UID 已存在");
         await set(ref(db, `users/${uid.toUpperCase()}`), { balance: 0, nickname: "新玩家", pin: null });
-        alert("會員新增成功");
     };
 </script>
 </body>
