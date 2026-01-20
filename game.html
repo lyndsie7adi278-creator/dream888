@@ -6,65 +6,51 @@
     <title>夢工廠 | 幸運選號系統</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; }
+        :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
+        body { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; }
         
-        body { 
-            margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; 
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; 
-        }
-
-        /* 頂部導航 */
+        /* 1. 導航與看板 */
         .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); z-index: 100; }
-        .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .back-btn:active { transform: scale(0.9); opacity: 0.7; }
+        .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; }
         .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
-
-        /* 商品看板 */
         .billboard { display: flex; align-items: center; padding: 12px; gap: 15px; background: var(--card); border-bottom: 2px solid #222; }
         .main-img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 1px solid #333; }
-        .info-box h2 { margin: 0; font-size: 1.1rem; color: #fff; letter-spacing: 1px; }
+        .info-box h2 { margin: 0; font-size: 1.1rem; color: #fff; }
 
-        /* 停盤橫幅 */
-        .soldout-banner { 
-            display: none; background: #ff4757; color: white; padding: 12px; 
-            font-size: 1.1rem; font-weight: 900; text-align: center; 
-            border-bottom: 2px solid #fff; box-shadow: 0 5px 15px rgba(255,71,87,0.4); 
+        /* 🟢 2. 排隊鎖定橫幅 */
+        .lock-banner { 
+            display: none; background: var(--lock); color: white; padding: 12px; 
+            font-size: 0.95rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; 
+            box-shadow: 0 5px 15px rgba(52,152,219,0.4); z-index: 200;
         }
+        .soldout-banner { display: none; background: #ff4757; color: white; padding: 12px; font-size: 1.1rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; z-index: 200; }
 
-        /* 🟢 進度條區塊 */
+        /* 3. 進度條 */
         .progress-container { padding: 15px 15px 5px; background: rgba(255,184,0,0.02); }
         .progress-info { display: flex; justify-content: space-between; font-size: 0.75rem; color: #aaa; margin-bottom: 6px; font-weight: bold; }
         .progress-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,184,0,0.1); }
-        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s; }
 
-        /* 獎號監控與發光標題 */
+        /* 4. 獎號監控 */
         .prize-monitor { padding: 12px 15px 15px; background: rgba(255,184,0,0.02); border-bottom: 1px solid #222; }
-        .prize-title { 
-            color: var(--p); font-size: 0.9rem; margin-bottom: 12px; font-weight: 900; 
-            text-shadow: 0 0 10px rgba(255, 184, 0, 0.4); animation: text-glow 2s infinite alternate;
-        }
-        @keyframes text-glow { from { text-shadow: 0 0 5px var(--p); } to { text-shadow: 0 0 15px var(--p), 0 0 20px var(--p); } }
-        
+        .prize-title { color: var(--p); font-size: 0.9rem; margin-bottom: 12px; font-weight: 900; animation: text-glow 2s infinite alternate; }
+        @keyframes text-glow { from { text-shadow: 0 0 5px var(--p); } to { text-shadow: 0 0 15px var(--p); } }
         .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
         .prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
-        .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); box-shadow: 0 0 5px var(--danger); }
+        .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); }
 
-        /* 遊戲格區域 */
+        /* 5. 遊戲網格 */
         #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 120px; touch-action: pan-y; }
         .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%; max-width: 500px; margin: 0 auto; }
         .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; transition: 0.2s; }
         .ticket.taken { background: #000; color: var(--p); border: 1px solid rgba(255,184,0,0.3); }
-        .ticket.taken .history-num { font-size: 1.5rem; font-weight: 900; color: var(--p); }
         .ticket.winner-glow { border-color: var(--win); box-shadow: inset 0 0 15px rgba(255,215,0,0.3), 0 0 10px var(--win); }
 
-        /* 刮刮互動層 */
+        /* 6. 刮刮層與彈窗 */
         .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
         .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
         #luckyVal { font-size: 8rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
         #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
-
-        /* 彈窗樣式 */
         .modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); }
         .m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
         .m-btn { display: block; width: 100%; padding: 18px; background: var(--p); color: #000; border: none; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; margin-top: 25px; position: relative; z-index: 999999; }
@@ -74,7 +60,7 @@
 <body oncontextmenu="return false;">
 
 <div class="header">
-    <button class="back-btn" onclick="location.href='index.html'">← 返回商城</button>
+    <button class="back-btn" onclick="location.href='index.html'">← 返回</button>
     <div class="balance-tag">P <span id="uBal">0</span></div>
 </div>
 
@@ -83,16 +69,13 @@
     <div class="info-box"><h2 id="gTitle">載入中...</h2><div id="priceDisplay" style="color:var(--p); font-weight:bold; margin-top:5px;">-- P</div></div>
 </div>
 
-<div id="soldOutBanner" class="soldout-banner">🚨 本期所有大獎已開出，商品已停盤 🚨</div>
+<div id="soldOutBanner" class="soldout-banner">🚨 本期大獎已開出，商品已停盤 🚨</div>
+
+<div id="lockBanner" class="lock-banner">🔒 玩家 <span id="lockUser">---</span> 正在包台中 (<span id="lockTimer">0</span>s)</div>
 
 <div class="progress-container">
-    <div class="progress-info">
-        <span>目前刮取進度：<span id="progText">0 / 0</span></span>
-        <span id="progPercent">0%</span>
-    </div>
-    <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progFill"></div>
-    </div>
+    <div class="progress-info"><span>刮取進度：<span id="progText">0 / 0</span></span><span id="progPercent">0%</span></div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progFill"></div></div>
 </div>
 
 <div class="prize-monitor">
@@ -104,27 +87,24 @@
 
 <div id="scratchOverlay" class="scratch-overlay">
     <div style="text-align:center;">
-        <div style="color:var(--p); font-weight:900; font-size:1.4rem;">選號 NO. <span id="selNum">--</span></div>
-        <div class="scratch-box" id="scratchBox">
-            <div id="luckyVal">?</div>
-        </div>
-        <div style="color:#aaa; font-size:0.8rem; margin-top:10px;">請動手刮開區域</div>
+        <div style="color:var(--p); font-weight:900; font-size:1.4rem;">NO. <span id="selNum">--</span></div>
+        <div class="scratch-box" id="scratchBox"><div id="luckyVal">?</div></div>
     </div>
 </div>
 
 <div id="resModal" class="modal">
     <div class="m-card">
         <img id="res_img" style="width:100%; border-radius:18px; border: 1px solid #333;">
-        <div id="res_msg" class="prize-title" style="font-size:1.5rem; margin-top:20px; text-align:center;"></div>
+        <div id="res_msg" style="font-size:1.5rem; margin-top:20px; font-weight:900; color:var(--p);"></div>
         <button class="m-btn" onclick="window.location.replace(window.location.href)">確認並繼續</button>
     </div>
 </div>
 
 <div id="noBalModal" class="modal">
     <div class="m-card">
-        <div style="font-size:4rem; margin-bottom:10px;">⚠️</div>
-        <div style="font-size:1.6rem; font-weight:900;">點數不足</div>
-        <a href="https://line.me/ti/p/@您的ID" class="line-btn">官方 LINE 客服儲值</a>
+        <div style="font-size:4rem;">⚠️</div>
+        <div style="font-size:1.5rem; font-weight:900; margin:15px 0;">點數不足</div>
+        <a href="https://line.me/ti/p/@您的LINE_ID" class="line-btn">官方 LINE 客服儲值</a>
         <button onclick="document.getElementById('noBalModal').style.display='none'" style="background:none; border:none; color:#666; margin-top:20px; font-weight:bold;">取消</button>
     </div>
 </div>
@@ -137,11 +117,34 @@
     const app = initializeApp(config); const db = getDatabase(app);
     const params = new URLSearchParams(window.location.search);
     const gameId = params.get('id'); const uid = localStorage.getItem('myScratchCode');
-    let gData = null; let isSoldOut = false;
+    
+    let gData = null; let isSoldOut = false; let currentLock = null;
 
     if(!gameId) location.href = 'index.html';
 
+    // 餘額監聽
     onValue(ref(db, `users/${uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
+
+    // 🟢 核心：排隊鎖定監聽邏輯
+    onValue(ref(db, `games/${gameId}/lock`), snap => {
+        const lock = snap.val();
+        const now = Date.now();
+        const banner = document.getElementById('lockBanner');
+        
+        if(lock && lock.expire > now) {
+            currentLock = lock;
+            banner.style.display = 'block';
+            document.getElementById('lockUser').innerText = lock.user === uid ? "您" : lock.user;
+            // 倒數計時器
+            const timer = setInterval(() => {
+                const left = Math.round((lock.expire - Date.now()) / 1000);
+                if(left <= 0) { clearInterval(timer); banner.style.display = 'none'; currentLock = null; }
+                else document.getElementById('lockTimer').innerText = left;
+            }, 1000);
+        } else {
+            banner.style.display = 'none'; currentLock = null;
+        }
+    });
 
     onValue(ref(db, `gameSettings/${gameId}`), s => {
         gData = s.val(); if(!gData) return;
@@ -149,17 +152,16 @@
         document.getElementById('soldOutBanner').style.display = isSoldOut ? 'block' : 'none';
         document.getElementById('gTitle').innerText = gameId;
         document.getElementById('gMainImg').src = gData.img;
-        document.getElementById('priceDisplay').innerText = isSoldOut ? '已停盤' : `${gData.price} P / 抽`;
+        document.getElementById('priceDisplay').innerText = isSoldOut ? '已停盤' : `${gData.price} P`;
 
         onValue(ref(db, `games/${gameId}/pool`), snap => {
             const pool = snap.val() || []; const grid = document.getElementById('poolGrid');
             const winningNums = (gData.prizes || []).map(p => Number(p.num));
             
-            // 🟢 更新進度條
-            const totalTickets = gData.total || pool.length;
+            // 進度條
             const takenCount = pool.filter(t => t.taken).length;
-            const percent = Math.round((takenCount / totalTickets) * 100);
-            document.getElementById('progText').innerText = `${takenCount} / ${totalTickets}`;
+            const percent = Math.round((takenCount / gData.total) * 100);
+            document.getElementById('progText').innerText = `${takenCount} / ${gData.total}`;
             document.getElementById('progPercent').innerText = `${percent}%`;
             document.getElementById('progFill').style.width = `${percent}%`;
 
@@ -179,24 +181,50 @@
                     } else div.innerHTML = `<span style="font-size:0.6rem;">刮開中</span>`;
                 } else {
                     div.className = 'ticket'; div.innerText = idxStr;
-                    div.onclick = () => { if(!isSoldOut) buy(i, t.grade); else alert("本期已停盤"); };
+                    div.onclick = () => { handleBuyClick(i, t.grade); };
                 }
                 grid.appendChild(div);
             });
         });
     });
 
-    async function buy(idx, grade) {
-        if(!uid) return;
+    // 🟢 點擊購買邏輯 (含鎖定檢查)
+    async function handleBuyClick(idx, grade) {
+        if(isSoldOut) return alert("本期已停盤");
+        
+        // 檢查鎖定狀態
+        const now = Date.now();
+        if(currentLock && currentLock.user !== uid && currentLock.expire > now) {
+            return alert(`玩家 ${currentLock.user} 正在包台中，請稍候 (${Math.round((currentLock.expire - now)/1000)}s)`);
+        }
+        
         const s = await get(ref(db, `users/${uid}/balance`)); const cur = s.val() || 0;
         const pSnap = await get(ref(db, `games/${gameId}/pool`)); const sold = (pSnap.val() || []).filter(x => x.taken).length;
         let price = (gData.promoCount > 0 && sold < gData.promoCount) ? gData.promoPrice : gData.price;
+        
         if(cur < price) { document.getElementById('noBalModal').style.display = 'flex'; return; }
         if(!confirm(`支付 ${price} P 購買編號 ${idx+1}？`)) return;
 
+        // 🟢 執行鎖定與扣款
+        let newExpire;
+        const firstDrawTime = 180 * 1000; // 首抽 180s
+        const addTime = 45 * 1000;      // 每抽加 45s
+        const maxSingle = 450 * 1000;   // 單次上限 450s
+        const maxTotal = 900 * 1000;    // 總累積上限 900s
+
+        if(!currentLock || currentLock.user !== uid || currentLock.expire < now) {
+            newExpire = now + firstDrawTime;
+        } else {
+            // 累加時間
+            let bonus = Math.min(currentLock.expire + addTime, now + maxTotal);
+            newExpire = bonus;
+        }
+
+        await update(ref(db, `games/${gameId}/lock`), { user: uid, expire: newExpire });
         await update(ref(db, `users/${uid}`), { balance: cur - price });
         await update(ref(db, `games/${gameId}/pool/${idx}`), { taken: true, revealed: false, user: uid });
         await set(push(ref(db, `users/${uid}/logs`)), { game: gameId, cost: price, time: serverTimestamp() });
+        
         initScratch((idx+1).toString().padStart(2,'0'), Number(grade).toString().padStart(2, '0'), idx);
     }
 
@@ -234,7 +262,6 @@
             const poolSnap = await get(ref(db, `games/${gameId}/pool`)); const pool = poolSnap.val() || [];
             const winningNums = (gData.prizes || []).map(p => Number(p.num));
             const wonCount = pool.filter(t => t.revealed && winningNums.includes(Number(t.grade))).length;
-            // 🔴 修正：所有獎項都開出才停盤
             if(wonCount >= winningNums.length) await update(ref(db, `gameSettings/${gameId}`), { isSoldOut: true });
             document.getElementById('res_msg').innerHTML = `🎊 恭喜獲得獎項 🎊<br>${hit.name}`;
             document.getElementById('res_img').src = hit.img || gData.img;
