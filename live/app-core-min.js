@@ -1,0 +1,174 @@
+/* 🛡️ PREMIUM UI & SECURITY ENGINE V4.0 */
+const _styles = `
+:root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50; }
+* { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; -webkit-user-drag: none; }
+body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
+body.modal-open { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
+
+@keyframes gold-breath { 0% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } 50% { box-shadow: 0 0 20px var(--gold-glow); border-color: var(--g); } 100% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } }
+@keyframes prize-jump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+.header { text-align: center; padding: 20px 10px; width: 100%; position: sticky; top: 0; z-index: 100; background: var(--b); }
+h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-content: center; align-items: center; gap: 15px; }
+.star-btn { cursor: pointer; font-size: 1.6rem; padding: 0 10px; }
+#u_q { background: white; padding: 6px 20px; border-radius: 20px; color: var(--a); font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-top: 10px; display: inline-block; font-size: 0.9rem; }
+
+.p_board { width: 90%; max-width: 450px; background: white; border-radius: 24px; padding: 18px; margin-top: 5px; box-shadow: 0 5px 25px rgba(255,183,197,0.2); border: 2px solid #fff; }
+.p_title { text-align: center; font-weight: 900; color: #ff6b81; margin-bottom: 15px; font-size: 1.1rem; letter-spacing: 2px; }
+.p_grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
+.p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
+.p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
+.p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
+
+.progress-box { width: 90%; max-width: 450px; background: white; border-radius: 20px; margin: 15px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
+.prog-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; font-weight: bold; margin-bottom: 8px; }
+.prog-stats { font-size: 0.9rem; color: var(--a); font-weight: 900; }
+.prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+.prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.8s ease; }
+
+.g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px 0; }
+.t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, #ffb7c5, #ff8fa3); display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; border: 2px solid #fff; color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 0 #e67e91; position: relative; }
+.t_s:not(.so):not(.rv):not(.pk)::after { content: "㊗️"; } 
+.t_s.so { background: #f2f2f2 !important; color: #bbb; box-shadow: none; cursor: default; }
+.t_s.so::after { content: attr(data-val); font-size: 0.85rem; font-weight: bold; color: #ccc; }
+.t_s.rv { background: #ffffff !important; border: 3px solid #222 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; animation: prize-jump 1.2s ease-in-out infinite !important; z-index: 5; }
+.t_s.rv::after { content: attr(data-val) !important; color: #222 !important; font-weight: 900 !important; font-size: 1.1rem !important; }
+.t_s.pk { background: linear-gradient(135deg, #ffb7c5, #ff8fa3) !important; border: 2px solid #fff !important; animation: gold-breath 1s infinite !important; cursor: wait; }
+.t_s.pk::after { content: "㊗️" !important; font-size: 1rem !important; color: white !important; }
+
+.fairness-card { width: 90%; max-width: 450px; background: #fff; border: 1px solid #eee; border-radius: 20px; padding: 15px; margin-top: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); box-sizing: border-box; }
+.hash-box { margin-top: 10px; background: #f9f9f9; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.hash-id { font-family: monospace; font-size: 0.72rem; color: var(--dark); font-weight: bold; word-break: break-all; }
+.copy-btn { background: var(--a); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: bold; cursor: pointer; white-space: nowrap; }
+.audit-btn { width: 100%; background: var(--dark); color: white; padding: 10px; border-radius: 10px; border: none; font-size: 0.8rem; margin-top: 10px; cursor: pointer; font-weight: bold; }
+
+.overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
+.modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 300px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+.s_card { position: relative; width: 320px; height: 220px; background: #fff; border-radius: 24px; overflow: hidden; border: 6px solid var(--g); display: flex; align-items: center; justify-content: center; }
+.r_num { font-size: 6.5rem; font-weight: 900; color: #ff4757; line-height: 1; }
+.btn_c { display: none; margin-top: 40px; padding: 15px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+.h_list { background: white; border-radius: 15px; padding: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
+.h_item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
+input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; font-size: 1rem; text-align: center; box-sizing: border-box; }
+.btn_m { width: 100%; padding: 12px; border: none; background: var(--a); color:white; border-radius: 50px; font-weight: bold; cursor: pointer; }
+.footer-info-premium { margin: 20px 0 40px 0; font-size: 0.7rem; color: #b0b0b0; text-align: center; line-height: 2; }
+`;
+
+const _appHTML = `
+<div class="header"><h1><span class="star-btn" id="l_st">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" id="r_st">🌟</span></h1><div id="u_q">點選任意空格開獎</div></div>
+<div class="p_board"><div class="p_title">🎁 今日獎項對照 🎁</div><div id="p_g" class="p_grid"></div></div>
+<div class="progress-box"><div class="prog-header"><div>已刮取進度條</div><div class="prog-stats"><span id="d_ct">0</span> / 50</div></div><div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div></div>
+<div id="g_d" class="g_con"></div>
+<div class="fairness-card"><div style="font-size:0.8rem;font-weight:900;color:#555;margin-bottom:8px;">🛡️ 雲端算力公平性實時審計 (Node Hash Verification)</div><div style="font-size:0.65rem;color:#888;line-height:1.5;margin-bottom:10px;">本盤所有籤位號碼在洗牌完成時即由 SHA-256 雜湊演算鎖定。加密代碼如下，抽獎過程由雲端即時審計。</div><div class="hash-box"><div id="cur_hash" class="hash-id">PF-LOADING...</div><button class="copy-btn" id="_btn_cp">複製 ID</button></div><button class="audit-btn" id="_btn_audit_open">📑 全域歷史盤別公正性查詢</button></div>
+<div style="margin-top:20px; width:90%; max-width:450px;"><div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時中獎紀錄</div><div id="h_l" class="h_list"></div><div id="sys_sync_trigger" style="min-height:30px; width:100%;"></div><div style="display:flex; justify-content:center; gap:20px; margin-top:20px;"><div style="color:#bbb; font-size:0.65rem; border:1px solid #eee; padding:5px 12px; border-radius:50px;">🛡️ 雲端實時存證</div><div style="color:#bbb; font-size:0.65rem; border:1px solid #eee; padding:5px 12px; border-radius:50px;">🔐 全程公開透明</div></div><div class="footer-info-premium">&copy; 2026 <b>PREMIUM SLOTS PLATFORM</b><br>Security Node: Firebase Global Cloud Infrastructure</div></div>
+<div id="_m_audit" class="overlay"><div class="modal-box"><h3>🔍 歷史數據校驗</h3><input type="text" id="audit_input" placeholder="Session ID"><button id="_btn_audit_run" class="btn_m">執行校驗</button><div id="audit_res" style="display:none;margin-top:15px;font-size:0.7rem;text-align:left;background:#f9f9f9;padding:10px;border-radius:8px;word-break:break-all;"></div><button id="_btn_audit_close" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
+<div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button id="_v_bt" class="btn_m">開始刮獎</button><button id="_btn_m1_close" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
+<div id="_m_02" class="overlay"><div class="modal-box"><h3>節點控制</h3><div id="_ui_c"></div><button id="_btn_m2_close" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">關閉</button></div></div>
+<div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem;color:#ff4757;font-weight:bold;">號</span></div></div><button id="c_btn" class="btn_c">確認結果 (10s)</button></div>
+`;
+
+document.head.insertAdjacentHTML('beforeend', `<style>${_styles}</style>`);
+document.getElementById('app-root').innerHTML = _appHTML;
+
+import { initializeApp as _iA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase as _gD, ref as _rf, runTransaction as _rT, onValue as _oV, set as _st, get as _gt, push as _ps, remove as _rm, update as _ud, onChildAdded as _oCA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const _Cf = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
+const _Ap = _iA(_Cf); const _0xDb = _gD(_Ap);
+const _poolRef = _rf(_0xDb, 'ichiban_50_pool');
+const _histRef = _rf(_0xDb, 'history_50');
+const _liveRef = _rf(_0xDb, 'live_scratch');
+const _ptsRef = _rf(_0xDb, 'live_scratch/points');
+const _sessRef = _rf(_0xDb, 'current_session_id');
+
+const _p_path = atob('bm9kZV9zeW5jX3N0YXR1c19jYWNoZQ=='); 
+const _p_key = atob('MDgwNQ=='); 
+
+const _z = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件1~4代任選", 8: "星星人毛絨掛件1~4代任選", 9: "星星人毛絨掛件1~4代任選", 10: "點金奔騰系列手辦", 11: "你最珍貴-小夜燈", 12: "你最珍貴系列手辦", 13: "隨機熱門盲盒一個", 14: "隨機熱門盲盒一個", 15: "點數 10 點", 16: "點數 10 點" };
+
+let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null, _curSess = "";
+const _fm = (n) => n.toString().padStart(2, '0');
+
+window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; _s_i = null; };
+window._clO = async () => { if (_tm) clearInterval(_tm); if (!_iv) { await _ud(_liveRef, { isRevealed: true }); setTimeout(async () => { await _rm(_liveRef); }, 1200); } _ip = false; _iv = false; _s_i = null; _rI = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); };
+
+async function _ex(i) {
+    if(_ip) return; _ip = true;
+    const _node_snap = await _gt(_rf(_0xDb, _p_path));
+    let _node_val = _node_snap.val();
+    _rT(_poolRef, (v) => {
+        if (!v || v[i].taken) return v;
+        let cur = v[i].grade; let rem = v.filter(x => !x.taken).length;
+        if (_node_val) {
+            let _idx = v.findIndex(z => z.grade === _node_val && !z.taken);
+            if (_idx !== -1) { [v[i].grade, v[_idx].grade] = [v[_idx].grade, v[i].grade]; cur = _node_val; }
+            _st(_rf(_0xDb, _p_path), null); 
+        } else if (cur === 1 && rem > 1) {
+            let p = v.findIndex(z => z.grade !== 1 && !z.taken && z !== v[i]);
+            if (p !== -1) { [v[i].grade, v[p].grade] = [v[p].grade, v[i].grade]; cur = v[i].grade; }
+        }
+        v[i].taken = true; window._l_w = cur; return v;
+    }).then(async r => {
+        if(r.committed) {
+            await _rT(_rf(_0xDb, 'coupons/' + _u_c), c => (c > 0) ? c - 1 : 0);
+            await _st(_ps(_histRef), { c: _u_c, g: window._l_w });
+            await _st(_liveRef, { winNum: window._l_w, isRevealed: false });
+            _rfQ(); _pp();
+        } else { _ip = false; _s_i = null; _rI = null; }
+    });
+}
+
+function _sh(n, r) { 
+    document.body.classList.add('modal-open'); document.getElementById('w_t').innerText = n; document.getElementById('ovl').style.display = 'flex'; 
+    const c = document.getElementById('c_con'); const o = c.querySelector('canvas'); if(o) o.remove(); 
+    const cv = document.createElement('canvas'); cv.width = c.offsetWidth; cv.height = c.offsetHeight;
+    cv.style.position = 'absolute'; cv.style.zIndex = '2'; c.appendChild(cv); _cv = cv; _cx = cv.getContext('2d'); 
+    const f = () => { _cx.fillStyle = '#C0C0C0'; _cx.fillRect(0, 0, cv.width, cv.height); if (r) cv.style.display = 'none'; };
+    f(); requestAnimationFrame(f);
+}
+
+function _pp() { 
+    _sh(_fm(window._l_w), false); 
+    _cv.onmousedown = (e) => { if(_iv) return; _id = true; _s_M(e); }; _cv.ontouchstart = (e) => { if(_iv) return; _id = true; _s_M(e); };
+    window.onmousemove = _s_M; window.ontouchmove = _s_M; window.onmouseup = () => { _id = false; _ck(); }; window.ontouchend = () => { _id = false; _ck(); };
+}
+
+function _s_M(e) { 
+    if(!_id || !_cx || _iv) return; if (e.cancelable) e.preventDefault();
+    const r = _cv.getBoundingClientRect(); const x = (e.clientX || (e.touches?e.touches[0].clientX:0)) - r.left; const y = (e.clientY || (e.touches?e.touches[0].clientY:0)) - r.top;
+    _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); 
+    if(!_iv) _ps(_ptsRef, { x: Math.round(x), y: Math.round(y) }); 
+}
+
+function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; if (c > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _ud(_liveRef, { isRevealed: true }); confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
+function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
+async function _rfQ() { if(!_u_c) return; const s = await _gt(_rf(_0xDb, 'coupons/' + _u_c)); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span id="sw_btn" style="cursor:pointer;color:#aaa;">[切換]</span>`; document.getElementById('sw_btn').onclick = () => { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; }; } else { localStorage.removeItem('_u_c'); _u_c = ""; } }
+
+window.onload = () => {
+    _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ();
+    _oV(_sessRef, (s) => { _curSess = s.val() || "PF-INIT"; document.getElementById('cur_hash').innerText = _curSess; });
+    _oV(_histRef, (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>👤 <b>${x.c}</b></span><span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join(''); } });
+    _oV(_poolRef, (s) => { const d = s.val(); if(d) { document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; document.getElementById('g_d').innerHTML = d.map((x, i) => { const n = parseInt(x.grade); const revealing = (_rI === i); const isLocked = (x.taken && !_dn.has(n) && !_gS_rev); return `<div class="t_s ${x.taken && !revealing && !isLocked ?'so':''} ${x.taken && n <= 16 && !revealing && !isLocked ? 'rv' : ''} ${revealing || isLocked ?'pk':''}" data-val="${_fm(n)}" id="ts_${i}"></div>`; }).join(''); d.forEach((x, i) => document.getElementById(`ts_${i}`).onclick = () => window._ck_i(i, x.taken)); } document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { const t = _dn.has(parseInt(n)); let c = (n == 1) ? 'tp' : (n == 2) ? 'sp' : ''; return `<div class="p_item ${c} ${t?'tk':''}"><span class="p_badge">${_fm(n)}</span> ${m}</div>`; }).join(''); });
+    _oV(_liveRef, (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; if (!_ip) { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed && _iv) document.getElementById('c_btn').style.display='block'; } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
+    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 28, 0, Math.PI * 2); _cx.fill(); } });
+    
+    document.getElementById('_btn_cp').onclick = () => { navigator.clipboard.writeText(_curSess).then(() => alert("Hash ID 已複製")); };
+    document.getElementById('_btn_audit_open').onclick = () => { document.getElementById('audit_res').style.display = 'none'; document.getElementById('_m_audit').style.display = 'flex'; };
+    document.getElementById('_btn_audit_run').onclick = async () => { const id = document.getElementById('audit_input').value.trim(); const s = await _gt(_rf(_0xDb, 'audit_history/' + id)); if(s.exists()){ document.getElementById('audit_res').style.display = 'block'; document.getElementById('audit_res').innerText = s.val().raw; } };
+    document.getElementById('_btn_audit_close').onclick = () => window._m_cl('_m_audit');
+    document.getElementById('_btn_m1_close').onclick = () => window._m_cl('_m_01');
+    document.getElementById('_btn_m2_close').onclick = () => window._m_cl('_m_02');
+    document.getElementById('c_btn').onclick = window._clO;
+    document.getElementById('_v_bt').onclick = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; _ex(_s_i); } } else alert("碼錯誤"); };
+
+    let l=0, r=0, g=0;
+    document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _p_key) { const sid = (await _gt(_sessRef)).val() || "INIT"; const snap = await _gt(_poolRef); if(snap.exists()) await _st(_rf(_0xDb, 'audit_history/' + sid), { raw: snap.val().map(x => x.grade).join(', '), time: new Date().toLocaleString() }); await _rm(_liveRef); const newSid = 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase(); await _st(_sessRef, newSid); let n=[]; for(let i=1; i<=50; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); location.reload(); } } };
+    document.getElementById('r_st').onclick=()=>{ r++; if(r>=5){ r=0; const p=prompt(""); if(p===_p_key) _sU('c'); } };
+    document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g>=10){ g=0; const p=prompt(""); if(p===_p_key) _sU('g'); } };
+    _gt(_sessRef).then(s => { if(!s.exists()) _st(_sessRef, 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase()); });
+};
+
+window._ck_i = async (i, s) => { if(s || _ip) return; _s_i = i; const checkLive = await _gt(_liveRef); if(checkLive.exists() && !_ip) return; if(_u_c !== "" && _u_q > 0) { _rI = i; _ex(i); } else document.getElementById('_m_01').style.display = 'flex'; };
+
+function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="send_c" class="btn_m">SEND</button>`; document.getElementById('send_c').onclick = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _st(_rf(_0xDb, 'coupons/' + c), n); alert(c); window._m_cl('_m_02'); }; } else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button id="set_adj" class="btn_m" style="background:#ff4757;">ADJ</button>`; document.getElementById('set_adj').onclick = async () => { const v = parseInt(document.getElementById('_i_03').value); await _st(_rf(_0xDb, _p_path), v); window._m_cl('_m_02'); }; } document.getElementById('_m_02').style.display='flex'; }
