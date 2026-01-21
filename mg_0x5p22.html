@@ -1,368 +1,78 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DREAM CMS | 旗艦戰略中控台</title>
-    <style>
-        :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; --border: rgba(255,184,0,0.3); }
-        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: none; overflow-x: hidden; }
-        
-        .sidebar { width: 240px; height: 100vh; background: #000; position: fixed; border-right: 1px solid var(--border); padding: 30px 15px; box-sizing: border-box; z-index: 1000; transition: 0.3s; left: 0; }
-        .main { margin-left: 240px; padding: 20px; padding-top: 65px; transition: 0.3s; }
-        
-        @media screen and (max-width: 768px) {
-            .sidebar { left: -240px; } 
-            .sidebar.open { left: 0; } 
-            .main { margin-left: 0; padding: 15px; padding-top: 70px; }
-            .menu-toggle { display: block !important; }
-        }
-
-        .menu-toggle { display: none; position: fixed; top: 15px; left: 15px; z-index: 1100; background: var(--p); color: #000; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .logo { font-size: 1.2rem; font-weight: 900; color: var(--p); letter-spacing: 4px; margin-bottom: 40px; text-align: center; border: 1px solid var(--p); padding: 10px; }
-        .nav-link { padding: 12px 15px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; color: #666; transition: 0.3s; font-size: 0.9rem; font-weight: bold; }
-        .nav-link:hover, .nav-link.active { background: rgba(255,184,0,0.1); color: var(--p); }
-
-        .page { display: none; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .card { background: var(--card); border-radius: 15px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
-        .title { font-size: 1.1rem; color: var(--p); font-weight: bold; margin-bottom: 20px; display: block; }
-        
-        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; font-size: 0.9rem; }
-        .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; transition: 0.2s; }
-        .btn-sm { padding: 8px 12px; font-size: 0.85rem; margin-right: 5px; margin-top: 5px; }
-        .btn-danger { background: #ff4757; color: white; }
-        .btn-unlock { background: #3498db; color: white; } /* 解鎖按鈕樣式 */
-
-        .user-item { background: #0a0c10; border: 1px solid #222; border-radius: 12px; margin-bottom: 10px; }
-        .user-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .spent-badge { font-size: 0.7rem; background: rgba(255,184,0,0.1); color: #aaa; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid rgba(255,184,0,0.2); }
-        .ref-tag { font-size: 0.7rem; background: rgba(52, 152, 219, 0.15); color: #3498db; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid rgba(52, 152, 219, 0.3); }
-        .user-content { display: none; padding: 15px; background: #0d1016; border-top: 1px solid #222; border-radius: 0 0 12px 12px; }
-        .user-content.show { display: block; }
-
-        .log-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
-        .log-box { background: var(--card); width: 95%; max-width: 500px; border-radius: 20px; border: 1px solid var(--p); padding: 25px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
-        .log-list { overflow-y: auto; flex-grow: 1; margin-top: 15px; }
-
-        .safe-box { border: 1px solid var(--p); padding: 15px; border-radius: 12px; background: rgba(255,184,0,0.05); margin-bottom: 15px; }
-        .adj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .win-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .win-table th { text-align: left; color: var(--p); padding: 10px; border-bottom: 2px solid #222; }
-        .win-table td { padding: 10px; border-bottom: 1px solid #222; }
-
-        .prize-row { display: flex; gap: 8px; margin-bottom: 8px; }
-        .prize-row input { margin-bottom: 0; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DREAM CMS | 旗艦戰略中控台</title>
+<style>
+:root{--p:#ffb800;--bg:#05070a;--card:#11141b;--text:#e2e8f0;--border:rgba(255,184,0,0.3);--lock:#3498db}
+body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);color:var(--text);margin:0;display:none;overflow-x:hidden}
+.sidebar{width:240px;height:100vh;background:#000;position:fixed;border-right:1px solid var(--border);padding:30px 15px;box-sizing:border-box;z-index:1000;transition:.3s;left:0}
+.main{margin-left:240px;padding:20px;padding-top:65px;transition:.3s}
+@media screen and (max-width:768px){.sidebar{left:-240px}.sidebar.open{left:0}.main{margin-left:0;padding:15px;padding-top:70px}.menu-toggle{display:block!important}}
+.menu-toggle{display:none;position:fixed;top:15px;left:15px;z-index:1100;background:var(--p);color:#000;border:none;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer}
+.logo{font-size:1.2rem;font-weight:900;color:var(--p);letter-spacing:4px;margin-bottom:40px;text-align:center;border:1px solid var(--p);padding:10px}
+.nav-link{padding:12px 15px;margin-bottom:8px;border-radius:10px;cursor:pointer;color:#666;transition:.3s;font-size:.9rem;font-weight:700}
+.nav-link:hover,.nav-link.active{background:rgba(255,184,0,.1);color:var(--p)}
+.page{display:none;animation:fadeIn .3s ease}@keyframes fadeIn{from{opacity:0}to{opacity:1}}.page.active{display:block}
+.card{background:var(--card);border-radius:15px;padding:20px;border:1px solid rgba(255,255,255,.05);margin-bottom:20px}
+.title{font-size:1.1rem;color:var(--p);font-weight:700;margin-bottom:20px;display:block}
+input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8px;border:1px solid #333;background:#000;color:#fff;box-sizing:border-box;font-size:.9rem}
+.btn{background:var(--p);color:#000;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:800;transition:.2s}
+.btn-sm{padding:8px 12px;font-size:.85rem;margin-right:5px;margin-top:5px}
+.btn-danger{background:#ff4757;color:#fff}.btn-unlock{background:var(--lock);color:#fff}
+.user-item{background:#0a0c10;border:1px solid #222;border-radius:12px;margin-bottom:10px}
+.user-header{padding:15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.spent-badge{font-size:.7rem;background:rgba(255,184,0,.1);color:#aaa;padding:2px 8px;border-radius:4px;margin-left:10px;border:1px solid rgba(255,184,0,.2)}
+.ref-tag{font-size:.7rem;background:rgba(52,152,219,.15);color:#3498db;padding:2px 8px;border-radius:4px;margin-left:10px;border:1px solid rgba(52,152,219,.3)}
+.user-content{display:none;padding:15px;background:#0d1016;border-top:1px solid #222;border-radius:0 0 12px 12px}.user-content.show{display:block}
+.log-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:2000;align-items:center;justify-content:center}
+.log-box{background:var(--card);width:95%;max-width:500px;border-radius:20px;border:1px solid var(--p);padding:25px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column}
+.log-list{overflow-y:auto;flex-grow:1;margin-top:15px}
+.safe-box{border:1px solid var(--p);padding:15px;border-radius:12px;background:rgba(255,184,0,.05);margin-bottom:15px}
+.adj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.win-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.win-table th{text-align:left;color:var(--p);padding:10px;border-bottom:2px solid #222}
+.win-table td{padding:10px;border-bottom:1px solid #222}
+.prize-row{display:flex;gap:8px;margin-bottom:8px}.prize-row input{margin-bottom:0}
+</style>
 </head>
 <body>
-
 <button class="menu-toggle" onclick="toggleSidebar()">☰ 選單</button>
-
-<div id="logModal" class="log-modal">
-    <div class="log-box">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 id="logUserName" style="margin:0; color:var(--p);">歷史對帳紀錄</h3>
-            <button class="btn btn-sm" onclick="closeLog()">關閉</button>
-        </div>
-        <div id="logItems" class="log-list"></div>
-    </div>
-</div>
-
-<div class="sidebar" id="sidebar">
-    <div class="logo">DREAM ADMIN</div>
-    <div class="nav-link active" onclick="switchTab('mon')">📊 數據監控</div>
-    <div class="nav-link" onclick="switchTab('game')">📦 商品管理</div>
-    <div class="nav-link" onclick="switchTab('win_logs')">🏆 中獎紀錄</div>
-    <div class="nav-link" onclick="switchTab('user')">👤 會員資料</div>
-    <div class="nav-link" onclick="switchTab('ann')">📜 公告發佈</div>
-</div>
-
+<div id="logModal" class="log-modal"><div class="log-box"><div style="display:flex;justify-content:space-between;align-items:center"><h3 id="logUserName" style="margin:0;color:var(--p)">歷史對帳紀錄</h3><button class="btn btn-sm" onclick="closeLog()">關閉</button></div><div id="logItems" class="log-list"></div></div></div>
+<div class="sidebar" id="sidebar"><div class="logo">DREAM ADMIN</div><div class="nav-link active" onclick="switchTab('mon')">📊 數據監控</div><div class="nav-link" onclick="switchTab('game')">📦 商品管理</div><div class="nav-link" onclick="switchTab('win_logs')">🏆 中獎紀錄</div><div class="nav-link" onclick="switchTab('user')">👤 會員資料</div><div class="nav-link" onclick="switchTab('ann')">📜 公告發佈</div></div>
 <div class="main">
-    <div id="mon" class="page active">
-        <span class="title">即時盤面監控</span>
-        <div id="monList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;"></div>
-    </div>
-
-    <div id="game" class="page">
-        <span class="title" id="gameActionTitle">商品發布與戰略配率</span>
-        <div class="card" style="max-width: 600px; margin: 0 auto;">
-            <input type="text" id="gId" placeholder="遊戲 ID (如: 刮刮樂 A)">
-            <input type="text" id="gCat" placeholder="分類 (如: 商城限定)">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <input type="number" id="gTotal" placeholder="總籤數">
-                <input type="number" id="gPrice" placeholder="單抽原價">
-            </div>
-            <div class="safe-box">
-                <input type="number" id="gSafeZone" placeholder="大獎保護區 (前 N 張不出獎)">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
-                    <input type="number" id="pCount" placeholder="優惠張數">
-                    <input type="number" id="pPrice" placeholder="優惠價格">
-                </div>
-            </div>
-            <input type="text" id="gImg" placeholder="封面圖網址 (URL)">
-            
-            <div style="margin-bottom: 10px; color: var(--p); font-weight: bold;">獎項設定：</div>
-            <div id="prizeContainer"></div>
-            <button class="btn btn-sm" onclick="addPrizeInput()" style="margin-bottom: 20px;">＋ 新增獎項</button>
-            
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" style="flex: 2" id="publishBtn" onclick="publishGame()">發布並初次洗牌</button>
-                <button class="btn btn-danger" style="flex: 1; display: none;" id="cancelEditBtn" onclick="resetGameForm()">取消編輯</button>
-            </div>
-        </div>
-        <hr style="border:0; border-top:1px solid #222; margin:30px 0;">
-        <div id="quickAdjustList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 15px;"></div>
-    </div>
-
-    <div id="win_logs" class="page">
-        <span class="title">全服中獎即時紀錄</span>
-        <div class="card">
-            <table class="win-table">
-                <thead><tr><th>時間</th><th>玩家</th><th>商品名稱</th><th>所獲獎項</th></tr></thead>
-                <tbody id="globalWinItems"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="user" class="page">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <span class="title" style="margin:0;">會員數據管理</span>
-            <button class="btn btn-sm" onclick="createUser()">＋ 新增會員</button>
-        </div>
-        <div id="userListContainer"></div>
-    </div>
-
-    <div id="ann" class="page">
-        <span class="title">首頁跑馬燈公告同步</span>
-        <textarea id="annContent" rows="10" placeholder="在此輸入公告內容..."></textarea>
-        <button class="btn" style="width:100%" onclick="saveAnnouncement()">同步並儲存公告</button>
-    </div>
+<div id="mon" class="page active"><span class="title">即時盤面監控</span><div id="monList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px"></div></div>
+<div id="game" class="page"><span class="title" id="gameActionTitle">商品發布與戰略配率</span><div class="card" style="max-width:600px;margin:0 auto"><input type="text" id="gId" placeholder="遊戲 ID"><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><input type="text" id="gCat" placeholder="分類"><input type="number" id="gOrder" placeholder="排序" value="99"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input type="number" id="gTotal" placeholder="總籤數"><input type="number" id="gPrice" placeholder="單抽原價"></div><div class="safe-box"><input type="number" id="gSafeZone" placeholder="大獎保護區"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><input type="number" id="pCount" placeholder="優惠張數"><input type="number" id="pPrice" placeholder="優惠價格"></div></div><input type="text" id="gImg" placeholder="封面圖網址"><div style="margin-bottom:10px;color:var(--p);font-weight:700">獎項設定：</div><div id="prizeContainer"></div><button class="btn btn-sm" onclick="addPrizeInput()">＋ 新增獎項</button><div style="display:flex;gap:10px"><button class="btn" style="flex:2" id="publishBtn" onclick="publishGame()">發布並洗牌</button><button class="btn btn-danger" style="flex:1;display:none" id="cancelEditBtn" onclick="resetGameForm()">取消</button></div></div><hr style="border:0;border-top:1px solid #333;margin:30px 0"><div id="quickAdjustList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:15px"></div></div>
+<div id="win_logs" class="page"><span class="title">全服中獎即時紀錄</span><div class="card"><table class="win-table"><thead><tr><th>時間</th><th>玩家</th><th>商品</th><th>獎項</th></tr></thead><tbody id="globalWinItems"></tbody></table></div></div>
+<div id="user" class="page"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><span class="title" style="margin:0">會員數據管理</span><button class="btn btn-sm" onclick="createUser()">＋ 新增會員</button></div><div id="userListContainer"></div></div>
+<div id="ann" class="page"><span class="title">首頁跑馬燈公告</span><textarea id="annContent" rows="10" placeholder="內容..."></textarea><button class="btn" style="width:100%" onclick="saveAnnouncement()">同步儲存公告</button></div>
 </div>
-
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, update, get, onValue, remove, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
-    const app = initializeApp(config); const db = getDatabase(app);
-
-    let isEditing = false;
-
-    window.onload = () => { if(prompt("管理授權碼 (ADMIN):")==="8888") { document.body.style.display="block"; startSync(); } else location.href="index.html"; };
-    
-    window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-    window.switchTab = (id) => {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if(event) event.currentTarget.classList.add('active');
-        if(window.innerWidth <= 768) toggleSidebar(); 
-    };
-    window.toggleUser = (uid) => document.getElementById(`content-${uid}`).classList.toggle('show');
-    window.closeLog = () => document.getElementById('logModal').style.display = 'none';
-
-    window.addPrizeInput = (num = '', name = '') => {
-        const div = document.createElement('div');
-        div.className = 'prize-row';
-        div.innerHTML = `
-            <input type="number" placeholder="中獎號碼" value="${num}" style="flex: 1">
-            <input type="text" placeholder="獎項名稱" value="${name}" style="flex: 2">
-            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
-        `;
-        document.getElementById('prizeContainer').appendChild(div);
-    };
-
-    function startSync() {
-        onValue(ref(db, 'gameSettings'), snap => {
-            const list = document.getElementById('monList'); const adj = document.getElementById('quickAdjustList');
-            const data = snap.val() || {}; list.innerHTML = ''; adj.innerHTML = '';
-            Object.entries(data).forEach(([id, g]) => {
-                const mon = document.createElement('div'); mon.className = 'card';
-                const statusHtml = g.isSoldOut ? `<span style="color:#ff4757;font-size:0.8rem;">[已停盤]</span>` : `<span style="color:#2ecc71;font-size:0.8rem;">[銷售中]</span>`;
-                
-                // 🟢 監聽 lock 狀態來決定是否顯示解鎖按鈕
-                onValue(ref(db, `games/${id}/lock`), lSnap => {
-                    const l = lSnap.val();
-                    const isLocked = l && l.expire > Date.now();
-                    const lockTxt = isLocked ? `<br><small style="color:var(--lock)">🔒 包台中: ${l.user}</small>` : '';
-                    const unlockBtn = isLocked ? `<button class="btn btn-sm btn-unlock" onclick="forceUnlock('${id}')">🔓 強制解鎖</button>` : '';
-                    
-                    mon.innerHTML = `<b>${id}</b> ${statusHtml}${lockTxt}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0;">--</div>
-                        <button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯商品</button>
-                        <button class="btn btn-sm" onclick="resetShuffle('${id}')">重新洗牌</button>
-                        ${unlockBtn}
-                        <button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button>`;
-                });
-
-                list.appendChild(mon);
-                onValue(ref(db, `games/${id}/pool`), ps => {
-                    const p = ps.val() || []; if(document.getElementById(`rem-${id}`)) document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`;
-                });
-                const adjCard = document.createElement('div'); adjCard.className = 'card';
-                adjCard.innerHTML = `<b>${id} 快捷調控</b><div class="adj-grid" style="margin-top:10px;">
-                    <input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="原價">
-                    <input type="number" value="${g.safeZone||0}" onchange="updNum('${id}','safeZone',this.value)" title="保護區">
-                    <input type="number" value="${g.promoCount||0}" onchange="updNum('${id}','promoCount',this.value)" title="優惠張數">
-                    <input type="number" value="${g.promoPrice||0}" onchange="updNum('${id}','promoPrice',this.value)" title="優惠價">
-                </div>`;
-                adj.appendChild(adjCard);
-            });
-        });
-
-        onValue(ref(db, 'winLogs'), snap => {
-            const list = document.getElementById('globalWinItems'); list.innerHTML = '';
-            const logs = snap.val() || {};
-            Object.values(logs).reverse().slice(0, 50).forEach(l => {
-                list.innerHTML += `<tr><td><small>${new Date(l.time).toLocaleString()}</small></td><td><b>${l.user}</b></td><td>${l.game}</td><td style="color:var(--p)">${l.prize}</td></tr>`;
-            });
-        });
-
-        onValue(ref(db, 'users'), s => {
-            const container = document.getElementById('userListContainer'); container.innerHTML = '';
-            const users = s.val() || {};
-            const refCounts = {};
-            Object.values(users).forEach(u => { if(u.referrer) refCounts[u.referrer] = (refCounts[u.referrer] || 0) + 1; });
-
-            Object.entries(users).forEach(([uid, u]) => {
-                const totalSpent = u.logs ? Object.values(u.logs).reduce((sum, log) => sum + (Number(log.cost) || 0), 0) : 0;
-                const invitedCount = refCounts[uid] || 0;
-                const item = document.createElement('div'); item.className = 'user-item';
-                item.innerHTML = `
-                    <div class="user-header" onclick="toggleUser('${uid}')">
-                        <div>
-                            <b>${u.nickname||'玩家'}</b>
-                            <span class="spent-badge">累計消費: ${totalSpent.toLocaleString()} P</span>
-                            ${u.referrer ? `<span class="ref-tag">來源: ${u.referrer}</span>` : ''}
-                            ${invitedCount > 0 ? `<span class="ref-tag" style="color:#2ecc71; border-color:#2ecc71">邀請: ${invitedCount}人</span>` : ''}
-                        </div>
-                        <div style="color:var(--p)">${(u.balance||0).toLocaleString()} P ▼</div>
-                    </div>
-                    <div class="user-content" id="content-${uid}">
-                        UID: ${uid} | PIN: ${u.pin||'無'}<br>
-                        ${u.referrer ? `推薦人 UID: ${u.referrer}<br>` : '推薦人: 自行註冊<br>'}
-                        邀請成功人數: ${invitedCount} 人
-                        <div style="margin-top:10px;">
-                            <button class="btn btn-sm" onclick="showLogs('${uid}')">對帳紀錄</button>
-                            <button class="btn btn-sm" onclick="addBal('${uid}')">調整點數</button>
-                            <button class="btn btn-sm" onclick="editPin('${uid}')">修改 PIN</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteUser('${uid}')">刪除會員</button>
-                        </div>
-                    </div>`;
-                container.appendChild(item);
-            });
-        });
-
-        get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annContent').value = s.val(); });
-    }
-
-    // 🟢 強制解鎖功能
-    window.forceUnlock = async (id) => {
-        if(confirm(`確定要解除 [${id}] 的包台狀態嗎？`)) {
-            await remove(ref(db, `games/${id}/lock`));
-            alert("已強制解鎖");
-        }
-    };
-
-    window.loadGameToEdit = async (id) => {
-        const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
-        if(!g) return;
-        isEditing = true;
-        document.getElementById('gId').value = id;
-        document.getElementById('gId').disabled = true;
-        document.getElementById('gCat').value = g.category;
-        document.getElementById('gTotal').value = g.total;
-        document.getElementById('gPrice').value = g.price;
-        document.getElementById('gSafeZone').value = g.safeZone || 0;
-        document.getElementById('pCount').value = g.promoCount || 0;
-        document.getElementById('pPrice').value = g.promoPrice || 0;
-        document.getElementById('gImg').value = g.img;
-        const container = document.getElementById('prizeContainer');
-        container.innerHTML = '';
-        g.prizes.forEach(p => addPrizeInput(p.num, p.name));
-        document.getElementById('gameActionTitle').innerText = "編輯商品：" + id;
-        document.getElementById('publishBtn').innerText = "更新商品資訊 (不重新洗牌)";
-        document.getElementById('cancelEditBtn').style.display = "block";
-        switchTab('game');
-    };
-
-    window.resetGameForm = () => {
-        isEditing = false;
-        document.getElementById('gId').value = '';
-        document.getElementById('gId').disabled = false;
-        document.getElementById('gCat').value = '';
-        document.getElementById('gTotal').value = '';
-        document.getElementById('gPrice').value = '';
-        document.getElementById('gSafeZone').value = '';
-        document.getElementById('pCount').value = '';
-        document.getElementById('pPrice').value = '';
-        document.getElementById('gImg').value = '';
-        document.getElementById('prizeContainer').innerHTML = '';
-        document.getElementById('gameActionTitle').innerText = "商品發布與戰略配率";
-        document.getElementById('publishBtn').innerText = "發布商品並初次洗牌";
-        document.getElementById('cancelEditBtn').style.display = "none";
-    };
-
-    window.publishGame = async () => {
-        const id = document.getElementById('gId').value.trim();
-        const total = Number(document.getElementById('gTotal').value);
-        const safe = Number(document.getElementById('gSafeZone').value) || 0;
-        const prizeRows = document.querySelectorAll('.prize-row');
-        const prizes = Array.from(prizeRows).map(row => ({
-            num: Number(row.querySelectorAll('input')[0].value),
-            name: row.querySelectorAll('input')[1].value
-        }));
-        if(!id || !total || prizes.length === 0) return alert("請填寫完整資訊並至少設定一個獎項");
-        const gameSettingsData = { total, price: Number(document.getElementById('gPrice').value), prizes, safeZone: safe, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value), promoPrice: Number(document.getElementById('pPrice').value), category: document.getElementById('gCat').value, isSoldOut: false };
-        await update(ref(db, `gameSettings/${id}`), gameSettingsData);
-        if(!isEditing) {
-            const pNums = prizes.map(p => Number(p.num));
-            let lose = []; for(let i=1; i<=total; i++) if(!pNums.includes(i)) lose.push(i);
-            lose.sort(() => Math.random() - 0.5);
-            let front = lose.splice(0, safe);
-            let back = [...lose, ...pNums].sort(() => Math.random() - 0.5);
-            let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
-            await set(ref(db, `games/${id}/pool`), pool);
-            alert("新商品發布成功");
-        } else { alert("商品資訊已更新"); }
-        resetGameForm();
-    };
-
-    window.resetShuffle = async (id) => {
-        if(!confirm("⚠️ 確定重新洗牌？這會清除該盤所有購買紀錄！")) return;
-        const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
-        const pNums = g.prizes.map(p => Number(p.num));
-        let lose = []; for(let i=1; i<=g.total; i++) if(!pNums.includes(i)) lose.push(i);
-        lose.sort(() => Math.random() - 0.5);
-        let front = lose.splice(0, g.safeZone || 0);
-        let back = [...lose, ...pNums].sort(() => Math.random() - 0.5);
-        let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
-        await update(ref(db, `gameSettings/${id}`), { isSoldOut: false });
-        await set(ref(db, `games/${id}/pool`), pool); alert("重新洗牌開盤成功");
-    };
-
-    window.showLogs = async (uid) => {
-        const s = await get(ref(db, `users/${uid}/logs`)); const logs = s.val() || {};
-        const list = document.getElementById('logItems'); list.innerHTML = '';
-        Object.values(logs).reverse().forEach(l => {
-            list.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${l.game}<br><small>${new Date(l.time).toLocaleString()}</small></span><b>-${l.cost} P</b></div>`;
-        });
-        document.getElementById('logModal').style.display = 'flex';
-    };
-
-    window.updNum = (id, f, v) => update(ref(db, `gameSettings/${id}`), { [f]: Number(v) });
-    window.addBal = async (uid) => {
-        const amt = prompt("調整餘額 (+ 或 -):"); if(!amt) return;
-        const s = await get(ref(db, `users/${uid}/balance`)); 
-        let fin = (s.val()||0) + parseInt(amt);
-        await update(ref(db, `users/${uid}`), { balance: fin });
-    };
-    window.editPin = async (uid) => { const p = prompt("新 PIN 密碼:"); if(p) update(ref(db, `users/${uid}`), { pin: p }); };
-    window.deleteGame = async (id) => { if(confirm("刪除此商品？")) { remove(ref(db, `gameSettings/${id}`)); remove(ref(db, `games/${id}`)); } };
-    window.deleteUser = async (uid) => { if(confirm("徹底刪除會員？")) remove(ref(db, `users/${uid}`)); };
-    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告已同步"); };
-    window.createUser = async () => { const u = prompt("輸入新帳號 ID:"); if(u) set(ref(db, `users/${u}`), { balance:0, nickname:"新玩家", pin:"123456" }); };
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {getDatabase,ref,set,update,get,onValue,remove,push} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+const config={apiKey:"AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE",databaseURL:"https://dream-169dc-default-rtdb.firebaseio.com",projectId:"dream-169dc",appId:"1:214137228622:web:84d14bad85d865ee94e21f"};
+const app=initializeApp(config),db=getDatabase(app);let isEditing=!1;
+window.onload=()=>{if("8888"===prompt("管理授權碼 (ADMIN):")){document.body.style.display="block";startSync()}else location.href="index.html"};
+window.toggleSidebar=()=>document.getElementById('sidebar').classList.toggle('open');
+window.switchTab=id=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));document.getElementById(id).classList.add('active');if(event)event.currentTarget.classList.add('active');if(window.innerWidth<=768)toggleSidebar()};
+window.toggleUser=uid=>document.getElementById(`content-${uid}`).classList.toggle('show');
+window.closeLog=()=>document.getElementById('logModal').style.display='none';
+window.addPrizeInput=(num='',name='')=>{const d=document.createElement('div');d.className='prize-row';d.innerHTML=`<input type="number" placeholder="號碼" value="${num}" style="flex:1"><input type="text" placeholder="名稱" value="${name}" style="flex:2"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`;document.getElementById('prizeContainer').appendChild(d)};
+function startSync(){onValue(ref(db,'gameSettings'),s=>{const list=document.getElementById('monList'),adj=document.getElementById('quickAdjustList'),data=s.val()||{};list.innerHTML='',adj.innerHTML='';const keys=Object.keys(data).sort((a,b)=>(data[a].order||99)-(data[b].order||99));keys.forEach(id=>{const g=data[id],mon=document.createElement('div');mon.className='card';onValue(ref(db,`games/${id}/lock`),ls=>{const l=ls.val(),isL=l&&l.expire>Date.now(),lT=isL?`<br><small style="color:var(--lock)">🔒 包台中: ${l.user}</small>`:'',uB=isL?`<button class="btn btn-sm btn-unlock" onclick="forceUnlock('${id}')">🔓 解鎖</button>`:'';mon.innerHTML=`<b>${id}</b> ${g.isSoldOut?'<span style="color:#ff4757">[已停盤]</span>':'<span style="color:#2ecc71">[銷售中]</span>'}<small style="color:#666"> (序:${g.order||99})</small>${lT}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0">--</div><button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯</button><button class="btn btn-sm" onclick="resetShuffle('${id}')">洗牌</button>${uB}<button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button>`});list.appendChild(mon);onValue(ref(db,`games/${id}/pool`),ps=>{const p=ps.val()||[];if(document.getElementById(`rem-${id}`))document.getElementById(`rem-${id}`).innerText=`剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`});const aC=document.createElement('div');aC.className='card';aC.innerHTML=`<b>${id} 調控</b><div class="adj-grid" style="margin-top:10px"><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="價格"><input type="number" value="${g.order||99}" onchange="updNum('${id}','order',this.value)" title="排序"></div>`;adj.appendChild(aC)})});onValue(ref(db,'winLogs'),s=>{const l=document.getElementById('globalWinItems');l.innerHTML='';const logs=s.val()||{};Object.values(logs).reverse().slice(0,50).forEach(i=>{l.innerHTML+=`<tr><td><small>${new Date(i.time).toLocaleString()}</small></td><td><b>${i.user}</b></td><td>${i.game}</td><td style="color:var(--p)">${i.prize}</td></tr>`})});onValue(ref(db,'users'),s=>{const c=document.getElementById('userListContainer');c.innerHTML='';const u=s.val()||{},r={};Object.values(u).forEach(i=>{if(i.referrer)r[i.referrer]=(r[i.referrer]||0)+1});Object.entries(u).forEach(([id,d])=>{const sp=d.logs?Object.values(d.logs).reduce((a,b)=>a+(Number(b.cost)||0),0):0,ic=r[id]||0,i=document.createElement('div');i.className='user-item';i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計:${sp.toLocaleString()}P</span>${d.referrer?`<span class="ref-tag">源:${d.referrer}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>${d.referrer?`推薦人: ${d.referrer}<br>`:'自行註冊<br>'}邀請: ${ic}人<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳</button><button class="btn btn-sm" onclick="addBal('${id}')">點數</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`;c.appendChild(i)})});get(ref(db,'settings/announcement')).then(s=>{if(s.exists())document.getElementById('annContent').value=s.val()})}
+window.forceUnlock=async id=>{if(confirm(`解除 [${id}] 包台？`)){await remove(ref(db,`games/${id}/lock`));alert("已解鎖")}};
+window.loadGameToEdit=async id=>{const s=await get(ref(db,`gameSettings/${id}`)),g=s.val();if(!g)return;isEditing=!0;document.getElementById('gId').value=id;document.getElementById('gId').disabled=!0;document.getElementById('gCat').value=g.category;document.getElementById('gTotal').value=g.total;document.getElementById('gPrice').value=g.price;document.getElementById('gSafeZone').value=g.safeZone||0;document.getElementById('pCount').value=g.promoCount||0;document.getElementById('pPrice').value=g.promoPrice||0;document.getElementById('gImg').value=g.img;document.getElementById('gOrder').value=g.order||99;const c=document.getElementById('prizeContainer');c.innerHTML='';g.prizes.forEach(p=>addPrizeInput(p.num,p.name));document.getElementById('gameActionTitle').innerText="編輯:"+id;document.getElementById('publishBtn').innerText="更新資訊";document.getElementById('cancelEditBtn').style.display="block";switchTab('game')};
+window.resetGameForm=()=>{isEditing=!1;document.getElementById('gId').value='';document.getElementById('gId').disabled=!1;document.getElementById('prizeContainer').innerHTML='';document.getElementById('cancelEditBtn').style.display="none";document.getElementById('gameActionTitle').innerText="商品發布與戰略配率";document.getElementById('publishBtn').innerText="發布並洗牌"};
+window.publishGame=async()=>{const id=document.getElementById('gId').value.trim(),tot=Number(document.getElementById('gTotal').value),prs=Array.from(document.querySelectorAll('.prize-row')).map(r=>({num:Number(r.querySelectorAll('input')[0].value),name:r.querySelectorAll('input')[1].value}));if(!id||!tot||0===prs.length)return alert("資訊不全");const d={total:tot,price:Number(document.getElementById('gPrice').value),prizes:prs,safeZone:Number(document.getElementById('gSafeZone').value)||0,img:document.getElementById('gImg').value,promoCount:Number(document.getElementById('pCount').value)||0,promoPrice:Number(document.getElementById('pPrice').value)||0,category:document.getElementById('gCat').value,order:Number(document.getElementById('gOrder').value)||99,isSoldOut:!1};await update(ref(db,`gameSettings/${id}`),d);if(!isEditing){const pN=prs.map(p=>Number(p.num));let lose=[];for(let i=1;i<=tot;i++)if(!pN.includes(i))lose.push(i);lose.sort(()=>Math.random()-.5);let f=lose.splice(0,d.safeZone),b=[...lose,...pN].sort(()=>Math.random()-.5),pool=[...f,...b].map(n=>({grade:n,taken:!1,revealed:!1}));await set(ref(db,`games/${id}/pool`),pool);alert("發布成功")}else alert("更新成功");resetGameForm()};
+window.resetShuffle=async id=>{if(confirm("確定洗牌？")){const s=await get(ref(db,`gameSettings/${id}`)),g=s.val(),pN=g.prizes.map(p=>Number(p.num));let lose=[];for(let i=1;i<=g.total;i++)if(!pN.includes(i))lose.push(i);lose.sort(()=>Math.random()-.5);let f=lose.splice(0,g.safeZone||0),b=[...lose,...pN].sort(()=>Math.random()-.5),pool=[...f,...b].map(n=>({grade:n,taken:!1,revealed:!1}));await update(ref(db,`gameSettings/${id}`),{isSoldOut:!1});await set(ref(db,`games/${id}/pool`),pool);alert("洗牌完成")}};
+window.showLogs=async uid=>{const s=await get(ref(db,`users/${uid}/logs`)),l=s.val()||{},c=document.getElementById('logItems');c.innerHTML='';Object.values(l).reverse().forEach(i=>{c.innerHTML+=`<div style="padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;"><span>${i.game}<br><small>${new Date(i.time).toLocaleString()}</small></span><b>-${i.cost}P</b></div>`});document.getElementById('logModal').style.display='flex'};
+window.updNum=(id,f,v)=>update(ref(db,`gameSettings/${id}`),{[f]:Number(v)});
+window.addBal=async uid=>{const a=prompt("調整餘額:");if(a){const s=await get(ref(db,`users/${uid}/balance`));await update(ref(db,`users/${uid}`),{balance:(s.val()||0)+parseInt(a)})}};
+window.editPin=async uid=>{const p=prompt("新 PIN:");if(p)update(ref(db,`users/${uid}`),{pin:p})};
+window.deleteGame=async id=>{if(confirm("刪除商品？")){remove(ref(db,`gameSettings/${id}`));remove(ref(db,`games/${id}`))}};
+window.deleteUser=async uid=>{if(confirm("刪除會員？"))remove(ref(db,`users/${uid}`))};
+window.saveAnnouncement=async()=>{await set(ref(db,'settings/announcement'),document.getElementById('annContent').value);alert("公告已存")};
+window.createUser=async()=>{const u=prompt("新帳號 ID:");if(u)set(ref(db,`users/${u}`),{balance:0,nickname:"新玩家",pin:"123456"})};
 </script>
 </body>
 </html>
