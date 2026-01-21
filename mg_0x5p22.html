@@ -38,11 +38,9 @@
         .user-item { background: #0a0c10; border: 1px solid #222; border-radius: 12px; margin-bottom: 10px; }
         .user-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .spent-badge { font-size: 0.7rem; background: rgba(255,184,0,0.1); color: #aaa; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid rgba(255,184,0,0.2); }
+        .ref-tag { font-size: 0.7rem; background: rgba(52, 152, 219, 0.15); color: #3498db; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid rgba(52, 152, 219, 0.3); }
         .user-content { display: none; padding: 15px; background: #0d1016; border-top: 1px solid #222; border-radius: 0 0 12px 12px; }
         .user-content.show { display: block; }
-
-        /* 🟢 新增：推薦功能專用標籤 */
-        .ref-tag { font-size: 0.7rem; background: rgba(52, 152, 219, 0.15); color: #3498db; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid rgba(52, 152, 219, 0.3); }
 
         /* 對帳彈窗 */
         .log-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
@@ -96,7 +94,11 @@
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;"><input type="number" id="pCount" placeholder="優惠張數"><input type="number" id="pPrice" placeholder="優惠價格"></div>
             </div>
             <input type="text" id="gImg" placeholder="封面圖網址 (URL)">
-            <textarea id="gPrizes" rows="3" placeholder='獎項設定 (JSON 格式): [{"num":8, "name":"特獎獎項"}]'></textarea>
+            <textarea id="gPrizes" rows="6" placeholder='獎項設定 (JSON 格式)'>[
+  {"num": 1, "name": "頭獎 10,000P"},
+  {"num": 8, "name": "二獎 5,000P"},
+  {"num": 66, "name": "幸運獎 1,000P"}
+]</textarea>
             <button class="btn" style="width:100%" onclick="publishGame()">發布商品並初次洗牌</button>
         </div>
         <hr style="border:0; border-top:1px solid #222; margin:30px 0;">
@@ -118,7 +120,6 @@
             <span class="title" style="margin:0;">會員數據管理</span>
             <button class="btn btn-sm" onclick="createUser()">＋ 新增會員</button>
         </div>
-        <div id="refStats" style="margin-bottom:15px; font-size:0.8rem; color:#888;"></div>
         <div id="userListContainer"></div>
     </div>
 
@@ -150,7 +151,6 @@
     window.closeLog = () => document.getElementById('logModal').style.display = 'none';
 
     function startSync() {
-        // 商品與監控同步
         onValue(ref(db, 'gameSettings'), snap => {
             const list = document.getElementById('monList'); const adj = document.getElementById('quickAdjustList');
             const data = snap.val() || {}; list.innerHTML = ''; adj.innerHTML = '';
@@ -162,7 +162,7 @@
                     <button class="btn btn-sm" style="background:#ef4444" onclick="deleteGame('${id}')">刪除</button>`;
                 list.appendChild(mon);
                 onValue(ref(db, `games/${id}/pool`), ps => {
-                    const p = ps.val() || []; document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`;
+                    const p = ps.val() || []; if(document.getElementById(`rem-${id}`)) document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`;
                 });
                 const adjCard = document.createElement('div'); adjCard.className = 'card';
                 adjCard.innerHTML = `<b>${id} 快捷調控</b><div class="adj-grid" style="margin-top:10px;">
@@ -175,7 +175,6 @@
             });
         });
 
-        // 中獎紀錄同步
         onValue(ref(db, 'winLogs'), snap => {
             const list = document.getElementById('globalWinItems'); list.innerHTML = '';
             const logs = snap.val() || {};
@@ -184,23 +183,16 @@
             });
         });
 
-        // 🟢 會員與推薦碼邏輯同步
         onValue(ref(db, 'users'), s => {
             const container = document.getElementById('userListContainer'); container.innerHTML = '';
             const users = s.val() || {};
-            
-            // 統計受邀人數
             const refCounts = {};
-            Object.values(users).forEach(u => {
-                if(u.referrer) refCounts[u.referrer] = (refCounts[u.referrer] || 0) + 1;
-            });
+            Object.values(users).forEach(u => { if(u.referrer) refCounts[u.referrer] = (refCounts[u.referrer] || 0) + 1; });
 
             Object.entries(users).forEach(([uid, u]) => {
                 const totalSpent = u.logs ? Object.values(u.logs).reduce((sum, log) => sum + (Number(log.cost) || 0), 0) : 0;
                 const invitedCount = refCounts[uid] || 0;
                 const item = document.createElement('div'); item.className = 'user-item';
-                
-                // Header 新增「推薦來源」與「邀請人數」顯示
                 item.innerHTML = `
                     <div class="user-header" onclick="toggleUser('${uid}')">
                         <div>
@@ -226,8 +218,7 @@
             });
         });
 
-        // 公告同步讀取
-        get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annContent').value = s.val(); });
+        get(ref(ref(db, 'settings/announcement'))).then(s => { if(s.exists()) document.getElementById('annContent').value = s.val(); });
     }
 
     window.publishGame = async () => {
@@ -242,11 +233,11 @@
         let back = [...lose, ...pNums].sort(() => Math.random() - 0.5);
         let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
         await set(ref(db, `gameSettings/${id}`), { total, price: Number(document.getElementById('gPrice').value), prizes, safeZone: safe, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value), promoPrice: Number(document.getElementById('pPrice').value), category: document.getElementById('gCat').value, isSoldOut: false });
-        await set(ref(db, `games/${id}/pool`), pool); alert("商品發布成功，保護區已生效");
+        await set(ref(db, `games/${id}/pool`), pool); alert("商品發布成功");
     };
 
     window.resetShuffle = async (id) => {
-        if(!confirm("⚠️ 確定要重新洗牌嗎？這會清除所有購買進度並恢復開盤狀態！")) return;
+        if(!confirm("⚠️ 確定重新洗牌？")) return;
         const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
         const pNums = g.prizes.map(p => Number(p.num));
         let lose = []; for(let i=1; i<=g.total; i++) if(!pNums.includes(i)) lose.push(i);
@@ -254,10 +245,8 @@
         let front = lose.splice(0, g.safeZone || 0);
         let back = [...lose, ...pNums].sort(() => Math.random() - 0.5);
         let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
-        
         await update(ref(db, `gameSettings/${id}`), { isSoldOut: false });
-        await set(ref(db, `games/${id}/pool`), pool); 
-        alert("戰略洗牌成功，商品已重新開盤");
+        await set(ref(db, `games/${id}/pool`), pool); alert("重新開盤成功");
     };
 
     window.showLogs = async (uid) => {
@@ -271,16 +260,16 @@
 
     window.updNum = (id, f, v) => update(ref(db, `gameSettings/${id}`), { [f]: Number(v) });
     window.addBal = async (uid) => {
-        const amt = prompt("調整餘額 (輸入 +100 或 -100):"); if(!amt) return;
+        const amt = prompt("調整餘額 (+ 或 -):"); if(!amt) return;
         const s = await get(ref(db, `users/${uid}/balance`)); 
-        let fin = (s.val()||0) + parseInt(amt.startsWith('+')?amt.slice(1):amt.startsWith('-')?amt:amt);
+        let fin = (s.val()||0) + parseInt(amt);
         await update(ref(db, `users/${uid}`), { balance: fin });
     };
-    window.editPin = async (uid) => { const p = prompt("新 4-6 位 PIN:"); if(p!==null) update(ref(db, `users/${uid}`), { pin: p }); };
-    window.deleteGame = async (id) => { if(confirm("徹底刪除此商品及所有數據？")) { remove(ref(db, `gameSettings/${id}`)); remove(ref(db, `games/${id}`)); } };
-    window.deleteUser = async (uid) => { if(confirm("確定要徹底刪除此會員及其所有紀錄嗎？此動作無法復原。")) remove(ref(db, `users/${uid}`)); };
-    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告同步完成"); };
-    window.createUser = async () => { const u = prompt("輸入新玩家 UID:"); if(u) set(ref(db, `users/${u.toUpperCase()}`), { balance:0, nickname:"新玩家", pin:null }); };
+    window.editPin = async (uid) => { const p = prompt("新 PIN:"); if(p) update(ref(db, `users/${uid}`), { pin: p }); };
+    window.deleteGame = async (id) => { if(confirm("刪除此商品？")) { remove(ref(db, `gameSettings/${id}`)); remove(ref(db, `games/${id}`)); } };
+    window.deleteUser = async (uid) => { if(confirm("徹底刪除會員？")) remove(ref(db, `users/${uid}`)); };
+    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告已存"); };
+    window.createUser = async () => { const u = prompt("輸入新 UID:"); if(u) set(ref(db, `users/${u.toUpperCase()}`), { balance:0, nickname:"新玩家", pin:null }); };
 </script>
 </body>
 </html>
