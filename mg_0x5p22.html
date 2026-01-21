@@ -33,8 +33,8 @@
         .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; transition: 0.2s; }
         .btn-sm { padding: 8px 12px; font-size: 0.85rem; margin-right: 5px; margin-top: 5px; }
         .btn-danger { background: #ff4757; color: white; }
+        .btn-unlock { background: #3498db; color: white; } /* 解鎖按鈕樣式 */
 
-        /* 會員項目 */
         .user-item { background: #0a0c10; border: 1px solid #222; border-radius: 12px; margin-bottom: 10px; }
         .user-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .spent-badge { font-size: 0.7rem; background: rgba(255,184,0,0.1); color: #aaa; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid rgba(255,184,0,0.2); }
@@ -42,7 +42,6 @@
         .user-content { display: none; padding: 15px; background: #0d1016; border-top: 1px solid #222; border-radius: 0 0 12px 12px; }
         .user-content.show { display: block; }
 
-        /* 對帳彈窗 */
         .log-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .log-box { background: var(--card); width: 95%; max-width: 500px; border-radius: 20px; border: 1px solid var(--p); padding: 25px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
         .log-list { overflow-y: auto; flex-grow: 1; margin-top: 15px; }
@@ -53,7 +52,6 @@
         .win-table th { text-align: left; color: var(--p); padding: 10px; border-bottom: 2px solid #222; }
         .win-table td { padding: 10px; border-bottom: 1px solid #222; }
 
-        /* 獎項列表樣式 */
         .prize-row { display: flex; gap: 8px; margin-bottom: 8px; }
         .prize-row input { margin-bottom: 0; }
     </style>
@@ -165,7 +163,6 @@
     window.toggleUser = (uid) => document.getElementById(`content-${uid}`).classList.toggle('show');
     window.closeLog = () => document.getElementById('logModal').style.display = 'none';
 
-    // 🟢 獎項動態輸入邏輯
     window.addPrizeInput = (num = '', name = '') => {
         const div = document.createElement('div');
         div.className = 'prize-row';
@@ -184,10 +181,21 @@
             Object.entries(data).forEach(([id, g]) => {
                 const mon = document.createElement('div'); mon.className = 'card';
                 const statusHtml = g.isSoldOut ? `<span style="color:#ff4757;font-size:0.8rem;">[已停盤]</span>` : `<span style="color:#2ecc71;font-size:0.8rem;">[銷售中]</span>`;
-                mon.innerHTML = `<b>${id}</b> ${statusHtml}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0;">--</div>
-                    <button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯商品</button>
-                    <button class="btn btn-sm" onclick="resetShuffle('${id}')">重新洗牌</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button>`;
+                
+                // 🟢 監聽 lock 狀態來決定是否顯示解鎖按鈕
+                onValue(ref(db, `games/${id}/lock`), lSnap => {
+                    const l = lSnap.val();
+                    const isLocked = l && l.expire > Date.now();
+                    const lockTxt = isLocked ? `<br><small style="color:var(--lock)">🔒 包台中: ${l.user}</small>` : '';
+                    const unlockBtn = isLocked ? `<button class="btn btn-sm btn-unlock" onclick="forceUnlock('${id}')">🔓 強制解鎖</button>` : '';
+                    
+                    mon.innerHTML = `<b>${id}</b> ${statusHtml}${lockTxt}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0;">--</div>
+                        <button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯商品</button>
+                        <button class="btn btn-sm" onclick="resetShuffle('${id}')">重新洗牌</button>
+                        ${unlockBtn}
+                        <button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button>`;
+                });
+
                 list.appendChild(mon);
                 onValue(ref(db, `games/${id}/pool`), ps => {
                     const p = ps.val() || []; if(document.getElementById(`rem-${id}`)) document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`;
@@ -249,7 +257,14 @@
         get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annContent').value = s.val(); });
     }
 
-    // 🟢 載入現有商品到編輯表單
+    // 🟢 強制解鎖功能
+    window.forceUnlock = async (id) => {
+        if(confirm(`確定要解除 [${id}] 的包台狀態嗎？`)) {
+            await remove(ref(db, `games/${id}/lock`));
+            alert("已強制解鎖");
+        }
+    };
+
     window.loadGameToEdit = async (id) => {
         const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
         if(!g) return;
@@ -263,11 +278,9 @@
         document.getElementById('pCount').value = g.promoCount || 0;
         document.getElementById('pPrice').value = g.promoPrice || 0;
         document.getElementById('gImg').value = g.img;
-        
         const container = document.getElementById('prizeContainer');
         container.innerHTML = '';
         g.prizes.forEach(p => addPrizeInput(p.num, p.name));
-        
         document.getElementById('gameActionTitle').innerText = "編輯商品：" + id;
         document.getElementById('publishBtn').innerText = "更新商品資訊 (不重新洗牌)";
         document.getElementById('cancelEditBtn').style.display = "block";
@@ -295,30 +308,14 @@
         const id = document.getElementById('gId').value.trim();
         const total = Number(document.getElementById('gTotal').value);
         const safe = Number(document.getElementById('gSafeZone').value) || 0;
-        
         const prizeRows = document.querySelectorAll('.prize-row');
         const prizes = Array.from(prizeRows).map(row => ({
             num: Number(row.querySelectorAll('input')[0].value),
             name: row.querySelectorAll('input')[1].value
         }));
-
         if(!id || !total || prizes.length === 0) return alert("請填寫完整資訊並至少設定一個獎項");
-
-        const gameSettingsData = { 
-            total, 
-            price: Number(document.getElementById('gPrice').value), 
-            prizes, 
-            safeZone: safe, 
-            img: document.getElementById('gImg').value, 
-            promoCount: Number(document.getElementById('pCount').value), 
-            promoPrice: Number(document.getElementById('pPrice').value), 
-            category: document.getElementById('gCat').value, 
-            isSoldOut: false 
-        };
-
+        const gameSettingsData = { total, price: Number(document.getElementById('gPrice').value), prizes, safeZone: safe, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value), promoPrice: Number(document.getElementById('pPrice').value), category: document.getElementById('gCat').value, isSoldOut: false };
         await update(ref(db, `gameSettings/${id}`), gameSettingsData);
-
-        // 如果是新發布或明確要求洗牌，才重新生成 pool
         if(!isEditing) {
             const pNums = prizes.map(p => Number(p.num));
             let lose = []; for(let i=1; i<=total; i++) if(!pNums.includes(i)) lose.push(i);
@@ -328,9 +325,7 @@
             let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
             await set(ref(db, `games/${id}/pool`), pool);
             alert("新商品發布成功");
-        } else {
-            alert("商品資訊已更新 (已跳過洗牌，保留當前進度)");
-        }
+        } else { alert("商品資訊已更新"); }
         resetGameForm();
     };
 
