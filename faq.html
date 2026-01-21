@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>夢工廠 | 常見問題 FAQ</title>
     <style>
-        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --text: #2c3e50; }
+        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --text: #2c3e50; --line: #06c755; }
         
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         body { 
@@ -14,7 +14,6 @@
             color: var(--text); line-height: 1.6;
         }
 
-        /* 頂部導航 */
         .header { 
             width: 100%; background: white; padding: 15px 20px; 
             display: flex; align-items: center; 
@@ -28,9 +27,18 @@
         }
 
         .container { width: 92%; max-width: 500px; margin: 20px auto 100px; }
-        .page-title { font-weight: 900; font-size: 1.5rem; color: #333; margin-bottom: 25px; text-align: center; letter-spacing: 2px; }
+        .page-title { font-weight: 900; font-size: 1.5rem; color: #333; margin-bottom: 10px; text-align: center; letter-spacing: 2px; }
+        
+        /* 🟢 新增：FAQ 頁聯繫按鈕 */
+        .line-shortcut { 
+            display: flex; justify-content: center; margin-bottom: 30px; text-decoration: none;
+        }
+        .line-shortcut-btn {
+            background: var(--line); color: white; padding: 10px 25px; border-radius: 50px; 
+            font-weight: 900; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(6,199,85,0.3);
+            display: flex; align-items: center; gap: 8px;
+        }
 
-        /* 🟢 下拉式 FAQ 核心樣式 */
         .faq-item { 
             background: white; border-radius: 18px; margin-bottom: 12px; 
             overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
@@ -38,26 +46,17 @@
         }
         .faq-header { 
             padding: 18px 20px; display: flex; justify-content: space-between; 
-            align-items: center; cursor: pointer; transition: 0.2s;
+            align-items: center; cursor: pointer;
         }
-        .faq-header:active { background: #fff1f3; }
-        .faq-question { font-weight: 900; font-size: 0.95rem; color: #2c3e50; padding-right: 10px; }
-        .faq-icon { 
-            color: var(--primary); font-weight: bold; font-size: 1.2rem; 
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
+        .faq-question { font-weight: 900; font-size: 0.95rem; color: #2c3e50; }
+        .faq-icon { color: var(--primary); font-weight: bold; font-size: 1.2rem; transition: 0.3s; }
 
-        .faq-content { 
-            max-height: 0; overflow: hidden; 
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            background: #fdfdfd;
-        }
+        .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; background: #fdfdfd; }
         .faq-text { padding: 0 20px 20px; font-size: 0.88rem; color: #7f8c8d; border-top: 1px solid #f9f9f9; padding-top: 15px; }
 
-        /* 展開狀態 */
-        .faq-item.active { border-color: var(--primary); box-shadow: 0 8px 20px rgba(255,143,163,0.15); }
+        .faq-item.active { border-color: var(--primary); }
         .faq-item.active .faq-icon { transform: rotate(45deg); }
-        .faq-item.active .faq-content { max-height: 500px; } /* 內容最大高度 */
+        .faq-item.active .faq-content { max-height: 500px; }
 
         .footer-note { text-align: center; margin-top: 40px; font-size: 0.8rem; color: #adb5bd; }
     </style>
@@ -70,6 +69,10 @@
 
 <div class="container">
     <div class="page-title">常見問題 FAQ</div>
+    
+    <a href="https://line.me/ti/p/@dream8" target="_blank" class="line-shortcut">
+        <div class="line-shortcut-btn">💬 聯繫官方 LINE 客服</div>
+    </a>
 
     <div class="faq-item">
         <div class="faq-header" onclick="toggleFaq(this)">
@@ -77,9 +80,7 @@
             <div class="faq-icon">+</div>
         </div>
         <div class="faq-content">
-            <div class="faq-text">
-                點擊右下角的 LINE 懸浮按鈕聯繫官方客服，告知您的 UID 代碼與預計儲值的金額，客服將引導您完成支付手續並在 5 分鐘內為您入點。
-            </div>
+            <div class="faq-text">點擊首頁或此處的 LINE 按鈕聯繫客服，提供您的 UID 及欲儲值金額，我們將引導您完成支付並快速入點。</div>
         </div>
     </div>
 
@@ -89,65 +90,29 @@
             <div class="faq-icon">+</div>
         </div>
         <div class="faq-content">
-            <div class="faq-text">
-                當您在商品頁進行首抽時，系統會自動為您鎖定 180 秒。在此期間內，其他玩家無法購買。如果您持續抽獎，時間會自動累加，確保您的抽獎權益不被搶標。
-            </div>
+            <div class="faq-text">首抽即觸發 180 秒保護，續抽自動累加秒數。保護期內其他人無法搶標，確保您的遊戲連貫性。</div>
         </div>
     </div>
 
     <div class="faq-item">
         <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">中獎後如何領取商品？</div>
+            <div class="faq-question">中獎後如何兌換？</div>
             <div class="faq-icon">+</div>
         </div>
         <div class="faq-content">
-            <div class="faq-text">
-                所有中獎紀錄皆會同步至後台。中獎後請截圖獲獎畫面並發送至官方 LINE 客服。客服核對 UID 後，將會為您安排商品寄送或兌換流程。
-            </div>
+            <div class="faq-text">系統會自動記錄中獎數據。請截圖您的中獎畫面並聯繫 LINE 客服，我們將核對後為您寄出或兌換商品。</div>
         </div>
     </div>
 
-    <div class="faq-item">
-        <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">忘記登入 PIN 碼怎麼辦？</div>
-            <div class="faq-icon">+</div>
-        </div>
-        <div class="faq-content">
-            <div class="faq-text">
-                如果您忘記了個人 PIN 碼，請聯繫 LINE 客服並提供您的帳號 UID，管理員核對身份後會為您手動重置 PIN 碼。
-            </div>
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">遊戲公平性說明？</div>
-            <div class="faq-icon">+</div>
-        </div>
-        <div class="faq-content">
-            <div class="faq-text">
-                商城採用雲端隨機洗牌算法。每套商品在發布瞬間即完成籤池排序。管理員亦無法在開盤後更改籤位，確保每位玩家的機率公平、公正、透明。
-            </div>
-        </div>
-    </div>
-
-    <div class="footer-note">仍有問題？請聯繫 LINE 官方客服</div>
+    <div class="footer-note">仍有疑問？請直接聯繫客服人員</div>
 </div>
 
 <script>
     function toggleFaq(element) {
         const item = element.parentElement;
         const isActive = item.classList.contains('active');
-        
-        // 關閉其他已打開的 (如果您希望一次只能開一個)
-        document.querySelectorAll('.faq-item').forEach(el => {
-            el.classList.remove('active');
-        });
-
-        // 如果點擊的是原本沒開的，就打開它
-        if (!isActive) {
-            item.classList.add('active');
-        }
+        document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('active'));
+        if (!isActive) item.classList.add('active');
     }
 </script>
 
