@@ -8,7 +8,6 @@
 <style>
     :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
     
-    /* 🟢 修正：移除 overflow:hidden 讓電腦版可以滾動 */
     body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; }
     
     .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
@@ -17,7 +16,6 @@
     
     .promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
 
-    /* 🟢 修正：加入 max-height 限制，防止電腦版圖片過大 */
     .gallery-container { background: #000; width: 100%; max-width: 600px; margin: 0 auto; }
     .main-img-wrap { width: 100%; height: 45vh; max-height: 400px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
     #gMainImg { width: 100%; height: 100%; object-fit: contain; }
@@ -34,7 +32,6 @@
     .lock-banner { display: none; background: var(--lock); color: white; padding: 12px; font-size: 0.95rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
     .soldout-banner { display: none; background: #ff4757; color: white; padding: 12px; font-size: 1.1rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
 
-    /* 🟢 修正：電腦版捲動區域優化 */
     #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px 15px 120px; box-sizing: border-box; }
     
     .progress-container { margin-bottom: 20px; }
@@ -52,7 +49,6 @@
     .ticket.taken { background: #000; color: var(--p); border: 1px solid rgba(255,184,0,0.3); cursor: default; }
     .ticket.winner-glow { border-color: var(--win); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
 
-    /* 彈窗樣式 保持完整 */
     .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
     .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
     #luckyVal { font-size: 8rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
@@ -205,7 +201,7 @@ async function _execAction(idx, grade) {
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
-    let _exp = (!_q || _q.user !== _uid || _q.expire < n) ? n + 180000 : Math.min(_q.expire + 45000, n + 900000);
+    let _exp = (!_q || _q.user !== _uid || _q.expire < n) ? n + 180000 : Math.min(_q.expire + 30000, n + 900000);
     await update(ref(_db, `games/${_gid}/lock`), { user: _uid, expire: _exp });
     await update(ref(_db, `users/${_uid}`), { balance: cur - pr });
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { taken: true, revealed: false, user: _uid });
@@ -252,3 +248,4 @@ async function _syncStatus(idx, val) {
 </script>
 </body>
 </html>
+
