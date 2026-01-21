@@ -1,47 +1,51 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-    <title>夢工廠 | 幸運選號系統</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
-        body { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; }
-        .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); z-index: 100; }
-        .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; }
-        .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
-        .billboard { display: flex; align-items: center; padding: 12px; gap: 15px; background: var(--card); border-bottom: 2px solid #222; }
-        .main-img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 1px solid #333; }
-        .info-box h2 { margin: 0; font-size: 1.1rem; color: #fff; }
-        .lock-banner { display: none; background: var(--lock); color: white; padding: 12px; font-size: 0.95rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; box-shadow: 0 5px 15px rgba(52,152,219,0.4); z-index: 200; }
-        .soldout-banner { display: none; background: #ff4757; color: white; padding: 12px; font-size: 1.1rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; z-index: 200; }
-        .progress-container { padding: 15px 15px 5px; background: rgba(255,184,0,0.02); }
-        .progress-info { display: flex; justify-content: space-between; font-size: 0.75rem; color: #aaa; margin-bottom: 6px; font-weight: bold; }
-        .progress-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,184,0,0.1); }
-        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s; }
-        .prize-monitor { padding: 12px 15px 15px; background: rgba(255,184,0,0.02); border-bottom: 1px solid #222; }
-        .prize-title { color: var(--p); font-size: 0.9rem; margin-bottom: 12px; font-weight: 900; animation: text-glow 2s infinite alternate; }
-        @keyframes text-glow { from { text-shadow: 0 0 5px var(--p); } to { text-shadow: 0 0 15px var(--p); } }
-        .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
-        .prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
-        .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); }
-        #scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 120px; touch-action: pan-y; }
-        .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%; max-width: 500px; margin: 0 auto; }
-        .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; transition: 0.2s; }
-        .ticket.taken { background: #000; color: var(--p); border: 1px solid rgba(255,184,0,0.3); }
-        .ticket.winner-glow { border-color: var(--win); box-shadow: inset 0 0 15px rgba(255,215,0,0.3), 0 0 10px var(--win); }
-        .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
-        .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
-        #luckyVal { font-size: 8rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
-        #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
-        .modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); }
-        .m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
-        .m-btn { display: block; width: 100%; padding: 18px; background: var(--p); color: #000; border: none; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; margin-top: 25px; position: relative; z-index: 999999; }
-        .line-btn { background: #06c755; color: white; display: flex; align-items: center; justify-content: center; padding: 16px; border-radius: 50px; text-decoration: none; font-weight: 900; margin-top: 12px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>夢工廠 | 幸運選號系統</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+:root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
+body { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow: hidden; position: fixed; touch-action: none; }
+.header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); z-index: 100; }
+.back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; }
+.balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
+/* 🟢 頂部優惠橫幅 */
+.promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; animation: slideIn 0.5s ease; z-index: 150; }
+@keyframes slideIn { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+.promo-banner b { color: #ffb800; font-size: 1.1rem; margin: 0 3px; }
+.billboard { display: flex; align-items: center; padding: 12px; gap: 15px; background: var(--card); border-bottom: 2px solid #222; }
+.main-img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 1px solid #333; }
+.info-box h2 { margin: 0; font-size: 1.1rem; color: #fff; }
+.lock-banner { display: none; background: var(--lock); color: white; padding: 12px; font-size: 0.95rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; z-index: 200; }
+.soldout-banner { display: none; background: #ff4757; color: white; padding: 12px; font-size: 1.1rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; z-index: 200; }
+.progress-container { padding: 15px 15px 5px; background: rgba(255,184,0,0.02); }
+.progress-info { display: flex; justify-content: space-between; font-size: 0.75rem; color: #aaa; margin-bottom: 6px; font-weight: bold; }
+.progress-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,184,0,0.1); }
+.progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s; }
+.prize-monitor { padding: 12px 15px 15px; background: rgba(255,184,0,0.02); border-bottom: 1px solid #222; }
+.prize-title { color: var(--p); font-size: 0.9rem; margin-bottom: 12px; font-weight: 900; text-shadow: 0 0 5px var(--p); }
+.prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
+.prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); }
+#scroll-area { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 10px 120px; touch-action: pan-y; }
+.pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%; max-width: 500px; margin: 0 auto; }
+.ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; transition: 0.2s; }
+.ticket.taken { background: #000; color: var(--p); border: 1px solid rgba(255,184,0,0.3); }
+.ticket.winner-glow { border-color: var(--win); box-shadow: inset 0 0 15px rgba(255,215,0,0.3), 0 0 10px var(--win); }
+.scratch-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
+.scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
+#luckyVal { font-size: 8rem; font-weight: 900; color: #000; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
+#scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
+.modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); }
+.m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
+.m-btn { display: block; width: 100%; padding: 18px; background: var(--p); color: #000; border: none; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; margin-top: 25px; }
+.line-btn { background: #06c755; color: white; display: flex; align-items: center; justify-content: center; padding: 16px; border-radius: 50px; text-decoration: none; font-weight: 900; margin-top: 12px; }
+</style>
 </head>
-<body>
+<body oncontextmenu="return false;">
+<div id="promoBanner" class="promo-banner">🔥 開盤大優惠中！剩餘 <b id="promoLeft">0</b> 抽，每抽只要 <b id="promoVal">0</b> P</div>
 <div class="header"><button class="back-btn" onclick="location.href='index.html'">← 返回</button><div class="balance-tag">P <span id="uBal">0</span></div></div>
 <div class="billboard"><img id="gMainImg" class="main-img" src=""><div class="info-box"><h2 id="gTitle">載入中...</h2><div id="priceDisplay" style="color:var(--p);font-weight:bold;margin-top:5px;">-- P</div></div></div>
 <div id="soldOutBanner" class="soldout-banner">🚨 本期大獎已開出，商品已停盤 🚨</div>
@@ -51,111 +55,119 @@
 <div id="scroll-area"><div class="pool-grid" id="poolGrid"></div></div>
 <div id="scratchOverlay" class="scratch-overlay"><div style="text-align:center;"><div style="color:var(--p);font-weight:900;font-size:1.4rem;">NO. <span id="selNum">--</span></div><div class="scratch-box" id="scratchBox"><div id="luckyVal">?</div></div></div></div>
 <div id="resModal" class="modal"><div class="m-card"><img id="res_img" style="width:100%;border-radius:18px;border:1px solid #333;"><div id="res_msg" style="font-size:1.5rem;margin-top:20px;font-weight:900;color:var(--p);"></div><button class="m-btn" onclick="window.location.replace(window.location.href)">確認並繼續</button></div></div>
-<div id="noBalModal" class="modal"><div class="m-card"><div style="font-size:4rem;">⚠️</div><div style="font-size:1.5rem;font-weight:900;margin:15px 0;">點數不足</div><a href="https://line.me/ti/p/@您的LINE_ID" class="line-btn">官方 LINE 客服儲值</a><button onclick="document.getElementById('noBalModal').style.display='none'" style="background:none;border:none;color:#666;margin-top:20px;font-weight:bold;">取消</button></div></div>
+<div id="noBalModal" class="modal"><div class="m-card"><div style="font-size:4rem;">⚠️</div><div style="font-size:1.5rem;font-weight:900;margin:15px 0;">點數不足</div><a href="https://line.me/ti/p/@dream8" class="line-btn">客服儲值</a><button onclick="document.getElementById('noBalModal').style.display='none'" style="background:none;border:none;color:#666;margin-top:20px;font-weight:bold;">取消</button></div></div>
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
-    const _app = initializeApp(_cc); const _db = getDatabase(_app);
-    const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
-    let _data = null; let _isClosed = false; let _q = null; let _tInterval = null;
-    if(!_gid) location.href = 'index.html';
-    onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
-    onValue(ref(_db, `games/${_gid}/lock`), snap => {
-        const l = snap.val(); const n = Date.now(); const b = document.getElementById('lockBanner');
-        if(_tInterval) clearInterval(_tInterval);
-        if(l && l.expire > n) {
-            _q = l; b.style.display = 'block'; document.getElementById('lockUser').innerText = l.user === _uid ? "您" : l.user;
-            const _run = () => {
-                const r = Math.round((l.expire - Date.now()) / 1000);
-                if(r <= 0) { clearInterval(_tInterval); b.style.display = 'none'; _q = null; }
-                else document.getElementById('lockTimer').innerText = r;
-            }; _run(); _tInterval = setInterval(_run, 1000);
-        } else { b.style.display = 'none'; _q = null; }
-    });
-    onValue(ref(_db, `gameSettings/${_gid}`), s => {
-        _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
-        document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
-        document.getElementById('gTitle').innerText = _gid; document.getElementById('gMainImg').src = _data.img;
-        document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`;
-        onValue(ref(_db, `games/${_gid}/pool`), snap => {
-            const p = snap.val() || []; const grid = document.getElementById('poolGrid');
-            const _targets = (_data.prizes || []).map(x => Number(x.num)); const _sold = p.filter(t => t.taken).length;
-            const _pct = Math.round((_sold / _data.total) * 100);
-            document.getElementById('progText').innerText = `${_sold} / ${_data.total}`;
-            document.getElementById('progPercent').innerText = `${_pct}%`;
-            document.getElementById('progFill').style.width = `${_pct}%`;
-            document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
-                const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
-                return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
-            }).join('');
-            grid.innerHTML = '';
-            p.forEach((t, i) => {
-                const div = document.createElement('div'); const s = (i + 1).toString().padStart(2, '0');
-                if(t.taken) {
-                    div.className = 'ticket taken';
-                    if(t.revealed) {
-                        const v = Number(t.grade); if(_targets.includes(v)) div.classList.add('winner-glow');
-                        div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${v.toString().padStart(2, '0')}</span>`;
-                    } else div.innerHTML = `<span style="font-size:0.6rem;">刮開中</span>`;
-                } else {
-                    div.className = 'ticket'; div.innerText = s; div.onclick = () => { _execAction(i, t.grade); };
-                } grid.appendChild(div);
-            });
-        });
-    });
-    async function _execAction(idx, grade) {
-        if(_isClosed) return; const n = Date.now();
-        if(_q && _q.user !== _uid && _q.expire > n) return alert(`鎖定中...`);
-        const s = await get(ref(_db, `users/${_uid}/balance`)); const cur = s.val() || 0;
-        const pS = await get(ref(_db, `games/${_gid}/pool`)); const sold = (pS.val() || []).filter(x => x.taken).length;
-        let pr = (_data.promoCount > 0 && sold < _data.promoCount) ? _data.promoPrice : _data.price;
-        if(cur < pr) { document.getElementById('noBalModal').style.display = 'flex'; return; }
-        if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
-        let _exp = (!_q || _q.user !== _uid || _q.expire < n) ? n + 180000 : Math.min(_q.expire + 45000, n + 900000);
-        await update(ref(_db, `games/${_gid}/lock`), { user: _uid, expire: _exp });
-        await update(ref(_db, `users/${_uid}`), { balance: cur - pr });
-        await update(ref(_db, `games/${_gid}/pool/${idx}`), { taken: true, revealed: false, user: _uid });
-        await set(push(ref(_db, `users/${_uid}/logs`)), { game: _gid, cost: pr, time: serverTimestamp() });
-        _initCanvas((idx+1).toString().padStart(2,'0'), Number(grade).toString().padStart(2, '0'), idx);
-    }
-    function _initCanvas(no, val, poolIdx) {
-        const o = document.getElementById('scratchOverlay'); const b = document.getElementById('scratchBox');
-        document.getElementById('selNum').innerText = no; document.getElementById('luckyVal').innerText = val;
-        const old = document.getElementById('scratch-canvas'); if(old) old.remove();
-        const c = document.createElement('canvas'); c.id = 'scratch-canvas'; c.width = 300; c.height = 300; b.appendChild(c);
-        const ctx = c.getContext('2d'); ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0, 0, 300, 300); o.style.display = 'flex';
-        let draw = false; const _draw = (e) => {
-            if(!draw) return; e.preventDefault(); const r = c.getBoundingClientRect();
-            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - r.left;
-            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - r.top;
-            ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
-            const pix = ctx.getImageData(0, 0, 300, 300).data; let cl = 0;
-            for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) cl++;
-            if(cl > (300*300*0.55)) { draw = false; c.style.pointerEvents = 'none'; _syncStatus(poolIdx, val); }
-        };
-        c.addEventListener('touchstart', (e) => { draw = true; e.preventDefault(); }, {passive: false});
-        window.addEventListener('touchend', () => draw = false);
-        c.addEventListener('touchmove', _draw, {passive: false});
-        c.addEventListener('mousedown', () => draw = true);
-        window.addEventListener('mouseup', () => draw = false);
-        c.addEventListener('mousemove', _draw);
-    }
-    async function _syncStatus(idx, val) {
-        await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
-        const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
-        if(hit) {
-            const pSnap = await get(ref(_db, `games/${_gid}/pool`)); const pool = pSnap.val() || [];
-            const targets = (_data.prizes || []).map(p => Number(p.num));
-            const won = pool.filter(t => t.revealed && targets.includes(Number(t.grade))).length;
-            if(won >= targets.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
-            document.getElementById('res_msg').innerHTML = `🎊 恭喜獲得獎項 🎊<br>${hit.name}`;
-            document.getElementById('res_img').src = hit.img || _data.img;
-            confetti({ particleCount: 150, spread: 70 });
-            push(ref(_db, `winLogs`), { user: _uid, game: _gid, prize: hit.name, time: serverTimestamp() });
-        } else { document.getElementById('res_msg').innerText = "銘謝惠顧"; document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png"; }
-        setTimeout(() => { document.getElementById('resModal').style.display = 'flex'; }, 400);
-    }
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
+const _app = initializeApp(_cc); const _db = getDatabase(_app);
+const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
+let _data = null, _isClosed = false, _q = null, _tInterval = null;
+if(!_gid) location.href = 'index.html';
+onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
+onValue(ref(_db, `games/${_gid}/lock`), snap => {
+const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
+if(_tInterval) clearInterval(_tInterval);
+if(l && l.expire > n) {
+_q = l; b.style.display = 'block'; document.getElementById('lockUser').innerText = l.user === _uid ? "您" : l.user;
+const _run = () => {
+const r = Math.round((l.expire - Date.now()) / 1000);
+if(r <= 0) { clearInterval(_tInterval); b.style.display = 'none'; _q = null; }
+else document.getElementById('lockTimer').innerText = r;
+}; _run(); _tInterval = setInterval(_run, 1000);
+} else { b.style.display = 'none'; _q = null; }
+});
+onValue(ref(_db, `gameSettings/${_gid}`), s => {
+_data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
+document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
+document.getElementById('gTitle').innerText = _gid; document.getElementById('gMainImg').src = _data.img;
+onValue(ref(_db, `games/${_gid}/pool`), snap => {
+const p = snap.val() || []; const grid = document.getElementById('poolGrid');
+const _targets = (_data.prizes || []).map(x => Number(x.num)); const _sold = p.filter(t => t.taken).length;
+const _pct = Math.round((_sold / _data.total) * 100);
+document.getElementById('progText').innerText = `${_sold} / ${_data.total}`;
+document.getElementById('progFill').style.width = `${_pct}%`;
+document.getElementById('progPercent').innerText = `${_pct}%`;
+// 🟢 頂部優惠橫幅邏輯
+const promoLeft = (_data.promoCount || 0) - _sold;
+const banner = document.getElementById('promoBanner');
+if(promoLeft > 0 && !_isClosed) {
+banner.style.display = 'block';
+document.getElementById('promoLeft').innerText = promoLeft;
+document.getElementById('promoVal').innerText = _data.promoPrice;
+document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P (開盤價)`;
+} else {
+banner.style.display = 'none';
+document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`;
+}
+document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
+const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
+return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
+}).join('');
+grid.innerHTML = '';
+p.forEach((t, i) => {
+const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
+if(t.taken) {
+div.className = 'ticket taken';
+if(t.revealed) {
+const v = Number(t.grade); if(_targets.includes(v)) div.classList.add('winner-glow');
+div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${v.toString().padStart(2, '0')}</span>`;
+} else div.innerHTML = `<span style="font-size:0.6rem;">刮開中</span>`;
+} else { div.className = 'ticket'; div.innerText = s; div.onclick = () => { _execAction(i, t.grade); }; }
+grid.appendChild(div);
+});
+});
+});
+async function _execAction(idx, grade) {
+if(_isClosed) return; const n = Date.now();
+if(_q && _q.user !== _uid && _q.expire > n) return alert(`他人包台中`);
+const s = await get(ref(_db, `users/${_uid}/balance`)), cur = s.val() || 0;
+const pS = await get(ref(_db, `games/${_gid}/pool`)), sold = (pS.val() || []).filter(x => x.taken).length;
+let pr = (_data.promoCount > 0 && sold < _data.promoCount) ? _data.promoPrice : _data.price;
+if(cur < pr) { document.getElementById('noBalModal').style.display = 'flex'; return; }
+if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
+let _exp = (!_q || _q.user !== _uid || _q.expire < n) ? n + 180000 : Math.min(_q.expire + 45000, n + 900000);
+await update(ref(_db, `games/${_gid}/lock`), { user: _uid, expire: _exp });
+await update(ref(_db, `users/${_uid}`), { balance: cur - pr });
+await update(ref(_db, `games/${_gid}/pool/${idx}`), { taken: true, revealed: false, user: _uid });
+await set(push(ref(_db, `users/${_uid}/logs`)), { game: _gid, cost: pr, time: serverTimestamp() });
+_initCanvas((idx+1).toString().padStart(2,'0'), Number(grade).toString().padStart(2, '0'), idx);
+}
+function _initCanvas(no, val, poolIdx) {
+const o = document.getElementById('scratchOverlay'), b = document.getElementById('scratchBox');
+document.getElementById('selNum').innerText = no; document.getElementById('luckyVal').innerText = val;
+const old = document.getElementById('scratch-canvas'); if(old) old.remove();
+const c = document.createElement('canvas'); c.id = 'scratch-canvas'; c.width = 300; c.height = 300; b.appendChild(c);
+const ctx = c.getContext('2d'); ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0, 0, 300, 300); o.style.display = 'flex';
+let draw = false; const _draw = (e) => {
+if(!draw) return; e.preventDefault(); const r = c.getBoundingClientRect();
+const x = (e.clientX || (e.touches && e.touches[0].clientX)) - r.left, y = (e.clientY || (e.touches && e.touches[0].clientY)) - r.top;
+ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
+const pix = ctx.getImageData(0, 0, 300, 300).data; let cl = 0;
+for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) cl++;
+if(cl > (300*300*0.55)) { draw = false; c.style.pointerEvents = 'none'; _syncStatus(poolIdx, val); }
+};
+c.addEventListener('touchstart', (e) => { draw = true; e.preventDefault(); }, {passive: false});
+window.addEventListener('touchend', () => draw = false);
+c.addEventListener('touchmove', _draw, {passive: false});
+c.addEventListener('mousedown', () => draw = true);
+window.addEventListener('mouseup', () => draw = false);
+c.addEventListener('mousemove', _draw);
+}
+async function _syncStatus(idx, val) {
+await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
+const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
+if(hit) {
+const pSnap = await get(ref(_db, `games/${_gid}/pool`)), pool = pSnap.val() || [], targets = (_data.prizes || []).map(p => Number(p.num));
+const won = pool.filter(t => t.revealed && targets.includes(Number(t.grade))).length;
+if(won >= targets.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
+document.getElementById('res_msg').innerHTML = `🎊 恭喜獲得獎項 🎊<br>${hit.name}`;
+document.getElementById('res_img').src = hit.img || _data.img;
+confetti({ particleCount: 150, spread: 70 });
+push(ref(_db, `winLogs`), { user: _uid, game: _gid, prize: hit.name, time: serverTimestamp() });
+} else { document.getElementById('res_msg').innerText = "銘謝惠顧"; document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png"; }
+setTimeout(() => { document.getElementById('resModal').style.display = 'flex'; }, 400);
+}
 </script>
 </body>
 </html>
