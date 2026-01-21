@@ -41,6 +41,9 @@
         .user-content { display: none; padding: 15px; background: #0d1016; border-top: 1px solid #222; border-radius: 0 0 12px 12px; }
         .user-content.show { display: block; }
 
+        /* 🟢 新增：推薦功能專用標籤 */
+        .ref-tag { font-size: 0.7rem; background: rgba(52, 152, 219, 0.15); color: #3498db; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid rgba(52, 152, 219, 0.3); }
+
         /* 對帳彈窗 */
         .log-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .log-box { background: var(--card); width: 95%; max-width: 500px; border-radius: 20px; border: 1px solid var(--p); padding: 25px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
@@ -115,6 +118,7 @@
             <span class="title" style="margin:0;">會員數據管理</span>
             <button class="btn btn-sm" onclick="createUser()">＋ 新增會員</button>
         </div>
+        <div id="refStats" style="margin-bottom:15px; font-size:0.8rem; color:#888;"></div>
         <div id="userListContainer"></div>
     </div>
 
@@ -180,16 +184,44 @@
             });
         });
 
-        // 會員與累計消費同步
+        // 🟢 會員與推薦碼邏輯同步
         onValue(ref(db, 'users'), s => {
             const container = document.getElementById('userListContainer'); container.innerHTML = '';
-            Object.entries(s.val()||{}).forEach(([uid, u]) => {
+            const users = s.val() || {};
+            
+            // 統計受邀人數
+            const refCounts = {};
+            Object.values(users).forEach(u => {
+                if(u.referrer) refCounts[u.referrer] = (refCounts[u.referrer] || 0) + 1;
+            });
+
+            Object.entries(users).forEach(([uid, u]) => {
                 const totalSpent = u.logs ? Object.values(u.logs).reduce((sum, log) => sum + (Number(log.cost) || 0), 0) : 0;
+                const invitedCount = refCounts[uid] || 0;
                 const item = document.createElement('div'); item.className = 'user-item';
-                item.innerHTML = `<div class="user-header" onclick="toggleUser('${uid}')"><div><b>${u.nickname||'玩家'}</b><span class="spent-badge">累計消費: ${totalSpent.toLocaleString()} P</span></div><div style="color:var(--p)">${(u.balance||0).toLocaleString()} P ▼</div></div>
-                    <div class="user-content" id="content-${uid}">UID: ${uid} | PIN: ${u.pin||'無'}<br>
-                    <div style="margin-top:10px;"><button class="btn btn-sm" onclick="showLogs('${uid}')">對帳紀錄</button>
-                    <button class="btn btn-sm" onclick="addBal('${uid}')">調整點數</button><button class="btn btn-sm" onclick="editPin('${uid}')">修改 PIN</button></div></div>`;
+                
+                // Header 新增「推薦來源」與「邀請人數」顯示
+                item.innerHTML = `
+                    <div class="user-header" onclick="toggleUser('${uid}')">
+                        <div>
+                            <b>${u.nickname||'玩家'}</b>
+                            <span class="spent-badge">累計消費: ${totalSpent.toLocaleString()} P</span>
+                            ${u.referrer ? `<span class="ref-tag">來源: ${u.referrer}</span>` : ''}
+                            ${invitedCount > 0 ? `<span class="ref-tag" style="color:#2ecc71; border-color:#2ecc71">邀請: ${invitedCount}人</span>` : ''}
+                        </div>
+                        <div style="color:var(--p)">${(u.balance||0).toLocaleString()} P ▼</div>
+                    </div>
+                    <div class="user-content" id="content-${uid}">
+                        UID: ${uid} | PIN: ${u.pin||'無'}<br>
+                        ${u.referrer ? `推薦人 UID: ${u.referrer}<br>` : '推薦人: 自行註冊<br>'}
+                        邀請成功人數: ${invitedCount} 人
+                        <div style="margin-top:10px;">
+                            <button class="btn btn-sm" onclick="showLogs('${uid}')">對帳紀錄</button>
+                            <button class="btn btn-sm" onclick="addBal('${uid}')">調整點數</button>
+                            <button class="btn btn-sm" onclick="editPin('${uid}')">修改 PIN</button>
+                            <button class="btn btn-sm" style="background:#ff4757; color:#fff" onclick="deleteUser('${uid}')">刪除會員</button>
+                        </div>
+                    </div>`;
                 container.appendChild(item);
             });
         });
@@ -246,6 +278,7 @@
     };
     window.editPin = async (uid) => { const p = prompt("新 4-6 位 PIN:"); if(p!==null) update(ref(db, `users/${uid}`), { pin: p }); };
     window.deleteGame = async (id) => { if(confirm("徹底刪除此商品及所有數據？")) { remove(ref(db, `gameSettings/${id}`)); remove(ref(db, `games/${id}`)); } };
+    window.deleteUser = async (uid) => { if(confirm("確定要徹底刪除此會員及其所有紀錄嗎？此動作無法復原。")) remove(ref(db, `users/${uid}`)); };
     window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告同步完成"); };
     window.createUser = async () => { const u = prompt("輸入新玩家 UID:"); if(u) set(ref(db, `users/${u.toUpperCase()}`), { balance:0, nickname:"新玩家", pin:null }); };
 </script>
