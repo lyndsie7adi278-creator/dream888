@@ -4,99 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>夢工廠 | 刮刮樂商城</title>
-    <style>
-        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --line: #06c755; --soldout: #95a5a6; --free: #4cd137; --lock: #3498db; }
-        * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
-        body { 
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            background: var(--bg); margin: 0; padding: 0; 
-            display: flex; flex-direction: column; align-items: center; 
-            overflow-x: hidden; padding-bottom: 100px;
-        }
-        
-
-        .top-nav { 
-            width: 100%; background: white; padding: 15px 20px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08); 
-            position: sticky; top: 0; z-index: 1000; 
-        }
-        .nav-left { display: flex; align-items: center; gap: 15px; cursor: pointer; color: #333; font-size: 1.4rem; position: relative; }
-        .logo-txt { font-weight: 900; letter-spacing: 2px; color: #333; font-size: 1rem; position: absolute; left: 50%; transform: translateX(-50%); }
-        
-        .menu-dropdown { 
-            display: none; position: absolute; top: 60px; left: 15px; 
-            background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
-            z-index: 2000; min-width: 150px; overflow: hidden; border: 1px solid #eee;
-        }
-        .menu-dropdown.show { display: block; animation: menuFade 0.3s ease; }
-        @keyframes menuFade { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .menu-item { padding: 15px 20px; font-size: 0.9rem; color: #2c3e50; font-weight: bold; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
-        .menu-item:last-child { border-bottom: none; }
-        .menu-item:active { background: #fff1f3; color: var(--primary); }
-
-        .marquee-container { width: 100%; background: #1a1c23; color: var(--primary); padding: 10px 0; overflow: hidden; white-space: nowrap; font-size: 0.85rem; font-weight: bold; border-bottom: 2px solid var(--primary); }
-        .marquee-content { display: inline-block; animation: marquee 25s linear infinite; }
-        @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
-        .category-scroll { display: flex; overflow-x: auto; padding: 15px 20px; gap: 12px; width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-        .category-scroll::-webkit-scrollbar { display: none; }
-        .cat-item { flex-shrink: 0; padding: 10px 22px; border-radius: 50px; background: white; border: 1px solid #eee; font-size: 0.85rem; color: #7f8c8d; font-weight: bold; transition: 0.3s; cursor: pointer; }
-        .cat-item.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(255,143,163,0.4); }
-
-        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; width: 94%; max-width: 500px; padding: 15px 0; }
-        .p-card { background: white; border-radius: 22px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; transition: 0.3s; position: relative; cursor: pointer; }
-        .p-card:active { transform: scale(0.95); }
-        .p-card.soldout { filter: grayscale(0.8); opacity: 0.8; }
-        .p-card.free-gift { border: 2px solid var(--free); box-shadow: 0 8px 25px rgba(76, 209, 55, 0.4); }
-        .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #fdfdfd; }
-        .p-info { padding: 18px 10px; text-align: center; min-height: 115px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .p-name { font-weight: 900; font-size: 0.95rem; color: #2c3e50; margin-bottom: 5px; line-height: 1.3; }
-        .p-price-value { color: var(--primary); font-weight: 900; font-size: 1.15rem; }
-        
-        .soldout-tag { background: #57606f; color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 6px; margin-top: 5px; display: inline-block; font-weight: 900; }
-        .free-tag { background: var(--free); color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 6px; margin-top: 5px; display: inline-block; font-weight: 900; animation: free-blink 1s infinite alternate; }
-        .lock-tag { background: var(--lock); color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 6px; margin-top: 5px; display: inline-block; font-weight: 900; animation: lock-pulse 1.5s infinite; }
-        @keyframes lock-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .promo-tag { background: #ff4757; color: white; font-size: 0.65rem; padding: 3px 8px; border-radius: 6px; margin-left: 6px; vertical-align: middle; animation: promo-blink 1.2s infinite; }
-        .promo-info { font-size: 0.65rem; color: #ff8fa3; margin-top: 5px; font-weight: 900; }
-
-        .side-drawer { position: fixed; top: 0; right: -310px; width: 300px; height: 100vh; background: white; z-index: 3000; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); padding: 35px 20px; box-shadow: -10px 0 35px rgba(0,0,0,0.15); }
-        .side-drawer.active { right: 0; }
-        .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2500; backdrop-filter: blur(5px); }
-        .drawer-overlay.active { display: block; }
-        .drawer-user-card { background: linear-gradient(145deg, #2c3e50 0%, #000000 100%); border-radius: 24px; padding: 25px; color: white; margin-bottom: 25px; }
-        .bal-amount { font-size: 2rem; font-weight: 900; color: var(--primary); margin: 8px 0; }
-        .total-spent-tag { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; margin-top: 10px; display: inline-block; color: #adb5bd; }
-        .record-section-title { font-size: 0.8rem; color: #666; font-weight: 900; margin: 15px 0 10px; letter-spacing: 1px; display: flex; align-items: center; }
-        .record-section-title::before { content: ""; width: 3px; height: 12px; background: var(--primary); margin-right: 8px; border-radius: 10px; }
-        .log-list { height: 120px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; border-bottom: 1px dashed #eee; }
-        .log-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-
-        .line-wrapper { position: fixed; bottom: 30px; right: 20px; z-index: 2000; display: flex; flex-direction: column; align-items: flex-end; animation: float-breath 2s infinite ease-in-out; }
-        .line-bubble { background: white; color: #333; padding: 10px 15px; border-radius: 15px; font-size: 0.8rem; font-weight: 900; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); position: relative; border: 1px solid #eee; white-space: nowrap; }
-        .line-bubble::after { content: ""; position: absolute; bottom: -8px; right: 20px; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid white; }
-        .line-float { width: 60px; height: 60px; background: var(--line); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(6,199,85,0.4); cursor: pointer; }
-        .line-float img { width: 35px; height: 35px; }
-        @keyframes float-breath { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .status-section { width: 92%; max-width: 460px; margin: 35px 0 15px; background: white; border-radius: 28px; padding: 25px; border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 5px 20px rgba(0,0,0,0.03); }
-        .status-item { display: flex; align-items: flex-start; background: #f9fafb; padding: 18px; border-radius: 20px; margin-bottom: 15px; }
-        .status-icon { font-size: 1.6rem; margin-right: 18px; margin-top: 3px; }
-        .status-text b { display: block; font-size: 0.9rem; color: #1a1c23; margin-bottom: 5px; }
-        .status-text p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.6; }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 4000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .m-box { background: white; padding: 35px 25px; border-radius: 35px; width: 88%; max-width: 340px; text-align: center; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #ccc; cursor: pointer; }
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; text-align: center; font-size: 1rem; font-weight: bold; color: var(--primary); outline: none; }
-        .btn { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 50px; font-weight: 900; width: 100%; cursor: pointer; font-size: 1rem; box-shadow: 0 8px 20px rgba(255,143,163,0.3); margin-top: 10px; }
-        .footer { padding: 30px 0 50px; font-size: 0.75rem; color: #95a5a6; text-align: center; line-height: 2; }
-        .ref-info { font-size: 0.7rem; color: #aaa; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
-    </style>
-</head>
+    </head>
 <body oncontextmenu="return false;">
 
+<div id="welcomeToast" class="welcome-toast"></div>
+
 <div class="line-wrapper" onclick="window.open('https://line.me/ti/p/@dream8', '_blank')">
-    <div class="line-bubble">儲值/遊戲相關問題請點我 💬</div>
+    <div class="line-bubble">儲值/問題請點我 💬</div>
     <div class="line-float"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE"></div>
 </div>
 
@@ -169,19 +83,16 @@
     <div class="m-box">
         <div class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">✕</div>
         <h2 id="loginStepTitle" style="margin:0 0 10px; letter-spacing:2px; font-size:1.2rem;">會員登入</h2>
-        
         <div id="step1">
             <input type="text" id="cIn" placeholder="請輸入帳號 (ID)">
             <button class="btn" onclick="checkCode()">下一步 NEXT</button>
             <p style="font-size:0.7rem; color:var(--primary); margin-top:15px; cursor:pointer;" onclick="showReg()">還沒有帳號？立即註冊</p>
         </div>
-
         <div id="step2" style="display:none;">
             <input type="password" id="pinIn" placeholder="輸入密碼">
             <button class="btn" onclick="handlePinLogin()">確認登入 ENTER</button>
             <button class="btn" style="background:#eee; color:#666; margin-top:10px;" onclick="backStep1()">回上一步</button>
         </div>
-
         <div id="stepRegister" style="display:none; text-align:left;">
             <p style="color:var(--primary); font-weight:bold; text-align:center; margin-bottom:10px;">✨ 建立新帳號</p>
             <input type="text" id="regId" placeholder="設定登入帳號">
@@ -194,19 +105,92 @@
         </div>
     </div>
 </div>
+<style>
+        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --line: #06c755; --soldout: #95a5a6; --free: #4cd137; --lock: #3498db; --gold: #ffb800; }
+        * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; padding-bottom: 100px; }
+        
+        .welcome-toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(26, 28, 35, 0.95); color: var(--gold); padding: 12px 25px; border-radius: 50px; font-weight: 900; font-size: 0.9rem; z-index: 5000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--gold); display: none; opacity: 0; transition: 0.5s; }
+        .welcome-toast.show { display: block; opacity: 1; transform: translateX(-50%) translateY(0); }
 
-<script type="module">
+        .top-nav { width: 100%; background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 15px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 1000; }
+        .nav-left { display: flex; align-items: center; gap: 15px; cursor: pointer; color: #333; font-size: 1.4rem; position: relative; }
+        .logo-txt { font-weight: 900; letter-spacing: 2px; color: #333; font-size: 1rem; position: absolute; left: 50%; transform: translateX(-50%); }
+        .menu-dropdown { display: none; position: absolute; top: 60px; left: 15px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 2000; min-width: 150px; overflow: hidden; border: 1px solid #eee; }
+        .menu-dropdown.show { display: block; animation: menuFade 0.3s ease; }
+        @keyframes menuFade { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .menu-item { padding: 15px 20px; font-size: 0.9rem; color: #2c3e50; font-weight: bold; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:active { background: #fff1f3; color: var(--primary); }
+
+        .marquee-container { width: 100%; background: #1a1c23; color: var(--primary); padding: 10px 0; overflow: hidden; white-space: nowrap; font-size: 0.85rem; font-weight: bold; border-bottom: 2px solid var(--primary); }
+        .marquee-content { display: inline-block; animation: marquee 25s linear infinite; }
+        @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+        .category-scroll { display: flex; overflow-x: auto; padding: 15px 20px; gap: 12px; width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .cat-item { flex-shrink: 0; padding: 10px 22px; border-radius: 50px; background: white; border: 1px solid #eee; font-size: 0.85rem; color: #7f8c8d; font-weight: bold; transition: 0.3s; cursor: pointer; }
+        .cat-item.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(255,143,163,0.4); }
+
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; width: 94%; max-width: 500px; padding: 15px 0; }
+        .p-card { background: white; border-radius: 22px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; transition: 0.3s; position: relative; cursor: pointer; }
+        .p-card:active { transform: scale(0.95); }
+        .p-card.soldout { filter: grayscale(0.8); opacity: 0.8; }
+        .p-card.free-gift { border: 2px solid var(--free); box-shadow: 0 8px 25px rgba(76, 209, 55, 0.4); }
+        .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #fdfdfd; }
+        .p-info { padding: 18px 10px; text-align: center; min-height: 115px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .p-name { font-weight: 900; font-size: 0.95rem; color: #2c3e50; margin-bottom: 5px; line-height: 1.3; }
+        .p-price-value { color: var(--primary); font-weight: 900; font-size: 1.15rem; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        
+        .soldout-tag { background: #57606f; color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 6px; margin-top: 5px; display: inline-block; font-weight: 900; }
+        .free-tag { background: var(--free); color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 6px; margin-top: 5px; display: inline-block; font-weight: 900; animation: free-blink 1s infinite alternate; }
+        .lock-tag { background: var(--lock); color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 6px; margin-top: 5px; display: inline-block; font-weight: 900; animation: lock-pulse 1.5s infinite; }
+        @keyframes lock-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .promo-tag { background: #ff4757; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 900; animation: promo-blink 1.2s infinite; }
+        .promo-info { font-size: 0.65rem; color: #ff8fa3; margin-top: 5px; font-weight: 900; }
+
+        .side-drawer { position: fixed; top: 0; right: -310px; width: 300px; height: 100vh; background: white; z-index: 3000; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); padding: 35px 20px; box-shadow: -10px 0 35px rgba(0,0,0,0.15); }
+        .side-drawer.active { right: 0; }
+        .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2500; backdrop-filter: blur(5px); }
+        .drawer-overlay.active { display: block; }
+        .drawer-user-card { background: linear-gradient(145deg, #2c3e50 0%, #000000 100%); border-radius: 24px; padding: 25px; color: white; margin-bottom: 25px; }
+        .bal-amount { font-size: 2rem; font-weight: 900; color: var(--primary); margin: 8px 0; }
+        .total-spent-tag { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; margin-top: 10px; display: inline-block; color: #adb5bd; }
+        .record-section-title { font-size: 0.8rem; color: #666; font-weight: 900; margin: 15px 0 10px; letter-spacing: 1px; display: flex; align-items: center; }
+        .record-section-title::before { content: ""; width: 3px; height: 12px; background: var(--primary); margin-right: 8px; border-radius: 10px; }
+        .log-list { height: 120px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; border-bottom: 1px dashed #eee; }
+        .log-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+
+        .line-wrapper { position: fixed; bottom: 30px; right: 20px; z-index: 2000; display: flex; flex-direction: column; align-items: flex-end; animation: float-breath 2s infinite ease-in-out; }
+        .line-bubble { background: white; color: #333; padding: 10px 15px; border-radius: 15px; font-size: 0.8rem; font-weight: 900; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); position: relative; border: 1px solid #eee; white-space: nowrap; }
+        .line-bubble::after { content: ""; position: absolute; bottom: -8px; right: 20px; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid white; }
+        .line-float { width: 60px; height: 60px; background: var(--line); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(6,199,85,0.4); cursor: pointer; }
+        .line-float img { width: 35px; height: 35px; }
+        @keyframes float-breath { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .status-section { width: 92%; max-width: 460px; margin: 35px 0 15px; background: white; border-radius: 28px; padding: 25px; border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 5px 20px rgba(0,0,0,0.03); }
+        .status-item { display: flex; align-items: flex-start; background: #f9fafb; padding: 18px; border-radius: 20px; margin-bottom: 15px; }
+        .status-icon { font-size: 1.6rem; margin-right: 18px; margin-top: 3px; }
+        .status-text b { display: block; font-size: 0.9rem; color: #1a1c23; margin-bottom: 5px; }
+        .status-text p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.6; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 4000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .m-box { background: white; padding: 35px 25px; border-radius: 35px; width: 88%; max-width: 340px; text-align: center; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #ccc; cursor: pointer; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; text-align: center; font-size: 1rem; font-weight: bold; color: var(--primary); outline: none; }
+        .btn { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 50px; font-weight: 900; width: 100%; cursor: pointer; font-size: 1rem; box-shadow: 0 8px 20px rgba(255,143,163,0.3); margin-top: 10px; }
+        .footer { padding: 30px 0 50px; font-size: 0.75rem; color: #95a5a6; text-align: center; line-height: 2; }
+        .ref-info { font-size: 0.7rem; color: #aaa; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+    <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const _c = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const _app = initializeApp(_c); const _db = getDatabase(_app);
     const _sk = localStorage.getItem('myScratchCode');
-
     let _g = {}; let _cc = 'ALL'; let _u = null;
 
-    const _mt = document.getElementById('menuToggle');
-    const _md = document.getElementById('menuDropdown');
+    const _mt = document.getElementById('menuToggle'); const _md = document.getElementById('menuDropdown');
     _mt.onclick = (e) => { e.stopPropagation(); _md.classList.toggle('show'); };
     window.onclick = () => { _md.classList.remove('show'); };
     window.openAnn = () => { document.getElementById('annModal').style.display = 'flex'; _md.classList.remove('show'); };
@@ -216,12 +200,18 @@
     window.handleLogout = () => { localStorage.removeItem('myScratchCode'); location.reload(); };
     window.editNick = async () => { const n = prompt("輸入新暱稱："); if(n && n.trim()) await update(ref(_db, `users/${_sk}`), { nickname: n.trim() }); };
 
+    function showWelcomeToast(name) {
+        const toast = document.getElementById('welcomeToast');
+        toast.innerText = `✨ 歡迎回來，${name}！祝您中大獎 ✨`;
+        toast.classList.add('show');
+        setTimeout(() => { toast.classList.remove('show'); }, 3500);
+    }
+
     function init() {
         get(ref(_db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annBody').innerText = s.val(); });
         onValue(ref(_db, 'gameSettings'), s => { _g = s.val() || {}; renderCats(); renderGrid(); });
         if(_sk) {
-            document.getElementById('userInfoArea').style.display = 'block';
-            document.getElementById('visitorArea').style.display = 'none';
+            document.getElementById('userInfoArea').style.display = 'block'; document.getElementById('visitorArea').style.display = 'none';
             onValue(ref(_db, `users/${_sk}`), s => {
                 const u = s.val(); if(!u) return;
                 document.getElementById('uBal').innerText = (u.balance||0).toLocaleString();
@@ -234,110 +224,66 @@
                     const total = Object.values(u.logs).reduce((sum, log) => sum + (Number(log.cost) || 0), 0);
                     document.getElementById('uTotalSpent').innerText = total.toLocaleString();
                 }
+                if(!sessionStorage.getItem('welcomed')) { showWelcomeToast(u.nickname || '玩家'); sessionStorage.setItem('welcomed', '1'); }
             });
             onValue(ref(_db, 'winLogs'), snap => {
                 const myWins = Object.values(snap.val()||{}).filter(l => l.user === _sk).sort((a,b)=>b.time-a.time);
                 document.getElementById('winList').innerHTML = myWins.length > 0 ? myWins.map(w => `<div class="log-item"><div><b>${w.prize}</b><br><small>${w.game}</small></div><span style="color:#27ae60; font-size:0.75rem; font-weight:bold;">已紀錄</span></div>`).join('') : '<div style="color:#ccc; text-align:center; padding:20px; font-size:0.8rem;">尚無紀錄</div>';
             });
-        } else {
-            document.getElementById('userInfoArea').style.display = 'none';
-            document.getElementById('visitorArea').style.display = 'block';
-        }
+        } else { document.getElementById('userInfoArea').style.display = 'none'; document.getElementById('visitorArea').style.display = 'block'; }
     }
 
-    window.showReg = () => {
-        document.getElementById('step1').style.display = 'none';
-        document.getElementById('step2').style.display = 'none';
-        document.getElementById('stepRegister').style.display = 'block';
-        document.getElementById('loginStepTitle').innerText = "註冊新帳號";
-    };
-    window.backStep1 = () => {
-        document.getElementById('step1').style.display = 'block';
-        document.getElementById('step2').style.display = 'none';
-        document.getElementById('stepRegister').style.display = 'none';
-        document.getElementById('loginStepTitle').innerText = "會員登入";
-    };
-
+    window.showReg = () => { document.getElementById('step1').style.display = 'none'; document.getElementById('stepRegister').style.display = 'block'; document.getElementById('loginStepTitle').innerText = "註冊新帳號"; };
+    window.backStep1 = () => { document.getElementById('step1').style.display = 'block'; document.getElementById('step2').style.display = 'none'; document.getElementById('stepRegister').style.display = 'none'; document.getElementById('loginStepTitle').innerText = "會員登入"; };
     window.checkCode = async () => {
-        const code = document.getElementById('cIn').value.trim(); // 🟢 移除 toUpperCase()，允許小寫
-        if(!code) return;
-        const s = await get(ref(_db, `users/${code}`));
-        if(!s.exists()) return alert("此帳號不存在，請先註冊。");
-        _u = { id: code, data: s.val() };
-        document.getElementById('step1').style.display = 'none';
-        document.getElementById('step2').style.display = 'block';
+        const code = document.getElementById('cIn').value.trim(); if(!code) return;
+        const s = await get(ref(_db, `users/${code}`)); if(!s.exists()) return alert("帳號不存在，請先註冊。");
+        _u = { id: code, data: s.val() }; document.getElementById('step1').style.display = 'none'; document.getElementById('step2').style.display = 'block';
     };
-
     window.handleRegister = async () => {
-        const id = document.getElementById('regId').value.trim(); // 🟢 移除 toUpperCase()
-        const nick = document.getElementById('regNick').value.trim();
-        const pass1 = document.getElementById('regPass1').value;
-        const pass2 = document.getElementById('regPass2').value;
-        const refCode = document.getElementById('refIn').value.trim(); // 🟢 移除 toUpperCase()
-        if(!id || !nick || !pass1 || !pass2 || !refCode) return alert("請填寫所有欄位");
-        if(pass1 !== pass2) return alert("兩次密碼輸入不一致");
-        if(id === refCode) return alert("推薦人不能是自己");
-        const existSnap = await get(ref(_db, `users/${id}`));
-        if(existSnap.exists()) return alert("此帳號已被註冊");
-        const refSnap = await get(ref(_db, `users/${refCode}`));
-        if(!refSnap.exists()) return alert("推薦人帳號不存在");
-        await set(ref(_db, `users/${id}`), { balance: 0, nickname: nick, pin: pass1, referrer: refCode, createTime: Date.now() });
-        localStorage.setItem('myScratchCode', id);
-        alert("註冊成功！"); location.reload();
+        const id = document.getElementById('regId').value.trim(); const nick = document.getElementById('regNick').value.trim(); const p1 = document.getElementById('regPass1').value; const p2 = document.getElementById('regPass2').value; const rf = document.getElementById('refIn').value.trim();
+        if(!id || !nick || !p1 || !p2 || !rf) return alert("請填寫所有欄位");
+        if(p1 !== p2) return alert("兩次密碼輸入不一致");
+        if(id === rf) return alert("推薦人不能是自己");
+        const ex = await get(ref(_db, `users/${id}`)); if(ex.exists()) return alert("此帳號已被註冊");
+        const rfs = await get(ref(_db, `users/${rf}`)); if(!rfs.exists()) return alert("推薦人不存在");
+        await set(ref(_db, `users/${id}`), { balance: 0, nickname: nick, pin: p1, referrer: rf, createTime: Date.now() });
+        localStorage.setItem('myScratchCode', id); alert("註冊成功！"); location.reload();
     };
-
-    window.handlePinLogin = async () => {
-        const pin = document.getElementById('pinIn').value;
-        if(_u.data.pin !== pin) return alert("密碼錯誤");
-        localStorage.setItem('myScratchCode', _u.id);
-        location.reload();
-    };
+    window.handlePinLogin = async () => { const p = document.getElementById('pinIn').value; if(_u.data.pin !== p) return alert("密碼錯誤"); localStorage.setItem('myScratchCode', _u.id); location.reload(); };
 
     function renderCats() {
-        const cats = new Set(['ALL']);
-        Object.values(_g).forEach(g => { if(g.category) cats.add(g.category); });
-        document.getElementById('catList').innerHTML = Array.from(cats).map(c => `<div class="cat-item ${_cc===c?'active':''}" onclick="filterCat('${c}')">${c==='ALL'?'全部 ALL':c}</div>`).join('');
+        const cats = new Set(['ALL']); Object.values(_g).forEach(g => { if(g.category) cats.add(g.category); });
+        document.getElementById('catList').innerHTML = Array.from(cats).map(c => `<div class="cat-item ${_cc===c?'active':''}" onclick="filterCat('${c}')">${c==='ALL'?'全部':c}</div>`).join('');
     }
     window.filterCat = (c) => { _cc = c; renderCats(); renderGrid(); };
 
     function renderGrid() {
         const grid = document.getElementById('pGrid'); grid.innerHTML = '';
         if(_cc === 'ALL') {
-            const f = document.createElement('div');
-            f.className = 'p-card free-gift';
-            f.onclick = () => window.open('https://myppt.cc/XU5x0i', '_blank');
-            f.innerHTML = `<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXdaU9vpns6dKcmrXAdxfEdMBQrMZH-5kYmI_TSV32wei4gLUw2uTwif9cGID9vOH_h7Qe5Jm64z6exzfHiUmgI-6Cqj1zDWfRLbHcR6R1P_KSEJAf75cmZkXdiN0hVmsA_0FFq598KLhNiEGjRxsZKP?key=NC24mEMkfz8IOcSbQ98k9A" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我領取</div></div>`;
+            const f = document.createElement('div'); f.className = 'p-card free-gift'; f.onclick = () => window.open('https://myppt.cc/XU5x0i', '_blank');
+            f.innerHTML = `<img src="https://i.ibb.co/Vp8n9Wq/image.png" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
             grid.appendChild(f);
         }
         for(let id in _g) {
             const item = _g[id]; if(_cc !== 'ALL' && item.category !== _cc) continue;
             const safeId = id.replace(/\s+/g,'-');
-            const card = document.createElement('div'); 
-            const isSoldOut = item.isSoldOut || false;
-            card.className = `p-card ${isSoldOut ? 'soldout' : ''}`;
-            card.onclick = () => location.href = `game.html?id=${id}`;
+            const card = document.createElement('div'); const isSoldOut = item.isSoldOut || false;
+            card.className = `p-card ${isSoldOut ? 'soldout' : ''}`; card.onclick = () => location.href = `game.html?id=${id}`;
             card.innerHTML = `<img src="${item.img || ''}" class="p-img"><div class="p-info" id="info-${safeId}"><div class="p-name" id="name-${safeId}">${id}</div><div id="status-${safeId}"></div><div id="promo-${safeId}"></div></div>`;
             grid.appendChild(card);
             onValue(ref(_db, `games/${id}`), s => {
                 const d = s.val() || {}; const l = d.lock; const p = d.pool || [];
-                const sB = document.getElementById(`status-${safeId}`);
-                const pB = document.getElementById(`promo-${safeId}`);
-                const nB = document.getElementById(`name-${safeId}`);
+                const sB = document.getElementById(`status-${safeId}`); const pB = document.getElementById(`promo-${safeId}`); const nB = document.getElementById(`name-${safeId}`);
                 if(!sB) return;
-                if(isSoldOut) {
-                    sB.innerHTML = `<div class="soldout-tag">SOLD OUT / 已停盤</div>`;
-                    pB.innerHTML = ""; nB.innerHTML = id;
-                } else if(l && l.expire > Date.now()) {
-                    sB.innerHTML = `<div class="lock-tag">🔒 玩家包台中</div>`;
-                    pB.innerHTML = ""; nB.innerHTML = id;
-                } else {
-                    sB.innerHTML = `<div class="p-price-value">一刮 / P${item.price || 0}</div>`;
+                if(isSoldOut) { sB.innerHTML = `<div class="soldout-tag">SOLD OUT / 已停盤</div>`; pB.innerHTML = ""; nB.innerHTML = id; }
+                else if(l && l.expire > Date.now()) { sB.innerHTML = `<div class="lock-tag">🔒 玩家包台中</div>`; pB.innerHTML = ""; nB.innerHTML = id; }
+                else {
                     const sold = p.filter(x => x.taken).length;
                     if(item.promoCount > 0 && sold < item.promoCount) {
-                        nB.innerHTML = `${id}<span class="promo-tag">開盤優惠</span>`;
-                        sB.innerHTML = `<div class="p-price-value"><span style="font-size:0.75rem;color:#adb5bd">一刮 / </span>P${item.promoPrice}</div>`;
+                        nB.innerHTML = id; sB.innerHTML = `<div class="p-price-value">P${item.promoPrice} <span class="promo-tag">開盤優惠</span></div>`;
                         pB.innerHTML = `<div class="promo-info">前${item.promoCount.toString().padStart(2,'0')}刮 P${item.promoPrice} / 之後 P${item.price}</div>`;
-                    } else { nB.innerHTML = id; pB.innerHTML = ""; }
+                    } else { nB.innerHTML = id; sB.innerHTML = `<div class="p-price-value">一刮 / P${item.price || 0}</div>`; pB.innerHTML = ""; }
                 }
             });
         }
@@ -346,4 +292,3 @@
 </script>
 </body>
 </html>
-
