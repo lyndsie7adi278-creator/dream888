@@ -6,8 +6,6 @@
     <title>夢工廠 | 刮刮樂商城</title>
     <style>
         :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --line: #06c755; --soldout: #95a5a6; --free: #4cd137; --lock: #3498db; }
-        
-        /* 基礎設定 */
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
         body { 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
@@ -16,7 +14,6 @@
             overflow-x: hidden; padding-bottom: 100px;
         }
 
-        /* 導航欄與下拉選單 */
         .top-nav { 
             width: 100%; background: white; padding: 15px 20px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -37,7 +34,6 @@
         .menu-item:last-child { border-bottom: none; }
         .menu-item:active { background: #fff1f3; color: var(--primary); }
 
-        /* 跑馬燈與分類 */
         .marquee-container { width: 100%; background: #1a1c23; color: var(--primary); padding: 10px 0; overflow: hidden; white-space: nowrap; font-size: 0.85rem; font-weight: bold; border-bottom: 2px solid var(--primary); }
         .marquee-content { display: inline-block; animation: marquee 25s linear infinite; }
         @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
@@ -46,7 +42,6 @@
         .cat-item { flex-shrink: 0; padding: 10px 22px; border-radius: 50px; background: white; border: 1px solid #eee; font-size: 0.85rem; color: #7f8c8d; font-weight: bold; transition: 0.3s; cursor: pointer; }
         .cat-item.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(255,143,163,0.4); }
 
-        /* 商品格 */
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; width: 94%; max-width: 500px; padding: 15px 0; }
         .p-card { background: white; border-radius: 22px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; transition: 0.3s; position: relative; cursor: pointer; }
         .p-card:active { transform: scale(0.95); }
@@ -64,7 +59,6 @@
         .promo-tag { background: #ff4757; color: white; font-size: 0.65rem; padding: 3px 8px; border-radius: 6px; margin-left: 6px; vertical-align: middle; animation: promo-blink 1.2s infinite; }
         .promo-info { font-size: 0.65rem; color: #ff8fa3; margin-top: 5px; font-weight: 900; }
 
-        /* 側邊欄 */
         .side-drawer { position: fixed; top: 0; right: -310px; width: 300px; height: 100vh; background: white; z-index: 3000; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); padding: 35px 20px; box-shadow: -10px 0 35px rgba(0,0,0,0.15); }
         .side-drawer.active { right: 0; }
         .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2500; backdrop-filter: blur(5px); }
@@ -77,7 +71,6 @@
         .log-list { height: 120px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; border-bottom: 1px dashed #eee; }
         .log-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
 
-        /* LINE 客服與聲明 */
         .line-wrapper { position: fixed; bottom: 30px; right: 20px; z-index: 2000; display: flex; flex-direction: column; align-items: flex-end; animation: float-breath 2s infinite ease-in-out; }
         .line-bubble { background: white; color: #333; padding: 10px 15px; border-radius: 15px; font-size: 0.8rem; font-weight: 900; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); position: relative; border: 1px solid #eee; white-space: nowrap; }
         .line-bubble::after { content: ""; position: absolute; bottom: -8px; right: 20px; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid white; }
@@ -90,7 +83,6 @@
         .status-text b { display: block; font-size: 0.9rem; color: #1a1c23; margin-bottom: 5px; }
         .status-text p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.6; }
 
-        /* 彈窗樣式修修 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 4000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .m-box { background: white; padding: 35px 25px; border-radius: 35px; width: 88%; max-width: 340px; text-align: center; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #ccc; cursor: pointer; }
@@ -206,35 +198,36 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
-    const app = initializeApp(config); const db = getDatabase(app);
-    const saved = localStorage.getItem('myScratchCode');
+    // 漂白處理：API 金鑰與資料庫連結
+    const _c = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
+    const _app = initializeApp(_c); const _db = getDatabase(_app);
+    const _sk = localStorage.getItem('myScratchCode');
 
-    let allG = {}; let curC = 'ALL'; let tempUser = null;
+    let _g = {}; let _cc = 'ALL'; let _u = null;
 
-    const menuToggle = document.getElementById('menuToggle');
-    const menuDropdown = document.getElementById('menuDropdown');
-    menuToggle.onclick = (e) => { e.stopPropagation(); menuDropdown.classList.toggle('show'); };
-    window.onclick = () => { menuDropdown.classList.remove('show'); };
-    window.openAnn = () => { document.getElementById('annModal').style.display = 'flex'; menuDropdown.classList.remove('show'); };
+    const _mt = document.getElementById('menuToggle');
+    const _md = document.getElementById('menuDropdown');
+    _mt.onclick = (e) => { e.stopPropagation(); _md.classList.toggle('show'); };
+    window.onclick = () => { _md.classList.remove('show'); };
+    window.openAnn = () => { document.getElementById('annModal').style.display = 'flex'; _md.classList.remove('show'); };
 
     window.toggleDrawer = () => { document.getElementById('drawer').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); };
     window.openLogin = () => { document.getElementById('loginModal').style.display = 'flex'; if(document.getElementById('drawer').classList.contains('active')) toggleDrawer(); backStep1(); };
     window.handleLogout = () => { localStorage.removeItem('myScratchCode'); location.reload(); };
-    window.editNick = async () => { const n = prompt("輸入新暱稱："); if(n && n.trim()) await update(ref(db, `users/${saved}`), { nickname: n.trim() }); };
+    window.editNick = async () => { const n = prompt("輸入新暱稱："); if(n && n.trim()) await update(ref(_db, `users/${_sk}`), { nickname: n.trim() }); };
 
     function init() {
-        get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annBody').innerText = s.val(); });
-        onValue(ref(db, 'gameSettings'), s => { allG = s.val() || {}; renderCats(); renderGrid(); });
-        if(saved) {
+        get(ref(_db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annBody').innerText = s.val(); });
+        onValue(ref(_db, 'gameSettings'), s => { _g = s.val() || {}; renderCats(); renderGrid(); });
+        if(_sk) {
             document.getElementById('userInfoArea').style.display = 'block';
             document.getElementById('visitorArea').style.display = 'none';
-            onValue(ref(db, `users/${saved}`), s => {
+            onValue(ref(_db, `users/${_sk}`), s => {
                 const u = s.val(); if(!u) return;
                 document.getElementById('uBal').innerText = (u.balance||0).toLocaleString();
                 document.getElementById('uNick').innerText = u.nickname || "新玩家 ✏️";
-                document.getElementById('uID').innerText = `ID: ${saved}`;
-                document.getElementById('myRefCode').innerText = saved;
+                document.getElementById('uID').innerText = `ID: ${_sk}`;
+                document.getElementById('myRefCode').innerText = _sk;
                 if(u.logs) {
                     const arr = Object.values(u.logs).sort((a,b)=>b.time-a.time);
                     document.getElementById('hList').innerHTML = arr.map(l => `<div class="log-item"><div><b>${l.game}</b><br><small style="color:#adb5bd">${new Date(l.time).toLocaleTimeString()}</small></div><span style="color:var(--primary); font-weight:900;">-${l.cost} P</span></div>`).join('');
@@ -242,8 +235,8 @@
                     document.getElementById('uTotalSpent').innerText = total.toLocaleString();
                 }
             });
-            onValue(ref(db, 'winLogs'), snap => {
-                const myWins = Object.values(snap.val()||{}).filter(l => l.user === saved).sort((a,b)=>b.time-a.time);
+            onValue(ref(_db, 'winLogs'), snap => {
+                const myWins = Object.values(snap.val()||{}).filter(l => l.user === _sk).sort((a,b)=>b.time-a.time);
                 document.getElementById('winList').innerHTML = myWins.length > 0 ? myWins.map(w => `<div class="log-item"><div><b>${w.prize}</b><br><small>${w.game}</small></div><span style="color:#27ae60; font-size:0.75rem; font-weight:bold;">已紀錄</span></div>`).join('') : '<div style="color:#ccc; text-align:center; padding:20px; font-size:0.8rem;">尚無紀錄</div>';
             });
         } else {
@@ -252,7 +245,6 @@
         }
     }
 
-    // 登入註冊切換邏輯
     window.showReg = () => {
         document.getElementById('step1').style.display = 'none';
         document.getElementById('step2').style.display = 'none';
@@ -269,9 +261,9 @@
     window.checkCode = async () => {
         const code = document.getElementById('cIn').value.trim().toUpperCase();
         if(!code) return;
-        const s = await get(ref(db, `users/${code}`));
+        const s = await get(ref(_db, `users/${code}`));
         if(!s.exists()) return alert("此帳號不存在，請先註冊。");
-        tempUser = { id: code, data: s.val() };
+        _u = { id: code, data: s.val() };
         document.getElementById('step1').style.display = 'none';
         document.getElementById('step2').style.display = 'block';
     };
@@ -282,46 +274,43 @@
         const pass1 = document.getElementById('regPass1').value;
         const pass2 = document.getElementById('regPass2').value;
         const refCode = document.getElementById('refIn').value.trim().toUpperCase();
-        
         if(!id || !nick || !pass1 || !pass2 || !refCode) return alert("請填寫所有欄位");
         if(pass1 !== pass2) return alert("兩次密碼輸入不一致");
         if(id === refCode) return alert("推薦人不能是自己");
-
-        const existSnap = await get(ref(db, `users/${id}`));
+        const existSnap = await get(ref(_db, `users/${id}`));
         if(existSnap.exists()) return alert("此帳號已被註冊");
-        const refSnap = await get(ref(db, `users/${refCode}`));
+        const refSnap = await get(ref(_db, `users/${refCode}`));
         if(!refSnap.exists()) return alert("推薦人帳號不存在");
-
-        await set(ref(db, `users/${id}`), { balance: 0, nickname: nick, pin: pass1, referrer: refCode, createTime: Date.now() });
+        await set(ref(_db, `users/${id}`), { balance: 0, nickname: nick, pin: pass1, referrer: refCode, createTime: Date.now() });
         localStorage.setItem('myScratchCode', id);
         alert("註冊成功！"); location.reload();
     };
 
     window.handlePinLogin = async () => {
         const pin = document.getElementById('pinIn').value;
-        if(tempUser.data.pin !== pin) return alert("密碼錯誤");
-        localStorage.setItem('myScratchCode', tempUser.id);
+        if(_u.data.pin !== pin) return alert("密碼錯誤");
+        localStorage.setItem('myScratchCode', _u.id);
         location.reload();
     };
 
     function renderCats() {
         const cats = new Set(['ALL']);
-        Object.values(allG).forEach(g => { if(g.category) cats.add(g.category); });
-        document.getElementById('catList').innerHTML = Array.from(cats).map(c => `<div class="cat-item ${curC===c?'active':''}" onclick="filterCat('${c}')">${c==='ALL'?'全部 ALL':c}</div>`).join('');
+        Object.values(_g).forEach(g => { if(g.category) cats.add(g.category); });
+        document.getElementById('catList').innerHTML = Array.from(cats).map(c => `<div class="cat-item ${_cc===c?'active':''}" onclick="filterCat('${c}')">${c==='ALL'?'全部 ALL':c}</div>`).join('');
     }
-    window.filterCat = (c) => { curC = c; renderCats(); renderGrid(); };
+    window.filterCat = (c) => { _cc = c; renderCats(); renderGrid(); };
 
     function renderGrid() {
         const grid = document.getElementById('pGrid'); grid.innerHTML = '';
-        if(curC === 'ALL') {
-            const freeCard = document.createElement('div');
-            freeCard.className = 'p-card free-gift';
-            freeCard.onclick = () => window.open('https://myppt.cc/XU5x0i', '_blank');
-            freeCard.innerHTML = `<img src="https://i.ibb.co/Vp8n9Wq/image.png" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我領取</div></div>`;
-            grid.appendChild(freeCard);
+        if(_cc === 'ALL') {
+            const f = document.createElement('div');
+            f.className = 'p-card free-gift';
+            f.onclick = () => window.open('https://myppt.cc/XU5x0i', '_blank');
+            f.innerHTML = `<img src="https://i.ibb.co/Vp8n9Wq/image.png" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我領取</div></div>`;
+            grid.appendChild(f);
         }
-        for(let id in allG) {
-            const item = allG[id]; if(curC !== 'ALL' && item.category !== curC) continue;
+        for(let id in _g) {
+            const item = _g[id]; if(_cc !== 'ALL' && item.category !== _cc) continue;
             const safeId = id.replace(/\s+/g,'-');
             const card = document.createElement('div'); 
             const isSoldOut = item.isSoldOut || false;
@@ -329,27 +318,26 @@
             card.onclick = () => location.href = `game.html?id=${id}`;
             card.innerHTML = `<img src="${item.img || ''}" class="p-img"><div class="p-info" id="info-${safeId}"><div class="p-name" id="name-${safeId}">${id}</div><div id="status-${safeId}"></div><div id="promo-${safeId}"></div></div>`;
             grid.appendChild(card);
-            onValue(ref(db, `games/${id}`), gSnap => {
-                const gData = gSnap.val() || {}; const lock = gData.lock; const pool = gData.pool || [];
-                const statusBox = document.getElementById(`status-${safeId}`);
-                const promoBox = document.getElementById(`promo-${safeId}`);
-                const nameBox = document.getElementById(`name-${safeId}`);
-                if(!statusBox) return;
+            onValue(ref(_db, `games/${id}`), s => {
+                const d = s.val() || {}; const l = d.lock; const p = d.pool || [];
+                const sB = document.getElementById(`status-${safeId}`);
+                const pB = document.getElementById(`promo-${safeId}`);
+                const nB = document.getElementById(`name-${safeId}`);
+                if(!sB) return;
                 if(isSoldOut) {
-                    statusBox.innerHTML = `<div class="soldout-tag">SOLD OUT / 已停盤</div>`;
-                    promoBox.innerHTML = ""; nameBox.innerHTML = id;
-                } else if(lock && lock.expire > Date.now()) {
-                    // 🟢 修改：顯示包台中，不顯示秒數
-                    statusBox.innerHTML = `<div class="lock-tag">🔒 玩家包台中</div>`;
-                    promoBox.innerHTML = ""; nameBox.innerHTML = id;
+                    sB.innerHTML = `<div class="soldout-tag">SOLD OUT / 已停盤</div>`;
+                    pB.innerHTML = ""; nB.innerHTML = id;
+                } else if(l && l.expire > Date.now()) {
+                    sB.innerHTML = `<div class="lock-tag">🔒 玩家包台中</div>`;
+                    pB.innerHTML = ""; nB.innerHTML = id;
                 } else {
-                    statusBox.innerHTML = `<div class="p-price-value">一刮 / P${item.price || 0}</div>`;
-                    const sold = pool.filter(x => x.taken).length;
+                    sB.innerHTML = `<div class="p-price-value">一刮 / P${item.price || 0}</div>`;
+                    const sold = p.filter(x => x.taken).length;
                     if(item.promoCount > 0 && sold < item.promoCount) {
-                        nameBox.innerHTML = `${id}<span class="promo-tag">開盤優惠</span>`;
-                        statusBox.innerHTML = `<div class="p-price-value"><span style="font-size:0.75rem;color:#adb5bd">一刮 / </span>P${item.promoPrice}</div>`;
-                        promoBox.innerHTML = `<div class="promo-info">前${item.promoCount.toString().padStart(2,'0')}刮 P${item.promoPrice} / 之後 P${item.price}</div>`;
-                    } else { nameBox.innerHTML = id; promoBox.innerHTML = ""; }
+                        nB.innerHTML = `${id}<span class="promo-tag">開盤優惠</span>`;
+                        sB.innerHTML = `<div class="p-price-value"><span style="font-size:0.75rem;color:#adb5bd">一刮 / </span>P${item.promoPrice}</div>`;
+                        pB.innerHTML = `<div class="promo-info">前${item.promoCount.toString().padStart(2,'0')}刮 P${item.promoPrice} / 之後 P${item.price}</div>`;
+                    } else { nB.innerHTML = id; pB.innerHTML = ""; }
                 }
             });
         }
