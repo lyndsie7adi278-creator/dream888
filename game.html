@@ -7,6 +7,8 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
     :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
+    /* 🟢 禁止選取與禁止點擊反饋 */
+    * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-drag: none !important; }
     body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow-x: hidden; }
     .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
     .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
@@ -14,11 +16,9 @@
     .promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
     .gallery-container { background: #000; width: 100%; max-width: 600px; margin: 0 auto; flex-shrink: 0; }
     .main-img-wrap { width: 100%; height: 45vh; max-height: 400px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
-    #gMainImg { width: 100%; height: 100%; object-fit: contain; }
+    #gMainImg { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
     .thumb-scroll { display: flex; gap: 8px; padding: 10px 15px; overflow-x: auto; background: var(--card); border-bottom: 1px solid #222; }
-    .thumb-scroll::-webkit-scrollbar { height: 4px; }
-    .thumb-scroll::-webkit-scrollbar-thumb { background: var(--p); border-radius: 10px; }
-    .thumb-img { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; border: 2px solid #333; opacity: 0.5; flex-shrink: 0; cursor: pointer; transition: 0.2s; }
+    .thumb-img { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; border: 2px solid #333; opacity: 0.5; flex-shrink: 0; cursor: pointer; pointer-events: auto !important; }
     .thumb-img.active { border-color: var(--p); opacity: 1; transform: scale(1.05); }
     .info-box { padding: 15px; background: var(--card); border-bottom: 2px solid #222; display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     .info-box h2 { margin: 0; font-size: 1.1rem; color: #fff; }
@@ -46,7 +46,8 @@
     .m-btn { display: block; width: 100%; padding: 18px; background: var(--p); color: #000; border: none; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; margin-top: 25px; }
 </style>
 </head>
-<body>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;">
+
 <div id="promoBanner" class="promo-banner">🔥 開盤大優惠！剩餘 <b id="promoLeft">0</b> 抽，每抽 <b id="promoVal">0</b> P</div>
 <div class="header"><a href="index.html" class="back-btn">← 返回商城</a><div class="balance-tag">P <span id="uBal">0</span></div></div>
 <div class="gallery-container"><div class="main-img-wrap"><img id="gMainImg" src=""></div><div class="thumb-scroll" id="thumbList"></div></div>
@@ -60,13 +61,26 @@
 </div>
 <div id="scratchOverlay" class="scratch-overlay"><div style="text-align:center;"><div style="color:var(--p); font-weight:900; font-size:1.5rem; margin-bottom:15px;">NO. <span id="selNum">--</span></div><div class="scratch-box" id="scratchBox"><div id="luckyVal">?</div></div></div></div>
 <div id="resModal" class="modal"><div class="m-card"><img id="res_img" style="width:100%; border-radius:18px; border: 1px solid #333;"><div id="res_msg" style="font-size:1.5rem; margin-top:20px; font-weight:900; color:var(--p);"></div><button class="m-btn" onclick="window.location.replace(window.location.href)">確認並繼續</button></div></div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// 🟢 安全鎖定：監聽鍵盤
+window.addEventListener('keydown', (e) => {
+    if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
+        e.preventDefault(); return false;
+    }
+});
+
+// 🟢 安全鎖定：Debugger 陷阱
+setInterval(() => { (function() { debugger; }()) }, 1000);
+
 const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
 const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
+
 if(!_gid) location.href = 'index.html';
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
@@ -90,11 +104,11 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     thumbList.innerHTML = allImgs.map((src, idx) => `<img src="${src}" class="thumb-img ${idx===0?'active':''}" onclick="window.changeImg(this, '${src}')">`).join('');
     onValue(ref(_db, `games/${_gid}/pool`), snap => {
         const p = snap.val() || []; const grid = document.getElementById('poolGrid');
-        const _targets = (_data.prizes || []).map(x => Number(x.num)), _sold = p.filter(t => t.taken).length;
-        const _pct = Math.round((_sold / _data.total) * 100);
-        document.getElementById('progText').innerText = `${_sold} / ${_data.total}`;
+        const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
+        const _pct = Math.round((_s / _data.total) * 100);
+        document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
         document.getElementById('progFill').style.width = `${_pct}%`; document.getElementById('progPercent').innerText = `${_pct}%`;
-        const pLeft = (_data.promoCount || 0) - _sold; const banner = document.getElementById('promoBanner');
+        const pLeft = (_data.promoCount || 0) - _s; const banner = document.getElementById('promoBanner');
         if(pLeft > 0 && !_isClosed) {
             banner.style.display = 'block'; document.getElementById('promoLeft').innerText = pLeft; document.getElementById('promoVal').innerText = _data.promoPrice;
             document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P`;
@@ -108,7 +122,7 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
             div.className = `ticket ${t.taken ? 'taken' : ''}`;
             if(t.taken && t.revealed) {
-                const v = Number(t.grade); if(_targets.includes(v)) div.classList.add('winner-glow');
+                const v = Number(t.grade); if(_m.includes(v)) div.classList.add('winner-glow');
                 div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${v.toString().padStart(2, '0')}</span>`;
             } else if(t.taken && !t.revealed) { div.innerHTML = `<span style="font-size:0.6rem;">刮開中</span>`;
             } else { div.innerText = s; div.onclick = () => { _execAction(i, t.grade); }; }
