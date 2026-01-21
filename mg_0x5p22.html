@@ -8,7 +8,6 @@
         :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --text: #e2e8f0; --border: rgba(255,184,0,0.3); }
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: none; overflow-x: hidden; }
         
-        /* 側邊欄樣式 */
         .sidebar { width: 240px; height: 100vh; background: #000; position: fixed; border-right: 1px solid var(--border); padding: 30px 15px; box-sizing: border-box; z-index: 1000; transition: 0.3s; left: 0; }
         .main { margin-left: 240px; padding: 20px; padding-top: 65px; transition: 0.3s; }
         
@@ -33,6 +32,7 @@
         input, textarea, select { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; font-size: 0.9rem; }
         .btn { background: var(--p); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 800; transition: 0.2s; }
         .btn-sm { padding: 8px 12px; font-size: 0.85rem; margin-right: 5px; margin-top: 5px; }
+        .btn-danger { background: #ff4757; color: white; }
 
         /* 會員項目 */
         .user-item { background: #0a0c10; border: 1px solid #222; border-radius: 12px; margin-bottom: 10px; }
@@ -47,11 +47,15 @@
         .log-box { background: var(--card); width: 95%; max-width: 500px; border-radius: 20px; border: 1px solid var(--p); padding: 25px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
         .log-list { overflow-y: auto; flex-grow: 1; margin-top: 15px; }
 
-        .safe-box { border: 1px solid #ff4757; padding: 15px; border-radius: 12px; background: rgba(255,71,87,0.05); margin-bottom: 15px; }
+        .safe-box { border: 1px solid var(--p); padding: 15px; border-radius: 12px; background: rgba(255,184,0,0.05); margin-bottom: 15px; }
         .adj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .win-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .win-table th { text-align: left; color: var(--p); padding: 10px; border-bottom: 2px solid #222; }
         .win-table td { padding: 10px; border-bottom: 1px solid #222; }
+
+        /* 獎項列表樣式 */
+        .prize-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .prize-row input { margin-bottom: 0; }
     </style>
 </head>
 <body>
@@ -84,22 +88,31 @@
     </div>
 
     <div id="game" class="page">
-        <span class="title">商品發布與戰略配率</span>
-        <div class="card" style="max-width: 500px; margin: 0 auto;">
+        <span class="title" id="gameActionTitle">商品發布與戰略配率</span>
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
             <input type="text" id="gId" placeholder="遊戲 ID (如: 刮刮樂 A)">
             <input type="text" id="gCat" placeholder="分類 (如: 商城限定)">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="gTotal" placeholder="總籤數"><input type="number" id="gPrice" placeholder="單抽原價"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <input type="number" id="gTotal" placeholder="總籤數">
+                <input type="number" id="gPrice" placeholder="單抽原價">
+            </div>
             <div class="safe-box">
                 <input type="number" id="gSafeZone" placeholder="大獎保護區 (前 N 張不出獎)">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;"><input type="number" id="pCount" placeholder="優惠張數"><input type="number" id="pPrice" placeholder="優惠價格"></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+                    <input type="number" id="pCount" placeholder="優惠張數">
+                    <input type="number" id="pPrice" placeholder="優惠價格">
+                </div>
             </div>
             <input type="text" id="gImg" placeholder="封面圖網址 (URL)">
-            <textarea id="gPrizes" rows="6" placeholder='獎項設定 (JSON 格式)'>[
-  {"num": 1, "name": "頭獎 10,000P"},
-  {"num": 8, "name": "二獎 5,000P"},
-  {"num": 66, "name": "幸運獎 1,000P"}
-]</textarea>
-            <button class="btn" style="width:100%" onclick="publishGame()">發布商品並初次洗牌</button>
+            
+            <div style="margin-bottom: 10px; color: var(--p); font-weight: bold;">獎項設定：</div>
+            <div id="prizeContainer"></div>
+            <button class="btn btn-sm" onclick="addPrizeInput()" style="margin-bottom: 20px;">＋ 新增獎項</button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" style="flex: 2" id="publishBtn" onclick="publishGame()">發布並初次洗牌</button>
+                <button class="btn btn-danger" style="flex: 1; display: none;" id="cancelEditBtn" onclick="resetGameForm()">取消編輯</button>
+            </div>
         </div>
         <hr style="border:0; border-top:1px solid #222; margin:30px 0;">
         <div id="quickAdjustList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 15px;"></div>
@@ -137,6 +150,8 @@
     const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const app = initializeApp(config); const db = getDatabase(app);
 
+    let isEditing = false;
+
     window.onload = () => { if(prompt("管理授權碼 (ADMIN):")==="8888") { document.body.style.display="block"; startSync(); } else location.href="index.html"; };
     
     window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
@@ -150,6 +165,18 @@
     window.toggleUser = (uid) => document.getElementById(`content-${uid}`).classList.toggle('show');
     window.closeLog = () => document.getElementById('logModal').style.display = 'none';
 
+    // 🟢 獎項動態輸入邏輯
+    window.addPrizeInput = (num = '', name = '') => {
+        const div = document.createElement('div');
+        div.className = 'prize-row';
+        div.innerHTML = `
+            <input type="number" placeholder="中獎號碼" value="${num}" style="flex: 1">
+            <input type="text" placeholder="獎項名稱" value="${name}" style="flex: 2">
+            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+        `;
+        document.getElementById('prizeContainer').appendChild(div);
+    };
+
     function startSync() {
         onValue(ref(db, 'gameSettings'), snap => {
             const list = document.getElementById('monList'); const adj = document.getElementById('quickAdjustList');
@@ -158,8 +185,9 @@
                 const mon = document.createElement('div'); mon.className = 'card';
                 const statusHtml = g.isSoldOut ? `<span style="color:#ff4757;font-size:0.8rem;">[已停盤]</span>` : `<span style="color:#2ecc71;font-size:0.8rem;">[銷售中]</span>`;
                 mon.innerHTML = `<b>${id}</b> ${statusHtml}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0;">--</div>
-                    <button class="btn btn-sm" onclick="resetShuffle('${id}')">戰略重置並開盤</button>
-                    <button class="btn btn-sm" style="background:#ef4444" onclick="deleteGame('${id}')">刪除</button>`;
+                    <button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯商品</button>
+                    <button class="btn btn-sm" onclick="resetShuffle('${id}')">重新洗牌</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button>`;
                 list.appendChild(mon);
                 onValue(ref(db, `games/${id}/pool`), ps => {
                     const p = ps.val() || []; if(document.getElementById(`rem-${id}`)) document.getElementById(`rem-${id}`).innerText = `剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`;
@@ -211,33 +239,103 @@
                             <button class="btn btn-sm" onclick="showLogs('${uid}')">對帳紀錄</button>
                             <button class="btn btn-sm" onclick="addBal('${uid}')">調整點數</button>
                             <button class="btn btn-sm" onclick="editPin('${uid}')">修改 PIN</button>
-                            <button class="btn btn-sm" style="background:#ff4757; color:#fff" onclick="deleteUser('${uid}')">刪除會員</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteUser('${uid}')">刪除會員</button>
                         </div>
                     </div>`;
                 container.appendChild(item);
             });
         });
 
-        get(ref(ref(db, 'settings/announcement'))).then(s => { if(s.exists()) document.getElementById('annContent').value = s.val(); });
+        get(ref(db, 'settings/announcement')).then(s => { if(s.exists()) document.getElementById('annContent').value = s.val(); });
     }
+
+    // 🟢 載入現有商品到編輯表單
+    window.loadGameToEdit = async (id) => {
+        const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
+        if(!g) return;
+        isEditing = true;
+        document.getElementById('gId').value = id;
+        document.getElementById('gId').disabled = true;
+        document.getElementById('gCat').value = g.category;
+        document.getElementById('gTotal').value = g.total;
+        document.getElementById('gPrice').value = g.price;
+        document.getElementById('gSafeZone').value = g.safeZone || 0;
+        document.getElementById('pCount').value = g.promoCount || 0;
+        document.getElementById('pPrice').value = g.promoPrice || 0;
+        document.getElementById('gImg').value = g.img;
+        
+        const container = document.getElementById('prizeContainer');
+        container.innerHTML = '';
+        g.prizes.forEach(p => addPrizeInput(p.num, p.name));
+        
+        document.getElementById('gameActionTitle').innerText = "編輯商品：" + id;
+        document.getElementById('publishBtn').innerText = "更新商品資訊 (不重新洗牌)";
+        document.getElementById('cancelEditBtn').style.display = "block";
+        switchTab('game');
+    };
+
+    window.resetGameForm = () => {
+        isEditing = false;
+        document.getElementById('gId').value = '';
+        document.getElementById('gId').disabled = false;
+        document.getElementById('gCat').value = '';
+        document.getElementById('gTotal').value = '';
+        document.getElementById('gPrice').value = '';
+        document.getElementById('gSafeZone').value = '';
+        document.getElementById('pCount').value = '';
+        document.getElementById('pPrice').value = '';
+        document.getElementById('gImg').value = '';
+        document.getElementById('prizeContainer').innerHTML = '';
+        document.getElementById('gameActionTitle').innerText = "商品發布與戰略配率";
+        document.getElementById('publishBtn').innerText = "發布商品並初次洗牌";
+        document.getElementById('cancelEditBtn').style.display = "none";
+    };
 
     window.publishGame = async () => {
         const id = document.getElementById('gId').value.trim();
         const total = Number(document.getElementById('gTotal').value);
         const safe = Number(document.getElementById('gSafeZone').value) || 0;
-        const prizes = JSON.parse(document.getElementById('gPrizes').value);
-        const pNums = prizes.map(p => Number(p.num));
-        let lose = []; for(let i=1; i<=total; i++) if(!pNums.includes(i)) lose.push(i);
-        lose.sort(() => Math.random() - 0.5);
-        let front = lose.splice(0, safe);
-        let back = [...lose, ...pNums].sort(() => Math.random() - 0.5);
-        let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
-        await set(ref(db, `gameSettings/${id}`), { total, price: Number(document.getElementById('gPrice').value), prizes, safeZone: safe, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value), promoPrice: Number(document.getElementById('pPrice').value), category: document.getElementById('gCat').value, isSoldOut: false });
-        await set(ref(db, `games/${id}/pool`), pool); alert("商品發布成功");
+        
+        const prizeRows = document.querySelectorAll('.prize-row');
+        const prizes = Array.from(prizeRows).map(row => ({
+            num: Number(row.querySelectorAll('input')[0].value),
+            name: row.querySelectorAll('input')[1].value
+        }));
+
+        if(!id || !total || prizes.length === 0) return alert("請填寫完整資訊並至少設定一個獎項");
+
+        const gameSettingsData = { 
+            total, 
+            price: Number(document.getElementById('gPrice').value), 
+            prizes, 
+            safeZone: safe, 
+            img: document.getElementById('gImg').value, 
+            promoCount: Number(document.getElementById('pCount').value), 
+            promoPrice: Number(document.getElementById('pPrice').value), 
+            category: document.getElementById('gCat').value, 
+            isSoldOut: false 
+        };
+
+        await update(ref(db, `gameSettings/${id}`), gameSettingsData);
+
+        // 如果是新發布或明確要求洗牌，才重新生成 pool
+        if(!isEditing) {
+            const pNums = prizes.map(p => Number(p.num));
+            let lose = []; for(let i=1; i<=total; i++) if(!pNums.includes(i)) lose.push(i);
+            lose.sort(() => Math.random() - 0.5);
+            let front = lose.splice(0, safe);
+            let back = [...lose, ...pNums].sort(() => Math.random() - 0.5);
+            let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
+            await set(ref(db, `games/${id}/pool`), pool);
+            alert("新商品發布成功");
+        } else {
+            alert("商品資訊已更新 (已跳過洗牌，保留當前進度)");
+        }
+        resetGameForm();
     };
 
     window.resetShuffle = async (id) => {
-        if(!confirm("⚠️ 確定重新洗牌？")) return;
+        if(!confirm("⚠️ 確定重新洗牌？這會清除該盤所有購買紀錄！")) return;
         const s = await get(ref(db, `gameSettings/${id}`)); const g = s.val();
         const pNums = g.prizes.map(p => Number(p.num));
         let lose = []; for(let i=1; i<=g.total; i++) if(!pNums.includes(i)) lose.push(i);
@@ -246,7 +344,7 @@
         let back = [...lose, ...pNums].sort(() => Math.random() - 0.5);
         let pool = [...front, ...back].map(n => ({ grade: n, taken: false, revealed: false }));
         await update(ref(db, `gameSettings/${id}`), { isSoldOut: false });
-        await set(ref(db, `games/${id}/pool`), pool); alert("重新開盤成功");
+        await set(ref(db, `games/${id}/pool`), pool); alert("重新洗牌開盤成功");
     };
 
     window.showLogs = async (uid) => {
@@ -265,11 +363,11 @@
         let fin = (s.val()||0) + parseInt(amt);
         await update(ref(db, `users/${uid}`), { balance: fin });
     };
-    window.editPin = async (uid) => { const p = prompt("新 PIN:"); if(p) update(ref(db, `users/${uid}`), { pin: p }); };
+    window.editPin = async (uid) => { const p = prompt("新 PIN 密碼:"); if(p) update(ref(db, `users/${uid}`), { pin: p }); };
     window.deleteGame = async (id) => { if(confirm("刪除此商品？")) { remove(ref(db, `gameSettings/${id}`)); remove(ref(db, `games/${id}`)); } };
     window.deleteUser = async (uid) => { if(confirm("徹底刪除會員？")) remove(ref(db, `users/${uid}`)); };
-    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告已存"); };
-    window.createUser = async () => { const u = prompt("輸入新 UID:"); if(u) set(ref(db, `users/${u.toUpperCase()}`), { balance:0, nickname:"新玩家", pin:null }); };
+    window.saveAnnouncement = async () => { await set(ref(db, 'settings/announcement'), document.getElementById('annContent').value); alert("公告已同步"); };
+    window.createUser = async () => { const u = prompt("輸入新帳號 ID:"); if(u) set(ref(db, `users/${u}`), { balance:0, nickname:"新玩家", pin:"123456" }); };
 </script>
 </body>
 </html>
