@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>夢工廠 | 旗艦選號商城</title>
+    <title>夢工廠 | 刮刮樂商城</title>
     <style>
         :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --line: #06c755; --soldout: #95a5a6; --free: #4cd137; --lock: #3498db; }
         
-        /* 1. 全域鎖定與基礎設定 */
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; box-sizing: border-box; }
         body { 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
@@ -16,7 +15,6 @@
             overflow-x: hidden; padding-bottom: 100px;
         }
 
-        /* 2. 頂部導航欄 */
         .top-nav { 
             width: 100%; background: white; padding: 15px 20px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -26,7 +24,6 @@
         .nav-left { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #7f8c8d; font-weight: bold; }
         .logo-txt { font-weight: 900; letter-spacing: 4px; color: #333; font-size: 1.1rem; }
 
-        /* 3. 跑馬燈 */
         .marquee-container { 
             width: 100%; background: #1a1c23; color: var(--primary); 
             padding: 12px 0; overflow: hidden; white-space: nowrap; 
@@ -35,7 +32,6 @@
         .marquee-content { display: inline-block; animation: marquee 25s linear infinite; }
         @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
 
-        /* 4. 分類滾動選單 */
         .category-scroll { 
             display: flex; overflow-x: auto; padding: 15px 20px; gap: 12px; 
             width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; 
@@ -51,7 +47,6 @@
             box-shadow: 0 4px 12px rgba(255,143,163,0.4); 
         }
 
-        /* 5. 商品卡片網格 */
         .product-grid { 
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; 
             width: 94%; max-width: 500px; padding: 15px 0; 
@@ -79,7 +74,6 @@
         @keyframes promo-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .promo-info { font-size: 0.65rem; color: #ff8fa3; margin-top: 5px; font-weight: 900; }
 
-        /* 6. 會員中心側欄 */
         .side-drawer { 
             position: fixed; top: 0; right: -310px; width: 300px; height: 100vh; 
             background: white; z-index: 3000; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
@@ -102,7 +96,6 @@
         .log-list { height: 150px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; border-bottom: 1px dashed #eee; }
         .log-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
 
-        /* LINE 懸浮客服 */
         .line-wrapper {
             position: fixed; bottom: 30px; right: 20px; z-index: 2000;
             display: flex; flex-direction: column; align-items: flex-end;
@@ -114,7 +107,6 @@
         .line-float img { width: 35px; height: 35px; }
         @keyframes float-breath { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* 7. 旗艦級聲明區塊 */
         .status-section { 
             width: 92%; max-width: 460px; margin: 35px 0 15px; 
             background: white; border-radius: 28px; padding: 25px; 
@@ -128,7 +120,6 @@
         .status-text b { display: block; font-size: 0.9rem; color: #1a1c23; margin-bottom: 5px; letter-spacing: 0.5px; }
         .status-text p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.6; }
 
-        /* 8. 彈窗與按鈕 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 4000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .m-box { background: white; padding: 40px 30px; border-radius: 35px; width: 88%; max-width: 340px; text-align: center; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #ccc; cursor: pointer; }
@@ -139,8 +130,8 @@
 </head>
 <body oncontextmenu="return false;">
 
-<div class="line-wrapper" onclick="window.open('https://line.me/ti/p/@您的LINE_ID', '_blank')">
-    <div class="line-bubble">儲值/問題請點我 💬</div>
+<div class="line-wrapper" onclick="window.open('https://line.me/ti/p/@dream8', '_blank')">
+    <div class="line-bubble">儲值/遊戲相關問題請點我 💬</div>
     <div class="line-float"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE"></div>
 </div>
 
@@ -155,11 +146,11 @@
 
 <div class="top-nav">
     <div class="nav-left" onclick="document.getElementById('annModal').style.display='flex'">📜 <span>最新公告</span></div>
-    <div class="logo-txt">DREAM FACTORY</div>
+    <div class="logo-txt">夢工廠 | 刮刮樂商城</div>
     <div onclick="toggleDrawer()" style="cursor:pointer; font-size:1.4rem; color:#444;">👤</div>
 </div>
 
-<div class="marquee-container"><div class="marquee-content" id="mq">祝各位玩家都能刮中頭獎！好運連連！</div></div>
+<div class="marquee-container"><div class="marquee-content" id="mq">祝各位玩家都能刮中！好運連連！</div></div>
 
 <div class="category-scroll" id="catList">
     <div class="cat-item active" onclick="filterCat('ALL')">全部商品 ALL</div>
@@ -206,7 +197,7 @@
     </div>
 </div>
 
-<div class="footer"> &copy; 2026 PREMIUM SLOTS | DREAM FACTORY </div>
+<div class="footer"> &copy; 2026 | 夢工廠 </div>
 
 <div id="loginModal" class="modal">
     <div class="m-box">
@@ -227,7 +218,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 🔴 100% 完整的 Firebase 配置
     const config = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
     const app = initializeApp(config); const db = getDatabase(app);
     const saved = localStorage.getItem('myScratchCode');
@@ -252,7 +242,6 @@
                 document.getElementById('uNick').innerText = u.nickname || "新玩家 ✏️";
                 document.getElementById('uID').innerText = `ID: ${saved}`;
                 
-                // 🔴 100% 補回：側邊欄消費紀錄渲染邏輯
                 if(u.logs) {
                     const arr = Object.values(u.logs).sort((a,b)=>b.time-a.time);
                     document.getElementById('hList').innerHTML = arr.map(l => `<div class="log-item"><div><b>${l.game}</b><br><small style="color:#adb5bd">${new Date(l.time).toLocaleTimeString()}</small></div><span style="color:var(--primary); font-weight:900;">-${l.cost} P</span></div>`).join('');
@@ -261,7 +250,6 @@
                 }
             });
             
-            // 🔴 100% 補回：中獎存根即時監聽
             onValue(ref(db, 'winLogs'), snap => {
                 const myWins = Object.values(snap.val()||{}).filter(l => l.user === saved).sort((a,b)=>b.time-a.time);
                 document.getElementById('winList').innerHTML = myWins.length > 0 ? myWins.map(w => `<div class="log-item"><div><b>${w.prize}</b><br><small>${w.game}</small></div><span style="color:#27ae60; font-size:0.75rem; font-weight:bold;">已紀錄</span></div>`).join('') : '<div style="color:#ccc; text-align:center; padding:20px; font-size:0.8rem;">尚無紀錄</div>';
@@ -300,12 +288,11 @@
     function renderGrid() {
         const grid = document.getElementById('pGrid'); grid.innerHTML = '';
         
-        // 🔴 免費引流格
         if(curC === 'ALL') {
             const freeCard = document.createElement('div');
             freeCard.className = 'p-card free-gift';
             freeCard.onclick = () => window.open('https://myppt.cc/XU5x0i', '_blank');
-            freeCard.innerHTML = `<img src="https://i.ibb.co/Vp8n9Wq/image.png" class="p-img"><div class="p-info"><div class="p-name">🎁 直播限定 | 免費抽</div><div class="free-tag">FREE / 點我領取</div></div>`;
+            freeCard.innerHTML = `<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXdaU9vpns6dKcmrXAdxfEdMBQrMZH-5kYmI_TSV32wei4gLUw2uTwif9cGID9vOH_h7Qe5Jm64z6exzfHiUmgI-6Cqj1zDWfRLbHcR6R1P_KSEJAf75cmZkXdiN0hVmsA_0FFq598KLhNiEGjRxsZKP?key=NC24mEMkfz8IOcSbQ98k9A" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我領取</div></div>`;
             grid.appendChild(freeCard);
         }
 
@@ -320,7 +307,6 @@
             card.innerHTML = `<img src="${item.img || ''}" class="p-img"><div class="p-info" id="info-${safeId}"><div class="p-name" id="name-${safeId}">${id}</div><div id="status-${safeId}"></div><div id="promo-${safeId}"></div></div>`;
             grid.appendChild(card);
             
-            // 🔴 核心監聽：包台、售罄、開盤優惠三態切換
             onValue(ref(db, `games/${id}`), gSnap => {
                 const gData = gSnap.val() || {};
                 const lock = gData.lock;
@@ -341,7 +327,6 @@
                 } else {
                     statusBox.innerHTML = `<div class="p-price-value">一刮 / P${item.price || 0}</div>`;
                     
-                    // 🔴 重新補回：開盤優惠標籤邏輯
                     const sold = pool.filter(x => x.taken).length;
                     if(item.promoCount > 0 && sold < item.promoCount) {
                         nameBox.innerHTML = `${id}<span class="promo-tag">開盤優惠</span>`;
@@ -359,3 +344,4 @@
 </script>
 </body>
 </html>
+
