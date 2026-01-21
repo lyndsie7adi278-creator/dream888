@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>夢工廠 | 常見問題 FAQ</title>
     <style>
-        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --text: #2c3e50; --line: #06c755; --lock: #3498db; }
+        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --text: #2c3e50; --line: #06c755; --lock: #3498db; --gold: #ffb800; }
         
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         body { 
@@ -57,13 +57,21 @@
         
         .faq-item.active { border-color: var(--primary); }
         .faq-item.active .faq-icon { transform: rotate(45deg); }
-        .faq-item.active .faq-content { max-height: 800px; }
+        .faq-item.active .faq-content { max-height: 1200px; }
 
-        /* 包台規則專用樣式 */
         .rule-list { margin: 0; padding-left: 18px; }
         .rule-list li { margin-bottom: 8px; }
         .highlight { color: var(--primary); font-weight: bold; }
         .lock-text { color: var(--lock); font-weight: bold; }
+
+        /* 儲值規範專用美化樣式 */
+        .rate-card {
+            background: linear-gradient(145deg, #1a1c23, #000);
+            border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 15px; border: 1px solid var(--gold);
+        }
+        .warning-box {
+            background: #fff5f5; border: 1px dashed #ff4757; border-radius: 12px; padding: 12px; margin-top: 10px;
+        }
 
         .footer-note { text-align: center; margin-top: 40px; font-size: 0.8rem; color: #adb5bd; padding-bottom: 50px; }
     </style>
@@ -106,6 +114,34 @@
 
     <div class="faq-item">
         <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">台幣與 P 點的匯率是多少？儲值後可以退費嗎？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                <div class="rate-card">
+                    <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">官方固定匯率</div>
+                    <div style="color: var(--gold); font-size: 1.5rem; font-weight: 900; margin-top: 5px;">
+                        1 <span style="font-size: 0.8rem; color: #eee;">台幣</span> = 1 <span style="font-size: 0.8rem; color: #eee;">P 點</span>
+                    </div>
+                </div>
+                所有儲值獲得之 P 點僅限於本商城參與遊戲使用，不可進行帳號間的轉讓或買賣。
+                <div class="warning-box">
+                    <b style="color: #ff4757; display: flex; align-items: center; gap: 5px; font-size: 0.9rem;">⚠️ 重要提醒</b>
+                    <p style="font-size: 0.82rem; color: #ff4757; margin: 5px 0 0; font-weight: bold; line-height: 1.5;">
+                        點數儲值成功後，即視為消耗性數位服務：
+                    </p>
+                    <ul style="font-size: 0.82rem; color: #d63031; padding-left: 15px; margin: 5px 0 0;">
+                        <li><b>絕對禁止：</b>點數無法兌換回現金。</li>
+                        <li><b>不可退費：</b>儲值前請務必確認個人需求。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
             <div class="faq-question">如何進行儲值？多久會到帳？</div>
             <div class="faq-icon">+</div>
         </div>
@@ -123,19 +159,7 @@
         </div>
         <div class="faq-content">
             <div class="faq-text">
-                專屬代碼為您的唯一身份識別，PIN 碼則是您的取款/交易密碼。若遺失，請立即聯繫 LINE 客服，並提供您的歷史儲值紀錄截圖，核對身份後將由管理員手動為您重置。
-            </div>
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">如果儲值金額沒顯示怎麼辦？</div>
-            <div class="faq-icon">+</div>
-        </div>
-        <div class="faq-content">
-            <div class="faq-text">
-                請先嘗試「重新整理」頁面。若 10 分鐘後點數仍未更新，請私訊客服並附上「匯款截圖」，我們會立即為您人工補單。
+                專屬代碼為您的唯一身份識別，PIN 碼則是您的取款/交易密碼。若遺失，請聯繫 LINE 客服並提供歷史紀錄，核對身份後將由管理員為您重置。
             </div>
         </div>
     </div>
@@ -149,7 +173,7 @@
         </div>
         <div class="faq-content">
             <div class="faq-text">
-                中獎紀錄會同步存於「會員中心」的「中獎存根」內。請點擊首頁人頭圖標，截圖您的中獎存根，並私訊 LINE 客服。實體獎品將於 <span class="highlight">3 個工作天內</span> 寄出，點數獎項則由客服直接手動加入。
+                中獎紀錄會同步存於「會員中心」的「中獎存根」內。請截圖您的中獎存根私訊 LINE 客服。實體獎品將於 <span class="highlight">3 個工作天內</span> 寄出，點數獎項則由客服直接手動加入。
             </div>
         </div>
     </div>
@@ -161,7 +185,7 @@
         </div>
         <div class="faq-content">
             <div class="faq-text">
-                別擔心！只要點數扣除成功，該次抽獎結果就已經寫入資料庫。您可以從「會員中心」查看「消費紀錄」，若該次有中獎，也會出現在「中獎存根」中，您的權益不會受到影響。
+                只要點數扣除成功，結果就已經寫入資料庫。您可以從「會員中心」查看「消費紀錄」或「中獎存根」，您的權益不會受到影響。
             </div>
         </div>
     </div>
@@ -173,7 +197,7 @@
         </div>
         <div class="faq-content">
             <div class="faq-text">
-                部分熱門商品設有「前 X 抽」特惠。只要該盤剩餘張數尚未達到門檻，系統會自動以優惠價結帳。一旦超過特惠張數，價格將恢復原價。
+                部分熱門商品設有「前 X 抽」特惠。只要該盤累計張數尚未達到門檻，系統會自動以優惠價結帳。超過門檻後將恢復原價。
             </div>
         </div>
     </div>
@@ -185,7 +209,7 @@
         </div>
         <div class="faq-content">
             <div class="faq-text">
-                夢工廠採用雲端隨機洗牌算法。每套商品在開盤瞬間，所有籤位（中獎與否）就已經隨機排定並鎖定在雲端。我們無法針對單一玩家進行操控，一切純屬機率，公平透明。
+                夢工廠採用雲端隨機洗牌算法。每套商品在開盤瞬間，所有籤位就已經隨機排定並鎖定。我們無法針對單一玩家進行操控，一切純屬機率，公平透明。
             </div>
         </div>
     </div>
@@ -197,10 +221,7 @@
     function toggleFaq(element) {
         const item = element.parentElement;
         const isActive = item.classList.contains('active');
-        
-        // 如果想讓點開一個、另一個自動收起，保留這行：
         document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('active'));
-        
         if (!isActive) {
             item.classList.add('active');
         }
