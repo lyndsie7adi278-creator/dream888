@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>夢工廠 | 常見問題 FAQ</title>
     <style>
-        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --text: #2c3e50; --line: #06c755; }
+        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --text: #2c3e50; --line: #06c755; --lock: #3498db; }
         
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         body { 
@@ -29,15 +29,16 @@
         .container { width: 92%; max-width: 500px; margin: 20px auto 100px; }
         .page-title { font-weight: 900; font-size: 1.5rem; color: #333; margin-bottom: 10px; text-align: center; letter-spacing: 2px; }
         
-        /* 🟢 新增：FAQ 頁聯繫按鈕 */
         .line-shortcut { 
             display: flex; justify-content: center; margin-bottom: 30px; text-decoration: none;
         }
         .line-shortcut-btn {
-            background: var(--line); color: white; padding: 10px 25px; border-radius: 50px; 
+            background: var(--line); color: white; padding: 12px 25px; border-radius: 50px; 
             font-weight: 900; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(6,199,85,0.3);
             display: flex; align-items: center; gap: 8px;
         }
+
+        .section-label { font-size: 0.8rem; color: #95a5a6; font-weight: bold; margin: 25px 0 10px 5px; letter-spacing: 1px; }
 
         .faq-item { 
             background: white; border-radius: 18px; margin-bottom: 12px; 
@@ -48,17 +49,23 @@
             padding: 18px 20px; display: flex; justify-content: space-between; 
             align-items: center; cursor: pointer;
         }
-        .faq-question { font-weight: 900; font-size: 0.95rem; color: #2c3e50; }
-        .faq-icon { color: var(--primary); font-weight: bold; font-size: 1.2rem; transition: 0.3s; }
+        .faq-question { font-weight: 900; font-size: 0.95rem; color: #2c3e50; padding-right: 10px; }
+        .faq-icon { color: var(--primary); font-weight: bold; font-size: 1.2rem; transition: 0.3s; flex-shrink: 0; }
 
         .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; background: #fdfdfd; }
         .faq-text { padding: 0 20px 20px; font-size: 0.88rem; color: #7f8c8d; border-top: 1px solid #f9f9f9; padding-top: 15px; }
-
+        
         .faq-item.active { border-color: var(--primary); }
         .faq-item.active .faq-icon { transform: rotate(45deg); }
-        .faq-item.active .faq-content { max-height: 500px; }
+        .faq-item.active .faq-content { max-height: 800px; }
 
-        .footer-note { text-align: center; margin-top: 40px; font-size: 0.8rem; color: #adb5bd; }
+        /* 包台規則專用樣式 */
+        .rule-list { margin: 0; padding-left: 18px; }
+        .rule-list li { margin-bottom: 8px; }
+        .highlight { color: var(--primary); font-weight: bold; }
+        .lock-text { color: var(--lock); font-weight: bold; }
+
+        .footer-note { text-align: center; margin-top: 40px; font-size: 0.8rem; color: #adb5bd; padding-bottom: 50px; }
     </style>
 </head>
 <body>
@@ -74,33 +81,112 @@
         <div class="line-shortcut-btn">💬 聯繫官方 LINE 客服</div>
     </a>
 
-    <div class="faq-item">
+    <div class="section-label">🔒 包台防搶機制規則</div>
+    
+    <div class="faq-item active">
         <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">如何儲值點數？</div>
+            <div class="faq-question">什麼是「包台」？規則為何？</div>
             <div class="faq-icon">+</div>
         </div>
         <div class="faq-content">
-            <div class="faq-text">點擊首頁或此處的 LINE 按鈕聯繫客服，提供您的 UID 及欲儲值金額，我們將引導您完成支付並快速入點。</div>
+            <div class="faq-text">
+                為了確保玩家在連續抽獎時不被中途攔截大獎，我們設定了以下機制：
+                <ul class="rule-list" style="margin-top:10px;">
+                    <li><span class="highlight">首抽保護：</span>當您進行第一抽時，系統會自動為您鎖定該商品 <span class="lock-text">180秒</span>。</li>
+                    <li><span class="highlight">連續追加：</span>在保護期內每多抽一筆，系統會自動延長 <span class="lock-text">30-45秒</span>。</li>
+                    <li><span class="highlight">累積上限：</span>單一玩家對同一商品的保護秒數最高可累積至 <span class="lock-text">900秒</span>。</li>
+                    <li><span class="highlight">強制釋出：</span>若保護秒數歸零，系統將開放所有玩家競爭進入。</li>
+                </ul>
+                <p style="margin-top:10px; font-size:0.8rem; background:#fff5f6; padding:10px; border-radius:10px;">※ 溫馨提醒：若商品顯示「包台中」，其他玩家將無法進入，請耐心等候倒數結束。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-label">💰 帳戶與儲值</div>
+
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">如何進行儲值？多久會到帳？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                請點擊首頁或本頁的「聯繫客服」按鈕，私訊您的 <span class="highlight">專屬代碼(UID)</span> 並說明欲儲值的金額。客服提供帳號後，您轉帳完成並截圖回傳，通常於 <span class="highlight">3-10分鐘內</span> 會完成入點。
+            </div>
         </div>
     </div>
 
     <div class="faq-item">
         <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">關於「包台鎖定」機制？</div>
+            <div class="faq-question">忘記 PIN 碼或專屬代碼怎麼辦？</div>
             <div class="faq-icon">+</div>
         </div>
         <div class="faq-content">
-            <div class="faq-text">首抽即觸發 180 秒保護，續抽自動累加秒數。保護期內其他人無法搶標，確保您的遊戲連貫性。</div>
+            <div class="faq-text">
+                專屬代碼為您的唯一身份識別，PIN 碼則是您的取款/交易密碼。若遺失，請立即聯繫 LINE 客服，並提供您的歷史儲值紀錄截圖，核對身份後將由管理員手動為您重置。
+            </div>
         </div>
     </div>
 
     <div class="faq-item">
         <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">中獎後如何兌換？</div>
+            <div class="faq-question">如果儲值金額沒顯示怎麼辦？</div>
             <div class="faq-icon">+</div>
         </div>
         <div class="faq-content">
-            <div class="faq-text">系統會自動記錄中獎數據。請截圖您的中獎畫面並聯繫 LINE 客服，我們將核對後為您寄出或兌換商品。</div>
+            <div class="faq-text">
+                請先嘗試「重新整理」頁面。若 10 分鐘後點數仍未更新，請私訊客服並附上「匯款截圖」，我們會立即為您人工補單。
+            </div>
+        </div>
+    </div>
+
+    <div class="section-label">🎰 遊戲與中獎</div>
+
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">抽中獎品後該如何兌換？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                中獎紀錄會同步存於「會員中心」的「中獎存根」內。請點擊首頁人頭圖標，截圖您的中獎存根，並私訊 LINE 客服。實體獎品將於 <span class="highlight">3 個工作天內</span> 寄出，點數獎項則由客服直接手動加入。
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">刮到一半當機或自動關閉怎麼辦？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                別擔心！只要點數扣除成功，該次抽獎結果就已經寫入資料庫。您可以從「會員中心」查看「消費紀錄」，若該次有中獎，也會出現在「中獎存根」中，您的權益不會受到影響。
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">什麼是「開盤優惠」？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                部分熱門商品設有「前 X 抽」特惠。只要該盤剩餘張數尚未達到門檻，系統會自動以優惠價結帳。一旦超過特惠張數，價格將恢復原價。
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">遊戲結果是公平的嗎？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                夢工廠採用雲端隨機洗牌算法。每套商品在開盤瞬間，所有籤位（中獎與否）就已經隨機排定並鎖定在雲端。我們無法針對單一玩家進行操控，一切純屬機率，公平透明。
+            </div>
         </div>
     </div>
 
@@ -111,8 +197,13 @@
     function toggleFaq(element) {
         const item = element.parentElement;
         const isActive = item.classList.contains('active');
+        
+        // 如果想讓點開一個、另一個自動收起，保留這行：
         document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('active'));
-        if (!isActive) item.classList.add('active');
+        
+        if (!isActive) {
+            item.classList.add('active');
+        }
     }
 </script>
 
