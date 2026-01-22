@@ -1,7 +1,7 @@
-/* 🛡️ STABILIZED PREMIUM ENGINE V8.0 - FX FIX */
+/* 🛡️ PREMIUM ALIGNED UI V9.0 - FINAL STABLE */
 const _styles = `
-:root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50; }
-* { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; -webkit-user-drag: none; }
+:root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50; --ui-w: 92%; --ui-max: 450px; }
+* { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; -webkit-user-drag: none; box-sizing: border-box; }
 body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
 body.modal-open { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
 
@@ -14,23 +14,24 @@ h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-conte
 .star-btn { cursor: pointer; font-size: 1.6rem; padding: 0 10px; }
 #u_q { background: white; padding: 6px 20px; border-radius: 20px; color: var(--a); font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-top: 10px; display: inline-block; font-size: 0.9rem; }
 
-.p_board { width: 90%; max-width: 450px; background: white; border-radius: 24px; padding: 18px; margin-top: 5px; box-shadow: 0 5px 25px rgba(255,183,197,0.2); border: 2px solid #fff; }
+/* 📏 UI 寬度統一容器 */
+.ui-c { width: var(--ui-w); max-width: var(--ui-max); background: white; border-radius: 24px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 15px rgba(255,183,197,0.15); border: 1px solid #eee; }
+
 .p_title { text-align: center; font-weight: 900; color: #ff6b81; margin-bottom: 15px; font-size: 1.1rem; letter-spacing: 2px; }
 .p_grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
 .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
 
-/* 🌟 2號獎呼吸燈質感修正 */
+/* 🌟 燈效邏輯類別 */
 .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
 .p_item.sp:not(.tk) { background: #f0faff; border: 2px solid #00bfff; animation: silver-breath 2.5s infinite; font-weight: 800; color: #008b8b; }
 .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
 
-.progress-box { width: 90%; max-width: 450px; background: white; border-radius: 20px; margin: 15px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
-.prog-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; }
-.prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+.prog-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; font-weight: bold; }
+.prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin-top: 10px; }
 .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.8s ease; }
 
-.g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px 0; }
+.g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: var(--ui-w); max-width: var(--ui-max); padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px 0; border: 1px solid #eee; }
 .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, #ffb7c5, #ff8fa3); display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; border: 2px solid #fff; color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 0 #e67e91; position: relative; }
 .t_s:not(.so):not(.rv):not(.pk)::after { content: "㊗️"; } 
 .t_s.so { background: #f2f2f2 !important; color: #bbb; box-shadow: none; cursor: default; }
@@ -44,7 +45,6 @@ h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-conte
 .t_s.pk { background: linear-gradient(135deg, #ffb7c5, #ff8fa3) !important; border: 2px solid #fff !important; animation: gold-breath 1s infinite !important; }
 .t_s.pk::after { content: "㊗️" !important; color: white !important; }
 
-.fairness-card { width: 90%; max-width: 450px; background: #fff; border-radius: 20px; padding: 15px; margin-top: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); box-sizing: border-box; }
 .hash-box { margin-top: 10px; background: #f9f9f9; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; }
 .hash-id { font-family: monospace; font-size: 0.72rem; color: var(--dark); font-weight: bold; word-break: break-all; }
 .copy-btn { background: var(--a); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; cursor: pointer; }
@@ -59,18 +59,20 @@ h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-conte
 .h_item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
 input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; font-size: 1rem; text-align: center; box-sizing: border-box; }
 .btn_m { width: 100%; padding: 12px; border: none; background: var(--a); color:white; border-radius: 50px; font-weight: bold; cursor: pointer; }
+.footer-info-premium { margin: 20px 0 40px 0; font-size: 0.7rem; color: #b0b0b0; text-align: center; line-height: 2; }
 `;
 
 const _appHTML = `
 <div class="header"><h1><span class="star-btn" onclick="window._l_st_ck()">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" onclick="window._r_st_ck()">🌟</span></h1><div id="u_q">點選任意空格開獎</div></div>
-<div class="p_board"><div class="p_title">🎁 今日獎項對照 🎁</div><div id="p_g" class="p_grid"></div></div>
-<div class="progress-box"><div class="prog-header"><div>已刮取進度條</div><div class="prog-stats"><span id="d_ct">0</span> / 50</div></div><div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div></div>
+<div class="ui-c"><div class="p_title">🎁 今日獎項對照 🎁</div><div id="p_g" class="p_grid"></div></div>
+<div class="ui-c"><div class="prog-header"><div>已刮取進度條</div><div style="color:var(--a);font-weight:900;"><span id="d_ct">0</span> / 50</div></div><div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div></div>
 <div id="g_d" class="g_con"></div>
-<div class="fairness-card"><div style="font-size:0.8rem;font-weight:900;color:#555;margin-bottom:8px;">🛡️ 雲端算力公平性實時審計</div><div class="hash-box"><div id="cur_hash" class="hash-id">SYNCING...</div><button class="copy-btn" onclick="window._cpH()">複製</button></div><button class="audit-btn" onclick="window._openAudit()">📑 歷史盤別查詢</button></div>
-<div style="margin-top:20px; width:90%; max-width:450px;"><div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時紀錄</div><div id="h_l" class="h_list"></div><div onclick="window._g_st_ck()" style="min-height:30px;"></div></div>
-<div id="_m_audit" class="overlay"><div class="modal-box"><h3>🔍 校驗</h3><input type="text" id="audit_input"><button onclick="window._runAuditCheck()" class="btn_m">執行</button><div id="audit_res" style="display:none;margin-top:10px;font-size:0.7rem;background:#f9f9f9;padding:10px;border-radius:8px;word-break:break-all;"></div><button onclick="window._m_cl('_m_audit')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
-<div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button onclick="window._v_cl()" class="btn_m">開始刮獎</button><button onclick="window._m_cl('_m_01')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
-<div id="_m_02" class="overlay"><div class="modal-box"><h3>控制節點</h3><div id="_ui_c"></div><button onclick="window._m_cl('_m_02')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">關閉</button></div></div>
+<div class="ui-c"><div style="font-size:0.8rem;font-weight:900;color:#555;margin-bottom:8px;">🛡️ 雲端算力公平性實時審計</div><div class="hash-box"><div id="cur_hash" class="hash-id">SYNCING...</div><button class="copy-btn" onclick="window._cpH()">複製</button></div><button class="audit-btn" onclick="window._openAudit()">📑 歷史盤別查詢</button></div>
+<div class="ui-c" style="margin-bottom:20px;"><div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時紀錄</div><div id="h_l" class="h_list"></div><div onclick="window._g_st_ck()" style="min-height:20px;"></div></div>
+<div class="footer-info-premium">&copy; 2026 <b>PREMIUM SLOTS PLATFORM</b><br>Security Node: Firebase Cloud Infra</div>
+<div id="_m_audit" class="overlay"><div class="modal-box"><h3>🔍 校驗</h3><input type="text" id="audit_input"><button onclick="window._runAuditCheck()" class="btn_m">執行</button><div id="audit_res" style="display:none;margin-top:10px;font-size:0.7rem;background:#f9f9f9;padding:10px;border-radius:8px;"></div><button onclick="window._m_cl('_m_audit')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
+<div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證</h3><input type="text" id="_i_01" autocomplete="off"><button onclick="window._v_cl()" class="btn_m">開始</button><button onclick="window._m_cl('_m_01')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
+<div id="_m_02" class="overlay"><div class="modal-box"><h3>節點控制</h3><div id="_ui_c"></div><button onclick="window._m_cl('_m_02')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">關閉</button></div></div>
 <div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem;color:#ff4757;font-weight:bold;">號</span></div></div><button id="c_btn" class="btn_c" onclick="window._clO()">確認結果 (10s)</button></div>
 `;
 
@@ -157,7 +159,6 @@ function _s_M(e) {
     if(!_iv) _ps(_ptsRef, { x: Math.round(x), y: Math.round(y) }); 
 }
 
-// 🏆 最終雪花噴發邏輯 (只有 1~16 號噴發)
 function _ck() { 
     const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; 
     let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; 
@@ -165,11 +166,8 @@ function _ck() {
         _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; 
         if (!_iv) { 
             _ud(_liveRef, { isRevealed: true }); 
-            // 關鍵精準判斷
-            const currentWin = parseInt(window._l_w);
-            if (currentWin >= 1 && currentWin <= 16) {
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); 
-            }
+            const curWin = parseInt(window._l_w);
+            if (curWin >= 1 && curWin <= 16) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); 
             _at(); 
         } 
     } 
@@ -192,17 +190,17 @@ window.onload = () => {
             document.getElementById('g_d').innerHTML = d.map((x, i) => { const n = parseInt(x.grade); const revealing = (_rI === i); const isLocked = (x.taken && !_dn.has(n) && !_gS_rev); return `<div class="t_s ${x.taken && !revealing && !isLocked ?'so':''} ${x.taken && n <= 16 && !revealing && !isLocked ? 'rv' : ''} ${revealing || isLocked ?'pk':''}" data-val="${_fm(n)}" id="ts_${i}"></div>`; }).join(''); 
             d.forEach((x, i) => { const el = document.getElementById(`ts_${i}`); if(el) el.onclick = () => window._ck_i_click(i, x.taken); });
         } 
-        // 🏆 2號獎呼吸燈對齊修正 (強制轉型判斷)
+        // 🏆 2 號獎燈效物理修復
         document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
             const n_int = parseInt(n);
-            const t = _dn.has(n_int); 
+            const taken = _dn.has(n_int); 
             let cls = (n_int === 1) ? 'tp' : (n_int === 2) ? 'sp' : ''; 
-            return `<div class="p_item ${cls} ${t?'tk':''}"><span class="p_badge">${_fm(n_int)}</span> ${m}</div>`; 
+            return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(n_int)}</span> ${m}</div>`; 
         }).join(''); 
     });
 
     _oV(_liveRef, (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; if (!_ip) { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed && _iv) document.getElementById('c_btn').style.display='block'; } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
-    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 25, 0, Math.PI * 2); _cx.fill(); } });
+    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 28, 0, Math.PI * 2); _cx.fill(); } });
     _gt(_sessRef).then(s => { if(!s.exists()) _st(_sessRef, 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase()); });
 };
 
