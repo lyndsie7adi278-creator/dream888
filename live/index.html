@@ -11,36 +11,29 @@
     <div id="ui-root">
         <div class="header">
             <h1><span class="star-btn" id="l_st">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" id="r_st">🌟</span></h1>
-            <div id="u_q">數據連線中...</div>
+            <div id="u_q">核心引擎啟動中...</div>
         </div>
-
         <div class="ui-c"><div class="p_title">🎁 今日獎項對照 🎁</div><div id="p_g" class="p_grid"></div></div>
-
         <div class="ui-c">
             <div class="prog-header"><div>已刮取進度條</div><div class="prog-stats"><span id="d_ct">0</span> / 50</div></div>
             <div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div>
         </div>
-
         <div id="g_d" class="g_con"></div>
-
         <div class="ui-c">
-            <div style="font-size:0.8rem;font-weight:900;color:#555;margin-bottom:8px;">🛡️ 雲端算力公平性實時審計</div>
+            <div class="fairness-title">🛡️ 雲端算力公平性實時審計</div>
             <div class="hash-box"><div id="cur_hash" class="hash-id">PF-INIT</div><button class="copy-btn" id="btn_cp">複製</button></div>
             <button class="audit-btn" id="btn_audit_open">📑 歷史盤別查詢</button>
         </div>
-
         <div class="ui-c" style="margin-bottom:20px;">
             <div style="font-weight:bold; color:#ff8fa3; margin-bottom:10px;">🏆 即時紀錄</div>
             <div id="h_l" class="h_list"></div>
             <div id="sys_sync_trigger" style="min-height:20px; width:100%;"></div>
         </div>
-
-        <div class="footer-info">&copy; 2026 <b>PREMIUM SLOTS</b><br>Security Node: Cloud Infra</div>
+        <div class="footer-info">&copy; 2026 <b>PREMIUM SLOTS</b><br>Security Node: Cloud Infrastructure</div>
     </div>
-
     <div id="_m_audit" class="overlay"><div class="modal-box"><h3>🔍 校驗</h3><input type="text" id="audit_input"><button id="btn_audit_run" class="btn_m">執行</button><div id="audit_res"></div><button class="close-txt" id="btn_audit_close">取消</button></div></div>
     <div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證</h3><input type="text" id="_i_01" autocomplete="off"><button id="_v_bt" class="btn_m">開始</button><button class="close-txt" id="btn_m1_close">取消</button></div></div>
     <div id="_m_02" class="overlay"><div class="modal-box"><h3>管理節點</h3><div id="_ui_c"></div><button class="close-txt" id="btn_m2_close">關閉</button></div></div>
-    <div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem;color:#ff4757;font-weight:bold;">號</span></div></div><button id="c_btn" class="btn_c">確認結果 (10s)</button></div>
+    <div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span class="unit">號</span></div></div><button id="c_btn" class="btn_c">確認結果 (10s)</button></div>
 </body>
 </html>
