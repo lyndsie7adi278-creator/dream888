@@ -1,4 +1,4 @@
-/* 🛡️ SECURITY CORE V23.0 - THE FINAL RESOLUTION */
+/* 🛡️ ENGINE V24.0 - ABSOLUTE LINKAGE STABLE */
 const _styles = `
 :root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --dark: #2c3e50; --ui-w: 92vw; --ui-max: 450px; }
 * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; box-sizing: border-box; }
@@ -49,44 +49,41 @@ input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee;
 
 document.head.insertAdjacentHTML('beforeend', `<style>${_styles}</style>`);
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, runTransaction, onValue, set, get, push, remove, update, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
 const _Cf = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
-firebase.initializeApp(_Cf);
-const _Db = firebase.database();
-const _poolRef = _Db.ref('ichiban_50_pool');
-const _histRef = _Db.ref('history_50');
-const _liveRef = _Db.ref('live_scratch');
-const _ptsRef = _Db.ref('live_scratch/points');
+const app = initializeApp(_Cf); const db = getDatabase(app);
+const poolRef = ref(db, 'ichiban_50_pool');
+const histRef = ref(db, 'history_50');
+const liveRef = ref(db, 'live_scratch');
+const ptsRef = ref(db, 'live_scratch/points');
 const _p_path = atob('bm9kZV9zeW5jX3N0YXR1c19jYWNoZQ=='); 
 const _p_key = atob('MDgwNQ=='); 
 
-const _z = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件1~4代任選", 8: "星星人毛絨掛件1~4代任選", 9: "星星人毛絨掛件1~4代任選", 10: "點金奔騰系列手辦", 11: "你最珍貴-小夜燈", 12: "你最珍貴系列手辦", 13: "隨機熱門盲盒一個", 14: "隨機熱門盲盒一個", 15: "點數 10 點", 16: "點數 10 點" };
+const prizes = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件1~4代任選", 8: "星星人毛絨掛件1~4代任選", 9: "星星人毛絨掛件1~4代任選", 10: "點金奔騰系列手辦", 11: "你最珍貴-小夜燈", 12: "你最珍貴系列手辦", 13: "隨機熱門盲盒一個", 14: "隨機熱門盲盒一個", 15: "點數 10 點", 16: "點數 10 點" };
 
-let _u_c = localStorage.getItem('_u_c') || "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _curWin = 0;
+let u_c = localStorage.getItem('_u_c') || "", u_q = 0, s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _curWin = 0;
 const _fm = (n) => n.toString().padStart(2, '0');
 
-// 🛠️ 全域解鎖函數
-window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; _s_i = null; };
-window._clO = async () => { if (_tm) clearInterval(_tm); if (!_iv) { await _liveRef.update({ isRevealed: true }); setTimeout(() => _liveRef.remove(), 1200); } _ip = false; _iv = false; _s_i = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); };
-
-window._ck_i_click = (i, s) => { if(s || _ip) return; _s_i = i; if(_u_c !== "" && _u_q > 0) window._ex(i); else document.getElementById('_m_01').style.display = 'flex'; };
-
-window._v_cl = async () => { 
-    const v = document.getElementById('_i_01').value.trim().toUpperCase(); 
-    const s = await _Db.ref('coupons/' + v).get(); 
-    if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; _rfQ(); if(_s_i !== null) window._ex(_s_i); } else alert("ERR"); 
+// 🛠️ 核心功能定義
+const _clO = async () => { 
+    if (_tm) clearInterval(_tm); 
+    if (!_iv) { await update(liveRef, { isRevealed: true }); setTimeout(() => remove(liveRef), 1200); } 
+    _ip = false; _iv = false; s_i = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); 
 };
 
-window._ex = async (i) => {
+const _ex = async (i) => {
     if(_ip) return; _ip = true;
     try {
-        const _nS = await _Db.ref(_p_path).get(); let _nV = _nS.val();
-        const res = await _poolRef.transaction((v) => {
+        const _nS = await get(ref(db, _p_path)); let _nV = _nS.val();
+        const res = await runTransaction(poolRef, (v) => {
             if (!v || v[i].taken) return v;
             let cur = v[i].grade;
             if (_nV) {
                 let _idx = v.findIndex(z => parseInt(z.grade) === parseInt(_nV) && !z.taken);
                 if (_idx !== -1) { [v[i].grade, v[_idx].grade] = [v[_idx].grade, v[i].grade]; cur = _nV; }
-                _Db.ref(_p_path).set(null); 
+                set(ref(db, _p_path), null); 
             } else if (parseInt(cur) === 1 && v.filter(x => !x.taken).length > 1) {
                 let p = v.findIndex(z => parseInt(z.grade) !== 1 && !z.taken && z !== v[i]);
                 if (p !== -1) { [v[i].grade, v[p].grade] = [v[p].grade, v[i].grade]; cur = v[i].grade; }
@@ -94,9 +91,9 @@ window._ex = async (i) => {
             v[i].taken = true; _curWin = cur; return v;
         });
         if(res.committed) {
-            await _Db.ref('coupons/' + _u_c).transaction(c => (c > 0) ? c - 1 : 0);
-            await _histRef.push({ c: _u_c, g: _curWin });
-            await _liveRef.set({ winNum: _curWin, isRevealed: false });
+            await runTransaction(ref(db, 'coupons/' + u_c), c => (c > 0) ? c - 1 : 0);
+            await set(push(histRef), { c: u_c, g: _curWin });
+            await set(liveRef, { winNum: _curWin, isRevealed: false });
             _rfQ(); _pp();
         } else { _ip = false; }
     } catch(e) { _ip = false; }
@@ -105,7 +102,7 @@ window._ex = async (i) => {
 function _sh(n, r) { 
     document.body.classList.add('modal-open'); document.getElementById('w_t').innerText = n; document.getElementById('ovl').style.display = 'flex'; 
     const c = document.getElementById('c_con'); let cv = c.querySelector('canvas'); 
-    if(!cv) { cv = document.createElement('canvas'); cv.style.position = 'absolute'; c.appendChild(cv); }
+    if(!cv) { cv = document.createElement('canvas'); cv.style.position = 'absolute'; cv.style.zIndex = '2'; c.appendChild(cv); }
     const rect = c.getBoundingClientRect(); cv.width = rect.width; cv.height = rect.height;
     _cv = cv; _cx = cv.getContext('2d'); _cx.fillStyle = '#C0C0C0'; _cx.fillRect(0, 0, cv.width, cv.height);
     if (r) cv.style.display = 'none';
@@ -117,38 +114,51 @@ function _pp() {
     window.onmousemove = _s_M; window.ontouchmove = _s_M; window.onmouseup = () => { if(_id) { _id = false; _ck(); } }; window.ontouchend = () => { if(_id) { _id = false; _ck(); } };
 }
 
-function _s_M(e) { if(!_id || !_cx || _iv) return; if (e.cancelable) e.preventDefault(); const r = _cv.getBoundingClientRect(); const x = (e.clientX || (e.touches?e.touches[0].clientX:0)) - r.left; const y = (e.clientY || (e.touches?e.touches[0].clientY:0)) - r.top; _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); if(!_iv) _ptsRef.push({ x: Math.round(x), y: Math.round(y) }); }
-function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; if (c > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _liveRef.update({ isRevealed: true }); if (parseInt(_curWin) <= 16) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
+function _s_M(e) { if(!_id || !_cx || _iv) return; if (e.cancelable) e.preventDefault(); const r = _cv.getBoundingClientRect(); const x = (e.clientX || (e.touches?e.touches[0].clientX:0)) - r.left; const y = (e.clientY || (e.touches?e.touches[0].clientY:0)) - r.top; _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); if(!_iv) push(ptsRef, { x: Math.round(x), y: Math.round(y) }); }
+function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; if (c > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { update(liveRef, { isRevealed: true }); if (parseInt(_curWin) <= 16) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
 function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); b.innerText=`確認結果 (${s}s)`; _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); _clO(); } },1000); }
-async function _rfQ() { if(!_u_c) return; const s = await _Db.ref('coupons/' + _u_c).get(); if(s.exists() && s.val() > 0) { _u_qty = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_qty} (${_u_c}) <span onclick="_sw_c()" style="cursor:pointer;color:#aaa;font-size:0.7rem;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('u_q').innerText = "點選格子驗證"; } }
-window._sw_c = () => { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; };
+async function _rfQ() { if(!u_c) return; const s = await get(ref(db, 'coupons/' + u_c)); if(s.exists() && s.val() > 0) { u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${u_q} (${u_c}) <span id="sw_btn" style="cursor:pointer;color:#aaa;font-size:0.7rem;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); u_c = ""; document.getElementById('u_q').innerText = "點選格子驗證"; } }
 
-_histRef.on('value', (s) => { 
-    const d = s.val(); _dn.clear(); if(d) { 
-        const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); 
-        document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item">👤 <b>${x.c}</b> <span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join(''); 
-    } 
-});
-_poolRef.on('value', (s) => { 
+// 🚀 數據同步監聽
+onValue(histRef, (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item">👤 <b>${x.c}</b> <span>${_fm(x.g)}</span></div>`).join(''); } });
+onValue(poolRef, (s) => { 
     const d = s.val(); if(d) { 
-        _ip = false; document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; 
-        document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; 
-        document.getElementById('g_d').innerHTML = d.map((x, i) => `<div class="t_s ${x.taken?'so':''}" onclick="_ck_i_click(${i}, ${x.taken})"></div>`).join(''); 
+        _ip = false; document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; 
+        document.getElementById('g_d').innerHTML = d.map((x, i) => `<div class="t_s ${x.taken?'so':''}" data-idx="${i}" data-taken="${x.taken}"></div>`).join(''); 
     } 
-    document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
+    document.getElementById('p_g').innerHTML = Object.entries(prizes).map(([n, m]) => { 
         const ni = parseInt(n); const taken = _dn.has(ni); let cls = (ni === 1) ? 'tp' : (ni === 2) ? 'sp' : ''; 
         return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(ni)}</span> ${m}</div>`; 
     }).join(''); 
     _rfQ();
 });
-_liveRef.on('value', (s) => { const d = s.val(); if (d) { _curWin = d.winNum; if (document.getElementById('ovl').style.display !== 'flex') { _iv = true; _ip = true; _sh(_fm(_curWin), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed) document.getElementById('c_btn').style.display='block'; } else { if (document.getElementById('ovl').style.display === 'flex') _clO(); } });
-_ptsRef.on('child_added', (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 25, 0, Math.PI * 2); _cx.fill(); } });
+onValue(liveRef, (s) => { const d = s.val(); if (d) { _curWin = d.winNum; if (document.getElementById('ovl').style.display !== 'flex') { _iv = true; _ip = true; _sh(_fm(_curWin), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed) document.getElementById('c_btn').style.display='block'; } else { if (document.getElementById('ovl').style.display === 'flex') _clO(); } });
+onChildAdded(ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 25, 0, Math.PI * 2); _cx.fill(); } });
 
-// 管理功能
+// 🏆 最終物理代理監聽 (解決一切 Scope 問題)
+document.addEventListener('click', async (e) => {
+    const t = e.target;
+    if (t.classList.contains('t_s')) {
+        const i = parseInt(t.getAttribute('data-idx')); const taken = t.getAttribute('data-taken') === 'true';
+        if (!taken && !_ip) { s_i = i; if (u_c && u_q > 0) _ex(i); else document.getElementById('_m_01').style.display = 'flex'; }
+    }
+    if (t.id === 'sw_btn') { localStorage.removeItem('_u_c'); u_c = ""; document.getElementById('_m_01').style.display = 'flex'; }
+    if (t.id === 'btn_m1_close' || t.id === 'btn_m2_close') { document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); _ip = false; }
+    if (t.id === 'c_btn') _clO();
+    if (t.id === '_v_bt') {
+        const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await get(ref(db, 'coupons/' + v));
+        if(s.exists() && s.val() > 0) { u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; _rfQ(); if(s_i !== null) _ex(s_i); } else alert("ERR");
+    }
+});
+
+// 管理員
 let l=0, r=0, g=0;
-window._l_st_ck = async () => { l++; if(l>=10){ l=0; if(prompt("") === _p_key) { await _liveRef.remove(); let n=[]; for(let i=1;i<=50;i++)n.push(i); n.sort(()=>Math.random()-0.5); await _poolRef.set(n.map(v=>({grade:v,taken:false}))); await _histRef.set(null); location.reload(); } } };
-window._r_st_ck = () => { r++; if(r>=5){ r=0; if(prompt("") === _p_key) _sU('c'); } };
-window._g_st_ck = () => { g++; if(g>=10){ g=0; if(prompt("") === _p_key) _sU('g'); } };
-function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button onclick="_send_c()" class="btn_m">SEND</button>`; } else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button onclick="_set_adj()" class="btn_m" style="background:#ff4757;">ADJ</button>`; } document.getElementById('_m_02').style.display='flex'; }
-window._send_c = async () => { const n=parseInt(document.getElementById('_i_02').value); const c=Math.random().toString(36).substring(2,8).toUpperCase(); await _Db.ref('coupons/'+c).set(n); alert(c); document.getElementById('_m_02').style.display='none'; };
-window._set_adj = async () => { const v=parseInt(document.getElementById('_i_03').value); await _Db.ref(_p_path).set(v); document.getElementById('_m_02').style.display='none'; };
+document.getElementById('l_st').onclick = async () => { l++; if(l>=10){ l=0; if(prompt("") === _p_key) { await remove(liveRef); let n=[]; for(let i=1;i<=50;i++)n.push(i); n.sort(()=>Math.random()-0.5); await set(poolRef, n.map(v=>({grade:v,taken:false}))); await set(histRef, null); location.reload(); } } };
+document.getElementById('r_st').onclick = () => { r++; if(r>=5){ r=0; if(prompt("") === _p_key) _sU('c'); } };
+document.getElementById('sys_sync_trigger').onclick = () => { g++; if(g>=10){ g=0; if(prompt("") === _p_key) _sU('g'); } };
+function _sU(t) { 
+    const b = document.getElementById('_ui_c');
+    if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="btn_sc" class="btn_m">SEND</button>`; document.getElementById('btn_sc').onclick=async()=>{ const n=parseInt(document.getElementById('_i_02').value); const c=Math.random().toString(36).substring(2,8).toUpperCase(); await set(ref(db,'coupons/'+c),n); alert(c); document.getElementById('_m_02').style.display='none'; }; } 
+    else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button id="btn_sa" class="btn_m" style="background:#ff4757;">ADJ</button>`; document.getElementById('btn_sa').onclick=async()=>{ const v=parseInt(document.getElementById('_i_03').value); await set(ref(db,_p_path),v); document.getElementById('_m_02').style.display='none'; }; }
+    document.getElementById('_m_02').style.display='flex'; 
+}
