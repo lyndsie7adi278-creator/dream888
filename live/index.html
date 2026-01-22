@@ -5,9 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>夢工廠刮刮樂</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script type="module" src="app-core-min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="app-core-min.js?v=20260123"></script>
 </head>
 <body oncontextmenu="return false;">
-    <div id="app-root"></div>
+    <div id="ui-root">
+        <div class="header">
+            <h1><span class="star-btn" onclick="_l_st_ck()">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" onclick="_r_st_ck()">🌟</span></h1>
+            <div id="u_q">引擎初始化中...</div>
+        </div>
+
+        <div class="ui-c"><div class="p_title">🎁 今日獎項對照 🎁</div><div id="p_g" class="p_grid"></div></div>
+
+        <div class="ui-c">
+            <div class="prog-header"><div>已刮取進度條</div><div style="color:var(--a);font-weight:900;"><span id="d_ct">0</span> / 50</div></div>
+            <div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div>
+        </div>
+
+        <div id="g_d" class="g_con"></div>
+
+        <div class="ui-c" style="margin-bottom:20px;">
+            <div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時紀錄</div>
+            <div id="h_l" class="h_list"></div>
+            <div onclick="_g_st_ck()" style="min-height:20px; width:100%;"></div>
+        </div>
+
+        <div class="footer-info">&copy; 2026 <b>PREMIUM SLOTS PLATFORM</b></div>
+    </div>
+
+    <div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button onclick="_v_cl()" class="btn_m">開始刮獎</button><button class="close-txt" onclick="_m_cl('_m_01')">取消</button></div></div>
+    <div id="_m_02" class="overlay"><div class="modal-box"><h3>管理節點</h3><div id="_ui_c"></div><button class="close-txt" onclick="_m_cl('_m_02')">關閉</button></div></div>
+    <div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem;color:#ff4757;font-weight:bold;">號</span></div></div><button id="c_btn" class="btn_c" onclick="_clO()">確認結果 (10s)</button></div>
 </body>
 </html>
