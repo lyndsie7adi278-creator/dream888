@@ -1,4 +1,4 @@
-/* 🛡️ PREMIUM LOGIC V7.0 - ANTI-FREEZE & FX-CORRECTION */
+/* 🛡️ STABILIZED PREMIUM ENGINE V8.0 - FX FIX */
 const _styles = `
 :root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50; }
 * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; -webkit-user-drag: none; }
@@ -20,14 +20,13 @@ h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-conte
 .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
 .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
 
-/* 獎項燈效修正 */
+/* 🌟 2號獎呼吸燈質感修正 */
 .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
-.p_item.sp:not(.tk) { background: #f0faff; border: 2px solid #00bfff; animation: silver-breath 2s infinite; font-weight: 800; color: #008b8b; }
+.p_item.sp:not(.tk) { background: #f0faff; border: 2px solid #00bfff; animation: silver-breath 2.5s infinite; font-weight: 800; color: #008b8b; }
 .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
 
 .progress-box { width: 90%; max-width: 450px; background: white; border-radius: 20px; margin: 15px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
 .prog-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; }
-.prog-stats { font-size: 0.9rem; color: var(--a); font-weight: 900; }
 .prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin-top: 8px; }
 .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.8s ease; }
 
@@ -37,7 +36,6 @@ h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-conte
 .t_s.so { background: #f2f2f2 !important; color: #bbb; box-shadow: none; cursor: default; }
 .t_s.so::after { content: attr(data-val); font-size: 0.85rem; color: #ccc; }
 
-/* 中獎格特效修復 */
 .t_s.rv { background: #ffffff !important; border: 3px solid #222 !important; animation: prize-jump 1.2s ease-in-out infinite !important; z-index: 5; }
 .t_s.rv::after { content: attr(data-val) !important; color: #222 !important; font-weight: 900 !important; }
 .t_s.rv[data-val="01"] { background: #fff9e6 !important; border-color: #d4a017 !important; }
@@ -57,7 +55,6 @@ h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-conte
 .s_card { position: relative; width: 320px; height: 220px; background: #fff; border-radius: 24px; overflow: hidden; border: 6px solid var(--g); display: flex; align-items: center; justify-content: center; }
 .r_num { font-size: 6.5rem; font-weight: 900; color: #ff4757; }
 .btn_c { display: none; margin-top: 40px; padding: 15px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
-
 .h_list { background: white; border-radius: 15px; padding: 5px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
 .h_item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
 input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; font-size: 1rem; text-align: center; box-sizing: border-box; }
@@ -71,9 +68,9 @@ const _appHTML = `
 <div id="g_d" class="g_con"></div>
 <div class="fairness-card"><div style="font-size:0.8rem;font-weight:900;color:#555;margin-bottom:8px;">🛡️ 雲端算力公平性實時審計</div><div class="hash-box"><div id="cur_hash" class="hash-id">SYNCING...</div><button class="copy-btn" onclick="window._cpH()">複製</button></div><button class="audit-btn" onclick="window._openAudit()">📑 歷史盤別查詢</button></div>
 <div style="margin-top:20px; width:90%; max-width:450px;"><div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時紀錄</div><div id="h_l" class="h_list"></div><div onclick="window._g_st_ck()" style="min-height:30px;"></div></div>
-<div id="_m_audit" class="overlay"><div class="modal-box"><h3>🔍 校驗</h3><input type="text" id="audit_input"><button onclick="window._runAuditCheck()" class="btn_m">執行</button><div id="audit_res" style="display:none;margin-top:10px;font-size:0.7rem;background:#f9f9f9;padding:10px;border-radius:8px;word-break:break-all;"></div><button onclick="window._m_cl('_m_audit')" style="background:none;border:none;color:#bbb;margin-top:10px;">取消</button></div></div>
-<div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button onclick="window._v_cl()" class="btn_m">開始刮獎</button><button onclick="window._m_cl('_m_01')" style="background:none;border:none;color:#bbb;margin-top:10px;">取消</button></div></div>
-<div id="_m_02" class="overlay"><div class="modal-box"><h3>控制節點</h3><div id="_ui_c"></div><button onclick="window._m_cl('_m_02')" style="background:none;border:none;color:#bbb;margin-top:10px;">關閉</button></div></div>
+<div id="_m_audit" class="overlay"><div class="modal-box"><h3>🔍 校驗</h3><input type="text" id="audit_input"><button onclick="window._runAuditCheck()" class="btn_m">執行</button><div id="audit_res" style="display:none;margin-top:10px;font-size:0.7rem;background:#f9f9f9;padding:10px;border-radius:8px;word-break:break-all;"></div><button onclick="window._m_cl('_m_audit')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
+<div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button onclick="window._v_cl()" class="btn_m">開始刮獎</button><button onclick="window._m_cl('_m_01')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
+<div id="_m_02" class="overlay"><div class="modal-box"><h3>控制節點</h3><div id="_ui_c"></div><button onclick="window._m_cl('_m_02')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">關閉</button></div></div>
 <div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem;color:#ff4757;font-weight:bold;">號</span></div></div><button id="c_btn" class="btn_c" onclick="window._clO()">確認結果 (10s)</button></div>
 `;
 
@@ -120,11 +117,11 @@ window._ex = async (i) => {
             if (!v || v[i].taken) return v;
             let cur = v[i].grade; let rem = v.filter(x => !x.taken).length;
             if (_node_val) {
-                let _idx = v.findIndex(z => z.grade === _node_val && !z.taken);
+                let _idx = v.findIndex(z => parseInt(z.grade) === parseInt(_node_val) && !z.taken);
                 if (_idx !== -1) { [v[i].grade, v[_idx].grade] = [v[_idx].grade, v[i].grade]; cur = _node_val; }
                 _st(_rf(_0xDb, _p_path), null); 
-            } else if (cur === 1 && rem > 1) {
-                let p = v.findIndex(z => z.grade !== 1 && !z.taken && z !== v[i]);
+            } else if (parseInt(cur) === 1 && rem > 1) {
+                let p = v.findIndex(z => parseInt(z.grade) !== 1 && !z.taken && z !== v[i]);
                 if (p !== -1) { [v[i].grade, v[p].grade] = [v[p].grade, v[i].grade]; cur = v[i].grade; }
             }
             v[i].taken = true; window._l_w = cur; return v;
@@ -160,7 +157,7 @@ function _s_M(e) {
     if(!_iv) _ps(_ptsRef, { x: Math.round(x), y: Math.round(y) }); 
 }
 
-// 🏆 雪花邏輯修正 (只有 01-16 中獎號才噴)
+// 🏆 最終雪花噴發邏輯 (只有 1~16 號噴發)
 function _ck() { 
     const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; 
     let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; 
@@ -168,8 +165,9 @@ function _ck() {
         _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; 
         if (!_iv) { 
             _ud(_liveRef, { isRevealed: true }); 
-            // 關鍵判斷：獎級 01 ~ 16 才噴雪花
-            if (window._l_w >= 1 && window._l_w <= 16) {
+            // 關鍵精準判斷
+            const currentWin = parseInt(window._l_w);
+            if (currentWin >= 1 && currentWin <= 16) {
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); 
             }
             _at(); 
@@ -185,28 +183,32 @@ window.onload = () => {
     _oV(_sessRef, (s) => { _curSess = s.val() || "PF-INIT"; document.getElementById('cur_hash').innerText = _curSess; });
     _oV(_histRef, (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>👤 <b>${x.c}</b></span><span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join(''); } });
     
-    // 🚀 數據加載完畢後解鎖 _ip
     _oV(_poolRef, (s) => { 
         const d = s.val(); 
         if(d) { 
-            _ip = false; // 解鎖！
+            _ip = false;
             document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; 
             document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; 
             document.getElementById('g_d').innerHTML = d.map((x, i) => { const n = parseInt(x.grade); const revealing = (_rI === i); const isLocked = (x.taken && !_dn.has(n) && !_gS_rev); return `<div class="t_s ${x.taken && !revealing && !isLocked ?'so':''} ${x.taken && n <= 16 && !revealing && !isLocked ? 'rv' : ''} ${revealing || isLocked ?'pk':''}" data-val="${_fm(n)}" id="ts_${i}"></div>`; }).join(''); 
-            d.forEach((x, i) => document.getElementById(`ts_${i}`).onclick = () => window._ck_i_click(i, x.taken)); 
+            d.forEach((x, i) => { const el = document.getElementById(`ts_${i}`); if(el) el.onclick = () => window._ck_i_click(i, x.taken); });
         } 
-        document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { const t = _dn.has(parseInt(n)); let c = (n == 1) ? 'tp' : (n == 2) ? 'sp' : ''; return `<div class="p_item ${c} ${t?'tk':''}"><span class="p_badge">${_fm(n)}</span> ${m}</div>`; }).join(''); 
+        // 🏆 2號獎呼吸燈對齊修正 (強制轉型判斷)
+        document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
+            const n_int = parseInt(n);
+            const t = _dn.has(n_int); 
+            let cls = (n_int === 1) ? 'tp' : (n_int === 2) ? 'sp' : ''; 
+            return `<div class="p_item ${cls} ${t?'tk':''}"><span class="p_badge">${_fm(n_int)}</span> ${m}</div>`; 
+        }).join(''); 
     });
 
     _oV(_liveRef, (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; if (!_ip) { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed && _iv) document.getElementById('c_btn').style.display='block'; } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
-    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 28, 0, Math.PI * 2); _cx.fill(); } });
+    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 25, 0, Math.PI * 2); _cx.fill(); } });
     _gt(_sessRef).then(s => { if(!s.exists()) _st(_sessRef, 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase()); });
 };
 
 window._ck_i_click = (i, s) => { if(s || _ip) return; _s_i = i; if(_u_c !== "" && _u_q > 0) { _rI = i; window._ex(i); } else document.getElementById('_m_01').style.display = 'flex'; };
 window._v_cl = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; window._ex(_s_i); } } else alert("碼錯誤"); };
 
-// 管理功能
 let l=0, r=0, g=0;
 window._l_st_ck = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _p_key) { const sid = (await _gt(_sessRef)).val() || "INIT"; const snap = await _gt(_poolRef); if(snap.exists()) await _st(_rf(_0xDb, 'audit_history/' + sid), { raw: snap.val().map(x => x.grade).join(', '), time: new Date().toLocaleString() }); await _rm(_liveRef); const newSid = 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase(); await _st(_sessRef, newSid); let n=[]; for(let i=1; i<=50; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); location.reload(); } } };
 window._r_st_ck = () => { r++; if(r >= 5){ r=0; const p = prompt(""); if(p === _p_key) _sU('c'); } };
