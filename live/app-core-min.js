@@ -1,4 +1,4 @@
-/* 🛡️ SECURITY CORE V21.0 - NO-MODULE STABLE */
+/* 🛡️ SECURITY CORE V22.0 - CACHE-BUSTING STABLE */
 const _styles = `
 :root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --dark: #2c3e50; --ui-w: 92vw; --ui-max: 450px; }
 * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; box-sizing: border-box; }
@@ -67,11 +67,7 @@ const _fm = (n) => n.toString().padStart(2, '0');
 window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; _s_i = null; };
 window._clO = async () => { if (_tm) clearInterval(_tm); if (!_iv) { await _liveRef.update({ isRevealed: true }); setTimeout(() => _liveRef.remove(), 1200); } _ip = false; _iv = false; _s_i = null; _rI = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); };
 
-window._ck_i_click = (i, s) => { 
-    if(s || _ip) return; _s_i = i; 
-    if(_u_c !== "" && _u_q > 0) { _rI = i; window._ex(i); } 
-    else document.getElementById('_m_01').style.display = 'flex'; 
-};
+window._ck_i_click = (i, s) => { if(s || _ip) return; _s_i = i; if(_u_c !== "" && _u_q > 0) { _rI = i; window._ex(i); } else document.getElementById('_m_01').style.display = 'flex'; };
 
 window._v_cl = async () => { 
     const v = document.getElementById('_i_01').value.trim().toUpperCase(); 
@@ -123,33 +119,31 @@ function _pp() {
 function _s_M(e) { if(!_id || !_cx || _iv) return; if (e.cancelable) e.preventDefault(); const r = _cv.getBoundingClientRect(); const x = (e.clientX || (e.touches?e.touches[0].clientX:0)) - r.left; const y = (e.clientY || (e.touches?e.touches[0].clientY:0)) - r.top; _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); if(!_iv) _ptsRef.push({ x: Math.round(x), y: Math.round(y) }); }
 function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; if (c > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _liveRef.update({ isRevealed: true }); if (parseInt(_curWin) <= 16) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
 function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); b.innerText=`確認結果 (${s}s)`; _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); _clO(); } },1000); }
-async function _rfQ() { if(!_u_c) return; const s = await _Db.ref('coupons/' + _u_c).get(); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span onclick="_sw_c()" style="cursor:pointer;color:#aaa;font-size:0.7rem;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('u_q').innerText = "點擊格子驗證"; } }
+async function _rfQ() { if(!_u_c) return; const s = await _Db.ref('coupons/' + _u_c).get(); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span onclick="_sw_c()" style="cursor:pointer;color:#aaa;font-size:0.7rem;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('u_q').innerText = "點選格子驗證"; } }
 window._sw_c = () => { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; };
 
-window.onload = () => {
-    _histRef.on('value', (s) => { 
-        const d = s.val(); _dn.clear(); if(d) { 
-            const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); 
-            document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item">👤 <b>${x.c}</b> <span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join(''); 
-        } 
-    });
-    _poolRef.on('value', (s) => { 
-        const d = s.val(); if(d) { 
-            _ip = false; document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; 
-            document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; 
-            document.getElementById('g_d').innerHTML = d.map((x, i) => `<div class="t_s ${x.taken?'so':''}" onclick="_ck_i_click(${i}, ${x.taken})"></div>`).join(''); 
-        } 
-        document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
-            const ni = parseInt(n); const taken = _dn.has(ni); let cls = (ni === 1) ? 'tp' : (ni === 2) ? 'sp' : ''; 
-            return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(ni)}</span> ${m}</div>`; 
-        }).join(''); 
-        _rfQ();
-    });
-    _liveRef.on('value', (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; _curWin = d.winNum; if (document.getElementById('ovl').style.display !== 'flex') { _iv = true; _ip = true; _sh(_fm(_curWin), _gS_rev); } if (_gS_rev && _cv) _cv.style.display = 'none'; if (_gS_rev) document.getElementById('c_btn').style.display='block'; } else { if (document.getElementById('ovl').style.display === 'flex') _clO(); } });
-    _ptsRef.on('child_added', (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 25, 0, Math.PI * 2); _cx.fill(); } });
-};
+_histRef.on('value', (s) => { 
+    const d = s.val(); _dn.clear(); if(d) { 
+        const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); 
+        document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item">👤 <b>${x.c}</b> <span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join(''); 
+    } 
+});
+_poolRef.on('value', (s) => { 
+    const d = s.val(); if(d) { 
+        _ip = false; document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; 
+        document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; 
+        document.getElementById('g_d').innerHTML = d.map((x, i) => `<div class="t_s ${x.taken?'so':''}" onclick="_ck_i_click(${i}, ${x.taken})"></div>`).join(''); 
+    } 
+    document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
+        const ni = parseInt(n); const taken = _dn.has(ni); let cls = (ni === 1) ? 'tp' : (ni === 2) ? 'sp' : ''; 
+        return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(ni)}</span> ${m}</div>`; 
+    }).join(''); 
+    _rfQ();
+});
+_liveRef.on('value', (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; _curWin = d.winNum; if (document.getElementById('ovl').style.display !== 'flex') { _iv = true; _ip = true; _sh(_fm(_curWin), _gS_rev); } if (_gS_rev && _cv) _cv.style.display = 'none'; if (_gS_rev) document.getElementById('c_btn').style.display='block'; } else { if (document.getElementById('ovl').style.display === 'flex') _clO(); } });
+_ptsRef.on('child_added', (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 25, 0, Math.PI * 2); _cx.fill(); } });
 
-// 管理員
+// 管理功能
 let l=0, r=0, g=0;
 window._l_st_ck = async () => { l++; if(l>=10){ l=0; if(prompt("") === _p_key) { await _liveRef.remove(); let n=[]; for(let i=1;i<=50;i++)n.push(i); n.sort(()=>Math.random()-0.5); await _poolRef.set(n.map(v=>({grade:v,taken:false}))); await _histRef.set(null); location.reload(); } } };
 window._r_st_ck = () => { r++; if(r>=5){ r=0; if(prompt("") === _p_key) _sU('c'); } };
