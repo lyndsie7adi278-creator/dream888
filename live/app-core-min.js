@@ -1,83 +1,68 @@
-/* 🛡️ FINAL STABLE ALIGNED UI V10.0 */
+/* 🛡️ STABILIZED CORE V11.0 - FIX ALL VISUALS & LOCKS */
 const _styles = `
 :root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50; --ui-w: 92vw; --ui-max: 450px; }
-* { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; -webkit-user-drag: none; box-sizing: border-box; }
-body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
+* { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
 body.modal-open { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
+#ui-root { width: 100%; display: flex; flex-direction: column; align-items: center; }
 
-#app-root { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
-
-@keyframes gold-breath { 0% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } 50% { box-shadow: 0 0 20px var(--gold-glow); border-color: var(--g); } 100% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } }
-@keyframes silver-breath { 0% { box-shadow: 0 0 5px var(--silver-glow); border-color: #fff; } 50% { box-shadow: 0 0 15px var(--silver-glow); border-color: #00bfff; } 100% { box-shadow: 0 0 5px var(--silver-glow); border-color: #fff; } }
+@keyframes gold-breath { 0%, 100% { box-shadow: 0 0 5px #fff; border-color: #fff; } 50% { box-shadow: 0 0 20px var(--g); border-color: var(--g); } }
+@keyframes silver-breath { 0%, 100% { box-shadow: 0 0 5px #fff; border-color: #fff; } 50% { box-shadow: 0 0 15px #00bfff; border-color: #00bfff; } }
 @keyframes prize-jump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
-.header { text-align: center; padding: 20px 10px; width: 100%; position: sticky; top: 0; z-index: 100; background: var(--b); display: flex; flex-direction: column; align-items: center; }
+.header { text-align: center; padding: 20px 10px; width: 100%; position: sticky; top: 0; background: var(--b); z-index: 10; }
 h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-content: center; align-items: center; gap: 15px; }
-.star-btn { cursor: pointer; font-size: 1.6rem; padding: 0 10px; }
-#u_q { background: white; padding: 6px 20px; border-radius: 20px; color: var(--a); font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-top: 10px; display: inline-block; font-size: 0.9rem; text-align: center; }
+.star-btn { cursor: pointer; font-size: 1.6rem; }
+#u_q { background: white; padding: 6px 20px; border-radius: 20px; color: var(--a); font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-top: 10px; display: inline-block; font-size: 0.85rem; }
 
-.ui-c { width: var(--ui-w); max-width: var(--ui-max); background: white; border-radius: 24px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 15px rgba(255,183,197,0.15); border: 1px solid #eee; margin-left: auto; margin-right: auto; }
-
+.ui-c { width: var(--ui-w); max-width: var(--ui-max); background: white; border-radius: 24px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 15px rgba(255,183,197,0.15); border: 1px solid #eee; }
 .p_title { text-align: center; font-weight: 900; color: #ff6b81; margin-bottom: 15px; font-size: 1.1rem; letter-spacing: 2px; }
 .p_grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
 .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
 
+/* 🌟 2號獎與1號獎呼吸燈 */
 .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
-.p_item.sp:not(.tk) { background: #f0faff; border: 2px solid #00bfff; animation: silver-breath 2.5s infinite; font-weight: 800; color: #008b8b; }
-.p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
+.p_item.sp:not(.tk) { background: #f0faff; border: 2px solid #00bfff; animation: silver-breath 2s infinite; font-weight: 800; color: #008b8b; }
+.p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; }
 
 .prog-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; font-weight: bold; }
-.prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+.prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin-top: 8px; }
 .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.8s ease; }
 
-.g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: var(--ui-w); max-width: var(--ui-max); padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px auto; border: 1px solid #eee; }
+.g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: var(--ui-w); max-width: var(--ui-max); padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px 0; border: 1px solid #eee; }
 .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, #ffb7c5, #ff8fa3); display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; border: 2px solid #fff; color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 0 #e67e91; position: relative; }
-.t_s:not(.so):not(.rv):not(.pk)::after { content: "㊗️"; } 
+.t_s:not(.so):not(.rv):not(.pk)::after { content: "㊗️"; }
 .t_s.so { background: #f2f2f2 !important; color: #bbb; box-shadow: none; cursor: default; }
-.t_s.so::after { content: attr(data-val); font-size: 0.85rem; color: #ccc; }
-
-.t_s.rv { background: #ffffff !important; border: 3px solid #222 !important; animation: prize-jump 1.2s ease-in-out infinite !important; z-index: 5; }
-.t_s.rv::after { content: attr(data-val) !important; color: #222 !important; font-weight: 900 !important; }
+.t_s.so::after { content: attr(data-val); font-size: 0.85rem; }
+.t_s.rv { background: #fff !important; border: 3px solid #222 !important; animation: prize-jump 1.2s infinite; z-index: 5; }
+.t_s.rv::after { content: attr(data-val) !important; color: #222 !important; font-weight: 900; }
 .t_s.rv[data-val="01"] { background: #fff9e6 !important; border-color: #d4a017 !important; }
 .t_s.rv[data-val="02"] { background: #f0faff !important; border-color: #00bfff !important; }
-
-.t_s.pk { background: linear-gradient(135deg, #ffb7c5, #ff8fa3) !important; border: 2px solid #fff !important; animation: gold-breath 1s infinite !important; }
+.t_s.pk { background: linear-gradient(135deg, #ffb7c5, #ff8fa3) !important; border: 2px solid #fff !important; animation: gold-breath 1s infinite; }
 .t_s.pk::after { content: "㊗️" !important; color: white !important; }
 
-.hash-box { margin-top: 10px; background: #f9f9f9; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; }
+.fairness-title { font-size: 0.8rem; font-weight: 900; color: #555; margin-bottom: 8px; }
+.hash-box { margin: 10px 0; background: #f9f9f9; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; }
 .hash-id { font-family: monospace; font-size: 0.72rem; color: var(--dark); font-weight: bold; word-break: break-all; }
 .copy-btn { background: var(--a); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; cursor: pointer; }
 .audit-btn { width: 100%; background: var(--dark); color: white; padding: 10px; border-radius: 10px; border: none; font-size: 0.8rem; margin-top: 10px; cursor: pointer; }
 
 .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
-.modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 300px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+.modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 300px; }
 .s_card { position: relative; width: 320px; height: 220px; background: #fff; border-radius: 24px; overflow: hidden; border: 6px solid var(--g); display: flex; align-items: center; justify-content: center; }
 .r_num { font-size: 6.5rem; font-weight: 900; color: #ff4757; }
+.unit { font-size: 1.5rem; color: #ff4757; font-weight: bold; }
 .btn_c { display: none; margin-top: 40px; padding: 15px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
-.h_list { background: white; border-radius: 15px; padding: 5px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
-.h_item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
-input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; font-size: 1rem; text-align: center; box-sizing: border-box; }
-.btn_m { width: 100%; padding: 12px; border: none; background: var(--a); color:white; border-radius: 50px; font-weight: bold; cursor: pointer; }
-.footer-info-premium { margin: 20px 0 40px 0; font-size: 0.7rem; color: #b0b0b0; text-align: center; line-height: 2; width: 100%; }
-`;
-
-const _appHTML = `
-<div class="header"><h1><span class="star-btn" onclick="window._l_st_ck()">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" onclick="window._r_st_ck()">🌟</span></h1><div id="u_q">點選任意空格開獎</div></div>
-<div class="ui-c"><div class="p_title">🎁 今日獎項對照 🎁</div><div id="p_g" class="p_grid"></div></div>
-<div class="ui-c"><div class="prog-header"><div>已刮取進度條</div><div style="color:var(--a);font-weight:900;"><span id="d_ct">0</span> / 50</div></div><div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div></div>
-<div id="g_d" class="g_con"></div>
-<div class="ui-c"><div style="font-size:0.8rem;font-weight:900;color:#555;margin-bottom:8px;">🛡️ 雲端算力公平性實時審計</div><div class="hash-box"><div id="cur_hash" class="hash-id">PF-INIT</div><button class="copy-btn" onclick="window._cpH()">複製</button></div><button class="audit-btn" onclick="window._openAudit()">📑 歷史盤別查詢</button></div>
-<div class="ui-c" style="margin-bottom:20px;"><div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時紀錄</div><div id="h_l" class="h_list"></div><div onclick="window._g_st_ck()" style="min-height:20px;"></div></div>
-<div class="footer-info-premium">&copy; 2026 <b>PREMIUM SLOTS PLATFORM</b><br>Security Node: Firebase Cloud Services</div>
-<div id="_m_audit" class="overlay"><div class="modal-box"><h3>🔍 校驗</h3><input type="text" id="audit_input"><button onclick="window._runAuditCheck()" class="btn_m">執行</button><div id="audit_res" style="display:none;margin-top:10px;font-size:0.7rem;background:#f9f9f9;padding:10px;border-radius:8px;"></div><button onclick="window._m_cl('_m_audit')" style="background:none;border:none;color:#bbb;margin-top:10px;">取消</button></div></div>
-<div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證</h3><input type="text" id="_i_01" autocomplete="off"><button onclick="window._v_cl()" class="btn_m">開始</button><button onclick="window._m_cl('_m_01')" style="background:none;border:none;color:#bbb;margin-top:10px;">取消</button></div></div>
-<div id="_m_02" class="overlay"><div class="modal-box"><h3>管理節點</h3><div id="_ui_c"></div><button onclick="window._m_cl('_m_02')" style="background:none;border:none;color:#bbb;margin-top:10px;">關閉</button></div></div>
-<div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem;color:#ff4757;font-weight:bold;">號</span></div></div><button id="c_btn" class="btn_c" onclick="window._clO()">確認結果 (10s)</button></div>
+.h_list { background: white; border-radius: 15px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
+.h_item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
+input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; text-align: center; }
+.btn_m { width: 100%; padding: 12px; border: none; background: var(--a); color: white; border-radius: 50px; font-weight: bold; cursor: pointer; }
+.close-txt { background: none; border: none; color: #bbb; margin-top: 10px; cursor: pointer; width: 100%; }
+.footer-info { margin: 20px 0 40px 0; font-size: 0.7rem; color: #b0b0b0; text-align: center; line-height: 2; }
 `;
 
 document.head.insertAdjacentHTML('beforeend', `<style>${_styles}</style>`);
-document.getElementById('app-root').innerHTML = _appHTML;
 
 import { initializeApp as _iA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase as _gD, ref as _rf, runTransaction as _rT, onValue as _oV, set as _st, get as _gt, push as _ps, remove as _rm, update as _ud, onChildAdded as _oCA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -98,10 +83,8 @@ const _z = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力
 let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null, _curSess = "";
 const _fm = (n) => n.toString().padStart(2, '0');
 
+// 🛠️ 彈窗控制
 window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; _s_i = null; _rI = null; };
-window._cpH = () => { navigator.clipboard.writeText(_curSess).then(() => alert("OK")); };
-window._openAudit = () => { document.getElementById('audit_res').style.display = 'none'; document.getElementById('_m_audit').style.display = 'flex'; };
-window._runAuditCheck = async () => { const id = document.getElementById('audit_input').value.trim(); const s = await _gt(_rf(_0xDb, 'audit_history/' + id)); if(s.exists()){ document.getElementById('audit_res').style.display = 'block'; document.getElementById('audit_res').innerText = s.val().raw; } };
 
 window._clO = async () => { 
     if (_tm) clearInterval(_tm); 
@@ -110,6 +93,7 @@ window._clO = async () => {
     document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); 
 };
 
+// 🏆 核心：抽獎與防卡死
 window._ex = async (i) => {
     if(_ip) return; _ip = true;
     try {
@@ -140,16 +124,18 @@ window._ex = async (i) => {
 function _sh(n, r) { 
     document.body.classList.add('modal-open'); document.getElementById('w_t').innerText = n; document.getElementById('ovl').style.display = 'flex'; 
     const c = document.getElementById('c_con'); const o = c.querySelector('canvas'); if(o) o.remove(); 
-    const cv = document.createElement('canvas'); cv.width = c.offsetWidth; cv.height = c.offsetHeight;
+    const cv = document.createElement('canvas'); 
+    cv.width = c.clientWidth; cv.height = c.clientHeight; // 修正 Canvas 物理對齊
     cv.style.position = 'absolute'; cv.style.zIndex = '2'; c.appendChild(cv); _cv = cv; _cx = cv.getContext('2d'); 
     const f = () => { _cx.fillStyle = '#C0C0C0'; _cx.fillRect(0, 0, cv.width, cv.height); if (r) cv.style.display = 'none'; };
-    f(); requestAnimationFrame(f);
+    f();
 }
 
 function _pp() { 
     _sh(_fm(window._l_w), false); 
     _cv.onmousedown = (e) => { if(_iv) return; _id = true; _s_M(e); }; _cv.ontouchstart = (e) => { if(_iv) return; _id = true; _s_M(e); };
     window.onmousemove = _s_M; window.ontouchmove = _s_M; window.onmouseup = () => { if(_id) { _id = false; _ck(); } }; window.ontouchend = () => { if(_id) { _id = false; _ck(); } };
+    _cv.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 }
 
 function _s_M(e) { 
@@ -160,8 +146,7 @@ function _s_M(e) {
 }
 
 function _ck() { 
-    const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; 
-    let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; 
+    const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; 
     if (c > (d.length/4)*0.45) { 
         _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; 
         if (!_iv) { 
@@ -188,8 +173,9 @@ window.onload = () => {
             document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; 
             document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; 
             document.getElementById('g_d').innerHTML = d.map((x, i) => { const n = parseInt(x.grade); const revealing = (_rI === i); const isLocked = (x.taken && !_dn.has(n) && !_gS_rev); return `<div class="t_s ${x.taken && !revealing && !isLocked ?'so':''} ${x.taken && n <= 16 && !revealing && !isLocked ? 'rv' : ''} ${revealing || isLocked ?'pk':''}" data-val="${_fm(n)}" id="ts_${i}"></div>`; }).join(''); 
-            d.forEach((x, i) => { const el = document.getElementById(`ts_${i}`); if(el) el.onclick = () => window._ck_i_click(i, x.taken); });
+            d.forEach((x, i) => { const el = document.getElementById(`ts_${i}`); if(el) el.onclick = () => { if(!x.taken && !_ip) { _rI = i; if(_u_c !== "" && _u_q > 0) window._ex(i); else document.getElementById('_m_01').style.display = 'flex'; } }; });
         } 
+        // 🏆 2號獎與1號獎燈效物理鎖定
         document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
             const n_int = parseInt(n); const taken = _dn.has(n_int); 
             let cls = (n_int === 1) ? 'tp' : (n_int === 2) ? 'sp' : ''; 
@@ -198,23 +184,27 @@ window.onload = () => {
     });
 
     _oV(_liveRef, (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; if (!_ip) { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed && _iv) document.getElementById('c_btn').style.display='block'; } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
-    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 28, 0, Math.PI * 2); _cx.fill(); } });
+    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 25, 0, Math.PI * 2); _cx.fill(); } });
+    
+    // 事件綁定
+    document.getElementById('btn_cp').onclick = () => { navigator.clipboard.writeText(_curSess).then(() => alert("OK")); };
+    document.getElementById('btn_audit_open').onclick = () => { document.getElementById('audit_res').style.display = 'none'; document.getElementById('_m_audit').style.display = 'flex'; };
+    document.getElementById('btn_audit_run').onclick = async () => { const id = document.getElementById('audit_input').value.trim(); const s = await _gt(_rf(_0xDb, 'audit_history/' + id)); if(s.exists()){ document.getElementById('audit_res').style.display = 'block'; document.getElementById('audit_res').innerText = s.val().raw; } };
+    document.getElementById('btn_audit_close').onclick = () => window._m_cl('_m_audit');
+    document.getElementById('btn_m1_close').onclick = () => window._m_cl('_m_01');
+    document.getElementById('btn_m2_close').onclick = () => window._m_cl('_m_02');
+    document.getElementById('_v_bt').onclick = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; window._ex(_s_i); } } else alert("ERR"); };
+
+    let l=0, r=0, g=0;
+    document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _p_key) { const sid = (await _gt(_sessRef)).val() || "INIT"; const snap = await _gt(_poolRef); if(snap.exists()) await _st(_rf(_0xDb, 'audit_history/' + sid), { raw: snap.val().map(x => x.grade).join(', '), time: new Date().toLocaleString() }); await _rm(_liveRef); const nS = 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase(); await _st(_sessRef, nS); let n=[]; for(let i=1; i<=50; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); location.reload(); } } };
+    document.getElementById('r_st').onclick=()=>{ r++; if(r >= 5){ r=0; const p = prompt(""); if(p === _p_key) _sU('c'); } };
+    document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g >= 10){ g=0; const p = prompt(""); if(p === _p_key) _sU('g'); } };
     _gt(_sessRef).then(s => { if(!s.exists()) _st(_sessRef, 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase()); });
 };
 
-window._ck_i_click = (i, s) => { if(s || _ip) return; _s_i = i; if(_u_c !== "" && _u_q > 0) { _rI = i; window._ex(i); } else document.getElementById('_m_01').style.display = 'flex'; };
-window._v_cl = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; window._ex(_s_i); } } else alert("碼錯誤"); };
-
-let l=0, r=0, g=0;
-window._l_st_ck = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _p_key) { const sid = (await _gt(_sessRef)).val() || "INIT"; const snap = await _gt(_poolRef); if(snap.exists()) await _st(_rf(_0xDb, 'audit_history/' + sid), { raw: snap.val().map(x => x.grade).join(', '), time: new Date().toLocaleString() }); await _rm(_liveRef); const newSid = 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase(); await _st(_sessRef, newSid); let n=[]; for(let i=1; i<=50; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); location.reload(); } } };
-window._r_st_ck = () => { r++; if(r >= 5){ r=0; const p = prompt(""); if(p === _p_key) _sU('c'); } };
-window._g_st_ck = () => { g++; if(g >= 10){ g=0; const p = prompt(""); if(p === _p_key) _sU('g'); } };
-
 function _sU(t) { 
     const b = document.getElementById('_ui_c');
-    if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button onclick="window._send_c()" class="btn_m">SEND</button>`; } 
-    else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button onclick="window._set_adj()" class="btn_m" style="background:#ff4757;">ADJ</button>`; }
+    if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="btn_send_c" class="btn_m">SEND</button>`; document.getElementById('btn_send_c').onclick = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _st(_rf(_0xDb, 'coupons/' + c), n); alert(c); window._m_cl('_m_02'); }; } 
+    else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button id="btn_set_adj" class="btn_m" style="background:#ff4757;">ADJ</button>`; document.getElementById('btn_set_adj').onclick = async () => { const v = parseInt(document.getElementById('_i_03').value); await _st(_rf(_0xDb, _p_path), v); window._m_cl('_m_02'); }; }
     document.getElementById('_m_02').style.display='flex'; 
 }
-window._send_c = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _st(_rf(_0xDb, 'coupons/' + c), n); alert(c); window._m_cl('_m_02'); };
-window._set_adj = async () => { const v = parseInt(document.getElementById('_i_03').value); await _st(_rf(_0xDb, _p_path), v); window._m_cl('_m_02'); };
