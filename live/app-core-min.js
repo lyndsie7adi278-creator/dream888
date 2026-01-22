@@ -1,6 +1,6 @@
-/* 🛡️ SECURITY CORE V13.0 - STABILIZED SEPARATION */
+/* 🛡️ ENGINE V14.0 - THE FINAL RESOLUTION */
 const _styles = `
-:root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50; --ui-w: 92vw; --ui-max: 450px; }
+:root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --dark: #2c3e50; --ui-w: 92vw; --ui-max: 450px; }
 * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; box-sizing: border-box; }
 body { font-family: -apple-system, sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
 body.modal-open { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
@@ -38,7 +38,6 @@ h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; align-items: 
 .modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 310px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
 .s_card { position: relative; width: 320px; height: 220px; background: #fff; border-radius: 24px; overflow: hidden; border: 6px solid var(--g); display: flex; align-items: center; justify-content: center; }
 .r_num { font-size: 6.5rem; font-weight: 900; color: #ff4757; }
-.unit { font-size: 1.5rem; color: #ff4757; font-weight: bold; }
 .btn_c { display: none; margin-top: 40px; padding: 15px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
 .h_list { background: white; border-radius: 15px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
 .h_item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
@@ -67,10 +66,12 @@ const _p_key = atob('MDgwNQ==');
 
 const _z = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件1~4代任選", 8: "星星人毛絨掛件1~4代任選", 9: "星星人毛絨掛件1~4代任選", 10: "點金奔騰系列手辦", 11: "你最珍貴-小夜燈", 12: "你最珍貴系列手辦", 13: "隨機熱門盲盒一個", 14: "隨機熱門盲盒一個", 15: "點數 10 點", 16: "點數 10 點" };
 
-let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = true, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null, _curSess = "";
+let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null, _curSess = "";
 const _fm = (n) => n.toString().padStart(2, '0');
 
-window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; _s_i = null; _rI = null; };
+// 🏆 修復亮燈與雪花的核心判斷
+const _isW = (n) => { const v = parseInt(n); return v >= 1 && v <= 16; };
+
 window._clO = async () => { if (_tm) clearInterval(_tm); if (!_iv) { await _ud(_liveRef, { isRevealed: true }); setTimeout(async () => { await _rm(_liveRef); }, 1200); } _ip = false; _iv = false; _s_i = null; _rI = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); };
 
 window._ex = async (i) => {
@@ -109,75 +110,53 @@ function _sh(n, r) {
     f();
 }
 
-function _pp() { 
-    _sh(_fm(window._l_w), false); 
-    _cv.onmousedown = (e) => { if(_iv) return; _id = true; _s_M(e); }; _cv.ontouchstart = (e) => { if(_iv) return; _id = true; _s_M(e); };
-    window.onmousemove = _s_M; window.ontouchmove = _s_M; window.onmouseup = () => { if(_id) { _id = false; _ck(); } }; window.ontouchend = () => { if(_id) { _id = false; _ck(); } };
-}
-
-function _s_M(e) { 
-    if(!_id || !_cx || _iv) return; if (e.cancelable) e.preventDefault();
-    const r = _cv.getBoundingClientRect(); const x = (e.clientX || (e.touches?e.touches[0].clientX:0)) - r.left; const y = (e.clientY || (e.touches?e.touches[0].clientY:0)) - r.top;
-    _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); 
-    if(!_iv) _ps(_ptsRef, { x: Math.round(x), y: Math.round(y) }); 
-}
-
-function _ck() { 
-    const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; 
-    if (c > (d.length/4)*0.45) { 
-        _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; 
-        if (!_iv) { 
-            _ud(_liveRef, { isRevealed: true }); 
-            if (parseInt(window._l_w) <= 16) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); 
-            _at(); 
-        } 
-    } 
-}
-
+function _pp() { _sh(_fm(window._l_w), false); _cv.onmousedown = (e) => { if(_iv) return; _id = true; _s_M(e); }; _cv.ontouchstart = (e) => { if(_iv) return; _id = true; _s_M(e); }; window.onmousemove = _s_M; window.ontouchmove = _s_M; window.onmouseup = () => { if(_id) { _id = false; _ck(); } }; window.ontouchend = () => { if(_id) { _id = false; _ck(); } }; }
+function _s_M(e) { if(!_id || !_cx || _iv) return; if (e.cancelable) e.preventDefault(); const r = _cv.getBoundingClientRect(); const x = (e.clientX || (e.touches?e.touches[0].clientX:0)) - r.left; const y = (e.clientY || (e.touches?e.touches[0].clientY:0)) - r.top; _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); if(!_iv) _ps(_ptsRef, { x: Math.round(x), y: Math.round(y) }); }
+function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; if (c > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _ud(_liveRef, { isRevealed: true }); if (_isW(window._l_w)) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
 function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); b.innerText=`確認結果 (${s}s)`; _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
-async function _rfQ() { if(!_u_c) return; const s = await _gt(_rf(_0xDb, 'coupons/' + _u_c)); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span id="sw_btn" style="cursor:pointer;color:#aaa;font-size:0.7rem;">[切換]</span>`; document.getElementById('sw_btn').onclick = () => { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; }; } else { localStorage.removeItem('_u_c'); _u_c = ""; } }
+async function _rfQ() { if(!_u_c) return; const s = await _gt(_rf(_0xDb, 'coupons/' + _u_c)); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span id="sw_btn" style="cursor:pointer;color:#aaa;font-size:0.7rem;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('u_q').innerText = "點選卡片驗證"; } }
 
-const _init = () => {
-    _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ();
-    _oV(_sessRef, (s) => { _curSess = s.val() || "PF-INIT"; document.getElementById('cur_hash').innerText = _curSess; });
-    _oV(_histRef, (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>👤 <b>${x.c}</b></span><span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join(''); } });
-    _oV(_poolRef, (s) => { 
-        const d = s.val(); if(d) { 
-            _ip = false; document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; 
-            document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; 
-            document.getElementById('g_d').innerHTML = d.map((x, i) => { const ni = parseInt(x.grade); const rv = (_rI === i); const lk = (x.taken && !_dn.has(ni) && !_gS_rev); return `<div class="t_s ${x.taken && !rv && !lk ?'so':''} ${x.taken && ni <= 16 && !rv && !lk ? 'rv' : ''} ${rv || lk ?'pk':''}" data-val="${_fm(ni)}" id="ts_${i}"></div>`; }).join(''); 
-            d.forEach((x, i) => { const el = document.getElementById(`ts_${i}`); if(el) el.onclick = () => { if(!x.taken && !_ip) { _rI = i; if(_u_c !== "" && _u_q > 0) window._ex(i); else document.getElementById('_m_01').style.display = 'flex'; } }; });
-        } 
-        document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
-            const ni = parseInt(n); const taken = _dn.has(ni); let cls = (ni === 1) ? 'tp' : (ni === 2) ? 'sp' : ''; 
-            return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(ni)}</span> ${m}</div>`; 
-        }).join(''); 
-    });
-    _oV(_liveRef, (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; if (document.getElementById('ovl').style.display !== 'flex') { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed) document.getElementById('c_btn').style.display='block'; } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
-    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 28, 0, Math.PI * 2); _cx.fill(); } });
-    _gt(_sessRef).then(s => { if(!s.exists()) _st(_sessRef, 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase()); });
+// 🚀 初始化偵聽
+_oV(_sessRef, (s) => { _curSess = s.val() || "PF-INIT"; document.getElementById('cur_hash').innerText = _curSess; });
+_oV(_histRef, (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>👤 <b>${x.c}</b></span><span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join(''); } });
+_oV(_poolRef, (s) => { 
+    const d = s.val(); if(d) { 
+        _ip = false; document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; 
+        document.getElementById('g_d').innerHTML = d.map((x, i) => { const ni = parseInt(x.grade); const rv = (_rI === i); const lk = (x.taken && !_dn.has(ni) && !_gS_rev); return `<div class="t_s ${x.taken && !rv && !lk ?'so':''} ${x.taken && _isW(ni) && !rv && !lk ? 'rv' : ''} ${rv || lk ?'pk':''}" data-val="${_fm(ni)}" data-idx="${i}" data-taken="${x.taken}"></div>`; }).join(''); 
+    } 
+    document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { const ni = parseInt(n); const taken = _dn.has(ni); let cls = (ni === 1) ? 'tp' : (ni === 2) ? 'sp' : ''; return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(ni)}</span> ${m}</div>`; }).join(''); 
+});
+_oV(_liveRef, (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; if (document.getElementById('ovl').style.display !== 'flex') { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed) document.getElementById('c_btn').style.display='block'; } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
+_oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 28, 0, Math.PI * 2); _cx.fill(); } });
+_gt(_sessRef).then(s => { if(!s.exists()) _st(_sessRef, 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase()); });
 
-    document.getElementById('btn_cp').onclick = () => { navigator.clipboard.writeText(_curSess).then(() => alert("OK")); };
-    document.getElementById('btn_audit_open').onclick = () => { document.getElementById('audit_res').style.display = 'none'; document.getElementById('_m_audit').style.display = 'flex'; };
-    document.getElementById('btn_audit_run').onclick = async () => { const id = document.getElementById('audit_input').value.trim(); const s = await _gt(_rf(_0xDb, 'audit_history/' + id)); if(s.exists()){ document.getElementById('audit_res').style.display = 'block'; document.getElementById('audit_res').innerText = s.val().raw; } };
-    document.getElementById('btn_audit_close').onclick = () => window._m_cl('_m_audit');
-    document.getElementById('btn_m1_close').onclick = () => window._m_cl('_m_01');
-    document.getElementById('btn_m2_close').onclick = () => window._m_cl('_m_02');
-    document.getElementById('_v_bt').onclick = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; window._ex(_s_i); } } };
-    document.getElementById('c_btn').onclick = window._clO;
+// 🏆 最終物理代理點擊 (解決一切卡死)
+document.addEventListener('click', async (e) => {
+    const t = e.target;
+    if (t.classList.contains('t_s')) {
+        const i = parseInt(t.dataset.idx); const taken = t.dataset.taken === 'true';
+        if (!taken && !_ip) { _rI = i; if (_u_c && _u_q > 0) window._ex(i); else document.getElementById('_m_01').style.display = 'flex'; }
+    }
+    if (t.id === 'sw_btn') { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; }
+    if (t.id === 'btn_cp') { navigator.clipboard.writeText(_curSess).then(() => alert("OK")); }
+    if (t.id === 'btn_audit_open') { document.getElementById('audit_res').style.display = 'none'; document.getElementById('_m_audit').style.display = 'flex'; }
+    if (t.id === 'btn_audit_run') { const id = document.getElementById('audit_input').value.trim(); const s = await _gt(_rf(_0xDb, 'audit_history/' + id)); if(s.exists()){ const res = document.getElementById('audit_res'); res.style.display = 'block'; res.innerText = s.val().raw; } }
+    if (t.id === 'btn_audit_close') document.getElementById('_m_audit').style.display = 'none';
+    if (t.id === 'btn_m1_close') document.getElementById('_m_01').style.display = 'none';
+    if (t.id === 'btn_m2_close') document.getElementById('_m_02').style.display = 'none';
+    if (t.id === 'c_btn') window._clO();
+    if (t.id === '_v_bt') {
+        const v = document.getElementById('_i_01').value.trim().toUpperCase();
+        const s = await _gt(_rf(_0xDb, 'coupons/' + v));
+        if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; _rfQ(); if(_s_i !== null) window._ex(_s_i); } else alert("ERR");
+    }
+});
 
-    let l=0, r=0, g=0;
-    document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _p_key) { const sid = (await _gt(_sessRef)).val() || "INIT"; const snap = await _gt(_poolRef); if(snap.exists()) await _st(_rf(_0xDb, 'audit_history/' + sid), { raw: snap.val().map(x => x.grade).join(', '), time: new Date().toLocaleString() }); await _rm(_liveRef); const nS = 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase(); await _st(_sessRef, nS); let n=[]; for(let i=1; i<=50; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); location.reload(); } } };
-    document.getElementById('r_st').onclick=()=>{ r++; if(r >= 5){ r=0; const p = prompt(""); if(p === _p_key) _sU('c'); } };
-    document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g >= 10){ g=0; const p = prompt(""); if(p === _p_key) _sU('g'); } };
-};
+// 🏆 管理功能
+let l=0, r=0, g=0;
+document.getElementById('l_st').onclick = async () => { l++; if(l>=10){ l=0; const p = prompt(""); if(p === _p_key) { const sid = (await _gt(_sessRef)).val() || "INIT"; const snap = await _gt(_poolRef); if(snap.exists()) await _st(_rf(_0xDb, 'audit_history/' + sid), { raw: snap.val().map(x => x.grade).join(', '), time: new Date().toLocaleString() }); await _rm(_liveRef); const newSid = 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase(); await _st(_sessRef, newSid); let n=[]; for(let i=1; i<=50; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); location.reload(); } } };
+document.getElementById('r_st').onclick = () => { r++; if(r>=5){ r=0; const p = prompt(""); if(p === _p_key) _sU('c'); } };
+document.getElementById('sys_sync_trigger').onclick = () => { g++; if(g>=10){ g=0; const p = prompt(""); if(p === _p_key) _sU('g'); } };
+function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="btn_sc" class="btn_m">SEND</button>`; document.getElementById('btn_sc').onclick=async()=>{ const n=parseInt(document.getElementById('_i_02').value); const c=Math.random().toString(36).substring(2,8).toUpperCase(); await _st(_rf(_0xDb,'coupons/'+c),n); alert(c); document.getElementById('_m_02').style.display='none'; }; } else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button id="btn_sa" class="btn_m" style="background:#ff4757;">ADJ</button>`; document.getElementById('btn_sa').onclick=async()=>{ const v=parseInt(document.getElementById('_i_03').value); await _st(_rf(_0xDb,_p_path),v); document.getElementById('_m_02').style.display='none'; }; } document.getElementById('_m_02').style.display='flex'; }
 
-function _sU(t) { 
-    const b = document.getElementById('_ui_c');
-    if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="btn_sc" class="btn_m">SEND</button>`; document.getElementById('btn_sc').onclick=async()=>{ const n=parseInt(document.getElementById('_i_02').value); const c=Math.random().toString(36).substring(2,8).toUpperCase(); await _st(_rf(_0xDb,'coupons/'+c),n); alert(c); window._m_cl('_m_02'); }; } 
-    else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button id="btn_sa" class="btn_m" style="background:#ff4757;">ADJ</button>`; document.getElementById('btn_sa').onclick=async()=>{ const v=parseInt(document.getElementById('_i_03').value); await _st(_rf(_0xDb,_p_path),v); window._m_cl('_m_02'); }; }
-    document.getElementById('_m_02').style.display='flex'; 
-}
-
-// 🚀 核心執行點
-_init();
+const _ls = localStorage.getItem('_u_c'); if(_ls) { _u_c = _ls; _rfQ(); }
