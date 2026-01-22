@@ -1,35 +1,28 @@
-/* 🛡️ SECURITY CORE V12.0 - FULL SEPARATION & VISUAL FIX */
+/* 🛡️ SECURITY CORE V13.0 - STABILIZED SEPARATION */
 const _styles = `
 :root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50; --ui-w: 92vw; --ui-max: 450px; }
 * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; box-sizing: border-box; }
 body { font-family: -apple-system, sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
 body.modal-open { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
 #ui-root { width: 100%; display: flex; flex-direction: column; align-items: center; }
-
 @keyframes gold-breath { 0%, 100% { box-shadow: 0 0 5px #fff; border-color: #fff; } 50% { box-shadow: 0 0 20px var(--g); border-color: var(--g); } }
 @keyframes silver-breath { 0%, 100% { box-shadow: 0 0 5px #fff; border-color: #fff; } 50% { box-shadow: 0 0 15px #00bfff; border-color: #00bfff; } }
 @keyframes prize-jump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-
 .header { text-align: center; padding: 20px 10px; width: 100%; position: sticky; top: 0; background: var(--b); z-index: 10; display: flex; flex-direction: column; align-items: center; }
 h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; align-items: center; gap: 15px; }
 .star-btn { cursor: pointer; font-size: 1.6rem; padding: 0 10px; }
 #u_q { background: white; padding: 6px 20px; border-radius: 20px; color: var(--a); font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-top: 10px; display: inline-block; font-size: 0.85rem; }
-
-.ui-c { width: var(--ui-w); max-width: var(--ui-max); background: white; border-radius: 24px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 15px rgba(255,183,197,0.15); border: 1px solid #eee; margin-left: auto; margin-right: auto; }
+.ui-c { width: var(--ui-w); max-width: var(--ui-max); background: white; border-radius: 24px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 15px rgba(255,183,197,0.15); border: 1px solid #eee; }
 .p_title { text-align: center; font-weight: 900; color: #ff6b81; margin-bottom: 15px; font-size: 1.1rem; letter-spacing: 2px; }
 .p_grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
 .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
-
-/* 🌟 燈效修復 */
 .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
 .p_item.sp:not(.tk) { background: #f0faff; border: 2px solid #00bfff; animation: silver-breath 2s infinite; font-weight: 800; color: #008b8b; }
 .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color:#ddd !important; }
-
 .prog-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; font-weight: bold; }
 .prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin-top: 8px; }
 .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.8s ease; }
-
 .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: var(--ui-w); max-width: var(--ui-max); padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px auto; border: 1px solid #eee; }
 .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, #ffb7c5, #ff8fa3); display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; border: 2px solid #fff; color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 0 #e67e91; position: relative; }
 .t_s:not(.so):not(.rv):not(.pk)::after { content: "㊗️"; }
@@ -41,11 +34,11 @@ h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; align-items: 
 .t_s.rv[data-val="02"] { background: #f0faff !important; border-color: #00bfff !important; }
 .t_s.pk { background: linear-gradient(135deg, #ffb7c5, #ff8fa3) !important; border: 2px solid #fff !important; animation: gold-breath 1s infinite; }
 .t_s.pk::after { content: "㊗️" !important; color: white !important; }
-
 .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
 .modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 310px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
 .s_card { position: relative; width: 320px; height: 220px; background: #fff; border-radius: 24px; overflow: hidden; border: 6px solid var(--g); display: flex; align-items: center; justify-content: center; }
 .r_num { font-size: 6.5rem; font-weight: 900; color: #ff4757; }
+.unit { font-size: 1.5rem; color: #ff4757; font-weight: bold; }
 .btn_c { display: none; margin-top: 40px; padding: 15px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
 .h_list { background: white; border-radius: 15px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
 .h_item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
@@ -77,28 +70,20 @@ const _z = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力
 let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = true, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null, _curSess = "";
 const _fm = (n) => n.toString().padStart(2, '0');
 
-// 🏆 彈窗邏輯
 window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; _s_i = null; _rI = null; };
+window._clO = async () => { if (_tm) clearInterval(_tm); if (!_iv) { await _ud(_liveRef, { isRevealed: true }); setTimeout(async () => { await _rm(_liveRef); }, 1200); } _ip = false; _iv = false; _s_i = null; _rI = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); };
 
-window._clO = async () => { 
-    if (_tm) clearInterval(_tm); 
-    if (!_iv) { await _ud(_liveRef, { isRevealed: true }); setTimeout(async () => { await _rm(_liveRef); }, 1200); } 
-    _ip = false; _iv = false; _s_i = null; _rI = null;
-    document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); 
-};
-
-// 🏆 核心抽獎
 window._ex = async (i) => {
     if(_ip) return; _ip = true;
     try {
-        const _node_snap = await _gt(_rf(_0xDb, _p_path));
-        let _node_val = _node_snap.val();
-        const result = await _rT(_poolRef, (v) => {
+        const _nS = await _gt(_rf(_0xDb, _p_path));
+        let _nV = _nS.val();
+        const res = await _rT(_poolRef, (v) => {
             if (!v || v[i].taken) return v;
             let cur = v[i].grade; let rem = v.filter(x => !x.taken).length;
-            if (_node_val) {
-                let _idx = v.findIndex(z => parseInt(z.grade) === parseInt(_node_val) && !z.taken);
-                if (_idx !== -1) { [v[i].grade, v[_idx].grade] = [v[_idx].grade, v[i].grade]; cur = _node_val; }
+            if (_nV) {
+                let _idx = v.findIndex(z => parseInt(z.grade) === parseInt(_nV) && !z.taken);
+                if (_idx !== -1) { [v[i].grade, v[_idx].grade] = [v[_idx].grade, v[i].grade]; cur = _nV; }
                 _st(_rf(_0xDb, _p_path), null); 
             } else if (parseInt(cur) === 1 && rem > 1) {
                 let p = v.findIndex(z => parseInt(z.grade) !== 1 && !z.taken && z !== v[i]);
@@ -106,7 +91,7 @@ window._ex = async (i) => {
             }
             v[i].taken = true; window._l_w = cur; return v;
         });
-        if(result.committed) {
+        if(res.committed) {
             await _rT(_rf(_0xDb, 'coupons/' + _u_c), c => (c > 0) ? c - 1 : 0);
             await _st(_ps(_histRef), { c: _u_c, g: window._l_w });
             await _st(_liveRef, { winNum: window._l_w, isRevealed: false });
@@ -143,50 +128,42 @@ function _ck() {
         _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; 
         if (!_iv) { 
             _ud(_liveRef, { isRevealed: true }); 
-            const curWin = parseInt(window._l_w);
-            if (curWin >= 1 && curWin <= 16) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); 
+            if (parseInt(window._l_w) <= 16) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); 
             _at(); 
         } 
     } 
 }
 
-function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); b.innerText = `確認結果 (${s}s)`; _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
+function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); b.innerText=`確認結果 (${s}s)`; _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
 async function _rfQ() { if(!_u_c) return; const s = await _gt(_rf(_0xDb, 'coupons/' + _u_c)); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span id="sw_btn" style="cursor:pointer;color:#aaa;font-size:0.7rem;">[切換]</span>`; document.getElementById('sw_btn').onclick = () => { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; }; } else { localStorage.removeItem('_u_c'); _u_c = ""; } }
 
-window.onload = () => {
+const _init = () => {
     _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ();
     _oV(_sessRef, (s) => { _curSess = s.val() || "PF-INIT"; document.getElementById('cur_hash').innerText = _curSess; });
     _oV(_histRef, (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>👤 <b>${x.c}</b></span><span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join(''); } });
-    
     _oV(_poolRef, (s) => { 
-        const d = s.val(); 
-        if(d) { 
-            _ip = false;
-            document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; 
+        const d = s.val(); if(d) { 
+            _ip = false; document.getElementById('d_ct').innerText = d.filter(x => x.taken).length; 
             document.getElementById('p_br').style.width = (d.filter(x => x.taken).length / 50 * 100) + "%"; 
-            document.getElementById('g_d').innerHTML = d.map((x, i) => { const n = parseInt(x.grade); const revealing = (_rI === i); const isLocked = (x.taken && !_dn.has(n) && !_gS_rev); return `<div class="t_s ${x.taken && !revealing && !isLocked ?'so':''} ${x.taken && n <= 16 && !revealing && !isLocked ? 'rv' : ''} ${revealing || isLocked ?'pk':''}" data-val="${_fm(n)}" id="ts_${i}"></div>`; }).join(''); 
+            document.getElementById('g_d').innerHTML = d.map((x, i) => { const ni = parseInt(x.grade); const rv = (_rI === i); const lk = (x.taken && !_dn.has(ni) && !_gS_rev); return `<div class="t_s ${x.taken && !rv && !lk ?'so':''} ${x.taken && ni <= 16 && !rv && !lk ? 'rv' : ''} ${rv || lk ?'pk':''}" data-val="${_fm(ni)}" id="ts_${i}"></div>`; }).join(''); 
             d.forEach((x, i) => { const el = document.getElementById(`ts_${i}`); if(el) el.onclick = () => { if(!x.taken && !_ip) { _rI = i; if(_u_c !== "" && _u_q > 0) window._ex(i); else document.getElementById('_m_01').style.display = 'flex'; } }; });
         } 
-        // 🏆 看板燈效物理修正
         document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
-            const ni = parseInt(n); const taken = _dn.has(ni); 
-            let cls = (ni === 1) ? 'tp' : (ni === 2) ? 'sp' : ''; 
+            const ni = parseInt(n); const taken = _dn.has(ni); let cls = (ni === 1) ? 'tp' : (ni === 2) ? 'sp' : ''; 
             return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(ni)}</span> ${m}</div>`; 
         }).join(''); 
     });
-
-    _oV(_liveRef, (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; if (!_ip) { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed && _iv) document.getElementById('c_btn').style.display='block'; } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
+    _oV(_liveRef, (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; if (document.getElementById('ovl').style.display !== 'flex') { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed) document.getElementById('c_btn').style.display='block'; } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
     _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 28, 0, Math.PI * 2); _cx.fill(); } });
     _gt(_sessRef).then(s => { if(!s.exists()) _st(_sessRef, 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase()); });
 
-    // 🚀 事件手動綁定
     document.getElementById('btn_cp').onclick = () => { navigator.clipboard.writeText(_curSess).then(() => alert("OK")); };
     document.getElementById('btn_audit_open').onclick = () => { document.getElementById('audit_res').style.display = 'none'; document.getElementById('_m_audit').style.display = 'flex'; };
     document.getElementById('btn_audit_run').onclick = async () => { const id = document.getElementById('audit_input').value.trim(); const s = await _gt(_rf(_0xDb, 'audit_history/' + id)); if(s.exists()){ document.getElementById('audit_res').style.display = 'block'; document.getElementById('audit_res').innerText = s.val().raw; } };
     document.getElementById('btn_audit_close').onclick = () => window._m_cl('_m_audit');
     document.getElementById('btn_m1_close').onclick = () => window._m_cl('_m_01');
     document.getElementById('btn_m2_close').onclick = () => window._m_cl('_m_02');
-    document.getElementById('_v_bt').onclick = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; window._ex(_s_i); } } else alert("ERR"); };
+    document.getElementById('_v_bt').onclick = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; window._ex(_s_i); } } };
     document.getElementById('c_btn').onclick = window._clO;
 
     let l=0, r=0, g=0;
@@ -197,7 +174,10 @@ window.onload = () => {
 
 function _sU(t) { 
     const b = document.getElementById('_ui_c');
-    if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="sc_btn" class="btn_m">SEND</button>`; document.getElementById('sc_btn').onclick=async()=>{ const n=parseInt(document.getElementById('_i_02').value); const c=Math.random().toString(36).substring(2,8).toUpperCase(); await _st(_rf(_0xDb,'coupons/'+c),n); alert(c); window._m_cl('_m_02'); }; } 
-    else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button id="sa_btn" class="btn_m" style="background:#ff4757;">ADJ</button>`; document.getElementById('sa_btn').onclick=async()=>{ const v=parseInt(document.getElementById('_i_03').value); await _st(_rf(_0xDb,_p_path),v); window._m_cl('_m_02'); }; }
+    if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="btn_sc" class="btn_m">SEND</button>`; document.getElementById('btn_sc').onclick=async()=>{ const n=parseInt(document.getElementById('_i_02').value); const c=Math.random().toString(36).substring(2,8).toUpperCase(); await _st(_rf(_0xDb,'coupons/'+c),n); alert(c); window._m_cl('_m_02'); }; } 
+    else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button id="btn_sa" class="btn_m" style="background:#ff4757;">ADJ</button>`; document.getElementById('btn_sa').onclick=async()=>{ const v=parseInt(document.getElementById('_i_03').value); await _st(_rf(_0xDb,_p_path),v); window._m_cl('_m_02'); }; }
     document.getElementById('_m_02').style.display='flex'; 
 }
+
+// 🚀 核心執行點
+_init();
