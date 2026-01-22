@@ -1,4 +1,4 @@
-/* 🛡️ STABILIZED CORE V11.0 - FIX ALL VISUALS & LOCKS */
+/* 🛡️ SECURITY CORE V12.0 - FULL SEPARATION & VISUAL FIX */
 const _styles = `
 :root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50; --ui-w: 92vw; --ui-max: 450px; }
 * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; box-sizing: border-box; }
@@ -10,27 +10,27 @@ body.modal-open { overflow: hidden !important; position: fixed; width: 100%; hei
 @keyframes silver-breath { 0%, 100% { box-shadow: 0 0 5px #fff; border-color: #fff; } 50% { box-shadow: 0 0 15px #00bfff; border-color: #00bfff; } }
 @keyframes prize-jump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
-.header { text-align: center; padding: 20px 10px; width: 100%; position: sticky; top: 0; background: var(--b); z-index: 10; }
-h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-content: center; align-items: center; gap: 15px; }
-.star-btn { cursor: pointer; font-size: 1.6rem; }
+.header { text-align: center; padding: 20px 10px; width: 100%; position: sticky; top: 0; background: var(--b); z-index: 10; display: flex; flex-direction: column; align-items: center; }
+h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; align-items: center; gap: 15px; }
+.star-btn { cursor: pointer; font-size: 1.6rem; padding: 0 10px; }
 #u_q { background: white; padding: 6px 20px; border-radius: 20px; color: var(--a); font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-top: 10px; display: inline-block; font-size: 0.85rem; }
 
-.ui-c { width: var(--ui-w); max-width: var(--ui-max); background: white; border-radius: 24px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 15px rgba(255,183,197,0.15); border: 1px solid #eee; }
+.ui-c { width: var(--ui-w); max-width: var(--ui-max); background: white; border-radius: 24px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 15px rgba(255,183,197,0.15); border: 1px solid #eee; margin-left: auto; margin-right: auto; }
 .p_title { text-align: center; font-weight: 900; color: #ff6b81; margin-bottom: 15px; font-size: 1.1rem; letter-spacing: 2px; }
 .p_grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
 .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
 
-/* 🌟 2號獎與1號獎呼吸燈 */
+/* 🌟 燈效修復 */
 .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
 .p_item.sp:not(.tk) { background: #f0faff; border: 2px solid #00bfff; animation: silver-breath 2s infinite; font-weight: 800; color: #008b8b; }
-.p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; }
+.p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color:#ddd !important; }
 
 .prog-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; font-weight: bold; }
 .prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin-top: 8px; }
 .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.8s ease; }
 
-.g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: var(--ui-w); max-width: var(--ui-max); padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px 0; border: 1px solid #eee; }
+.g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: var(--ui-w); max-width: var(--ui-max); padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px auto; border: 1px solid #eee; }
 .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, #ffb7c5, #ff8fa3); display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; border: 2px solid #fff; color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 0 #e67e91; position: relative; }
 .t_s:not(.so):not(.rv):not(.pk)::after { content: "㊗️"; }
 .t_s.so { background: #f2f2f2 !important; color: #bbb; box-shadow: none; cursor: default; }
@@ -42,22 +42,16 @@ h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-conte
 .t_s.pk { background: linear-gradient(135deg, #ffb7c5, #ff8fa3) !important; border: 2px solid #fff !important; animation: gold-breath 1s infinite; }
 .t_s.pk::after { content: "㊗️" !important; color: white !important; }
 
-.fairness-title { font-size: 0.8rem; font-weight: 900; color: #555; margin-bottom: 8px; }
-.hash-box { margin: 10px 0; background: #f9f9f9; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; }
-.hash-id { font-family: monospace; font-size: 0.72rem; color: var(--dark); font-weight: bold; word-break: break-all; }
-.copy-btn { background: var(--a); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; cursor: pointer; }
-.audit-btn { width: 100%; background: var(--dark); color: white; padding: 10px; border-radius: 10px; border: none; font-size: 0.8rem; margin-top: 10px; cursor: pointer; }
-
 .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
-.modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 300px; }
+.modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 310px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
 .s_card { position: relative; width: 320px; height: 220px; background: #fff; border-radius: 24px; overflow: hidden; border: 6px solid var(--g); display: flex; align-items: center; justify-content: center; }
 .r_num { font-size: 6.5rem; font-weight: 900; color: #ff4757; }
-.unit { font-size: 1.5rem; color: #ff4757; font-weight: bold; }
 .btn_c { display: none; margin-top: 40px; padding: 15px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
 .h_list { background: white; border-radius: 15px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
 .h_item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
-input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; text-align: center; }
+input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; text-align: center; font-size: 1rem; }
 .btn_m { width: 100%; padding: 12px; border: none; background: var(--a); color: white; border-radius: 50px; font-weight: bold; cursor: pointer; }
+#audit_res { display:none; margin-top:10px; font-size:0.7rem; background:#f9f9f9; padding:10px; border-radius:8px; word-break:break-all; text-align:left; }
 .close-txt { background: none; border: none; color: #bbb; margin-top: 10px; cursor: pointer; width: 100%; }
 .footer-info { margin: 20px 0 40px 0; font-size: 0.7rem; color: #b0b0b0; text-align: center; line-height: 2; }
 `;
@@ -80,10 +74,10 @@ const _p_key = atob('MDgwNQ==');
 
 const _z = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件1~4代任選", 8: "星星人毛絨掛件1~4代任選", 9: "星星人毛絨掛件1~4代任選", 10: "點金奔騰系列手辦", 11: "你最珍貴-小夜燈", 12: "你最珍貴系列手辦", 13: "隨機熱門盲盒一個", 14: "隨機熱門盲盒一個", 15: "點數 10 點", 16: "點數 10 點" };
 
-let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null, _curSess = "";
+let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = true, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null, _curSess = "";
 const _fm = (n) => n.toString().padStart(2, '0');
 
-// 🛠️ 彈窗控制
+// 🏆 彈窗邏輯
 window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; _s_i = null; _rI = null; };
 
 window._clO = async () => { 
@@ -93,7 +87,7 @@ window._clO = async () => {
     document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); 
 };
 
-// 🏆 核心：抽獎與防卡死
+// 🏆 核心抽獎
 window._ex = async (i) => {
     if(_ip) return; _ip = true;
     try {
@@ -124,8 +118,7 @@ window._ex = async (i) => {
 function _sh(n, r) { 
     document.body.classList.add('modal-open'); document.getElementById('w_t').innerText = n; document.getElementById('ovl').style.display = 'flex'; 
     const c = document.getElementById('c_con'); const o = c.querySelector('canvas'); if(o) o.remove(); 
-    const cv = document.createElement('canvas'); 
-    cv.width = c.clientWidth; cv.height = c.clientHeight; // 修正 Canvas 物理對齊
+    const cv = document.createElement('canvas'); cv.width = c.clientWidth; cv.height = c.clientHeight;
     cv.style.position = 'absolute'; cv.style.zIndex = '2'; c.appendChild(cv); _cv = cv; _cx = cv.getContext('2d'); 
     const f = () => { _cx.fillStyle = '#C0C0C0'; _cx.fillRect(0, 0, cv.width, cv.height); if (r) cv.style.display = 'none'; };
     f();
@@ -135,7 +128,6 @@ function _pp() {
     _sh(_fm(window._l_w), false); 
     _cv.onmousedown = (e) => { if(_iv) return; _id = true; _s_M(e); }; _cv.ontouchstart = (e) => { if(_iv) return; _id = true; _s_M(e); };
     window.onmousemove = _s_M; window.ontouchmove = _s_M; window.onmouseup = () => { if(_id) { _id = false; _ck(); } }; window.ontouchend = () => { if(_id) { _id = false; _ck(); } };
-    _cv.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 }
 
 function _s_M(e) { 
@@ -175,18 +167,19 @@ window.onload = () => {
             document.getElementById('g_d').innerHTML = d.map((x, i) => { const n = parseInt(x.grade); const revealing = (_rI === i); const isLocked = (x.taken && !_dn.has(n) && !_gS_rev); return `<div class="t_s ${x.taken && !revealing && !isLocked ?'so':''} ${x.taken && n <= 16 && !revealing && !isLocked ? 'rv' : ''} ${revealing || isLocked ?'pk':''}" data-val="${_fm(n)}" id="ts_${i}"></div>`; }).join(''); 
             d.forEach((x, i) => { const el = document.getElementById(`ts_${i}`); if(el) el.onclick = () => { if(!x.taken && !_ip) { _rI = i; if(_u_c !== "" && _u_q > 0) window._ex(i); else document.getElementById('_m_01').style.display = 'flex'; } }; });
         } 
-        // 🏆 2號獎與1號獎燈效物理鎖定
+        // 🏆 看板燈效物理修正
         document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
-            const n_int = parseInt(n); const taken = _dn.has(n_int); 
-            let cls = (n_int === 1) ? 'tp' : (n_int === 2) ? 'sp' : ''; 
-            return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(n_int)}</span> ${m}</div>`; 
+            const ni = parseInt(n); const taken = _dn.has(ni); 
+            let cls = (ni === 1) ? 'tp' : (ni === 2) ? 'sp' : ''; 
+            return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(ni)}</span> ${m}</div>`; 
         }).join(''); 
     });
 
     _oV(_liveRef, (s) => { const d = s.val(); if (d) { _gS_rev = d.isRevealed; if (!_ip) { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } if (d.isRevealed && _cv) _cv.style.display = 'none'; if (d.isRevealed && _iv) document.getElementById('c_btn').style.display='block'; } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
-    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 25, 0, Math.PI * 2); _cx.fill(); } });
-    
-    // 事件綁定
+    _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 28, 0, Math.PI * 2); _cx.fill(); } });
+    _gt(_sessRef).then(s => { if(!s.exists()) _st(_sessRef, 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase()); });
+
+    // 🚀 事件手動綁定
     document.getElementById('btn_cp').onclick = () => { navigator.clipboard.writeText(_curSess).then(() => alert("OK")); };
     document.getElementById('btn_audit_open').onclick = () => { document.getElementById('audit_res').style.display = 'none'; document.getElementById('_m_audit').style.display = 'flex'; };
     document.getElementById('btn_audit_run').onclick = async () => { const id = document.getElementById('audit_input').value.trim(); const s = await _gt(_rf(_0xDb, 'audit_history/' + id)); if(s.exists()){ document.getElementById('audit_res').style.display = 'block'; document.getElementById('audit_res').innerText = s.val().raw; } };
@@ -194,17 +187,17 @@ window.onload = () => {
     document.getElementById('btn_m1_close').onclick = () => window._m_cl('_m_01');
     document.getElementById('btn_m2_close').onclick = () => window._m_cl('_m_02');
     document.getElementById('_v_bt').onclick = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; window._ex(_s_i); } } else alert("ERR"); };
+    document.getElementById('c_btn').onclick = window._clO;
 
     let l=0, r=0, g=0;
     document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _p_key) { const sid = (await _gt(_sessRef)).val() || "INIT"; const snap = await _gt(_poolRef); if(snap.exists()) await _st(_rf(_0xDb, 'audit_history/' + sid), { raw: snap.val().map(x => x.grade).join(', '), time: new Date().toLocaleString() }); await _rm(_liveRef); const nS = 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase(); await _st(_sessRef, nS); let n=[]; for(let i=1; i<=50; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); location.reload(); } } };
     document.getElementById('r_st').onclick=()=>{ r++; if(r >= 5){ r=0; const p = prompt(""); if(p === _p_key) _sU('c'); } };
     document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g >= 10){ g=0; const p = prompt(""); if(p === _p_key) _sU('g'); } };
-    _gt(_sessRef).then(s => { if(!s.exists()) _st(_sessRef, 'PF-' + Math.random().toString(36).substring(2, 10).toUpperCase()); });
 };
 
 function _sU(t) { 
     const b = document.getElementById('_ui_c');
-    if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="btn_send_c" class="btn_m">SEND</button>`; document.getElementById('btn_send_c').onclick = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _st(_rf(_0xDb, 'coupons/' + c), n); alert(c); window._m_cl('_m_02'); }; } 
-    else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button id="btn_set_adj" class="btn_m" style="background:#ff4757;">ADJ</button>`; document.getElementById('btn_set_adj').onclick = async () => { const v = parseInt(document.getElementById('_i_03').value); await _st(_rf(_0xDb, _p_path), v); window._m_cl('_m_02'); }; }
+    if(t==='c') { b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="sc_btn" class="btn_m">SEND</button>`; document.getElementById('sc_btn').onclick=async()=>{ const n=parseInt(document.getElementById('_i_02').value); const c=Math.random().toString(36).substring(2,8).toUpperCase(); await _st(_rf(_0xDb,'coupons/'+c),n); alert(c); window._m_cl('_m_02'); }; } 
+    else { b.innerHTML=`<input type="number" id="_i_03" placeholder="1-50"><button id="sa_btn" class="btn_m" style="background:#ff4757;">ADJ</button>`; document.getElementById('sa_btn').onclick=async()=>{ const v=parseInt(document.getElementById('_i_03').value); await _st(_rf(_0xDb,_p_path),v); window._m_cl('_m_02'); }; }
     document.getElementById('_m_02').style.display='flex'; 
 }
