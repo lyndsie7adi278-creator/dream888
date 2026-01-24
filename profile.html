@@ -5,92 +5,134 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
     <title>夢工廠 | 會員中心</title>
     <style>
-        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --gold: #ffb800; --card: #ffffff; }
+        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
-        body { margin: 0; background: var(--bg); color: #2c3e50; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* 頁首導航 */
-        .header { padding: 15px 20px; display: flex; align-items: center; background: #fff; box-shadow: 0 2px 15px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 1000; }
-        .back-btn { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 6px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: 900; }
+        /* 頁首輕量導航 */
+        .header { padding: 15px 20px; display: flex; align-items: center; background: #fff; box-shadow: 0 1px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
+        .back-btn { background: none; border: 1.5px solid var(--primary); color: var(--primary); padding: 5px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; font-weight: 900; transition: 0.3s; }
+        .back-btn:active { background: var(--primary); color: #fff; }
         
-        /* 個人資料卡 (採用主頁深色質感) */
-        .user-panel { padding: 40px 20px; background: linear-gradient(145deg, #2c3e50 0%, #000 100%); text-align: center; color: #fff; position: relative; overflow: hidden; }
-        .user-panel::after { content: "DREAM FACTORY"; position: absolute; bottom: -10px; right: -10px; font-size: 3rem; font-weight: 900; opacity: 0.05; font-style: italic; }
+        /* 高級漸層個人資料區 */
+        .user-panel { 
+            padding: 50px 20px 40px; 
+            background: linear-gradient(135deg, #ff8fa3 0%, #ffb1bf 100%); 
+            text-align: center; color: #fff; position: relative; 
+            border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
+            box-shadow: 0 10px 30px rgba(255,143,163,0.3);
+        }
         
-        .avatar { width: 85px; height: 85px; background: var(--primary); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #fff; font-weight: 900; box-shadow: 0 8px 25px rgba(255,143,163,0.4); border: 3px solid rgba(255,255,255,0.2); }
+        .avatar-wrap { position: relative; width: 95px; height: 95px; margin: 0 auto 15px; }
+        .avatar { 
+            width: 100%; height: 100%; background: #fff; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 2.5rem; color: var(--primary); font-weight: 900; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); border: 4px solid rgba(255,255,255,0.4);
+        }
         
-        .nickname-box { font-size: 1.3rem; font-weight: 900; margin-bottom: 5px; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .uid-tag { font-size: 0.75rem; color: rgba(255,255,255,0.5); letter-spacing: 1px; background: rgba(255,255,255,0.1); padding: 3px 12px; border-radius: 50px; display: inline-block; cursor: pointer; }
-        .uid-tag:active { background: var(--primary); color: #fff; }
+        .nickname-box { font-size: 1.4rem; font-weight: 900; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .uid-tag { 
+            font-size: 0.7rem; color: #fff; letter-spacing: 1px; 
+            background: rgba(0,0,0,0.1); padding: 4px 14px; border-radius: 50px; 
+            display: inline-block; margin-top: 5px; backdrop-filter: blur(5px);
+        }
 
-        .balance-box { margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .balance-amount { font-size: 2.5rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 15px rgba(255,184,0,0.3); }
-        .balance-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 2px; font-weight: bold; }
+        .balance-card { 
+            margin: 25px auto 0; background: rgba(255,255,255,0.95); 
+            width: 85%; padding: 15px; border-radius: 20px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        .balance-label { font-size: 0.7rem; color: #999; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; }
+        .balance-amount { font-size: 1.8rem; font-weight: 900; color: #333; }
+        .balance-amount span { color: var(--gold); margin-right: 2px; }
 
-        /* 分頁標籤 */
-        .tabs { display: flex; background: #fff; padding: 0 10px; border-bottom: 1px solid #eee; position: sticky; top: 61px; z-index: 900; }
-        .tab-btn { flex: 1; padding: 18px 0; text-align: center; font-size: 0.9rem; font-weight: 900; color: #95a5a6; cursor: pointer; transition: 0.3s; border-bottom: 3px solid transparent; }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        /* 極簡分頁按鈕 */
+        .tabs { display: flex; background: #fff; margin-top: 15px; padding: 5px 15px; position: sticky; top: 58px; z-index: 900; }
+        .tab-btn { 
+            flex: 1; padding: 15px 0; text-align: center; font-size: 0.9rem; 
+            font-weight: 900; color: #bbb; cursor: pointer; transition: 0.3s; 
+            position: relative;
+        }
+        .tab-btn.active { color: var(--primary); }
+        .tab-btn.active::after { 
+            content: ""; position: absolute; bottom: 8px; left: 50%; 
+            transform: translateX(-50%); width: 20px; height: 3px; 
+            background: var(--primary); border-radius: 10px;
+        }
 
-        /* 列表區域 */
-        .content-area { flex-grow: 1; padding: 20px 15px 100px; max-width: 500px; margin: 0 auto; width: 100%; }
-        .page-content { display: none; animation: slideUp 0.4s ease; }
+        /* 內容與卡片樣式 */
+        .content-area { flex-grow: 1; padding: 10px 15px 100px; max-width: 500px; margin: 0 auto; width: 100%; }
+        .page-content { display: none; animation: fadeIn 0.4s ease; }
         .page-content.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .list-item { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #f0f0f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
-        .item-info b { display: block; font-size: 1rem; color: #2c3e50; margin-bottom: 4px; font-weight: 900; }
-        .item-info small { color: #adb5bd; font-size: 0.75rem; font-weight: bold; }
+        .list-item { 
+            background: #fff; border-radius: 18px; padding: 18px; 
+            margin-bottom: 12px; display: flex; justify-content: space-between; 
+            align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.01);
+        }
+        .item-info b { display: block; font-size: 0.95rem; color: #333; margin-bottom: 4px; font-weight: 900; }
+        .item-info small { color: #ccc; font-size: 0.7rem; font-weight: bold; }
         
-        .item-val { font-weight: 900; font-size: 1.1rem; }
-        .val-minus { color: var(--primary); }
+        .item-val { font-weight: 900; font-size: 1.1rem; color: var(--primary); }
+        .win-tag { 
+            background: #fff9fa; color: var(--primary); 
+            padding: 6px 14px; border-radius: 12px; 
+            font-size: 0.75rem; font-weight: 900; border: 1px solid #ffeff2;
+        }
+
+        .empty-state { text-align: center; padding: 80px 20px; color: #d0d5dd; }
+        .empty-icon { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
         
-        .win-tag { background: rgba(76,209,55,0.1); color: #27ae60; padding: 6px 15px; border-radius: 10px; font-size: 0.8rem; font-weight: 900; border: 1px solid rgba(76,209,55,0.2); }
-
-        .empty-state { text-align: center; padding: 80px 20px; color: #ccc; }
-        .empty-icon { font-size: 4rem; margin-bottom: 15px; opacity: 0.5; }
-
-        /* 複製提示視窗 */
-        #copyToast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1a1c23; color: var(--gold); padding: 10px 25px; border-radius: 50px; font-size: 0.85rem; font-weight: 900; z-index: 5000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        #copyToast { 
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
+            background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; 
+            border-radius: 50px; font-size: 0.8rem; font-weight: bold; 
+            z-index: 5000; display: none; animation: bounceIn 0.3s;
+        }
+        @keyframes bounceIn { 0% { transform: translateX(-50%) scale(0.8); } 100% { transform: translateX(-50%) scale(1); } }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
     <div class="header">
-        <a href="index.html" class="back-btn">← 返回商城</a>
+        <a href="index.html" class="back-btn">← 回商城</a>
     </div>
 
     <div class="user-panel">
-        <div class="avatar" id="avatarLetter">?</div>
-        <div class="nickname-box"><span id="uNick">載入中...</span></div>
-        <div class="uid-tag" onclick="copyUid()">UID: <span id="displayUid">--------</span> 📋</div>
+        <div class="avatar-wrap">
+            <div class="avatar" id="avatarLetter">?</div>
+        </div>
+        <div class="nickname-box"><span id="uNick">---</span></div>
+        <div class="uid-tag" onclick="copyUid()">ID: <span id="displayUid">--------</span> 📋</div>
         
-        <div class="balance-box">
-            <div class="balance-amount"><span id="uBal">0</span> <span style="font-size: 1rem; opacity: 0.6;">P</span></div>
-            <div class="balance-label">ACCOUNT BALANCE</div>
+        <div class="balance-card">
+            <div class="balance-label">可用點數餘額</div>
+            <div class="balance-amount"><span>P</span> <span id="uBal">0</span></div>
         </div>
     </div>
 
     <div class="tabs">
-        <div class="tab-btn active" onclick="switchTab(0)">💎 帳單明細</div>
-        <div class="tab-btn" onclick="switchTab(1)">🏆 中獎存根</div>
+        <div class="tab-btn active" onclick="switchTab(0)">消費清單</div>
+        <div class="tab-btn" onclick="switchTab(1)">中獎存根</div>
     </div>
 
     <div class="content-area">
         <div id="tab-billing" class="page-content active">
             <div id="billingList"></div>
         </div>
-
         <div id="tab-wins" class="page-content">
             <div id="winsList"></div>
         </div>
     </div>
 
-    <div id="copyToast">✅ UID 已複製</div>
+    <div id="copyToast">✅ 已複製 UID</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
         const _app = initializeApp(_cc); const _db = getDatabase(_app);
@@ -99,7 +141,6 @@
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
 
-        // 複製 UID
         window.copyUid = () => {
             navigator.clipboard.writeText(_uid);
             const t = document.getElementById('copyToast');
@@ -107,38 +148,34 @@
             setTimeout(() => t.style.display = 'none', 2000);
         };
 
-        // 切換分頁邏輯
         window.switchTab = (idx) => {
             document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
             document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
         };
 
-        // 讀取用戶資料
         onValue(ref(_db, `users/${_uid}`), s => {
             const u = s.val(); if(!u) return;
             document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
             document.getElementById('uNick').innerText = u.nickname || "新玩家";
             document.getElementById('avatarLetter').innerText = (u.nickname || _uid).charAt(0).toUpperCase();
 
-            // 帳單
             const bList = document.getElementById('billingList');
             if(u.logs) {
                 const logs = Object.values(u.logs).sort((a,b) => b.time - a.time);
                 bList.innerHTML = logs.map(l => `
                     <div class="list-item">
                         <div class="item-info">
-                            <b>${l.game || '系統調整'}</b>
+                            <b>${l.game || '點數調整'}</b>
                             <small>${new Date(l.time).toLocaleString()}</small>
                         </div>
-                        <div class="item-val val-minus">-${l.cost} P</div>
+                        <div class="item-val">-${l.cost} P</div>
                     </div>
                 `).join('');
             } else {
-                bList.innerHTML = '<div class="empty-state"><div class="empty-icon">📜</div>尚無消費紀錄</div>';
+                bList.innerHTML = '<div class="empty-state"><div class="empty-icon">📜</div>尚無紀錄</div>';
             }
         });
 
-        // 讀取中獎紀錄
         onValue(ref(_db, `winLogs`), s => {
             const list = document.getElementById('winsList');
             const myWins = s.val() ? Object.values(s.val()).filter(w => w.user === _uid).sort((a,b) => b.time - a.time) : [];
@@ -147,13 +184,13 @@
                     <div class="list-item">
                         <div class="item-info">
                             <b>${w.prize}</b>
-                            <small>${w.game}<br>${new Date(w.time).toLocaleString()}</small>
+                            <small>${w.game} | ${new Date(w.time).toLocaleString()}</small>
                         </div>
-                        <div class="win-tag">已紀錄</div>
+                        <div class="win-tag">中獎紀錄</div>
                     </div>
                 `).join('');
             } else {
-                list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎁</div>尚未獲得獎項</div>';
+                list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎁</div>尚未中獎</div>';
             }
         });
     </script>
