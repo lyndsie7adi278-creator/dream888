@@ -8,12 +8,12 @@
         :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --danger: #ff4757; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; padding-bottom: 50px; }
-        
+       
         .header { padding: 15px 20px; display: flex; align-items: center; background: #fff; box-shadow: 0 1px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
         .back-btn { background: none; border: 1.5px solid var(--primary); color: var(--primary); padding: 5px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; font-weight: 900; }
 
         .container { max-width: 500px; margin: 0 auto; padding: 20px; }
-
+        
         .card { background: #fff; border-radius: 25px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02); }
         .section-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
         .section-title::before { content: ""; width: 4px; height: 18px; background: var(--primary); border-radius: 10px; }
@@ -43,10 +43,10 @@
         .m-box { background: #fff; padding: 30px; border-radius: 30px; text-align: center; width: 100%; max-width: 320px; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <div class="header">
-        <a href="profile.html" class="back-btn">← 取消</a>
+        <a href="profile.html" class="back-btn">← 返回</a>
     </div>
 
     <div class="container">
@@ -54,7 +54,7 @@
             <div class="section-title">填寫儲值金額</div>
             <div class="input-group">
                 <label>儲值台幣 (NTD)</label>
-                <input type="number" id="amountIn" placeholder="最小儲值金額 100" min="100" oninput="calcP()">
+                <input type="number" id="amountIn" placeholder="最小金額 100" min="100" oninput="calcP()">
             </div>
             <div style="text-align: center; color: #999; font-size: 0.9rem;">
                 預計獲得：<b id="pOut" style="color:var(--gold); font-size: 1.2rem;">0</b> P
@@ -64,12 +64,10 @@
         <div class="card">
             <div class="section-title">指定匯款帳戶</div>
             <div class="bank-info">
-                <div class="bank-row"><span>銀行代碼</span><b>822 中國信託</b></div>
-                <div class="bank-row"><span>分行名稱</span><b>台北分行</b></div>
-                <div class="bank-row"><span>帳戶號碼</span><b>123-456789-000</b></div>
-                <div class="bank-row"><span>戶名</span><b>夢工廠數位娛樂</b></div>
+                <div class="bank-row"><span>銀行代碼</span><b>822 396 街口</b></div>
+                <div class="bank-row"><span>帳戶號碼</span><b>903515547</b></div>
             </div>
-            <p style="font-size: 0.7rem; color: #aaa; margin-top: 10px;">※ 請於匯款完成後再送出申請，加速查帳進度。</p>
+            <p style="font-size: 0.7rem; color: #aaa; margin-top: 10px;">※ 匯款完成後請點擊下方按鈕，系統將會通知客服查帳。</p>
         </div>
 
         <div class="warning-box">
@@ -77,20 +75,19 @@
             <p>
                 1. 點數匯率為 1:1，儲值後僅供商城內消費使用。<br>
                 2. <b>絕對禁止：</b>本商城不提供點數換回現金之服務。<br>
-                3. 請務必確認匯款金額與申請金額一致，以免造成入點延遲。<br>
-                4. 若超過 30 分鐘未入點，請聯繫官方 LINE 客服。
+                3. 點擊送出申請即代表已完成匯款並同意上述規範。
             </p>
         </div>
 
-        <button class="submit-btn" id="submitBtn" onclick="submitRequest()">送出儲值申請</button>
+        <button class="submit-btn" id="submitBtn" onclick="submitRequest()">我已匯款，送出申請</button>
     </div>
 
     <div id="resModal" class="modal">
         <div class="m-box">
             <div style="font-size: 3rem; margin-bottom: 15px;">✅</div>
             <h3 style="margin: 0 0 10px;">申請已送出</h3>
-            <p style="color: #666; font-size: 0.9rem; line-height: 1.6;">請等待客服查帳，<br>入點完成後將顯示於餘額中。</p>
-            <button class="submit-btn" style="margin-top: 20px;" onclick="location.href='profile.html'">回個人中心</button>
+            <p style="color: #666; font-size: 0.9rem; line-height: 1.6;">已發送通知給客服。<br>5分鐘內查帳完成後會立刻幫您入點！</p>
+            <button class="submit-btn" style="margin-top: 20px;" onclick="location.href='profile.html'">確認並返回</button>
         </div>
     </div>
 
@@ -101,6 +98,8 @@
         const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
         const _app = initializeApp(_cc); const _db = getDatabase(_app);
         const _uid = localStorage.getItem('myScratchCode');
+
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbz07UGZEQrF2A9IRlYkqnFQv4ZbquNaIb4PDsEKXxnd7DrzUrL_9oBsHl2oB3ThEItf/exec"; 
 
         if(!_uid) location.href = 'index.html';
 
@@ -113,26 +112,4 @@
             const amt = document.getElementById('amountIn').value;
             if(!amt || amt < 100) return alert("請輸入正確的儲值金額 (最小 100)");
 
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = "處理中...";
-
-            try {
-                // 將儲值申請寫入 Firebase
-                await push(ref(_db, `depositRequests`), {
-                    uid: _uid,
-                    amount: Number(amt),
-                    status: "pending",
-                    time: serverTimestamp()
-                });
-                
-                document.getElementById('resModal').style.display = 'flex';
-            } catch (e) {
-                alert("申請失敗，請檢查網路或聯繫客服");
-                btn.disabled = false;
-                btn.innerText = "重新送出";
-            }
-        };
-    </script>
-</body>
-</html>
+            const btn = document.getElementById('submit
