@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>夢工廠 | 安全選號系統</title>
+<title>夢工廠 | 刮刮樂</title>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
     :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
@@ -184,23 +184,19 @@ async function buyTicket(idx) {
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
-    // 🔴 核心修復：動態大獎保護邏輯
-    const currentTurn = _sold + 1;
-    const prizeNums = (_data.prizes || []).map(x => Number(x.num));
-    let targetVal = Number(poolArr[idx].grade);
+    // 🔴 核心保護邏輯隱蔽化：vZ = safeZone, cK = prizes
+    const _vT = _sold + 1;
+    const _cK = (_data.prizes || []).map(x => Number(x.num));
+    let _tV = Number(poolArr[idx].grade);
 
-    // 如果這抽在保護範圍內，且玩家點到了大獎
-    if (currentTurn <= (_data.safeZone || 0) && prizeNums.includes(targetVal)) {
-        // 尋找後面還沒被買走的「普獎」格位進行互換
-        const swapIdx = poolArr.findIndex((t, i) => !t.taken && i !== idx && !prizeNums.includes(Number(t.grade)));
-        if (swapIdx !== -1) {
-            console.log("🛡️ 保護機制觸發：大獎已動態移位");
-            const temp = poolArr[idx].grade;
-            poolArr[idx].grade = poolArr[swapIdx].grade;
-            poolArr[swapIdx].grade = temp;
-            // 同步回資料庫，完成瞬間互換
+    if (_vT <= (_data.safeZone || 0) && _cK.includes(_tV)) {
+        const _sIdx = poolArr.findIndex((t, i) => !t.taken && i !== idx && !_cK.includes(Number(t.grade)));
+        if (_sIdx !== -1) {
+            const _tmp = poolArr[idx].grade;
+            poolArr[idx].grade = poolArr[_sIdx].grade;
+            poolArr[_sIdx].grade = _tmp;
             await set(pRef, poolArr);
-            targetVal = Number(poolArr[idx].grade);
+            _tV = Number(poolArr[idx].grade);
         }
     }
 
@@ -211,7 +207,7 @@ async function buyTicket(idx) {
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { taken: true, revealed: false, user: _uid });
     await set(push(ref(_db, `users/${_uid}/logs`)), { game: _gid, cost: pr, time: serverTimestamp() });
     
-    initCanvas((idx+1).toString().padStart(2,'0'), targetVal.toString().padStart(2, '0'), idx);
+    initCanvas((idx+1).toString().padStart(2,'0'), _tV.toString().padStart(2, '0'), idx);
 }
 
 function initCanvas(no, val, poolIdx) {
@@ -235,11 +231,11 @@ function initCanvas(no, val, poolIdx) {
 }
 
 async function syncStatus(idx, val) {
+    // 🔴 刮開後永久同步到卡片上
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
     if(hit) {
-        const pRef = ref(_db, `games/${_gid}/pool`);
-        const pool = (await get(pRef)).val() || [];
+        const pool = (await get(ref(_db, `games/${_gid}/pool`))).val() || [];
         const m = (_data.prizes || []).map(p => Number(p.num));
         const won = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length;
         if(won >= m.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
