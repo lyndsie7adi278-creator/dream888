@@ -7,7 +7,6 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
     :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
-    /* 🔴 強制防護：禁止選取與圖片拖拽 */
     * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-drag: none !important; }
     body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow-x: hidden; }
     .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
@@ -39,7 +38,7 @@
     .ticket.winner-glow { border-color: var(--win); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
     .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
     .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
-    #luckyVal { font-size: 10rem; font-weight: 900; color: var(--danger); position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; text-shadow: 0 0 20px rgba(255,71,87,0.3); }
+    #luckyVal { font-size: 7rem; font-weight: 900; color: var(--danger); position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; text-shadow: 0 0 20px rgba(255,71,87,0.3); }
     #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
     .modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); }
     .m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
@@ -66,7 +65,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// 🔴 安全鎖定：防止 F12 與 調試
 window.addEventListener('keydown', (e) => {
     if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
         e.preventDefault(); return false;
@@ -82,7 +80,6 @@ let _data = null, _isClosed = false, _q = null, _tInterval = null;
 if(!_gid) location.href = 'index.html';
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
-// 監聽排隊鎖定
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
     const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
     if(_tInterval) clearInterval(_tInterval);
@@ -96,7 +93,6 @@ onValue(ref(_db, `games/${_gid}/lock`), snap => {
     } else { b.style.display = 'none'; _q = null; }
 });
 
-// 監聽遊戲設定
 onValue(ref(_db, `gameSettings/${_gid}`), s => {
     _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
@@ -105,7 +101,6 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     mainImg.src = _data.img; let allImgs = [_data.img]; if(_data.album) allImgs = [_data.img, ..._data.album];
     thumbList.innerHTML = allImgs.map((src, idx) => `<img src="${src}" class="thumb-img ${idx===0?'active':''}" onclick="window.changeImg(this, '${src}')">`).join('');
     
-    // 🟡 安全渲染
     onValue(ref(_db, `games/${_gid}/pool`), snap => {
         const p = snap.val() || []; const grid = document.getElementById('poolGrid');
         const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
@@ -187,7 +182,6 @@ function _initCanvas(no, val, poolIdx) {
 }
 
 async function _syncStatus(idx, val) {
-    // 🔴 關鍵更新：將號碼設為 revealed，卡片即會更新顯示數字
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
 
     const _b = (s) => btoa(s.toString());
@@ -210,3 +204,4 @@ window.changeImg = (el, src) => { document.getElementById('gMainImg').src = src;
 </script>
 </body>
 </html>
+
