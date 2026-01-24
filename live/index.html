@@ -4,48 +4,127 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>夢工廠刮刮樂</title>
-    <link rel="stylesheet" href="style.css?v=20260124">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script type="module" src="app-core-min.js?v=20260124"></script>
+    <style>
+        :root { 
+            --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; 
+            --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50;
+        }
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none !important; 
+            -webkit-user-select: none; 
+            -moz-user-select: none; 
+            -ms-user-select: none;
+            -webkit-user-drag: none;
+        }
+        body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
+        
+        body.modal-open { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
+
+        @keyframes gold-breath { 0% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } 50% { box-shadow: 0 0 20px var(--gold-glow); border-color: var(--g); } 100% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } }
+        @keyframes silver-breath { 0% { box-shadow: 0 0 5px var(--silver-glow); border-color: #fff; } 50% { box-shadow: 0 0 15px var(--silver-glow); border-color: #00bfff; } 100% { box-shadow: 0 0 5px var(--silver-glow); border-color: #fff; } }
+        @keyframes prize-jump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+        .header { text-align: center; padding: 20px 10px; width: 100%; position: sticky; top: 0; z-index: 100; background: var(--b); }
+        h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-content: center; align-items: center; gap: 15px; }
+        .star-btn { cursor: pointer; font-size: 1.6rem; padding: 0 10px; }
+        #u_q { background: white; padding: 6px 20px; border-radius: 20px; color: var(--a); font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-top: 10px; display: inline-block; font-size: 0.9rem; }
+
+        .p_board { width: 90%; max-width: 450px; background: white; border-radius: 24px; padding: 18px; margin-top: 5px; box-shadow: 0 5px 25px rgba(255,183,197,0.2); border: 2px solid #fff; }
+        .p_title { text-align: center; font-weight: 900; color: #ff6b81; margin-bottom: 15px; font-size: 1.1rem; letter-spacing: 2px; }
+        .p_grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
+        .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
+        .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
+        .p_item.sp:not(.tk) { background: #f0faff; border: 2px solid #00bfff; animation: silver-breath 2s infinite; font-weight: 800; color: #008b8b; }
+        .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
+
+        .progress-box { width: 90%; max-width: 450px; background: white; border-radius: 20px; margin: 15px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
+        .prog-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; font-weight: bold; margin-bottom: 8px; }
+        .prog-stats { font-size: 0.9rem; color: var(--a); font-weight: 900; }
+        .prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+        .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.8s ease; }
+
+        .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px 0; }
+        .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, #ffb7c5, #ff8fa3); display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; border: 2px solid #fff; color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 0 #e67e91; position: relative; }
+        
+        .t_s:not(.so):not(.rv):not(.pk)::after { content: "㊗️"; } 
+        .t_s.so { background: #f2f2f2 !important; color: #bbb; box-shadow: none; cursor: default; }
+        .t_s.so::after { content: attr(data-val); font-size: 0.85rem; font-weight: bold; color: #ccc; }
+        
+        .t_s.rv { 
+            background: #ffffff !important; 
+            border: 3px solid #222 !important; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; 
+            animation: prize-jump 1.2s ease-in-out infinite !important; 
+            z-index: 5;
+        }
+        .t_s.rv::after { content: attr(data-val) !important; color: #222 !important; font-weight: 900 !important; font-size: 1.1rem !important; }
+        .t_s.rv[data-val="01"] { background: #fff9e6 !important; border-color: #d4a017 !important; }
+        .t_s.rv[data-val="02"] { background: #f0faff !important; border-color: #00bfff !important; }
+
+        .t_s.pk { background: linear-gradient(135deg, #ffb7c5, #ff8fa3) !important; border: 2px solid #fff !important; animation: gold-breath 1s infinite !important; cursor: wait; }
+        .t_s.pk::after { content: "㊗️" !important; font-size: 1rem !important; color: white !important; }
+
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
+        .modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 300px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .s_card { position: relative; width: 320px; height: 220px; background: #fff; border-radius: 24px; overflow: hidden; border: 6px solid var(--g); display: flex; align-items: center; justify-content: center; }
+        .r_num { font-size: 6.5rem; font-weight: 900; color: #ff4757; line-height: 1; }
+        .btn_c { display: none; margin-top: 40px; padding: 15px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        
+        .h_box { width: 90%; max-width: 450px; margin-bottom: 20px; }
+        .h_list { background: white; border-radius: 15px; padding: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
+        .h_item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
+        
+        input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; font-size: 1rem; text-align: center; box-sizing: border-box; }
+        .btn_m { width: 100%; padding: 12px; border: none; background: var(--a); color:white; border-radius: 50px; font-weight: bold; cursor: pointer; }
+        .footer-info-premium { margin: 20px 0 40px 0; font-size: 0.7rem; color: #b0b0b0; text-align: center; line-height: 2; }
+    </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div class="header">
     <h1><span class="star-btn" id="l_st">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" id="r_st">🌟</span></h1>
-    <div id="u_q">核心引擎啟動中...</div>
+    <div id="u_q">點選任意空格開獎</div>
 </div>
 
-<div class="ui-c">
+<div class="p_board">
     <div class="p_title">🎁 今日獎項對照 🎁</div>
     <div class="p_grid" id="p_g"></div>
 </div>
 
-<div class="ui-c">
+<div class="progress-box">
     <div class="prog-header"><div>已刮取進度條</div><div class="prog-stats"><span id="d_ct">0</span> / 40</div></div>
     <div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div>
 </div>
 
 <div class="g_con" id="g_d"></div>
 
-<div class="ui-c" style="margin-bottom:20px;">
-    <div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時紀錄</div>
+<div class="h_box" style="margin-top:20px;">
+    <div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時中獎紀錄</div>
     <div class="h_list" id="h_l"></div>
+    
     <div style="min-height:30px; width:100%;" id="sys_sync_trigger"></div>
+
+    <div class="footer-info-premium">
+        &copy; 2026 <b>PREMIUM SLOTS PLATFORM</b><br>
+        Security Node: Firebase Global Cloud Infrastructure
+    </div>
 </div>
 
-<div class="footer-info-premium">
-    &copy; 2026 <b>PREMIUM SLOTS PLATFORM</b>
-</div>
-
-<div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button id="_v_bt" class="btn_m">開始刮獎</button><button id="btn_m1_close" class="close-txt">取消</button></div></div>
-<div id="_m_02" class="overlay"><div class="modal-box"><h3>管理控制台</h3><div id="_ui_c"></div><button id="btn_m2_close" class="close-txt">關閉</button></div></div>
+<div id="_m_01" class="overlay" onclick="window._o_cl(event, '_m_01')"><div class="modal-box"><h3 style="color:var(--a);">🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button id="_v_bt" class="btn_m">開始刮獎</button><button onclick="window._m_cl('_m_01')" style="background:none;border:none; color:#bbb; margin-top:10px; cursor:pointer;">取消</button></div></div>
+<div id="_m_02" class="overlay" onclick="window._o_cl(event, '_m_02')"><div class="modal-box"><h3 style="color:#666;" id="m_tit">節點控制</h3><div id="_ui_c"></div><button onclick="window._m_cl('_m_02')" style="background:none;border:none; color:#bbb; margin-top:10px; cursor:pointer;">關閉</button></div></div>
 
 <div class="overlay" id="ovl">
     <div class="s_card" id="c_con">
-        <div><span id="w_t" class="r_num">?</span><span class="unit">號</span></div>
+        <div style="display:flex; flex-direction:column; align-items:center;">
+            <div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem; color:#ff4757; font-weight:bold;">號</span></div>
+        </div>
     </div>
-    <button class="btn_c" id="c_btn">確認結果 (10s)</button>
+    <button class="btn_c" id="c_btn" onclick="window._clO()">確認結果 (10s)</button>
 </div>
 
+<script type="module" src="app-core-min.js"></script>
 </body>
 </html>
