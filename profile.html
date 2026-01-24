@@ -9,14 +9,12 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* 頁首輕量導航 */
         .header { padding: 15px 20px; display: flex; align-items: center; background: #fff; box-shadow: 0 1px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
         .back-btn { background: none; border: 1.5px solid var(--primary); color: var(--primary); padding: 5px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; font-weight: 900; transition: 0.3s; }
-        .back-btn:active { background: var(--primary); color: #fff; }
         
         /* 高級漸層個人資料區 */
         .user-panel { 
-            padding: 50px 20px 40px; 
+            padding: 50px 20px 60px; 
             background: linear-gradient(135deg, #ff8fa3 0%, #ffb1bf 100%); 
             text-align: center; color: #fff; position: relative; 
             border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
@@ -35,64 +33,48 @@
         .uid-tag { 
             font-size: 0.7rem; color: #fff; letter-spacing: 1px; 
             background: rgba(0,0,0,0.1); padding: 4px 14px; border-radius: 50px; 
-            display: inline-block; margin-top: 5px; backdrop-filter: blur(5px);
+            display: inline-block; margin-top: 5px; backdrop-filter: blur(5px); cursor: pointer;
         }
 
+        /* 儲值按鈕與餘額卡片整合 */
         .balance-card { 
-            margin: 25px auto 0; background: rgba(255,255,255,0.95); 
-            width: 85%; padding: 15px; border-radius: 20px; 
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin: 25px auto -85px; background: rgba(255,255,255,0.95); 
+            width: 88%; padding: 20px; border-radius: 25px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            position: relative; z-index: 5;
         }
-        .balance-label { font-size: 0.7rem; color: #999; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; }
-        .balance-amount { font-size: 1.8rem; font-weight: 900; color: #333; }
-        .balance-amount span { color: var(--gold); margin-right: 2px; }
+        .balance-label { font-size: 0.75rem; color: #999; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px; }
+        .balance-amount { font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 15px; }
+        .balance-amount span { color: var(--gold); }
+        
+        .deposit-btn {
+            background: var(--primary); color: #fff; border: none;
+            width: 100%; padding: 12px; border-radius: 15px;
+            font-size: 1rem; font-weight: 900; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255,143,163,0.3);
+            transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .deposit-btn:active { transform: scale(0.98); opacity: 0.9; }
 
-        /* 極簡分頁按鈕 */
-        .tabs { display: flex; background: #fff; margin-top: 15px; padding: 5px 15px; position: sticky; top: 58px; z-index: 900; }
-        .tab-btn { 
-            flex: 1; padding: 15px 0; text-align: center; font-size: 0.9rem; 
-            font-weight: 900; color: #bbb; cursor: pointer; transition: 0.3s; 
-            position: relative;
-        }
+        /* 分頁按鈕 */
+        .tabs { display: flex; background: transparent; margin-top: 90px; padding: 5px 15px; position: sticky; top: 58px; z-index: 4; }
+        .tab-btn { flex: 1; padding: 15px 0; text-align: center; font-size: 0.9rem; font-weight: 900; color: #bbb; cursor: pointer; position: relative; }
         .tab-btn.active { color: var(--primary); }
-        .tab-btn.active::after { 
-            content: ""; position: absolute; bottom: 8px; left: 50%; 
-            transform: translateX(-50%); width: 20px; height: 3px; 
-            background: var(--primary); border-radius: 10px;
-        }
+        .tab-btn.active::after { content: ""; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: var(--primary); border-radius: 10px; }
 
-        /* 內容與卡片樣式 */
         .content-area { flex-grow: 1; padding: 10px 15px 100px; max-width: 500px; margin: 0 auto; width: 100%; }
         .page-content { display: none; animation: fadeIn 0.4s ease; }
         .page-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .list-item { 
-            background: #fff; border-radius: 18px; padding: 18px; 
-            margin-bottom: 12px; display: flex; justify-content: space-between; 
-            align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-            border: 1px solid rgba(0,0,0,0.01);
-        }
+        .list-item { background: #fff; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .item-info b { display: block; font-size: 0.95rem; color: #333; margin-bottom: 4px; font-weight: 900; }
         .item-info small { color: #ccc; font-size: 0.7rem; font-weight: bold; }
-        
         .item-val { font-weight: 900; font-size: 1.1rem; color: var(--primary); }
-        .win-tag { 
-            background: #fff9fa; color: var(--primary); 
-            padding: 6px 14px; border-radius: 12px; 
-            font-size: 0.75rem; font-weight: 900; border: 1px solid #ffeff2;
-        }
+        .win-tag { background: #fff9fa; color: var(--primary); padding: 6px 14px; border-radius: 12px; font-size: 0.75rem; font-weight: 900; border: 1px solid #ffeff2; }
 
         .empty-state { text-align: center; padding: 80px 20px; color: #d0d5dd; }
-        .empty-icon { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
-        
-        #copyToast { 
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
-            background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; 
-            border-radius: 50px; font-size: 0.8rem; font-weight: bold; 
-            z-index: 5000; display: none; animation: bounceIn 0.3s;
-        }
-        @keyframes bounceIn { 0% { transform: translateX(-50%) scale(0.8); } 100% { transform: translateX(-50%) scale(1); } }
+        #copyToast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; z-index: 5000; display: none; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -102,15 +84,16 @@
     </div>
 
     <div class="user-panel">
-        <div class="avatar-wrap">
-            <div class="avatar" id="avatarLetter">?</div>
-        </div>
+        <div class="avatar-wrap"><div class="avatar" id="avatarLetter">?</div></div>
         <div class="nickname-box"><span id="uNick">---</span></div>
         <div class="uid-tag" onclick="copyUid()">ID: <span id="displayUid">--------</span> 📋</div>
         
         <div class="balance-card">
-            <div class="balance-label">可用點數餘額</div>
+            <div class="balance-label">ACCOUNT BALANCE</div>
             <div class="balance-amount"><span>P</span> <span id="uBal">0</span></div>
+            <button class="deposit-btn" onclick="location.href='deposit.html'">
+                💳 儲值點數 / 上分申請
+            </button>
         </div>
     </div>
 
@@ -120,12 +103,8 @@
     </div>
 
     <div class="content-area">
-        <div id="tab-billing" class="page-content active">
-            <div id="billingList"></div>
-        </div>
-        <div id="tab-wins" class="page-content">
-            <div id="winsList"></div>
-        </div>
+        <div id="tab-billing" class="page-content active"><div id="billingList"></div></div>
+        <div id="tab-wins" class="page-content"><div id="winsList"></div></div>
     </div>
 
     <div id="copyToast">✅ 已複製 UID</div>
@@ -171,9 +150,7 @@
                         <div class="item-val">-${l.cost} P</div>
                     </div>
                 `).join('');
-            } else {
-                bList.innerHTML = '<div class="empty-state"><div class="empty-icon">📜</div>尚無紀錄</div>';
-            }
+            } else { bList.innerHTML = '<div class="empty-state">尚無紀錄</div>'; }
         });
 
         onValue(ref(_db, `winLogs`), s => {
@@ -189,9 +166,7 @@
                         <div class="win-tag">中獎紀錄</div>
                     </div>
                 `).join('');
-            } else {
-                list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎁</div>尚未中獎</div>';
-            }
+            } else { list.innerHTML = '<div class="empty-state">尚未中獎</div>'; }
         });
     </script>
 </body>
