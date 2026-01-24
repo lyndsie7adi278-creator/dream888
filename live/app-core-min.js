@@ -1,4 +1,4 @@
-/* 🛡️ ENGINE V42.0 - ENCRYPTED & RESTRAINED */
+/* 🛡️ ENGINE V42.1 - LINKAGE FIXED */
 import { initializeApp as _0x1 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase as _0x2, ref as _0x3, runTransaction as _0x4, onValue as _0x5, set as _0x6, get as _0x7, push as _0x8, remove as _0x9, update as _0xa, onChildAdded as _0xb } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -18,6 +18,7 @@ const _0x13 = { 1: "\uD83C\uDF1F \u767E\u6A02\u9580 400%", 2: "\u661F\u661F\u4EB
 let _0x14 = localStorage.getItem('_u_c') || "", _0x15 = 0, _0x16 = null, _0x17, _0x18, _0x19 = false, _0x1a = true, _0x1b = false, _0x1c = new Set(), _0x1d = null, _0x1e = false, _0x1f = null;
 const _0x20 = (n) => n.toString().padStart(2, '0');
 
+// 🏆 關鍵修正：物理掛載函數到 window，解決分離卡死
 window._ck_i = (i, s) => { if(s || _0x1a) return; _0x16 = i; if(_0x14 !== "" && _0x15 > 0) { _0x1f = i; _0x21(i); } else document.getElementById('_m_01').style.display = 'flex'; };
 window._clO = async () => { if (_0x1d) clearInterval(_0x1d); if (!_0x1b) { await _0xa(_0x11, { isRevealed: true }); setTimeout(() => _0x9(_0x11), 1200); } _0x1a = false; _0x1b = false; _0x16 = null; _0x1f = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); };
 window._v_cl = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _0x7(_0x3(_0xe, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _0x14 = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _0x22(); if(_0x16 !== null) _0x21(_0x16); } else alert("\u78BC\u932F\u8AA4"); };
@@ -29,7 +30,6 @@ async function _0x21(i) {
         if (!v || v[i].taken) return v;
         let _0x23 = v[i].grade;
         let _0x24 = v.filter(x => x.taken).length;
-        // 🔒 Logic: First 20 Restriction
         if (parseInt(_0x23) === 1 && _0x24 < 20) {
             let _0x25 = v.findIndex(z => parseInt(z.grade) !== 1 && !z.taken && z !== v[i]);
             if (_0x25 !== -1) { [v[i].grade, v[_0x25].grade] = [v[_0x25].grade, v[i].grade]; _0x23 = v[i].grade; }
@@ -75,14 +75,13 @@ _0x5(_0xf, (s) => {
     document.getElementById('p_g').innerHTML = Object.entries(_0x13).map(([n, m]) => { const ni = parseInt(n); const taken = _0x1c.has(ni); let cls = (ni === 1) ? 'tp' : (ni === 2) ? 'sp' : ''; return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_0x20(ni)}</span> ${m}</div>`; }).join(''); 
     _0x22();
 });
+
 _0x5(_0x11, (s) => { const d = s.val(); if (d) { _0x1e = d.isRevealed; if (document.getElementById('ovl').style.display !== 'flex') { _0x1b = true; _0x1a = true; _0x27(_0x20(d.winNum), d.isRevealed); } if (d.isRevealed && _0x17) _0x17.style.display = 'none'; if (d.isRevealed) document.getElementById('c_btn').style.display='block'; } else { _0x1e = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); } });
-_0x0b(_0x12, (s) => { if (_0x18 && _0x1b) { const p = s.val(); _0x18.globalCompositeOperation = 'destination-out'; _0x18.beginPath(); _0x18.arc(p.x, p.y, 25, 0, Math.PI * 2); _0x18.fill(); } });
+_0xb(_0x12, (s) => { if (_0x18 && _0x1b) { const p = s.val(); _0x18.globalCompositeOperation = 'destination-out'; _0x18.beginPath(); _0x18.arc(p.x, p.y, 25, 0, Math.PI * 2); _0x18.fill(); } });
 
-document.getElementById('l_st').onclick = async () => { if(prompt("") === atob('MDgwNQ==')) { await _0x9(_0x11); let n=[]; for(let i=1; i<=40; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _0x6(_0xf, n.map(v=>({grade:v,taken:false}))); await _0x6(_0x10, null); location.reload(); } };
-document.getElementById('r_st').onclick = () => { if(prompt("") === atob('MDgwNQ==')) _0x2b('c'); };
-document.getElementById('btn_m1_close').onclick = () => window._m_cl('_m_01');
-document.getElementById('btn_m2_close').onclick = () => window._m_cl('_m_02');
-document.getElementById('_v_bt').onclick = window._v_cl;
-document.getElementById('c_btn').onclick = window._clO;
+// 管理功能
+window._l_st_ck = async () => { if(prompt("") === atob('MDgwNQ==')) { await _0x9(_0x11); let n=[]; for(let i=1; i<=40; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _0x6(_0xf, n.map(v=>({grade:v,taken:false}))); await _0x6(_0x10, null); location.reload(); } };
+window._r_st_ck = () => { if(prompt("") === atob('MDgwNQ==')) _0x2b(); };
+window._sys_v1 = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _0x6(_0x3(_0xe, 'coupons/' + c), n); alert(c); };
 
-function _0x2b(t) { const b = document.getElementById('_ui_c'); b.innerHTML=`<input type="number" id="_i_02" value="1"><button id="_0x2c" class="btn_m">SEND</button>`; document.getElementById('_0x2c').onclick=async()=>{ const n=parseInt(document.getElementById('_i_02').value); const c=Math.random().toString(36).substring(2,8).toUpperCase(); await _0x6(_0x3(_0xe,'coupons/'+c),n); alert(c); window._m_cl('_m_02'); }; document.getElementById('_m_02').style.display='flex'; }
+function _0x2b() { const b = document.getElementById('_ui_c'); b.innerHTML=`<input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; document.getElementById('_m_02').style.display='flex'; }
