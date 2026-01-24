@@ -1,4 +1,4 @@
-/* 🛡️ PREMIUM ENGINE V41.0 - NO HAND / 40 CARDS / 20-RESTRAINT */
+/* 🛡️ PREMIUM ENGINE V42.0 - ANTI-CHEAT / 40 CARDS / 20-RESTRAINT */
 import { initializeApp as _iA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase as _gD, ref as _rf, runTransaction as _rT, onValue as _oV, set as _st, get as _gt, push as _ps, remove as _rm, update as _ud, onChildAdded as _oCA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -18,6 +18,7 @@ const _ptsRef = _rf(_0xDb, 'live_scratch/points');
 const _z = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件1~4代任選", 8: "星星人毛絨掛件1~4代任選", 9: "星星人毛絨掛件1~4代任選", 10: "點金奔騰系列手辦", 11: "你最珍貴-小夜燈", 12: "你最珍貴系列手辦", 13: "隨機熱門盲盒一個", 14: "隨機熱門盲盒一個", 15: "點數 10 點", 16: "點數 10 點" };
 
 let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null;
+let _M_D = []; // 🏆 私有記憶體：存放底牌數據，不與 HTML 共用
 const _fm = (n) => n.toString().padStart(2, '0');
 
 window._o_cl = (e, i) => { if(e.target.id === i) window._m_cl(i); };
@@ -50,15 +51,23 @@ _oV(_histRef, (s) => {
 _oV(_poolRef, (s) => {
     const d = s.val();
     if(d) {
+        _M_D = d; // 🚀 更新記憶體數據
         const takenArr = d.filter(x => x.taken);
         document.getElementById('d_ct').innerText = takenArr.length;
-        // 🚀 修改：進度條分母改為 40
         document.getElementById('p_br').style.width = (takenArr.length / 40 * 100) + "%";
+        
+        // 🏆 修改重點：格子上絕對不出現 data-val 屬性，Elements 面板看不到數字
         document.getElementById('g_d').innerHTML = d.map((x, i) => {
-            const n = parseInt(x.grade); const isTaken = x.taken; const isWinner = (n >= 1 && n <= 16);
+            const n = parseInt(x.grade); 
+            const isWinner = (n >= 1 && n <= 16);
             const isRevealing = (_rI === i);
-            const isLocked = (isTaken && !_dn.has(n) && !_gS_rev);
-            return `<div class="t_s ${isTaken && !isRevealing && !isLocked ?'so':''} ${isTaken && isWinner && !isRevealing && !isLocked ? 'rv' : ''} ${isRevealing || isLocked ?'pk':''}" data-val="${_fm(n)}" onclick="window._ck_i(${i}, ${isTaken})"></div>`;
+            const isLocked = (x.taken && !_dn.has(n) && !_gS_rev);
+            
+            // 只有在已刮開且非鎖定狀態下，才動態生成顯示用的數字，否則顯示為空
+            const displayVal = (x.taken && !isRevealing && !isLocked) ? _fm(n) : "";
+            const cls = `t_s ${x.taken && !isRevealing && !isLocked ?'so':''} ${x.taken && isWinner && !isRevealing && !isLocked ? 'rv' : ''} ${isRevealing || isLocked ?'pk':''}`;
+            
+            return `<div class="${cls}" onclick="window._ck_i(${i}, ${x.taken})">${displayVal}</div>`;
         }).join('');
     }
     document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => {
@@ -69,23 +78,14 @@ _oV(_poolRef, (s) => {
 
 async function _ex(i) {
     if(_ip) return; _ip = true;
-    
-    // 🏆 核心邏輯修正版：前 20 張不出 1 號
     _rT(_poolRef, (v) => {
         if (!v || v[i].taken) return v;
-        
         let curGrade = v[i].grade;
         let takenCount = v.filter(x => x.taken).length;
-
-        // 🚀 修改：若目前刮開不足 20 張，且抽中 1 號獎，強行進行物理交換
         if (parseInt(curGrade) === 1 && takenCount < 20) {
             let pIdx = v.findIndex(z => parseInt(z.grade) !== 1 && !z.taken && z !== v[i]);
-            if (pIdx !== -1) {
-                [v[i].grade, v[pIdx].grade] = [v[pIdx].grade, v[i].grade];
-                curGrade = v[i].grade;
-            }
+            if (pIdx !== -1) { [v[i].grade, v[pIdx].grade] = [v[pIdx].grade, v[i].grade]; curGrade = v[i].grade; }
         }
-
         v[i].taken = true; window._l_w = curGrade; return v;
     }).then(async r => {
         if(r.committed) {
@@ -146,7 +146,6 @@ async function _rfQ() { if(!_u_c) return; const s = await _gt(_rf(_0xDb, 'coupon
 function _iS() {
     let l=0, r=0, g=0;
     document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _0x_k_val) { 
-        // 🚀 修改：物理移除算力存證邏輯，僅保留初始化 40 張的功能
         await _rm(_liveRef); 
         let n=[]; for(let i=1; i<=40; i++) n.push(i); 
         n.sort(()=>Math.random()-0.5); 
@@ -156,7 +155,6 @@ function _iS() {
     document.getElementById('r_st').onclick=()=>{ r++; if(r>=5){ r=0; const p = prompt(""); if(p === _0x_k_val) _sU('c'); } };
     document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g>=10){ g=0; if(prompt("") === _0x_k_val) _sU('g'); } };
 }
-// 🚀 修改：移除上帝之手 ADJ 按鈕功能與通知文字
 function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>物理限制已啟動：前20張保證不出01號獎項</p>`; document.getElementById('_m_02').style.display='flex'; }
 
 window.onload = () => { 
