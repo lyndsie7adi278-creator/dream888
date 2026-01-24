@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
     :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
+    /* 🔴 強制防護：禁止選取與圖片拖拽 */
     * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-drag: none !important; }
     body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow-x: hidden; }
     .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
@@ -17,7 +18,7 @@
     .main-img-wrap { width: 100%; height: 45vh; max-height: 400px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
     #gMainImg { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
     .thumb-scroll { display: flex; gap: 8px; padding: 10px 15px; overflow-x: auto; background: var(--card); border-bottom: 1px solid #222; }
-    .thumb-img { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; border: 2px solid #333; opacity: 0.5; flex-shrink: 0; cursor: pointer; pointer-events: auto !important; }
+    .thumb-img { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; border: 2px solid #333; opacity: 0.5; flex-shrink: 0; cursor: pointer; }
     .thumb-img.active { border-color: var(--p); opacity: 1; transform: scale(1.05); }
     .info-box { padding: 15px; background: var(--card); border-bottom: 2px solid #222; display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     .info-box h2 { margin: 0; font-size: 1.1rem; color: #fff; }
@@ -65,7 +66,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// 🔴 安全鎖定：防止開發者工具
+// 🔴 安全鎖定：防止 F12 與 調試
 window.addEventListener('keydown', (e) => {
     if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
         e.preventDefault(); return false;
@@ -80,6 +81,8 @@ let _data = null, _isClosed = false, _q = null, _tInterval = null;
 
 if(!_gid) location.href = 'index.html';
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
+
+// 監聽排隊鎖定
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
     const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
     if(_tInterval) clearInterval(_tInterval);
@@ -93,6 +96,7 @@ onValue(ref(_db, `games/${_gid}/lock`), snap => {
     } else { b.style.display = 'none'; _q = null; }
 });
 
+// 監聽遊戲設定（不在此下載號碼池）
 onValue(ref(_db, `gameSettings/${_gid}`), s => {
     _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
@@ -101,60 +105,57 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     mainImg.src = _data.img; let allImgs = [_data.img]; if(_data.album) allImgs = [_data.img, ..._data.album];
     thumbList.innerHTML = allImgs.map((src, idx) => `<img src="${src}" class="thumb-img ${idx===0?'active':''}" onclick="window.changeImg(this, '${src}')">`).join('');
     
-    // 🟡 安全增強：不在此處監聽 pool，改為渲染空盤
-    renderPoolGrid();
+    // 🟡 安全渲染：這裡只拿 taken 狀態，不下載 grade
+    onValue(ref(_db, `games/${_gid}/pool`), snap => {
+        const p = snap.val() || []; const grid = document.getElementById('poolGrid');
+        const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
+        const _pct = Math.round((_s / _data.total) * 100);
+        document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
+        document.getElementById('progFill').style.width = `${_pct}%`; document.getElementById('progPercent').innerText = `${_pct}%`;
+        const pLeft = (_data.promoCount || 0) - _s; const banner = document.getElementById('promoBanner');
+        if(pLeft > 0 && !_isClosed) {
+            banner.style.display = 'block'; document.getElementById('promoLeft').innerText = pLeft; document.getElementById('promoVal').innerText = _data.promoPrice;
+            document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P`;
+        } else { banner.style.display = 'none'; document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`; }
+        
+        document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
+            const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
+            return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
+        }).join('');
+
+        grid.innerHTML = '';
+        p.forEach((t, i) => {
+            const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
+            div.className = `ticket ${t.taken ? 'taken' : ''}`;
+            if(t.taken && t.revealed) {
+                const v = Number(t.grade); if(_m.includes(v)) div.classList.add('winner-glow');
+                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${v.toString().padStart(2, '0')}</span>`;
+            } else if(t.taken && !t.revealed) { div.innerHTML = `<span style="font-size:0.6rem;">刮開中</span>`;
+            } else { div.innerText = s; div.onclick = () => { _buyTicket(i); }; }
+            grid.appendChild(div);
+        });
+    });
 });
 
-async function renderPoolGrid() {
-    const snap = await get(ref(_db, `games/${_gid}/pool`));
-    const p = snap.val() || [];
-    const grid = document.getElementById('poolGrid');
-    const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
-    
-    // 更新進度
-    const _pct = Math.round((_s / _data.total) * 100);
-    document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
-    document.getElementById('progFill').style.width = `${_pct}%`;
-    document.getElementById('progPercent').innerText = `${_pct}%`;
-    
-    // 顯示中獎標籤（已揭曉的）
-    document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
-        const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
-        return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
-    }).join('');
-
-    grid.innerHTML = '';
-    p.forEach((t, i) => {
-        const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
-        div.className = `ticket ${t.taken ? 'taken' : ''}`;
-        if(t.taken && t.revealed) {
-            const v = Number(t.grade); if(_m.includes(v)) div.classList.add('winner-glow');
-            div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${v.toString().padStart(2, '0')}</span>`;
-        } else if(t.taken && !t.revealed) {
-            div.innerHTML = `<span style="font-size:0.6rem;">刮開中</span>`;
-        } else {
-            div.innerText = s;
-            div.onclick = () => { _buyTicket(i); };
-        }
-        grid.appendChild(div);
-    });
-}
-
-// 🔵 核心安全函數：點擊時才向後台請求單格 grade
+// 🔵 核心加固：點擊後才獲取單格號碼
 async function _buyTicket(idx) {
     if(_isClosed) return; const n = Date.now();
     if(_q && _q.user !== _uid && _q.expire > n) return alert(`他人包台中`);
     
-    const s = await get(ref(_db, `users/${_uid}/balance`)), cur = s.val() || 0;
-    const pS = await get(ref(_db, `games/${_gid}/pool`)), pool = pS.val() || [];
-    const _sold = pool.filter(x => x.taken).length;
+    // 付款前最後一次拉取資料庫確認狀態
+    const poolSnap = await get(ref(_db, `games/${_gid}/pool/${idx}`));
+    if(poolSnap.val().taken) return alert("已被購買");
+
+    const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
+    const pSnap = await get(ref(_db, `games/${_gid}/pool`)), poolArr = pSnap.val() || [];
+    const _sold = poolArr.filter(x => x.taken).length;
     let pr = (_data.promoCount > 0 && _sold < _data.promoCount) ? _data.promoPrice : _data.price;
     
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
-    // 🔴 關鍵點：此時才獲取這一格的獎號，防止提前監聽
-    const targetGrade = pool[idx].grade;
+    // 🟢 付款並讀取獎號（此時 grade 才會出現在手機通訊封包中）
+    const targetVal = poolArr[idx].grade;
 
     let _exp = (!_q || _q.user !== _uid || _q.expire < n) ? n + 180000 : Math.min(_q.expire + 30000, n + 900000);
     await update(ref(_db, `games/${_gid}/lock`), { user: _uid, expire: _exp });
@@ -162,7 +163,7 @@ async function _buyTicket(idx) {
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { taken: true, revealed: false, user: _uid });
     await set(push(ref(_db, `users/${_uid}/logs`)), { game: _gid, cost: pr, time: serverTimestamp() });
     
-    _initCanvas((idx+1).toString().padStart(2,'0'), Number(targetGrade).toString().padStart(2, '0'), idx);
+    _initCanvas((idx+1).toString().padStart(2,'0'), Number(targetVal).toString().padStart(2, '0'), idx);
 }
 
 function _initCanvas(no, val, poolIdx) {
@@ -184,11 +185,9 @@ function _initCanvas(no, val, poolIdx) {
 }
 
 async function _syncStatus(idx, val) {
-    await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
-    // 使用 Base64 簡單混淆判斷
+
     const _b = (s) => btoa(s.toString());
     const hit = (_data.prizes || []).find(p => _b(p.num) === _b(val));
-    
     if(hit) {
         const pSnap = await get(ref(_db, `games/${_gid}/pool`)), pool = pSnap.val() || [], m = (_data.prizes || []).map(p => Number(p.num));
         const won = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length;
