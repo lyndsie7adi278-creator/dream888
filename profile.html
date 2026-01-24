@@ -3,46 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-    <title>夢工廠 | 個人中心</title>
+    <title>夢工廠 | 會員中心</title>
     <style>
-        :root { --p: #ffb800; --bg: #05070a; --card: #1a1e26; --text: #e2e8f0; --border: rgba(255,184,0,0.2); }
+        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --gold: #ffb800; --card: #ffffff; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+        body { margin: 0; background: var(--bg); color: #2c3e50; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* 頁首 */
-        .header { padding: 15px; display: flex; align-items: center; background: #000; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 6px 15px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: bold; }
+        /* 頁首導航 */
+        .header { padding: 15px 20px; display: flex; align-items: center; background: #fff; box-shadow: 0 2px 15px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 1000; }
+        .back-btn { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 6px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: 900; }
         
-        /* 個人資料卡 */
-        .user-panel { padding: 30px 20px; background: linear-gradient(145deg, #11141b, #000); border-bottom: 1px solid var(--border); text-align: center; }
-        .avatar { width: 80px; height: 80px; background: var(--p); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #000; font-weight: 900; box-shadow: 0 0 20px rgba(255,184,0,0.3); }
-        .uid-tag { font-size: 0.8rem; color: #888; letter-spacing: 1px; margin-bottom: 10px; }
-        .balance-box { font-size: 2.2rem; font-weight: 900; color: var(--p); margin: 10px 0; }
-        .balance-label { font-size: 0.8rem; color: #666; text-transform: uppercase; }
+        /* 個人資料卡 (採用主頁深色質感) */
+        .user-panel { padding: 40px 20px; background: linear-gradient(145deg, #2c3e50 0%, #000 100%); text-align: center; color: #fff; position: relative; overflow: hidden; }
+        .user-panel::after { content: "DREAM FACTORY"; position: absolute; bottom: -10px; right: -10px; font-size: 3rem; font-weight: 900; opacity: 0.05; font-style: italic; }
+        
+        .avatar { width: 85px; height: 85px; background: var(--primary); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #fff; font-weight: 900; box-shadow: 0 8px 25px rgba(255,143,163,0.4); border: 3px solid rgba(255,255,255,0.2); }
+        
+        .nickname-box { font-size: 1.3rem; font-weight: 900; margin-bottom: 5px; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .uid-tag { font-size: 0.75rem; color: rgba(255,255,255,0.5); letter-spacing: 1px; background: rgba(255,255,255,0.1); padding: 3px 12px; border-radius: 50px; display: inline-block; cursor: pointer; }
+        .uid-tag:active { background: var(--primary); color: #fff; }
 
-        /* 分頁切換 */
-        .tabs { display: flex; background: #000; padding: 5px; border-bottom: 1px solid #222; position: sticky; top: 61px; z-index: 90; }
-        .tab-btn { flex: 1; padding: 12px; text-align: center; font-size: 0.9rem; font-weight: bold; color: #666; cursor: pointer; transition: 0.3s; border-bottom: 2px solid transparent; }
-        .tab-btn.active { color: var(--p); border-bottom-color: var(--p); }
+        .balance-box { margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .balance-amount { font-size: 2.5rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 15px rgba(255,184,0,0.3); }
+        .balance-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 2px; font-weight: bold; }
 
-        /* 內容區域 */
-        .content-area { flex-grow: 1; padding: 20px 15px 100px; }
-        .page-content { display: none; animation: fadeIn 0.4s ease; }
+        /* 分頁標籤 */
+        .tabs { display: flex; background: #fff; padding: 0 10px; border-bottom: 1px solid #eee; position: sticky; top: 61px; z-index: 900; }
+        .tab-btn { flex: 1; padding: 18px 0; text-align: center; font-size: 0.9rem; font-weight: 900; color: #95a5a6; cursor: pointer; transition: 0.3s; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* 列表區域 */
+        .content-area { flex-grow: 1; padding: 20px 15px 100px; max-width: 500px; margin: 0 auto; width: 100%; }
+        .page-content { display: none; animation: slideUp 0.4s ease; }
         .page-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 列表樣式 */
-        .list-item { background: var(--card); border-radius: 15px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: space-between; align-items: center; }
-        .item-info b { display: block; font-size: 1rem; margin-bottom: 4px; }
-        .item-info small { color: #666; font-size: 0.75rem; }
+        .list-item { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #f0f0f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
+        .item-info b { display: block; font-size: 1rem; color: #2c3e50; margin-bottom: 4px; font-weight: 900; }
+        .item-info small { color: #adb5bd; font-size: 0.75rem; font-weight: bold; }
+        
         .item-val { font-weight: 900; font-size: 1.1rem; }
-        .val-minus { color: #ff4757; }
-        .val-plus { color: var(--p); }
-        .win-tag { background: rgba(255,184,0,0.1); color: var(--p); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; border: 1px solid var(--border); }
+        .val-minus { color: var(--primary); }
+        
+        .win-tag { background: rgba(76,209,55,0.1); color: #27ae60; padding: 6px 15px; border-radius: 10px; font-size: 0.8rem; font-weight: 900; border: 1px solid rgba(76,209,55,0.2); }
 
-        /* 空狀態 */
-        .empty-state { text-align: center; padding: 50px 20px; color: #444; }
-        .empty-state div { font-size: 3rem; margin-bottom: 15px; }
+        .empty-state { text-align: center; padding: 80px 20px; color: #ccc; }
+        .empty-icon { font-size: 4rem; margin-bottom: 15px; opacity: 0.5; }
+
+        /* 複製提示視窗 */
+        #copyToast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1a1c23; color: var(--gold); padding: 10px 25px; border-radius: 50px; font-size: 0.85rem; font-weight: 900; z-index: 5000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -53,9 +62,13 @@
 
     <div class="user-panel">
         <div class="avatar" id="avatarLetter">?</div>
-        <div class="uid-tag">UID: <span id="displayUid">--------</span></div>
-        <div class="balance-box"><span id="uBal">0</span> <span style="font-size: 1rem;">P</span></div>
-        <div class="balance-label">Current Balance</div>
+        <div class="nickname-box"><span id="uNick">載入中...</span></div>
+        <div class="uid-tag" onclick="copyUid()">UID: <span id="displayUid">--------</span> 📋</div>
+        
+        <div class="balance-box">
+            <div class="balance-amount"><span id="uBal">0</span> <span style="font-size: 1rem; opacity: 0.6;">P</span></div>
+            <div class="balance-label">ACCOUNT BALANCE</div>
+        </div>
     </div>
 
     <div class="tabs">
@@ -73,14 +86,11 @@
         </div>
     </div>
 
+    <div id="copyToast">✅ UID 已複製</div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        // 安全鎖定
-        window.addEventListener('keydown', e => {
-            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) e.preventDefault();
-        });
 
         const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
         const _app = initializeApp(_cc); const _db = getDatabase(_app);
@@ -88,60 +98,63 @@
 
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
-        document.getElementById('avatarLetter').innerText = _uid.charAt(0).toUpperCase();
+
+        // 複製 UID
+        window.copyUid = () => {
+            navigator.clipboard.writeText(_uid);
+            const t = document.getElementById('copyToast');
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2000);
+        };
 
         // 切換分頁邏輯
         window.switchTab = (idx) => {
-            const btns = document.querySelectorAll('.tab-btn');
-            const pages = document.querySelectorAll('.page-content');
-            btns.forEach((b, i) => b.classList.toggle('active', i === idx));
-            pages.forEach((p, i) => p.classList.toggle('active', i === idx));
+            document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+            document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
         };
 
-        // 讀取餘額
-        onValue(ref(_db, `users/${_uid}/balance`), s => {
-            document.getElementById('uBal').innerText = (s.val() || 0).toLocaleString();
-        });
+        // 讀取用戶資料
+        onValue(ref(_db, `users/${_uid}`), s => {
+            const u = s.val(); if(!u) return;
+            document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
+            document.getElementById('uNick').innerText = u.nickname || "新玩家";
+            document.getElementById('avatarLetter').innerText = (u.nickname || _uid).charAt(0).toUpperCase();
 
-        // 讀取帳單明細
-        onValue(ref(_db, `users/${_uid}/logs`), s => {
-            const list = document.getElementById('billingList');
-            const data = s.val();
-            if(!data) {
-                list.innerHTML = '<div class="empty-state"><div>📜</div>尚無消費紀錄</div>';
-                return;
-            }
-            const items = Object.values(data).reverse();
-            list.innerHTML = items.map(i => `
-                <div class="list-item">
-                    <div class="item-info">
-                        <b>${i.game || '系統調整'}</b>
-                        <small>${new Date(i.time).toLocaleString()}</small>
+            // 帳單
+            const bList = document.getElementById('billingList');
+            if(u.logs) {
+                const logs = Object.values(u.logs).sort((a,b) => b.time - a.time);
+                bList.innerHTML = logs.map(l => `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <b>${l.game || '系統調整'}</b>
+                            <small>${new Date(l.time).toLocaleString()}</small>
+                        </div>
+                        <div class="item-val val-minus">-${l.cost} P</div>
                     </div>
-                    <div class="item-val val-minus">-${i.cost} P</div>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                bList.innerHTML = '<div class="empty-state"><div class="empty-icon">📜</div>尚無消費紀錄</div>';
+            }
         });
 
-        // 讀取中獎存根
+        // 讀取中獎紀錄
         onValue(ref(_db, `winLogs`), s => {
             const list = document.getElementById('winsList');
-            const data = s.val();
-            const myWins = data ? Object.values(data).filter(w => w.user === _uid).reverse() : [];
-            
-            if(myWins.length === 0) {
-                list.innerHTML = '<div class="empty-state"><div>🎁</div>尚未獲得獎項</div>';
-                return;
-            }
-            list.innerHTML = myWins.map(w => `
-                <div class="list-item">
-                    <div class="item-info">
-                        <b>${w.prize}</b>
-                        <small>${w.game} | ${new Date(w.time).toLocaleString()}</small>
+            const myWins = s.val() ? Object.values(s.val()).filter(w => w.user === _uid).sort((a,b) => b.time - a.time) : [];
+            if(myWins.length) {
+                list.innerHTML = myWins.map(w => `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <b>${w.prize}</b>
+                            <small>${w.game}<br>${new Date(w.time).toLocaleString()}</small>
+                        </div>
+                        <div class="win-tag">已紀錄</div>
                     </div>
-                    <div class="win-tag">已存根</div>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎁</div>尚未獲得獎項</div>';
+            }
         });
     </script>
 </body>
