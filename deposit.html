@@ -24,9 +24,13 @@
         input:focus { border-color: var(--primary); background: #fff9fa; }
 
         .bank-info { background: #fdfdfd; border: 1px dashed #ddd; border-radius: 15px; padding: 15px; margin-top: 10px; }
-        .bank-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
+        .bank-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; }
         .bank-row span { color: #888; }
-        .bank-row b { color: #333; letter-spacing: 1px; }
+        .bank-row b { color: #333; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        
+        /* 複製按鈕樣式 */
+        .copy-btn { background: var(--primary); color: #fff; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .copy-btn:active { transform: scale(0.9); opacity: 0.8; }
 
         .warning-box { background: #fff5f5; border-radius: 15px; padding: 15px; margin: 20px 0; border: 1px solid #ffebeb; }
         .warning-box h4 { margin: 0 0 8px; color: var(--danger); font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
@@ -41,9 +45,14 @@
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
         .m-box { background: #fff; padding: 30px; border-radius: 30px; text-align: center; width: 100%; max-width: 320px; }
+        
+        /* 複製提示小標籤 */
+        #copyTip { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; display: none; z-index: 3000; }
     </style>
 </head>
 <body oncontextmenu="return false;">
+
+    <div id="copyTip">✅ 已複製到剪貼簿</div>
 
     <div class="header">
         <a href="profile.html" class="back-btn">← 返回</a>
@@ -64,8 +73,14 @@
         <div class="card">
             <div class="section-title">指定匯款帳戶</div>
             <div class="bank-info">
-                <div class="bank-row"><span>銀行代碼</span><b>396 街口</b></div>
-                <div class="bank-row"><span>帳戶號碼</span><b>903515547</b></div>
+                <div class="bank-row">
+                    <span>銀行代碼</span>
+                    <b>396 街口 <button class="copy-btn" onclick="copyText('396')">複製</button></b>
+                </div>
+                <div class="bank-row">
+                    <span>帳戶號碼</span>
+                    <b>903515547 <button class="copy-btn" onclick="copyText('903515547')">複製</button></b>
+                </div>
             </div>
             <p style="font-size: 0.7rem; color: #aaa; margin-top: 10px;">※ 匯款完成後請點擊下方按鈕，系統將會通知客服查帳。</p>
         </div>
@@ -103,18 +118,25 @@
 
         if(!_uid) location.href = 'index.html';
 
-        // 🟢 修復即時計算：強制綁定 input 監聽器，確保手機端也能即時觸發
+        // 複製功能
+        window.copyText = (text) => {
+            navigator.clipboard.writeText(text).then(() => {
+                const tip = document.getElementById('copyTip');
+                tip.style.display = 'block';
+                setTimeout(() => tip.style.display = 'none', 2000);
+            });
+        };
+
+        // 即時計算
         const amountInput = document.getElementById('amountIn');
         const displayOutput = document.getElementById('pOut');
-
         const calcP = () => {
             const val = amountInput.value;
             displayOutput.innerText = val && val > 0 ? val : 0;
         };
-
         amountInput.addEventListener('input', calcP);
 
-        // 🟢 完整補全提交邏輯
+        // 提交申請
         window.submitRequest = async () => {
             const amt = amountInput.value;
             if(!amt || amt < 100) return alert("請輸入正確的儲值金額 (最小 100)");
@@ -124,7 +146,6 @@
             btn.innerText = "提交申請中...";
 
             try {
-                // 1. 寫入 Firebase 資料庫
                 await push(ref(_db, `depositRequests`), {
                     uid: _uid,
                     amount: Number(amt),
@@ -132,7 +153,6 @@
                     time: serverTimestamp()
                 });
 
-                // 2. 透過 GAS 發送 LINE 通知
                 fetch(GAS_URL, {
                     method: "POST",
                     mode: "no-cors", 
@@ -143,7 +163,6 @@
                     })
                 });
                 
-                // 成功後顯示 Modal
                 document.getElementById('resModal').style.display = 'flex';
             } catch (e) {
                 console.error(e);
