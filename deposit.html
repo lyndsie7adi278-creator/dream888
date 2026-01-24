@@ -54,7 +54,7 @@
             <div class="section-title">填寫儲值金額</div>
             <div class="input-group">
                 <label>儲值台幣 (NTD)</label>
-                <input type="number" id="amountIn" placeholder="最小金額 100" min="100" oninput="calcP()">
+                <input type="number" id="amountIn" placeholder="最小金額 100" min="100">
             </div>
             <div style="text-align: center; color: #999; font-size: 0.9rem;">
                 預計獲得：<b id="pOut" style="color:var(--gold); font-size: 1.2rem;">0</b> P
@@ -103,13 +103,55 @@
 
         if(!_uid) location.href = 'index.html';
 
-        window.calcP = () => {
-            const val = document.getElementById('amountIn').value;
-            document.getElementById('pOut').innerText = val || 0;
+        // 🟢 修復即時計算：強制綁定 input 監聽器，確保手機端也能即時觸發
+        const amountInput = document.getElementById('amountIn');
+        const displayOutput = document.getElementById('pOut');
+
+        const calcP = () => {
+            const val = amountInput.value;
+            displayOutput.innerText = val && val > 0 ? val : 0;
         };
 
+        amountInput.addEventListener('input', calcP);
+
+        // 🟢 完整補全提交邏輯
         window.submitRequest = async () => {
-            const amt = document.getElementById('amountIn').value;
+            const amt = amountInput.value;
             if(!amt || amt < 100) return alert("請輸入正確的儲值金額 (最小 100)");
 
-            const btn = document.getElementById('submit
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "提交申請中...";
+
+            try {
+                // 1. 寫入 Firebase 資料庫
+                await push(ref(_db, `depositRequests`), {
+                    uid: _uid,
+                    amount: Number(amt),
+                    status: "pending",
+                    time: serverTimestamp()
+                });
+
+                // 2. 透過 GAS 發送 LINE 通知
+                fetch(GAS_URL, {
+                    method: "POST",
+                    mode: "no-cors", 
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({
+                        uid: _uid,
+                        amount: amt
+                    })
+                });
+                
+                // 成功後顯示 Modal
+                document.getElementById('resModal').style.display = 'flex';
+            } catch (e) {
+                console.error(e);
+                alert("申請出錯，請聯繫客服");
+                btn.disabled = false;
+                btn.innerText = "我已匯款，送出申請";
+            }
+        };
+    </script>
+</body>
+</html>
