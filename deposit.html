@@ -28,7 +28,6 @@
         .bank-row span { color: #888; }
         .bank-row b { color: #333; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
         
-        /* 複製按鈕樣式 */
         .copy-btn { background: var(--primary); color: #fff; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .copy-btn:active { transform: scale(0.9); opacity: 0.8; }
 
@@ -46,7 +45,6 @@
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
         .m-box { background: #fff; padding: 30px; border-radius: 30px; text-align: center; width: 100%; max-width: 320px; }
         
-        /* 複製提示小標籤 */
         #copyTip { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; display: none; z-index: 3000; }
     </style>
 </head>
@@ -88,7 +86,7 @@
         <div class="warning-box">
             <h4>⚠️ 儲值須知與提醒</h4>
             <p>
-                1. 點數匯率為 1:1，儲值後僅供商城內消費使用。<br>
+                1. 點數匯率為 台幣 1 : P幣 1，儲值後僅供商城內消費使用。<br>
                 2. <b>絕對禁止：</b>本商城不提供點數換回現金之服務。<br>
                 3. 點擊送出申請即代表已完成匯款並同意上述規範。
             </p>
@@ -118,7 +116,6 @@
 
         if(!_uid) location.href = 'index.html';
 
-        // 複製功能
         window.copyText = (text) => {
             navigator.clipboard.writeText(text).then(() => {
                 const tip = document.getElementById('copyTip');
@@ -127,7 +124,6 @@
             });
         };
 
-        // 即時計算
         const amountInput = document.getElementById('amountIn');
         const displayOutput = document.getElementById('pOut');
         const calcP = () => {
@@ -136,7 +132,6 @@
         };
         amountInput.addEventListener('input', calcP);
 
-        // 提交申請
         window.submitRequest = async () => {
             const amt = amountInput.value;
             if(!amt || amt < 100) return alert("請輸入正確的儲值金額 (最小 100)");
