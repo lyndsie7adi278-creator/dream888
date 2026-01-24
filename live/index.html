@@ -4,64 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>夢工廠刮刮樂</title>
-    <link rel="stylesheet" href="style.css?v=2.0">
+    <link rel="stylesheet" href="style.css?v=3.1">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script type="module" src="app-core-min.js?v=2.0"></script>
+    <script type="module" src="app-core-min.js?v=3.1"></script>
 </head>
 <body oncontextmenu="return false;">
-
-<div class="header">
-    <h1><span class="star-btn" id="l_st">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" id="r_st">🌟</span></h1>
-    <div id="u_q">點選任意空格開獎</div>
-</div>
-
-<div class="p_board">
-    <div class="p_title">🎁 今日獎項對照 🎁</div>
-    <div class="p_grid" id="p_g"></div>
-</div>
-
-<div class="progress-box">
-    <div class="prog-header"><div>已刮取進度條</div><div class="prog-stats"><span id="d_ct">0</span> / 50</div></div>
-    <div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div>
-</div>
-
-<div class="g_con" id="g_d"></div>
-
-<div class="fairness-card">
-    <div class="fairness-title">🛡️ 雲端算力公平性實時審計 (Node Hash Verification)</div>
-    <div class="fairness-content">
-        本盤所有籤位號碼在洗牌完成時即由 <b>SHA-256</b> 雜湊演算鎖定。加密代碼如下，抽獎過程由雲端即時審計。
-    </div>
-    <div class="hash-box">
-        <div id="cur_hash" class="hash-id">PF-LOADING...</div>
-        <button class="copy-btn" id="btn_cp_hash">複製 ID</button>
-    </div>
-    <button class="audit-btn" id="btn_audit_open">📑 全域歷史盤別公正性查詢</button>
-</div>
-
-<div class="h_box" style="margin-top:20px;">
-    <div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時中獎紀錄</div>
-    <div class="h_list" id="h_l"></div>
-    <div style="min-height:30px; width:100%;" id="sys_sync_trigger"></div>
-    <div class="footer-info-premium">
-        &copy; 2026 <b>PREMIUM SLOTS PLATFORM</b><br>
-        Security Node: Firebase Global Cloud Infrastructure
-    </div>
-</div>
-
-<div id="_m_audit" class="overlay"><div class="modal-box" style="width:320px;"><h3>🔍 歷史數據校驗</h3><input type="text" id="audit_input" placeholder="Session ID"><button id="btn_audit_run" class="btn_m">執行校驗</button><div id="audit_res"></div><button id="btn_audit_close" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
-<div id="_m_01" class="overlay"><div class="modal-box"><h3 style="color:var(--a);">🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button id="_v_bt" class="btn_m">開始刮獎</button><button id="btn_m1_close" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
-<div id="_m_02" class="overlay"><div class="modal-box"><h3 style="color:#666;" id="m_tit">節點控制</h3><div id="_ui_c"></div><button id="btn_m2_close" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">關閉</button></div></div>
-
-<div class="overlay" id="ovl">
-    <div class="s_card" id="c_con">
-        <div style="display:flex; flex-direction:column; align-items:center;">
-            <span style="color:#888; font-weight:bold; font-size:0.8rem; margin-bottom:10px;">揭曉開獎號碼</span>
-            <div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem; color:#ff4757; font-weight:bold;">號</span></div>
+    <div id="ui-root">
+        <div class="header">
+            <h1><span class="star-btn" id="l_st">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" id="r_st">🌟</span></h1>
+            <div id="u_q">引擎連線中...</div>
         </div>
+        <div class="ui-c"><div class="p_title">🎁 今日獎項對照 🎁</div><div id="p_g" class="p_grid"></div></div>
+        <div class="ui-c">
+            <div class="prog-header"><div>已刮取進度條</div><div class="prog-stats"><span id="d_ct">0</span> / 50</div></div>
+            <div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div>
+        </div>
+        <div id="g_d" class="g_con"></div>
+        <div class="ui-c" style="margin-bottom:20px;">
+            <div style="font-weight:bold; color:#ff8fa3; margin-bottom:10px;">🏆 即時紀錄</div>
+            <div id="h_l" class="h_list"></div>
+            <div id="sys_sync_trigger" style="min-height:20px; width:100%;"></div>
+        </div>
+        <div class="footer-info">&copy; 2026 <b>PREMIUM SLOTS</b></div>
     </div>
-    <button class="btn_c" id="c_btn">確認結果 (10s)</button>
-</div>
-
+    <div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button id="_v_bt" class="btn_m">開始刮獎</button><button id="btn_m1_close" class="close-txt">取消</button></div></div>
+    <div id="_m_02" class="overlay"><div class="modal-box"><h3>管理節點</h3><div id="_ui_c"></div><button id="btn_m2_close" class="close-txt">關閉</button></div></div>
+    <div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span class="unit">號</span></div></div><button id="c_btn" class="btn_c">確認結果 (10s)</button></div>
 </body>
 </html>
