@@ -1,4 +1,3 @@
-/* 🛡️ PREMIUM ENGINE V42.0 - ANTI-CHEAT / 40 CARDS / 20-RESTRAINT */
 import { initializeApp as _iA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase as _gD, ref as _rf, runTransaction as _rT, onValue as _oV, set as _st, get as _gt, push as _ps, remove as _rm, update as _ud, onChildAdded as _oCA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -18,7 +17,7 @@ const _ptsRef = _rf(_0xDb, 'live_scratch/points');
 const _z = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件1~4代任選", 8: "星星人毛絨掛件1~4代任選", 9: "星星人毛絨掛件1~4代任選", 10: "點金奔騰系列手辦", 11: "你最珍貴-小夜燈", 12: "你最珍貴系列手辦", 13: "隨機熱門盲盒一個", 14: "隨機熱門盲盒一個", 15: "點數 10 點", 16: "點數 10 點" };
 
 let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null;
-let _M_D = []; // 🏆 私有記憶體：存放底牌數據，不與 HTML 共用
+let _M_D = []; 
 const _fm = (n) => n.toString().padStart(2, '0');
 
 window._o_cl = (e, i) => { if(e.target.id === i) window._m_cl(i); };
@@ -44,26 +43,24 @@ _oV(_histRef, (s) => {
     if(d) {
         const r = Object.values(d).reverse();
         r.forEach(x => _dn.add(parseInt(x.g)));
-        document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>👤 <b>${x.c}</b></span><span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join('');
+        document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>抽獎碼 <b>${x.c}</b></span><span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join('');
     }
 });
 
 _oV(_poolRef, (s) => {
     const d = s.val();
     if(d) {
-        _M_D = d; // 🚀 更新記憶體數據
+        _M_D = d; 
         const takenArr = d.filter(x => x.taken);
         document.getElementById('d_ct').innerText = takenArr.length;
         document.getElementById('p_br').style.width = (takenArr.length / 40 * 100) + "%";
         
-        // 🏆 修改重點：格子上絕對不出現 data-val 屬性，Elements 面板看不到數字
         document.getElementById('g_d').innerHTML = d.map((x, i) => {
             const n = parseInt(x.grade); 
             const isWinner = (n >= 1 && n <= 16);
             const isRevealing = (_rI === i);
             const isLocked = (x.taken && !_dn.has(n) && !_gS_rev);
             
-            // 只有在已刮開且非鎖定狀態下，才動態生成顯示用的數字，否則顯示為空
             const displayVal = (x.taken && !isRevealing && !isLocked) ? _fm(n) : "";
             const cls = `t_s ${x.taken && !isRevealing && !isLocked ?'so':''} ${x.taken && isWinner && !isRevealing && !isLocked ? 'rv' : ''} ${isRevealing || isLocked ?'pk':''}`;
             
@@ -155,7 +152,7 @@ function _iS() {
     document.getElementById('r_st').onclick=()=>{ r++; if(r>=5){ r=0; const p = prompt(""); if(p === _0x_k_val) _sU('c'); } };
     document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g>=10){ g=0; if(prompt("") === _0x_k_val) _sU('g'); } };
 }
-function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>物理限制已啟動：前20張保證不出01號獎項</p>`; document.getElementById('_m_02').style.display='flex'; }
+function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>t</p>`; document.getElementById('_m_02').style.display='flex'; }
 
 window.onload = () => { 
     _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ(); _iV(); _iS();
