@@ -42,6 +42,7 @@
     .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; }
     .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; cursor: pointer; transition: 0.2s; }
     .ticket.taken { background: #000; cursor: default; }
+    .ticket.revealed { color: #ff4757 !important; font-weight: 900 !important; font-size: 1.4rem !important; }
     .ticket.winner-glow { border-color: var(--win); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
 
     .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
@@ -147,14 +148,14 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
         }).join('');
 
-        // 格子渲染與紅色數字處理
+        // 格子渲染
         grid.innerHTML = '';
         p.forEach((t, i) => {
             const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
             if(t.taken && t.revealed) {
                 const v = Number(t.grade);
                 div.className = `ticket revealed ${_m.includes(v) ? 'winner-glow' : ''}`;
-                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="color:#ff4757;font-weight:900;">${v.toString().padStart(2, '0')}</span>`;
+                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${v.toString().padStart(2, '0')}</span>`;
             } else if(t.taken && !t.revealed) {
                 div.className = `ticket taken`;
                 div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
@@ -171,18 +172,38 @@ async function buyTicket(idx) {
     if(_isClosed) return; const n = Date.now();
     if(_q && _q.user !== _uid && _q.expire > n) return alert(`他人包台中`);
     
-    const pSnap = await get(ref(_db, `games/${_gid}/pool/${idx}`));
-    if(pSnap.val().taken) return alert("已被購買");
+    const pRef = ref(_db, `games/${_gid}/pool`);
+    const pSnap = await get(pRef);
+    const poolArr = pSnap.val() || [];
+    if(poolArr[idx].taken) return alert("已被購買");
 
     const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
-    const pData = (await get(ref(_db, `games/${_gid}/pool`))).val() || [];
-    const _sold = pData.filter(x => x.taken).length;
+    const _sold = poolArr.filter(x => x.taken).length;
     let pr = (_data.promoCount > 0 && _sold < _data.promoCount) ? _data.promoPrice : _data.price;
     
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
-    const targetVal = pData[idx].grade;
+    // 🔴 核心修復：動態大獎保護邏輯
+    const currentTurn = _sold + 1;
+    const prizeNums = (_data.prizes || []).map(x => Number(x.num));
+    let targetVal = Number(poolArr[idx].grade);
+
+    // 如果這抽在保護範圍內，且玩家點到了大獎
+    if (currentTurn <= (_data.safeZone || 0) && prizeNums.includes(targetVal)) {
+        // 尋找後面還沒被買走的「普獎」格位進行互換
+        const swapIdx = poolArr.findIndex((t, i) => !t.taken && i !== idx && !prizeNums.includes(Number(t.grade)));
+        if (swapIdx !== -1) {
+            console.log("🛡️ 保護機制觸發：大獎已動態移位");
+            const temp = poolArr[idx].grade;
+            poolArr[idx].grade = poolArr[swapIdx].grade;
+            poolArr[swapIdx].grade = temp;
+            // 同步回資料庫，完成瞬間互換
+            await set(pRef, poolArr);
+            targetVal = Number(poolArr[idx].grade);
+        }
+    }
+
     let _exp = (!_q || _q.user !== _uid || _q.expire < n) ? n + 180000 : Math.min(_q.expire + 30000, n + 900000);
     
     await update(ref(_db, `games/${_gid}/lock`), { user: _uid, expire: _exp });
@@ -190,7 +211,7 @@ async function buyTicket(idx) {
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { taken: true, revealed: false, user: _uid });
     await set(push(ref(_db, `users/${_uid}/logs`)), { game: _gid, cost: pr, time: serverTimestamp() });
     
-    initCanvas((idx+1).toString().padStart(2,'0'), Number(targetVal).toString().padStart(2, '0'), idx);
+    initCanvas((idx+1).toString().padStart(2,'0'), targetVal.toString().padStart(2, '0'), idx);
 }
 
 function initCanvas(no, val, poolIdx) {
@@ -217,7 +238,8 @@ async function syncStatus(idx, val) {
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
     if(hit) {
-        const pool = (await get(ref(_db, `games/${_gid}/pool`))).val() || [];
+        const pRef = ref(_db, `games/${_gid}/pool`);
+        const pool = (await get(pRef)).val() || [];
         const m = (_data.prizes || []).map(p => Number(p.num));
         const won = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length;
         if(won >= m.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
