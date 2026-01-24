@@ -152,7 +152,15 @@ window.forceUnlock=async id=>{if(confirm(`解除 [${id}] 包台？`)){await remo
 window.loadGameToEdit=async id=>{const s=await get(ref(db,`gameSettings/${id}`)),g=s.val();if(!g)return;isEditing=!0;document.getElementById('gId').value=id;document.getElementById('gId').disabled=!0;document.getElementById('gCat').value=g.category;document.getElementById('gTotal').value=g.total;document.getElementById('gPrice').value=g.price;document.getElementById('gSafeZone').value=g.safeZone||0;document.getElementById('pCount').value=g.promoCount||0;document.getElementById('pPrice').value=g.promoPrice||0;document.getElementById('gImg').value=g.img;document.getElementById('gOrder').value=g.order||99;const aC=document.getElementById('albumContainer');aC.innerHTML='';if(g.album)g.album.forEach(u=>addAlbumInput(u));const pC=document.getElementById('prizeContainer');pC.innerHTML='';g.prizes.forEach(p=>addPrizeInput(p.num,p.name));document.getElementById('gameActionTitle').innerText="編輯:"+id;document.getElementById('publishBtn').innerText="更新資訊";document.getElementById('cancelEditBtn').style.display="block";switchTab('game')};
 window.resetGameForm=()=>{isEditing=!1;document.getElementById('gId').value='';document.getElementById('gId').disabled=!1;document.getElementById('prizeContainer').innerHTML='';document.getElementById('albumContainer').innerHTML='';document.getElementById('cancelEditBtn').style.display="none";document.getElementById('gameActionTitle').innerText="商品發布與戰略配率";document.getElementById('publishBtn').innerText="發布並洗牌"};
 
-// 🟢 修復：發布邏輯 (確保寫入新 Pool)
+// 🟢 高強度 Fisher-Yates 洗牌演算法
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 window.publishGame=async()=>{
     const id=document.getElementById('gId').value.trim(),tot=Number(document.getElementById('gTotal').value),cat=document.getElementById('gCat').value,prs=Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')).map(r=>({num:Number(r.querySelectorAll('input')[0].value),name:r.querySelectorAll('input')[1].value})),alb=Array.from(document.querySelectorAll('#albumContainer .dynamic-row')).map(r=>r.querySelector('input').value).filter(v=>v.trim());
     if(!id||!tot||0===prs.length||!cat)return alert("資訊不全(分類必選)");
@@ -162,22 +170,25 @@ window.publishGame=async()=>{
         const pN=prs.map(p=>Number(p.num));
         let allNumbers = [];
         for(let i=1; i<=tot; i++) allNumbers.push(i);
-        // Fisher-Yates Shuffle
-        for(let i=allNumbers.length-1; i>0; i--){
-            const j=Math.floor(Math.random()*(i+1));
-            [allNumbers[i], allNumbers[j]] = [allNumbers[j], allNumbers[i]];
-        }
+        
+        // 第一次亂序
+        allNumbers = shuffle(allNumbers);
+
         let losePool = allNumbers.filter(n=>!pN.includes(n));
         let winPool = allNumbers.filter(n=>pN.includes(n));
         const safeZoneSize = d.safeZone||0;
         let finalNumbers = [];
+        
         if(safeZoneSize > 0){
+            // 抽普獎放前面
             const frontSafe = losePool.splice(0, safeZoneSize);
-            let restMixed = [...losePool, ...winPool].sort(()=>Math.random()-0.5);
+            // 剩餘的大獎與普獎再次混洗
+            let restMixed = shuffle([...losePool, ...winPool]);
             finalNumbers = [...frontSafe, ...restMixed];
         } else {
             finalNumbers = allNumbers;
         }
+        
         const pool = finalNumbers.map(n=>({grade:n,taken:!1,revealed:!1}));
         await set(ref(db, `games/${id}/pool`), pool);
         alert("發布成功");
@@ -185,37 +196,41 @@ window.publishGame=async()=>{
     resetGameForm();
 };
 
-// 🟢 核心修復：徹底重新洗牌函數 (確保寫入資料庫並清除快取)
+// 🟢 核心修復：徹底重新洗牌函數
 window.resetShuffle=async id=>{
-    if(confirm(`確定重新洗牌 [${id}]？將重置所有格位並重新排列獎號。`)){
+    if(confirm(`【重要】確定重新洗牌 [${id}]？\n這將完全重置號碼順序，且無法復原。`)){
         try {
             const s=await get(ref(db,`gameSettings/${id}`)), g=s.val();
             if(!g) return alert("找不到設定");
             const pN=g.prizes.map(p=>Number(p.num));
             let allNumbers = [];
             for(let i=1; i<=g.total; i++) allNumbers.push(i);
-            // 徹底打亂 (Fisher-Yates)
-            for(let i=allNumbers.length-1; i>0; i--){
-                const j=Math.floor(Math.random()*(i+1));
-                [allNumbers[i], allNumbers[j]] = [allNumbers[j], allNumbers[i]];
-            }
-            // 處理大獎保護區
+            
+            // 徹底亂序
+            allNumbers = shuffle(allNumbers);
+
+            // 處理保護邏輯
             let losePool = allNumbers.filter(n=>!pN.includes(n));
             let winPool = allNumbers.filter(n=>pN.includes(n));
             const safeZoneSize = g.safeZone||0;
             let finalNumbers = [];
+            
             if(safeZoneSize > 0){
                 const frontSafe = losePool.splice(0, safeZoneSize);
-                let restMixed = [...losePool, ...winPool].sort(()=>Math.random()-0.5);
+                let restMixed = shuffle([...losePool, ...winPool]);
                 finalNumbers = [...frontSafe, ...restMixed];
             } else {
                 finalNumbers = allNumbers;
             }
+            
             const pool = finalNumbers.map(n=>({grade:n,taken:!1,revealed:!1}));
-            // 寫入資料庫並清除停盤狀態
-            await update(ref(db,`gameSettings/${id}`), {isSoldOut:!1});
+            
+            // 🔴 關鍵點：先刪除舊 pool，再 set 新 pool，防止快取
+            await remove(ref(db, `games/${id}/pool`));
             await set(ref(db, `games/${id}/pool`), pool);
+            await update(ref(db,`gameSettings/${id}`), {isSoldOut:!1});
             await remove(ref(db, `games/${id}/lock`));
+            
             alert(`[${id}] 洗牌成功！數字已重新分布。`);
         } catch(e) {
             alert("洗牌失敗：" + e.message);
