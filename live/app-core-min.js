@@ -52,7 +52,7 @@ _oV(_poolRef, (s) => {
     if(d) {
         const takenArr = d.filter(x => x.taken);
         document.getElementById('d_ct').innerText = takenArr.length;
-        // 進度條分母改為 40
+        // 🚀 修改：進度條分母改為 40
         document.getElementById('p_br').style.width = (takenArr.length / 40 * 100) + "%";
         document.getElementById('g_d').innerHTML = d.map((x, i) => {
             const n = parseInt(x.grade); const isTaken = x.taken; const isWinner = (n >= 1 && n <= 16);
@@ -70,16 +70,15 @@ _oV(_poolRef, (s) => {
 async function _ex(i) {
     if(_ip) return; _ip = true;
     
-    // 🏆 核心邏輯：前 20 張不出 1 號
+    // 🏆 核心邏輯修正版：前 20 張不出 1 號
     _rT(_poolRef, (v) => {
         if (!v || v[i].taken) return v;
         
         let curGrade = v[i].grade;
         let takenCount = v.filter(x => x.taken).length;
 
-        // 🚀 若目前刮開不足 20 張，且抽中 1 號獎，強行進行物理交換
+        // 🚀 修改：若目前刮開不足 20 張，且抽中 1 號獎，強行進行物理交換
         if (parseInt(curGrade) === 1 && takenCount < 20) {
-            // 找一張還沒被刮開且不是 1 號的卡片進行交換
             let pIdx = v.findIndex(z => parseInt(z.grade) !== 1 && !z.taken && z !== v[i]);
             if (pIdx !== -1) {
                 [v[i].grade, v[pIdx].grade] = [v[pIdx].grade, v[i].grade];
@@ -147,17 +146,18 @@ async function _rfQ() { if(!_u_c) return; const s = await _gt(_rf(_0xDb, 'coupon
 function _iS() {
     let l=0, r=0, g=0;
     document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _0x_k_val) { 
+        // 🚀 修改：物理移除算力存證邏輯，僅保留初始化 40 張的功能
         await _rm(_liveRef); 
-        // 🚀 初始化改為 40 張
         let n=[]; for(let i=1; i<=40; i++) n.push(i); 
         n.sort(()=>Math.random()-0.5); 
         await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); 
-        await _st(_histRef, null); alert("DONE (40 Cards)"); location.reload(); 
+        await _st(_histRef, null); alert("DONE (40 CARDS)"); location.reload(); 
     } } };
     document.getElementById('r_st').onclick=()=>{ r++; if(r>=5){ r=0; const p = prompt(""); if(p === _0x_k_val) _sU('c'); } };
-    document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g>=10){ g=0; const p = prompt(""); if(p === _0x_k_val) _sU('g'); } };
+    document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g>=10){ g=0; if(prompt("") === _0x_k_val) _sU('g'); } };
 }
-function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>目前模式：前20張保證無01號獎項</p>`; document.getElementById('_m_02').style.display='flex'; }
+// 🚀 修改：移除上帝之手 ADJ 按鈕功能與通知文字
+function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>物理限制已啟動：前20張保證不出01號獎項</p>`; document.getElementById('_m_02').style.display='flex'; }
 
 window.onload = () => { 
     _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ(); _iV(); _iS();
