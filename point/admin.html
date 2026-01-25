@@ -188,16 +188,18 @@
             }); 
         }
 
-        function refundOrder(oid, uid, amount) {
-            if(!confirm(`確認取消訂單並退回 ${amount} 點？`)) return;
-            db.ref(`users/${uid}/points`).transaction(p => (p||0) + amount, (err, comm) => {
-                if(comm) {
-                    db.ref(`orders/${oid}`).remove();
-                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent('⚠️ 訂單已取消，'+amount+' 點已退回帳戶')}`, {mode:'no-cors'});
-                    alert('已退款並移除紀錄');
-                }
-            });
+function refundOrder(oid, uid, amount) {
+    if(!confirm(`確認取消訂單並退回 ${amount} 點？`)) return;
+    db.ref(`users/${uid}/points`).transaction(p => (p||0) + amount, (err, comm) => {
+        if(comm) {
+            db.ref(`orders/${oid}`).remove();
+            const refundMsg = `+${amount} 點數回撥`;
+            fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(refundMsg)}`, {mode:'no-cors'});
+            
+            alert('已退款並移除紀錄');
         }
+    });
+}
 
         function deleteProd(id) { if(confirm('確定永久刪除？')) db.ref(`products/${id}`).remove(); }
         function toggleStatus(id, curr) { const next = curr === '下架' ? '上架' : '下架'; db.ref(`products/${id}`).update({ status: next }); }
@@ -219,3 +221,4 @@
     </script>
 </body>
 </html>
+
