@@ -1,173 +1,97 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DREAM 旗艦商城</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DREAM 商城</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
-        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; }
+        body { background: #0f172a; color: #f8fafc; }
         .gold-text { color: #eab308; }
-        .category-btn.active { background: #eab308; color: #0f172a; border-color: #eab308; }
-        .modal-bg { background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .bg-gold { background: #eab308; }
+        .cat-btn.active { background: #eab308; color: #111; }
+        .modal-bg { background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body class="p-4">
-    <div class="bg-slate-800 rounded-3xl p-6 mb-6 text-center shadow-xl border border-slate-700 relative overflow-hidden">
-        <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">💎</div>
-        <p class="text-slate-400 text-xs uppercase tracking-widest mb-1">My Balance</p>
+<body class="p-4 pb-10">
+    <div class="bg-slate-800 rounded-3xl p-6 mb-6 text-center border border-slate-700 shadow-2xl">
+        <p class="text-slate-400 text-xs tracking-widest mb-1">TOTAL POINTS</p>
         <h1 id="userPoints" class="text-5xl font-black gold-text tracking-tighter">---</h1>
     </div>
 
-    <div class="flex gap-2 overflow-x-auto pb-4 no-scrollbar mb-2" id="categoryBar">
-        <button onclick="filterCat('全部')" class="cat-btn active px-6 py-2 rounded-full border border-slate-700 text-sm font-bold whitespace-nowrap transition">全部</button>
-    </div>
-
-    <div id="productGrid" class="grid grid-cols-2 gap-4 pb-10"></div>
+    <div id="categoryBar" class="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar"></div>
+    <div id="productGrid" class="grid grid-cols-2 gap-4"></div>
 
     <div id="itemModal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-6">
-        <div class="bg-slate-800 w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl border border-slate-700 animate-in fade-in zoom-in duration-300">
-            <img id="mImg" src="" class="w-full h-52 object-cover bg-slate-900">
+        <div class="bg-slate-800 w-full max-w-sm rounded-3xl overflow-hidden border border-slate-700 shadow-2xl">
+            <img id="mImg" src="" class="w-full h-52 object-cover">
             <div class="p-6">
-                <div class="flex justify-between items-start mb-2">
+                <div class="flex justify-between items-start mb-4">
                     <h2 id="mName" class="text-xl font-bold"></h2>
-                    <span id="mPrice" class="gold-text font-black text-lg"></span>
+                    <span id="mPrice" class="gold-text font-black text-xl"></span>
                 </div>
-                <div class="h-24 overflow-y-auto mb-6 no-scrollbar">
-                    <p id="mDesc" class="text-slate-400 text-sm leading-relaxed"></p>
-                </div>
-                
+                <div class="h-20 overflow-y-auto mb-6"><p id="mDesc" class="text-slate-400 text-sm"></p></div>
                 <div class="flex items-center justify-between bg-slate-900 rounded-2xl p-2 mb-6 border border-slate-700">
-                    <button onclick="adjQty(-1)" class="w-12 h-12 flex items-center justify-center text-2xl font-bold text-yellow-500">-</button>
-                    <div class="text-center">
-                        <span id="mQty" class="text-xl font-black">1</span>
-                        <p class="text-[10px] text-slate-500 uppercase">數量</p>
-                    </div>
-                    <button onclick="adjQty(1)" class="w-12 h-12 flex items-center justify-center text-2xl font-bold text-yellow-500">+</button>
+                    <button onclick="adjQty(-1)" class="w-12 h-12 text-2xl font-bold gold-text">-</button>
+                    <span id="mQty" class="text-xl font-black">1</span>
+                    <button onclick="adjQty(1)" class="w-12 h-12 text-2xl font-bold gold-text">+</button>
                 </div>
-
                 <div class="flex gap-3">
-                    <button onclick="closeModal()" class="flex-1 py-3 rounded-2xl font-bold bg-slate-700 text-white">返回</button>
-                    <button onclick="confirmRedeem()" class="flex-[2] py-3 rounded-2xl font-bold bg-yellow-600 text-slate-900 shadow-lg shadow-yellow-900/20">確認兌換</button>
+                    <button onclick="closeModal()" class="flex-1 py-3 rounded-2xl font-bold bg-slate-700">返回</button>
+                    <button onclick="confirmRedeem()" class="flex-[2] py-3 rounded-2xl font-bold bg-gold text-slate-900">確認兌換</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDJIhgbbCJv3f8y9xdSHUCTfJi_sjKBOqs",
-            authDomain: "dreampoint-b37df.firebaseapp.com",
-            projectId: "dreampoint-b37df",
-            storageBucket: "dreampoint-b37df.firebasestorage.app",
-            messagingSenderId: "454938973111",
-            appId: "1:454938973111:web:2191261a3175c8115d0e32",
-            measurementId: "G-H4L410HB29"
-        };
-        const LIFF_ID = "2008964915-gP6NfUpi";
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec";
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        let user = { id: "", points: 0 };
-        let allProducts = {};
-        let currentItem = null;
-        let qty = 1;
+        const firebaseConfig = { apiKey: "AIzaSyDJIhgbbCJv3f8y9xdSHUCTfJi_sjKBOqs", authDomain: "dreampoint-b37df.firebaseapp.com", projectId: "dreampoint-b37df", databaseURL: "https://dreampoint-b37df-default-rtdb.firebaseio.com/", storageBucket: "dreampoint-b37df.firebasestorage.app", messagingSenderId: "454938973111", appId: "1:454938973111:web:2191261a3175c8115d0e32" };
+        const LIFF_ID = "2008964915-gP6NfUpi", GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec";
+        firebase.initializeApp(firebaseConfig); const db = firebase.database();
+        let user = { id: "", points: 0 }, allProducts = {}, currentItem = null, qty = 1;
 
         async function init() {
             await liff.init({ liffId: LIFF_ID });
-            if (!liff.isLoggedIn()) { liff.login(); }
-            else {
-                const profile = await liff.getProfile();
-                user.id = profile.userId;
-                sync();
-            }
+            if (!liff.isLoggedIn()) liff.login();
+            else { const profile = await liff.getProfile(); user.id = profile.userId; sync(); }
         }
 
         function sync() {
-            db.ref('users/' + user.id + '/points').on('value', snap => {
-                user.points = snap.val() || 0;
-                document.getElementById('userPoints').innerText = user.points.toLocaleString();
-            });
-
-            db.ref('products').on('value', snap => {
-                allProducts = snap.val() || {};
-                updateCategoryBar();
-                filterCat('全部');
-            });
+            db.ref('users/'+user.id+'/points').on('value', s => { user.points = s.val() || 0; document.getElementById('userPoints').innerText = user.points.toLocaleString(); });
+            db.ref('products').on('value', s => { allProducts = s.val() || {}; updateCats(); filter('全部'); });
         }
 
-        function updateCategoryBar() {
-            const cats = new Set(['全部']);
-            for(let id in allProducts) {
-                if(allProducts[id].cat) cats.add(allProducts[id].cat);
-            }
-            const bar = document.getElementById('categoryBar');
-            bar.innerHTML = '';
-            cats.forEach(c => {
-                bar.innerHTML += `<button onclick="filterCat('${c}')" class="cat-btn px-6 py-2 rounded-full border border-slate-700 text-sm font-bold whitespace-nowrap transition ${c==='全部'?'active':''}">${c}</button>`;
-            });
+        function updateCats() {
+            const cats = new Set(['全部']); for(let id in allProducts) if(allProducts[id].cat) cats.add(allProducts[id].cat);
+            const bar = document.getElementById('categoryBar'); bar.innerHTML = '';
+            cats.forEach(c => { bar.innerHTML += `<button onclick="filter('${c}')" class="cat-btn px-6 py-2 rounded-full border border-slate-700 text-sm font-bold whitespace-nowrap transition ${c==='全部'?'active':''}">${c}</button>`; });
         }
 
-        function filterCat(cat) {
-            document.querySelectorAll('.cat-btn').forEach(b => {
-                b.classList.toggle('active', b.innerText === cat);
-            });
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = '';
+        function filter(cat) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.innerText === cat));
+            const grid = document.getElementById('productGrid'); grid.innerHTML = '';
             for(let id in allProducts) {
-                const p = allProducts[id];
-                if(cat !== '全部' && p.cat !== cat) continue;
-                grid.innerHTML += `
-                    <div onclick="openModal('${id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 shadow-lg active:scale-95 transition">
-                        <img src="${p.img}" class="w-full h-32 object-cover bg-slate-900">
-                        <div class="p-4">
-                            <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">${p.cat || '未分類'}</p>
-                            <p class="font-bold text-slate-100 truncate text-sm mb-1">${p.name}</p>
-                            <p class="gold-text font-black text-base">${p.price.toLocaleString()} <span class="text-[10px]">PTS</span></p>
-                        </div>
-                    </div>`;
+                const p = allProducts[id]; if(cat !== '全部' && p.cat !== cat) continue;
+                grid.innerHTML += `<div onclick="openModal('${id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg">
+                    <img src="${p.img}" class="w-full h-32 object-cover">
+                    <div class="p-4"><p class="text-[9px] text-slate-500 font-bold uppercase mb-1">${p.cat||'一般'}</p><p class="font-bold truncate text-sm mb-1">${p.name}</p><p class="gold-text font-black">${p.price.toLocaleString()} PTS</p></div>
+                </div>`;
             }
         }
 
-        function openModal(id) {
-            currentItem = { id, ...allProducts[id] };
-            qty = 1;
-            document.getElementById('mImg').src = currentItem.img;
-            document.getElementById('mName').innerText = currentItem.name;
-            document.getElementById('mPrice').innerText = currentItem.price.toLocaleString() + " PTS";
-            document.getElementById('mDesc').innerText = currentItem.desc || "此商品暫無詳細介紹內容。";
-            document.getElementById('mQty').innerText = qty;
-            document.getElementById('itemModal').classList.remove('hidden');
-        }
-
-        function adjQty(v) {
-            qty = Math.max(1, qty + v);
-            document.getElementById('mQty').innerText = qty;
-        }
-
-        function closeModal() {
-            document.getElementById('itemModal').classList.add('hidden');
-        }
+        function openModal(id) { currentItem = {id, ...allProducts[id]}; qty = 1; document.getElementById('mImg').src = currentItem.img; document.getElementById('mName').innerText = currentItem.name; document.getElementById('mPrice').innerText = currentItem.price.toLocaleString() + " PTS"; document.getElementById('mDesc').innerText = currentItem.desc || "無介紹"; document.getElementById('mQty').innerText = qty; document.getElementById('itemModal').classList.remove('hidden'); }
+        function adjQty(v) { qty = Math.max(1, qty + v); document.getElementById('mQty').innerText = qty; }
+        function closeModal() { document.getElementById('itemModal').classList.add('hidden'); }
 
         async function confirmRedeem() {
-            const totalCost = currentItem.price * qty;
-            if(user.points < totalCost) return alert("您的點數餘額不足以兌換此數量");
-            
-            if(confirm(`確定要兌換 ${qty} 個「${currentItem.name}」嗎？\n總計扣除：${totalCost} 點`)) {
-                const newTotal = user.points - totalCost;
-                await db.ref('users/' + user.id).update({ points: newTotal });
-                
-                // 發送 Line 通知
-                const msg = `🎁 兌換成功！\n項目：${currentItem.name} x ${qty}\n扣除點數：${totalCost}\n目前餘額：${newTotal}`;
+            const total = currentItem.price * qty; if(user.points < total) return alert("點數不足");
+            if(confirm(`確認兌換 ${qty} 個「${currentItem.name}」？`)) {
+                const newPts = user.points - total; await db.ref('users/'+user.id).update({ points: newPts });
+                const msg = `🎁 兌換成功！\n項目：${currentItem.name} x ${qty}\n扣除：${total} pts`;
                 fetch(`${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(msg)}`, { mode: 'no-cors' });
-                
-                alert("兌換成功！請確認您的 Line 通知");
-                closeModal();
+                alert("兌換成功！"); closeModal();
             }
         }
         window.onload = init;
