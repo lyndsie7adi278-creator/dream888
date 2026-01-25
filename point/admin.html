@@ -1,163 +1,155 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8"><title>DREAM 旗艦管理系統</title>
+    <meta charset="UTF-8"><title>夢工廠控制台 - 旗艦版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <style>
-        body { background: #0f172a; }
-        .tab-active { background: #eab308; color: #111; font-weight: bold; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-    </style>
 </head>
-<body class="text-slate-100 min-h-screen p-4">
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
     <div id="lockScreen" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center">
-        <div class="bg-slate-800 p-8 rounded-3xl w-80 border border-slate-700 shadow-2xl text-center">
-            <h2 class="text-xl font-bold mb-4 text-yellow-500 font-mono">ADMIN LOGIN</h2>
-            <input type="password" id="adminPass" placeholder="請輸入密碼" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 mb-4 text-center text-yellow-500 outline-none">
+        <div class="bg-slate-800 p-8 rounded-3xl w-80 text-center border border-slate-700 shadow-2xl">
+            <h2 class="text-xl font-bold mb-4 text-yellow-500 font-mono italic">DREAM ADMIN</h2>
+            <input type="password" id="adminPass" placeholder="密碼 0805" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 mb-4 text-center text-yellow-500 outline-none">
             <button onclick="checkPass()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold">進入系統</button>
         </div>
     </div>
 
     <div class="max-w-6xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <h1 class="text-2xl font-black text-yellow-500 tracking-tighter">DREAM CONTROL <span class="text-xs text-slate-500 font-normal">v3.0</span></h1>
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <h1 class="text-3xl font-black text-yellow-500 tracking-tighter italic">夢工廠 CONTROL</h1>
             <nav class="bg-slate-800 p-1 rounded-2xl flex gap-1 shadow-inner border border-slate-700">
-                <button onclick="tab('u')" id="bu" class="px-5 py-2 rounded-xl text-sm transition tab-active">會員管理</button>
-                <button onclick="tab('o')" id="bo" class="px-5 py-2 rounded-xl text-sm transition text-slate-400">訂單管理</button>
-                <button onclick="tab('p')" id="bp" class="px-5 py-2 rounded-xl text-sm transition text-slate-400">商城管理</button>
+                <button onclick="tab('u')" id="bu" class="px-6 py-2 rounded-xl text-sm font-bold bg-yellow-600 text-slate-900 transition">會員管理</button>
+                <button onclick="tab('o')" id="bo" class="px-6 py-2 rounded-xl text-sm font-bold text-slate-400 transition">訂單管理</button>
+                <button onclick="tab('p')" id="bp" class="px-6 py-2 rounded-xl text-sm font-bold text-slate-400 transition">商城管理</button>
             </nav>
         </header>
 
-        <div id="tu" class="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-900/50 text-slate-500 text-xs uppercase tracking-widest">
-                    <tr><th class="px-6 py-4">玩家資訊</th><th class="px-6 py-4">目前點數</th><th class="px-6 py-4 text-right">操作</th></tr>
-                </thead>
-                <tbody id="userTable" class="divide-y divide-slate-700"></tbody>
-            </table>
+        <div id="tu" class="space-y-4">
+            <div class="relative">
+                <input type="text" id="userSearch" oninput="renderUsers()" placeholder="🔍 輸入 Line 暱稱進行搜尋..." 
+                       class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 pl-12 text-yellow-500 outline-none focus:border-yellow-500 transition shadow-xl">
+                <span class="absolute left-4 top-4 text-slate-500">Search</span>
+            </div>
+            <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-900/50 text-slate-500 text-xs uppercase tracking-widest">
+                        <tr><th class="px-6 py-4">會員資訊</th><th class="px-6 py-4">餘額</th><th class="px-6 py-4 text-right">調整額度</th></tr>
+                    </thead>
+                    <tbody id="userTable" class="divide-y divide-slate-700"></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="to" class="hidden space-y-4">
             <div id="orderList" class="grid grid-cols-1 gap-4"></div>
         </div>
 
-        <div id="tp" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 h-fit sticky top-6 shadow-xl">
-                <h2 id="fTitle" class="font-bold mb-4 text-yellow-500">🎁 編輯商品</h2>
+        <div id="tp" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-xl h-fit sticky top-6">
+                <h2 id="fTitle" class="font-bold mb-4 text-yellow-500 italic">🎁 商品編輯</h2>
                 <input type="hidden" id="editId">
                 <div class="space-y-3">
-                    <input type="text" id="pCat" placeholder="分類" class="w-full bg-slate-900 border-slate-700 rounded-lg p-3 text-sm border focus:border-yellow-500 outline-none">
-                    <input type="text" id="pName" placeholder="商品名稱" class="w-full bg-slate-900 border-slate-700 rounded-lg p-3 text-sm border focus:border-yellow-500 outline-none">
-                    <input type="number" id="pPrice" placeholder="點數" class="w-full bg-slate-900 border-slate-700 rounded-lg p-3 text-sm border focus:border-yellow-500 outline-none">
-                    <input type="text" id="pImg" placeholder="圖片連結 (URL)" class="w-full bg-slate-900 border-slate-700 rounded-lg p-3 text-sm border focus:border-yellow-500 outline-none">
-                    <textarea id="pDesc" placeholder="商品介紹內容" class="w-full bg-slate-900 border-slate-700 rounded-lg p-3 text-sm h-24 border focus:border-yellow-500 outline-none"></textarea>
-                    <button onclick="save()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition">儲存商品</button>
-                    <button onclick="reset()" class="w-full text-slate-500 text-xs hover:text-slate-300">取消編輯並清空</button>
+                    <input type="text" id="pCat" placeholder="分類" class="w-full bg-slate-900 border-slate-700 rounded-xl p-3 text-sm">
+                    <input type="text" id="pName" placeholder="商品名稱" class="w-full bg-slate-900 border-slate-700 rounded-xl p-3 text-sm">
+                    <input type="number" id="pPrice" placeholder="兌換點數" class="w-full bg-slate-900 border-slate-700 rounded-xl p-3 text-sm">
+                    <input type="text" id="pImg" placeholder="圖片連結" class="w-full bg-slate-900 border-slate-700 rounded-xl p-3 text-sm">
+                    <textarea id="pDesc" placeholder="商品詳細介紹" class="w-full bg-slate-900 border-slate-700 rounded-xl p-3 text-sm h-24"></textarea>
+                    <div class="flex items-center gap-2 p-2 bg-slate-900 rounded-xl border border-slate-700">
+                        <span class="text-xs text-slate-400 ml-2">預設狀態：</span>
+                        <select id="pStatus" class="bg-transparent text-yellow-500 font-bold text-sm outline-none cursor-pointer">
+                            <option value="上架">直接上架</option>
+                            <option value="下架">暫時下架</option>
+                        </select>
+                    </div>
+                    <button onclick="save()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold shadow-lg">儲存商品</button>
+                    <button onclick="reset()" class="w-full text-slate-500 text-xs mt-2">重置欄位</button>
                 </div>
             </div>
-            <div class="lg:col-span-2 grid grid-cols-1 gap-3" id="pList"></div>
+            <div class="lg:col-span-2 grid grid-cols-1 gap-4" id="pList"></div>
         </div>
     </div>
 
     <script>
-        const ADMIN_PASSWORD = "0805";
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec";
+        const ADMIN_PASSWORD = "0805", GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec";
         const firebaseConfig = { apiKey: "AIzaSyDJIhgbbCJv3f8y9xdSHUCTfJi_sjKBOqs", authDomain: "dreampoint-b37df.firebaseapp.com", projectId: "dreampoint-b37df", databaseURL: "https://dreampoint-b37df-default-rtdb.firebaseio.com/", storageBucket: "dreampoint-b37df.firebasestorage.app", messagingSenderId: "454938973111", appId: "1:454938973111:web:2191261a3175c8115d0e32" };
         firebase.initializeApp(firebaseConfig); const db = firebase.database();
+        
+        let allUsers = {}, allProducts = {};
 
         function checkPass() { if(document.getElementById('adminPass').value === ADMIN_PASSWORD) { document.getElementById('lockScreen').style.display='none'; sessionStorage.setItem('adm','1'); load(); } else alert('密碼錯誤'); }
         if(sessionStorage.getItem('adm')==='1') { document.getElementById('lockScreen').style.display='none'; load(); }
-
-        function tab(t) {
-            ['u','o','p'].forEach(x => { document.getElementById('t'+x).classList.toggle('hidden', x!==t); document.getElementById('b'+x).className = x===t ? 'px-5 py-2 rounded-xl text-sm transition tab-active' : 'px-5 py-2 rounded-xl text-sm transition text-slate-400'; });
-        }
-
+        
+        function tab(t) { ['u','o','p'].forEach(x => { document.getElementById('t'+x).classList.toggle('hidden', x!==t); document.getElementById('b'+x).className = x===t ? 'px-6 py-2 rounded-xl text-sm font-bold bg-yellow-600 text-slate-900 transition' : 'px-6 py-2 rounded-xl text-sm font-bold text-slate-400 transition'; }); }
+        
         function load() {
-            // 會員讀取
-            db.ref('users').on('value', s => {
-                const u = s.val(), t = document.getElementById('userTable'); t.innerHTML = '';
-                for(let id in u) {
-                    t.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition">
-                        <td class="px-6 py-4"><span class="font-bold text-yellow-500">${u[id].name||'未同步'}</span><br><span class="text-[10px] text-slate-500 font-mono">${id}</span></td>
-                        <td class="px-6 py-4 font-black text-xl">${(u[id].points||0).toLocaleString()}</td>
-                        <td class="px-6 py-4 text-right"><input type="number" id="in-${id}" placeholder="+/-" class="bg-slate-900 w-20 p-2 rounded-lg text-center border border-slate-700 text-yellow-500 focus:border-yellow-600 outline-none mr-2"><button onclick="adj('${id}')" class="bg-slate-100 text-black px-4 py-2 rounded-lg font-bold text-sm active:scale-95 transition">執行</button></td>
-                    </tr>`;
-                }
-            });
-            // 訂單讀取 (新)
+            db.ref('users').on('value', s => { allUsers = s.val() || {}; renderUsers(); });
+            db.ref('products').on('value', s => { allProducts = s.val() || {}; renderProducts(); });
+            // 訂單加載邏輯保持原樣...
             db.ref('orders').on('value', s => {
                 const o = s.val(), l = document.getElementById('orderList'); l.innerHTML = '';
-                if(!o) { l.innerHTML = '<div class="text-center py-10 text-slate-500">目前尚無訂單</div>'; return; }
-                const sortedKeys = Object.keys(o).reverse();
-                sortedKeys.forEach(id => {
-                    const ord = o[id];
-                    const isDone = ord.status === '已出貨';
-                    l.innerHTML += `<div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg ${isDone?'opacity-60':''}">
-                        <div class="flex items-center gap-4 w-full md:w-auto">
-                            <div class="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center font-bold text-yellow-500 border border-slate-700">${ord.userName?.charAt(0)||'用'}</div>
-                            <div>
-                                <p class="font-bold">${ord.itemName} <span class="text-yellow-500">x${ord.qty}</span></p>
-                                <p class="text-xs text-slate-400">${ord.userName} · ${new Date(ord.time).toLocaleString()}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3 w-full md:w-auto justify-end">
-                            <span class="text-xs px-3 py-1 rounded-full border ${isDone?'border-green-500 text-green-500':'border-orange-500 text-orange-500 font-bold'}">${ord.status}</span>
-                            <button onclick="toggleOrder('${id}','${ord.status}')" class="px-4 py-2 rounded-xl text-xs font-bold ${isDone?'bg-slate-700 text-slate-300':'bg-yellow-600 text-slate-900'}">${isDone?'改回待出貨':'設為已出貨'}</button>
-                            <button onclick="if(confirm('刪除訂單？')) db.ref('orders/${id}').remove()" class="text-red-500 p-2">✕</button>
-                        </div>
+                if(!o) return l.innerHTML = '<p class="text-center text-slate-500 py-10">尚無兌換紀錄</p>';
+                Object.keys(o).reverse().forEach(id => {
+                    const ord = o[id]; const isDone = ord.status === '已出貨';
+                    l.innerHTML += `<div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex justify-between items-center shadow-lg ${isDone?'opacity-50':''}">
+                        <div><p class="font-bold">${ord.itemName} x${ord.qty}</p><p class="text-xs text-slate-400">${ord.userName} · ${new Date(ord.time).toLocaleString()}</p></div>
+                        <div class="flex gap-3 items-center"><span class="text-xs px-2 py-1 rounded border ${isDone?'border-green-500 text-green-500':'border-yellow-500 text-yellow-500'}">${ord.status}</span><button onclick="toggleOrder('${id}','${ord.status}')" class="bg-slate-700 px-3 py-2 rounded-xl text-xs font-bold">${isDone?'改回':'出貨'}</button></div>
                     </div>`;
                 });
             });
-            // 商品讀取
-            db.ref('products').on('value', s => {
-                const p = s.val(), l = document.getElementById('pList'); l.innerHTML = '';
-                for(let id in p) {
-                    l.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex gap-4 items-center shadow-lg transition hover:border-slate-500">
-                        <img src="${p[id].img}" class="w-16 h-16 rounded-xl object-cover border border-slate-700">
-                        <div class="flex-1 min-w-0"><p class="text-[10px] text-slate-500 font-bold uppercase">${p[id].cat||'一般'}</p><p class="font-bold truncate">${p[id].name}</p><p class="text-yellow-500 font-black">${p[id].price} PTS</p></div>
-                        <button onclick="edit('${id}','${p[id].cat}','${p[id].name}',${p[id].price},'${p[id].img}','${p[id].desc}')" class="bg-slate-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-slate-600 transition">編輯</button>
-                        <button onclick="if(confirm('刪除商品？')) db.ref('products/${id}').remove()" class="bg-red-900/30 text-red-500 px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-900/50 transition">刪除</button>
-                    </div>`;
-                }
-            });
         }
 
-        function adj(uid) {
-            const v = parseInt(document.getElementById(`in-${uid}`).value); if(isNaN(v)) return;
-            db.ref(`users/${uid}/points`).transaction(p => (p||0)+v, (e,c,snap) => {
-                if(c) {
-                    const change = (v > 0 ? "+" : "") + v;
-                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(change)}`, {mode:'no-cors'});
-                    document.getElementById(`in-${uid}`).value = '';
-                }
-            });
+        // 渲染會員清單 (含搜尋過濾)
+        function renderUsers() {
+            const query = document.getElementById('userSearch').value.toLowerCase();
+            const t = document.getElementById('userTable'); t.innerHTML = '';
+            for(let id in allUsers) {
+                const name = allUsers[id].name || '未同步';
+                if(query && !name.toLowerCase().includes(query)) continue;
+                t.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-800/50"><td class="px-6 py-4 font-bold text-yellow-500">${name}<br><span class="text-[10px] text-slate-500">${id}</span></td><td class="px-6 py-4 font-black text-xl">${allUsers[id].points||0}</td><td class="px-6 py-4 text-right"><input type="number" id="in-${id}" placeholder="+/-" class="bg-slate-900 w-24 p-2 rounded-lg text-center border border-slate-700 mr-2 text-yellow-500 outline-none"><button onclick="adj('${id}')" class="bg-white text-black px-4 py-2 rounded-lg font-bold text-xs shadow-lg">執行</button></td></tr>`;
+            }
         }
 
-        function toggleOrder(oid, curr) {
-            const next = curr === '待出貨' ? '已出貨' : '待出貨';
-            db.ref(`orders/${oid}`).update({ status: next });
+        // 渲染商品清單 (含狀態顯示)
+        function renderProducts() {
+            const l = document.getElementById('pList'); l.innerHTML = '';
+            for(let id in allProducts) {
+                const p = allProducts[id];
+                const isOn = p.status !== '下架';
+                l.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex gap-4 items-center shadow-lg hover:border-yellow-600 transition ${!isOn?'opacity-50 grayscale':''}">
+                    <img src="${p.img}" class="w-16 h-16 rounded-xl object-cover bg-slate-900">
+                    <div class="flex-1 font-bold">
+                        <p class="text-[10px] ${isOn?'text-green-500':'text-red-500'} font-black uppercase">${isOn?'● 上架中':'○ 已下架'}</p>
+                        <p class="text-white truncate">${p.name}</p>
+                        <p class="text-yellow-500 text-sm">${p.price} PTS</p>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <button onclick="toggleStatus('${id}','${p.status}')" class="text-[10px] px-2 py-1 rounded bg-slate-700 text-slate-200">${isOn?'下架':'上架'}</button>
+                        <button onclick="edit('${id}','${p.cat}','${p.name}',${p.price},'${p.img}','${p.desc}','${p.status}')" class="text-blue-400 text-[10px] font-bold">編輯</button>
+                    </div>
+                </div>`;
+            }
         }
 
-        function save() {
-            const id = document.getElementById('editId').value;
-            const data = { cat: document.getElementById('pCat').value||'一般', name: document.getElementById('pName').value, price: parseInt(document.getElementById('pPrice').value), img: document.getElementById('pImg').value, desc: document.getElementById('pDesc').value||'' };
-            if(!data.name || isNaN(data.price)) return alert('請填寫完整商品名稱與價格');
-            if(id) db.ref('products/'+id).update(data); else db.ref('products').push(data);
-            reset();
+        function toggleStatus(id, curr) { const next = curr === '下架' ? '上架' : '下架'; db.ref(`products/${id}`).update({ status: next }); }
+        function save() { 
+            const id = document.getElementById('editId').value; 
+            const data = { 
+                cat: document.getElementById('pCat').value||'一般', 
+                name: document.getElementById('pName').value, 
+                price: parseInt(document.getElementById('pPrice').value), 
+                img: document.getElementById('pImg').value, 
+                desc: document.getElementById('pDesc').value||'',
+                status: document.getElementById('pStatus').value 
+            }; 
+            if(!data.name || isNaN(data.price)) return alert('資訊不完整'); 
+            if(id) db.ref('products/'+id).update(data); else db.ref('products').push(data); 
+            reset(); 
         }
-
-        function edit(id,c,n,p,i,d) {
-            document.getElementById('editId').value = id; document.getElementById('pCat').value = c; document.getElementById('pName').value = n; document.getElementById('pPrice').value = p; document.getElementById('pImg').value = i; document.getElementById('pDesc').value = d==='undefined'?'':d;
-            document.getElementById('fTitle').innerText = "✏️ 正在編輯模式";
-        }
-
-        function reset() {
-            document.getElementById('editId').value = ''; document.getElementById('pCat').value = ''; document.getElementById('pName').value = ''; document.getElementById('pPrice').value = ''; document.getElementById('pImg').value = ''; document.getElementById('pDesc').value = '';
-            document.getElementById('fTitle').innerText = "🎁 編輯商品";
-        }
+        function edit(id,c,n,p,i,d,s) { document.getElementById('editId').value = id; document.getElementById('pCat').value = c; document.getElementById('pName').value = n; document.getElementById('pPrice').value = p; document.getElementById('pImg').value = i; document.getElementById('pDesc').value = d||''; document.getElementById('pStatus').value = s||'上架'; document.getElementById('fTitle').innerText = "✏️ 編輯模式"; }
+        function reset() { document.getElementById('editId').value = ''; document.getElementById('pCat').value = ''; document.getElementById('pName').value = ''; document.getElementById('pPrice').value = ''; document.getElementById('pImg').value = ''; document.getElementById('pDesc').value = ''; document.getElementById('pStatus').value = '上架'; document.getElementById('fTitle').innerText = "🎁 商品編輯"; }
+        function adj(uid) { const v = parseInt(document.getElementById(`in-${uid}`).value); if(isNaN(v)) return alert('請輸入數字'); db.ref(`users/${uid}/points`).transaction(p => (p||0)+v, (e,c,snap) => { if(c) { fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent((v>0?'+':'')+v)}`, {mode:'no-cors'}); document.getElementById(`in-${uid}`).value = ''; } }); }
+        function toggleOrder(oid, curr) { const next = curr === '待出貨' ? '已出貨' : '待出貨'; db.ref(`orders/${oid}`).update({ status: next }); }
     </script>
 </body>
 </html>
