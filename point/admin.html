@@ -193,7 +193,7 @@ function refundOrder(oid, uid, amount) {
     db.ref(`users/${uid}/points`).transaction(p => (p||0) + amount, (err, comm) => {
         if(comm) {
             db.ref(`orders/${oid}`).remove();
-            const refundMsg = `+${amount} 點數回撥`;
+            const refundMsg = `+${amount} 點數退回`;
             fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(refundMsg)}`, {mode:'no-cors'});
             
             alert('已退款並移除紀錄');
@@ -221,4 +221,5 @@ function refundOrder(oid, uid, amount) {
     </script>
 </body>
 </html>
+
 
