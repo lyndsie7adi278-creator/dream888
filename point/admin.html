@@ -1,87 +1,54 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>DREAM 旗艦管理系統 v3.0</title>
+    <title>DREAM 旗艦管理</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
-
+<body class="bg-slate-900 text-slate-100 min-h-screen">
     <div id="lockScreen" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center">
         <div class="bg-slate-800 p-8 rounded-3xl shadow-2xl w-80 text-center border border-slate-700">
             <h2 class="text-xl font-bold mb-4">管理員驗證</h2>
-            <input type="password" id="adminPass" placeholder="輸入管理密碼" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 mb-4 text-center text-yellow-500 focus:outline-none focus:border-yellow-600">
-            <button onclick="checkPass()" class="w-full bg-yellow-600 hover:bg-yellow-500 text-slate-900 py-3 rounded-xl font-bold transition">進入系統</button>
+            <input type="password" id="adminPass" placeholder="輸入密碼" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 mb-4 text-center text-yellow-500">
+            <button onclick="checkPass()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold">進入系統</button>
         </div>
     </div>
 
     <div class="max-w-5xl mx-auto p-6">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-            <div>
-                <h1 class="text-3xl font-black text-yellow-500 tracking-tight">DREAM CONTROL</h1>
-                <p class="text-slate-500 text-sm">直播會員與商城營運中心</p>
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-black text-yellow-500">DREAM CONTROL</h1>
+            <div class="bg-slate-800 p-1 rounded-xl">
+                <button onclick="switchTab('u')" id="btn-u" class="px-4 py-2 rounded-lg bg-yellow-600 text-slate-900 font-bold text-sm">會員管理</button>
+                <button onclick="switchTab('p')" id="btn-p" class="px-4 py-2 rounded-lg text-slate-400 font-bold text-sm">商城管理</button>
             </div>
-            <nav class="flex bg-slate-800 p-1 rounded-2xl border border-slate-700">
-                <button onclick="switchTab('users')" id="btn-users" class="px-6 py-2 rounded-xl text-sm font-bold transition bg-yellow-600 text-slate-900">會員管理</button>
-                <button onclick="switchTab('products')" id="btn-products" class="px-6 py-2 rounded-xl text-sm font-bold transition text-slate-400">商城管理</button>
-            </nav>
-            <button onclick="logout()" class="text-slate-600 hover:text-slate-400 text-xs underline">安全登出</button>
-        </header>
+        </div>
 
-        <section id="tab-users" class="space-y-4">
-            <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden">
-                <div class="p-6 border-b border-slate-700 flex justify-between items-center">
-                    <h2 class="font-bold">👥 會員清單總覽</h2>
-                    <span id="userCount" class="text-xs text-slate-400">載入中...</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-900/50 text-slate-500 text-[10px] uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4">玩家 ID</th>
-                                <th class="px-6 py-4">當前點數</th>
-                                <th class="px-6 py-4 text-right">手動調整點數 (輸入正負值)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userTable" class="divide-y divide-slate-700">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+        <div id="tab-u" class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-slate-900 text-slate-500 text-xs">
+                    <tr><th class="px-6 py-4">玩家暱稱 / ID</th><th class="px-6 py-4">點數</th><th class="px-6 py-4 text-right">調整 (加/扣)</th></tr>
+                </thead>
+                <tbody id="userTable" class="divide-y divide-slate-700"></tbody>
+            </table>
+        </div>
 
-        <section id="tab-products" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 h-fit sticky top-6">
-                <h2 id="formTitle" class="font-bold mb-4 text-yellow-500">🎁 新增商品</h2>
-                <input type="hidden" id="editProductId">
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] text-slate-500 ml-1">商品名稱</label>
-                        <input type="text" id="pName" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-yellow-600 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-slate-500 ml-1">兌換所需點數</label>
-                        <input type="number" id="pPrice" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-yellow-600 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-slate-500 ml-1">商品圖片連結</label>
-                        <input type="text" id="pImg" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-yellow-600 outline-none">
-                    </div>
-                    <div class="flex gap-2">
-                        <button id="submitBtn" onclick="handleProductSubmit()" class="flex-1 bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold hover:bg-yellow-500 transition">確認上架</button>
-                        <button id="cancelBtn" onclick="resetForm()" class="hidden flex-1 bg-slate-700 text-white py-3 rounded-xl font-bold">取消編輯</button>
-                    </div>
-                </div>
+        <div id="tab-p" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 h-fit sticky top-6">
+                <h2 id="fTitle" class="font-bold mb-4 text-yellow-500">新增商品</h2>
+                <input type="hidden" id="editId">
+                <input type="text" id="pName" placeholder="名稱" class="w-full bg-slate-900 border-slate-700 rounded-lg p-2 mb-2 text-sm">
+                <input type="number" id="pPrice" placeholder="點數" class="w-full bg-slate-900 border-slate-700 rounded-lg p-2 mb-2 text-sm">
+                <input type="text" id="pImg" placeholder="圖片URL" class="w-full bg-slate-900 border-slate-700 rounded-lg p-2 mb-4 text-sm">
+                <button onclick="saveProduct()" class="w-full bg-blue-600 py-2 rounded-lg font-bold">確認儲存</button>
             </div>
-            <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4" id="productList">
-                </div>
-        </section>
+            <div class="md:col-span-2 grid grid-cols-1 gap-4" id="pList"></div>
+        </div>
     </div>
 
     <script>
-        const ADMIN_PASSWORD = "0805"; // 請自行修改
+        const ADMIN_PASSWORD = "0805"; 
         const GAS_URL = "AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ";
         const firebaseConfig = {
   apiKey: "AIzaSyDJIhgbbCJv3f8y9xdSHUCTfJi_sjKBOqs",
@@ -91,138 +58,72 @@
   messagingSenderId: "454938973111",
   appId: "1:454938973111:web:2191261a3175c8115d0e32",
   measurementId: "G-H4L410HB29"
-        };
-
+};
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 登入驗證邏輯
         function checkPass() {
             if(document.getElementById('adminPass').value === ADMIN_PASSWORD) {
                 document.getElementById('lockScreen').style.display = 'none';
-                sessionStorage.setItem('isDREAMAdmin', 'true');
-                init();
-            } else { alert('密碼錯誤！'); }
+                sessionStorage.setItem('admin', 'true');
+                loadData();
+            } else { alert('密碼錯誤'); }
         }
-        if(sessionStorage.getItem('isDREAMAdmin') === 'true') {
+        if(sessionStorage.getItem('admin') === 'true') {
             document.getElementById('lockScreen').style.display = 'none';
-            init();
+            loadData();
         }
 
-        function init() {
-            loadUsers();
-            loadProducts();
+        function switchTab(t) {
+            document.getElementById('tab-u').classList.toggle('hidden', t!=='u');
+            document.getElementById('tab-p').classList.toggle('hidden', t!=='p');
+            document.getElementById('btn-u').className = t==='u' ? 'px-4 py-2 rounded-lg bg-yellow-600 text-slate-900 font-bold text-sm' : 'px-4 py-2 rounded-lg text-slate-400 font-bold text-sm';
+            document.getElementById('btn-p').className = t==='p' ? 'px-4 py-2 rounded-lg bg-yellow-600 text-slate-900 font-bold text-sm' : 'px-4 py-2 rounded-lg text-slate-400 font-bold text-sm';
         }
 
-        // 分頁切換
-        function switchTab(tab) {
-            document.getElementById('tab-users').classList.toggle('hidden', tab !== 'users');
-            document.getElementById('tab-products').classList.toggle('hidden', tab !== 'products');
-            document.getElementById('btn-users').className = tab === 'users' ? 'px-6 py-2 rounded-xl text-sm font-bold transition bg-yellow-600 text-slate-900' : 'px-6 py-2 rounded-xl text-sm font-bold transition text-slate-400';
-            document.getElementById('btn-products').className = tab === 'products' ? 'px-6 py-2 rounded-xl text-sm font-bold transition bg-yellow-600 text-slate-900' : 'px-6 py-2 rounded-xl text-sm font-bold transition text-slate-400';
-        }
-
-        // 會員管理邏輯
-        function loadUsers() {
-            db.ref('users').on('value', snap => {
-                const users = snap.val();
-                const container = document.getElementById('userTable');
-                container.innerHTML = '';
-                let count = 0;
-                for (let id in users) {
-                    count++;
-                    container.innerHTML += `
-                        <tr class="hover:bg-slate-800/50 transition text-sm">
-                            <td class="px-6 py-4 font-mono text-slate-400 text-xs">${id}</td>
-                            <td class="px-6 py-4 font-black text-yellow-500 text-lg">${users[id].points || 0}</td>
-                            <td class="px-6 py-4 text-right">
-                                <input type="number" id="input-${id}" placeholder="例如: 100" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1 text-center w-24 mr-2 text-white">
-                                <button onclick="adjustPoints('${id}')" class="bg-white text-slate-900 px-4 py-1.5 rounded-lg font-bold text-xs">執行</button>
-                            </td>
-                        </tr>`;
+        function loadData() {
+            db.ref('users').on('value', s => {
+                const u = s.val(), t = document.getElementById('userTable'); t.innerHTML = '';
+                for(let id in u) {
+                    t.innerHTML += `<tr class="border-b border-slate-700">
+                        <td class="px-6 py-4"><div class="font-bold text-yellow-500">${u[id].name || '未同步'}</div><div class="text-[10px] text-slate-500">${id.substring(0,10)}...</div></td>
+                        <td class="px-6 py-4 text-xl font-black">${u[id].points || 0}</td>
+                        <td class="px-6 py-4 text-right"><input type="number" id="in-${id}" class="bg-slate-900 w-20 p-1 rounded text-center mr-2">
+                        <button onclick="adj('${id}')" class="bg-white text-black px-3 py-1 rounded font-bold">執行</button></td></tr>`;
                 }
-                document.getElementById('userCount').innerText = `共 ${count} 位會員`;
             });
-        }
-
-        function adjustPoints(uid) {
-            const val = parseInt(document.getElementById(`input-${uid}`).value);
-            if(isNaN(val)) return alert("請輸入有效數字");
-            db.ref(`users/${uid}/points`).transaction(p => (p || 0) + val, (err, comm, snap) => {
-                if(comm) {
-                    const msg = `🔔 點數變動通知\n變動：${val > 0 ? '+' : ''}${val}\n目前剩餘：${snap.val()} 點`;
-                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, { mode: 'no-cors' });
-                    document.getElementById(`input-${uid}`).value = '';
+            db.ref('products').on('value', s => {
+                const p = s.val(), l = document.getElementById('pList'); l.innerHTML = '';
+                for(let id in p) {
+                    l.innerHTML += `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex gap-4 items-center">
+                        <img src="${p[id].img}" class="w-12 h-12 rounded object-cover">
+                        <div class="flex-1 font-bold">${p[id].name} <span class="text-yellow-500 ml-2">${p[id].price}</span></div>
+                        <button onclick="edit('${id}','${p[id].name}',${p[id].price},'${p[id].img}')" class="text-blue-400 text-xs">編輯</button>
+                        <button onclick="db.ref('products/${id}').remove()" class="text-red-500 text-xs">刪除</button></div>`;
                 }
             });
         }
 
-        // 商品管理邏輯
-        function loadProducts() {
-            db.ref('products').on('value', snap => {
-                const ps = snap.val();
-                const container = document.getElementById('productList');
-                container.innerHTML = '';
-                for (let id in ps) {
-                    container.innerHTML += `
-                        <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex gap-4 items-center">
-                            <img src="${ps[id].img}" class="w-16 h-16 rounded-xl object-cover bg-slate-900">
-                            <div class="flex-1 min-w-0">
-                                <p class="font-bold truncate">${ps[id].name}</p>
-                                <p class="text-yellow-500 font-black">${ps[id].price} PTS</p>
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <button onclick="editProduct('${id}', '${ps[id].name}', ${ps[id].price}, '${ps[id].img}')" class="text-blue-400 text-[10px] uppercase font-bold hover:underline">編輯</button>
-                                <button onclick="deleteProduct('${id}')" class="text-red-500 text-[10px] uppercase font-bold hover:underline">刪除</button>
-                            </div>
-                        </div>`;
-                }
+        function adj(uid) {
+            const v = parseInt(document.getElementById(`in-${uid}`).value);
+            if(isNaN(v)) return;
+            db.ref(`users/${uid}/points`).transaction(p => (p||0)+v, (e,c,snap) => {
+                if(c) fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent('點數變動：'+v+'\n餘額：'+snap.val())}`, {mode:'no-cors'});
             });
         }
 
-        function handleProductSubmit() {
-            const id = document.getElementById('editProductId').value;
-            const data = {
-                name: document.getElementById('pName').value,
-                price: parseInt(document.getElementById('pPrice').value),
-                img: document.getElementById('pImg').value
-            };
-            if(!data.name || isNaN(data.price)) return alert("請填寫正確資訊");
-
-            if(id) {
-                db.ref(`products/${id}`).update(data).then(() => { alert("修改成功"); resetForm(); });
-            } else {
-                db.ref('products').push(data).then(() => { alert("上架成功"); resetForm(); });
-            }
+        function saveProduct() {
+            const id = document.getElementById('editId').value;
+            const data = { name: document.getElementById('pName').value, price: parseInt(document.getElementById('pPrice').value), img: document.getElementById('pImg').value };
+            if(id) db.ref('products/'+id).update(data); else db.ref('products').push(data);
+            document.getElementById('editId').value = ''; 
         }
 
-        function editProduct(id, name, price, img) {
-            document.getElementById('editProductId').value = id;
-            document.getElementById('pName').value = name;
-            document.getElementById('pPrice').value = price;
-            document.getElementById('pImg').value = img;
-            document.getElementById('formTitle').innerText = "✏️ 編輯商品";
-            document.getElementById('submitBtn').innerText = "儲存修改";
-            document.getElementById('cancelBtn').classList.remove('hidden');
+        function edit(id,n,p,i) {
+            document.getElementById('editId').value = id;
+            document.getElementById('pName').value = n; document.getElementById('pPrice').value = p; document.getElementById('pImg').value = i;
+            document.getElementById('fTitle').innerText = "編輯商品";
         }
-
-        function deleteProduct(id) {
-            if(confirm("確定要刪除此商品嗎？")) {
-                db.ref(`products/${id}`).remove();
-            }
-        }
-
-        function resetForm() {
-            document.getElementById('editProductId').value = "";
-            document.getElementById('pName').value = "";
-            document.getElementById('pPrice').value = "";
-            document.getElementById('pImg').value = "";
-            document.getElementById('formTitle').innerText = "🎁 新增商品";
-            document.getElementById('submitBtn').innerText = "確認上架";
-            document.getElementById('cancelBtn').classList.add('hidden');
-        }
-
-        function logout() { sessionStorage.clear(); location.reload(); }
     </script>
 </body>
 </html>
