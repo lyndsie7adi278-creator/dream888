@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>DREAM 旗艦管理</title>
+    <title>DREAM 旗艦管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
@@ -17,18 +17,18 @@
     </div>
 
     <div class="max-w-5xl mx-auto p-6">
-        <div class="flex justify-between items-center mb-8">
+        <header class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-black text-yellow-500">DREAM CONTROL</h1>
-            <div class="bg-slate-800 p-1 rounded-xl">
-                <button onclick="switchTab('u')" id="btn-u" class="px-4 py-2 rounded-lg bg-yellow-600 text-slate-900 font-bold text-sm">會員管理</button>
-                <button onclick="switchTab('p')" id="btn-p" class="px-4 py-2 rounded-lg text-slate-400 font-bold text-sm">商城管理</button>
-            </div>
-        </div>
+            <nav class="bg-slate-800 p-1 rounded-xl">
+                <button onclick="switchTab('u')" id="btn-u" class="px-6 py-2 rounded-lg bg-yellow-600 text-slate-900 font-bold text-sm transition">會員管理</button>
+                <button onclick="switchTab('p')" id="btn-p" class="px-6 py-2 rounded-lg text-slate-400 font-bold text-sm transition">商城管理</button>
+            </nav>
+        </header>
 
-        <div id="tab-u" class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+        <div id="tab-u" class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-2xl">
             <table class="w-full text-left">
-                <thead class="bg-slate-900 text-slate-500 text-xs">
-                    <tr><th class="px-6 py-4">玩家暱稱 / ID</th><th class="px-6 py-4">點數</th><th class="px-6 py-4 text-right">調整 (加/扣)</th></tr>
+                <thead class="bg-slate-900/50 text-slate-500 text-xs">
+                    <tr><th class="px-6 py-4">玩家暱稱 / ID</th><th class="px-6 py-4">當前點數</th><th class="px-6 py-4 text-right">調整額度 (執行後通知)</th></tr>
                 </thead>
                 <tbody id="userTable" class="divide-y divide-slate-700"></tbody>
             </table>
@@ -36,12 +36,12 @@
 
         <div id="tab-p" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 h-fit sticky top-6">
-                <h2 id="fTitle" class="font-bold mb-4 text-yellow-500">新增商品</h2>
+                <h2 id="fTitle" class="font-bold mb-4 text-yellow-500">🎁 商品上架/編輯</h2>
                 <input type="hidden" id="editId">
-                <input type="text" id="pName" placeholder="名稱" class="w-full bg-slate-900 border-slate-700 rounded-lg p-2 mb-2 text-sm">
-                <input type="number" id="pPrice" placeholder="點數" class="w-full bg-slate-900 border-slate-700 rounded-lg p-2 mb-2 text-sm">
-                <input type="text" id="pImg" placeholder="圖片URL" class="w-full bg-slate-900 border-slate-700 rounded-lg p-2 mb-4 text-sm">
-                <button onclick="saveProduct()" class="w-full bg-blue-600 py-2 rounded-lg font-bold">確認儲存</button>
+                <input type="text" id="pName" placeholder="名稱" class="w-full bg-slate-900 border-slate-700 rounded-lg p-3 mb-2 text-sm text-white">
+                <input type="number" id="pPrice" placeholder="點數" class="w-full bg-slate-900 border-slate-700 rounded-lg p-3 mb-2 text-sm text-white">
+                <input type="text" id="pImg" placeholder="圖片URL" class="w-full bg-slate-900 border-slate-700 rounded-lg p-3 mb-4 text-sm text-white">
+                <button onclick="saveProduct()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-500 transition">儲存商品</button>
             </div>
             <div class="md:col-span-2 grid grid-cols-1 gap-4" id="pList"></div>
         </div>
@@ -49,7 +49,7 @@
 
     <script>
         const ADMIN_PASSWORD = "0805"; 
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec"; 
         const firebaseConfig = {
   apiKey: "AIzaSyDJIhgbbCJv3f8y9xdSHUCTfJi_sjKBOqs",
   authDomain: "dreampoint-b37df.firebaseapp.com",
@@ -59,17 +59,18 @@
   appId: "1:454938973111:web:2191261a3175c8115d0e32",
   measurementId: "G-H4L410HB29"
 };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         function checkPass() {
             if(document.getElementById('adminPass').value === ADMIN_PASSWORD) {
                 document.getElementById('lockScreen').style.display = 'none';
-                sessionStorage.setItem('admin', 'true');
+                sessionStorage.setItem('admin_session', 'active');
                 loadData();
             } else { alert('密碼錯誤'); }
         }
-        if(sessionStorage.getItem('admin') === 'true') {
+        if(sessionStorage.getItem('admin_session') === 'active') {
             document.getElementById('lockScreen').style.display = 'none';
             loadData();
         }
@@ -77,54 +78,64 @@
         function switchTab(t) {
             document.getElementById('tab-u').classList.toggle('hidden', t!=='u');
             document.getElementById('tab-p').classList.toggle('hidden', t!=='p');
-            document.getElementById('btn-u').className = t==='u' ? 'px-4 py-2 rounded-lg bg-yellow-600 text-slate-900 font-bold text-sm' : 'px-4 py-2 rounded-lg text-slate-400 font-bold text-sm';
-            document.getElementById('btn-p').className = t==='p' ? 'px-4 py-2 rounded-lg bg-yellow-600 text-slate-900 font-bold text-sm' : 'px-4 py-2 rounded-lg text-slate-400 font-bold text-sm';
+            document.getElementById('btn-u').className = t==='u' ? 'px-6 py-2 rounded-lg bg-yellow-600 text-slate-900 font-bold text-sm' : 'px-6 py-2 rounded-lg text-slate-400 font-bold text-sm';
+            document.getElementById('btn-p').className = t==='p' ? 'px-6 py-2 rounded-lg bg-yellow-600 text-slate-900 font-bold text-sm' : 'px-6 py-2 rounded-lg text-slate-400 font-bold text-sm';
         }
 
         function loadData() {
             db.ref('users').on('value', s => {
                 const u = s.val(), t = document.getElementById('userTable'); t.innerHTML = '';
                 for(let id in u) {
-                    t.innerHTML += `<tr class="border-b border-slate-700">
-                        <td class="px-6 py-4"><div class="font-bold text-yellow-500">${u[id].name || '未同步'}</div><div class="text-[10px] text-slate-500">${id.substring(0,10)}...</div></td>
-                        <td class="px-6 py-4 text-xl font-black">${u[id].points || 0}</td>
-                        <td class="px-6 py-4 text-right"><input type="number" id="in-${id}" class="bg-slate-900 w-20 p-1 rounded text-center mr-2">
-                        <button onclick="adj('${id}')" class="bg-white text-black px-3 py-1 rounded font-bold">執行</button></td></tr>`;
+                    t.innerHTML += `<tr class="border-b border-slate-700 hover:bg-slate-800/50 transition">
+                        <td class="px-6 py-4"><div class="font-bold text-yellow-500 text-base">${u[id].name || '未同步'}</div><div class="text-[10px] text-slate-500 font-mono">${id}</div></td>
+                        <td class="px-6 py-4 text-2xl font-black text-white">${u[id].points || 0}</td>
+                        <td class="px-6 py-4 text-right">
+                            <input type="number" id="in-${id}" placeholder="+/-" class="bg-slate-900 w-24 p-2 rounded-lg text-center mr-2 border border-slate-700">
+                            <button onclick="adj('${id}')" class="bg-white text-black px-4 py-2 rounded-lg font-bold shadow-lg">執行</button>
+                        </td></tr>`;
                 }
             });
             db.ref('products').on('value', s => {
                 const p = s.val(), l = document.getElementById('pList'); l.innerHTML = '';
                 for(let id in p) {
-                    l.innerHTML += `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex gap-4 items-center">
-                        <img src="${p[id].img}" class="w-12 h-12 rounded object-cover">
-                        <div class="flex-1 font-bold">${p[id].name} <span class="text-yellow-500 ml-2">${p[id].price}</span></div>
-                        <button onclick="edit('${id}','${p[id].name}',${p[id].price},'${p[id].img}')" class="text-blue-400 text-xs">編輯</button>
-                        <button onclick="db.ref('products/${id}').remove()" class="text-red-500 text-xs">刪除</button></div>`;
+                    l.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex gap-4 items-center shadow-lg">
+                        <img src="${p[id].img}" class="w-16 h-16 rounded-xl object-cover bg-slate-900">
+                        <div class="flex-1 min-w-0 font-bold text-lg">${p[id].name} <span class="text-yellow-500 ml-2">${p[id].price} PTS</span></div>
+                        <button onclick="edit('${id}','${p[id].name}',${p[id].price},'${p[id].img}')" class="text-blue-400 font-bold px-3">編輯</button>
+                        <button onclick="db.ref('products/${id}').remove()" class="text-red-500 font-bold px-3">刪除</button></div>`;
                 }
             });
         }
 
         function adj(uid) {
             const v = parseInt(document.getElementById(`in-${uid}`).value);
-            if(isNaN(v)) return;
+            if(isNaN(v)) return alert("請輸入數字");
             db.ref(`users/${uid}/points`).transaction(p => (p||0)+v, (e,c,snap) => {
-                if(c) fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent('點數變動：'+v+'\n餘額：'+snap.val())}`, {mode:'no-cors'});
+                if(c) {
+                    const changeStr = (v > 0 ? "+" : "") + v;
+                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(changeStr)}`, {mode:'no-cors'});
+                    document.getElementById(`in-${uid}`).value = '';
+                }
             });
         }
 
         function saveProduct() {
             const id = document.getElementById('editId').value;
             const data = { name: document.getElementById('pName').value, price: parseInt(document.getElementById('pPrice').value), img: document.getElementById('pImg').value };
+            if(!data.name || !data.price) return alert("請填寫資訊");
             if(id) db.ref('products/'+id).update(data); else db.ref('products').push(data);
-            document.getElementById('editId').value = ''; 
+            resetForm();
         }
 
         function edit(id,n,p,i) {
             document.getElementById('editId').value = id;
             document.getElementById('pName').value = n; document.getElementById('pPrice').value = p; document.getElementById('pImg').value = i;
-            document.getElementById('fTitle').innerText = "編輯商品";
+            document.getElementById('fTitle').innerText = "✏️ 編輯商品";
+        }
+        function resetForm() {
+            document.getElementById('editId').value = ''; document.getElementById('pName').value = ''; document.getElementById('pPrice').value = ''; document.getElementById('pImg').value = '';
+            document.getElementById('fTitle').innerText = "🎁 商品上架/編輯";
         }
     </script>
 </body>
 </html>
-
