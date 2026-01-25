@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播點數系統 - 管理者後台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
+    <style>
+        body { background-color: #f1f5f9; }
+        .user-card { transition: all 0.3s ease; }
+        .user-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-slate-800">直播點數管理系統</h1>
+                <p class="text-slate-500">管理客人點數、上架商城商品、發送即時通知</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <span class="text-sm text-slate-500 block">目前在線玩家</span>
+                <span id="userCount" class="text-2xl font-bold text-blue-600">0</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-slate-700 flex items-center">
+                            <span class="mr-2">👥</span> 玩家名單
+                        </h2>
+                        <input type="text" id="searchUser" placeholder="搜尋玩家名稱..." class="border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-slate-400 text-sm uppercase">
+                                <tr>
+                                    <th class="pb-4 font-medium">玩家資訊</th>
+                                    <th class="pb-4 font-medium">目前點數</th>
+                                    <th class="pb-4 font-medium text-right">手動調整 (會發送通知)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userListBody" class="divide-y divide-slate-100">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-xl font-bold text-slate-700 mb-4 flex items-center">
+                        <span class="mr-2">🎁</span> 上架新商品
+                    </h2>
+                    <div class="space-y-3">
+                        <input type="text" id="pName" placeholder="商品名稱 (如: 500元禮券)" class="w-full border rounded-lg p-2 text-sm">
+                        <input type="number" id="pPrice" placeholder="兌換所需點數" class="w-full border rounded-lg p-2 text-sm">
+                        <input type="text" id="pImg" placeholder="圖片網址 (URL)" class="w-full border rounded-lg p-2 text-sm">
+                        <button onclick="uploadProduct()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold hover:bg-slate-700 transition">確認上架商品</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-lg font-bold text-slate-700 mb-4">目前商城商品</h2>
+                    <div id="pList" class="space-y-3">
+                        </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 配置區域 (請務必填寫正確) ---
+        const firebaseConfig = {
+      apiKey: "AIzaSyDJIhgbbCJv3f8y9xdSHUCTfJi_sjKBOqs",
+  authDomain: "dreampoint-b37df.firebaseapp.com",
+  projectId: "dreampoint-b37df",
+  storageBucket: "dreampoint-b37df.firebasestorage.app",
+  messagingSenderId: "454938973111",
+  appId: "1:454938973111:web:2191261a3175c8115d0e32",
+  measurementId: "G-H4L410HB29"
+        };
+        
+        // GAS 部署後的網頁應用程式 URL
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzl3c3pYQU44Vh49wzsB8DRk19TrRtv80GeFyXYe1gVmTWHXdRCwFyNBc7AowSmWWQ/exec"; 
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- 2. 玩家管理邏輯 ---
+        db.ref('users').on('value', (snapshot) => {
+            const users = snapshot.val();
+            const container = document.getElementById('userListBody');
+            const userCountDisplay = document.getElementById('userCount');
+            container.innerHTML = '';
+            
+            let count = 0;
+            for (let id in users) {
+                count++;
+                const u = users[id];
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="py-4">
+                        <div class="font-bold text-slate-700">${u.name || '未登錄'}</div>
+                        <div class="text-xs text-slate-400 font-mono">${id}</div>
+                    </td>
+                    <td class="py-4">
+                        <span class="text-lg font-black text-blue-600">${u.points || 0}</span>
+                    </td>
+                    <td class="py-4 text-right space-x-1">
+                        <button onclick="adjustPoints('${id}', '${u.name}', 100)" class="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm font-bold hover:bg-blue-600 hover:text-white transition">+100</button>
+                        <button onclick="adjustPoints('${id}', '${u.name}', -100)" class="bg-red-50 text-red-600 px-3 py-1 rounded-md text-sm font-bold hover:bg-red-600 hover:text-white transition">-100</button>
+                        <button onclick="customPoints('${id}', '${u.name}')" class="bg-slate-100 text-slate-600 px-3 py-1 rounded-md text-sm font-bold hover:bg-slate-600 hover:text-white transition">自定義</button>
+                    </td>
+                `;
+                container.appendChild(tr);
+            }
+            userCountDisplay.innerText = count;
+        });
+
+        // 核心：調整點數並發送 Line 通知
+        async function adjustPoints(uid, name, amt) {
+            const userRef = db.ref('users/' + uid + '/points');
+            
+            userRef.transaction((current) => {
+                const newPoints = (current || 0) + amt;
+                return newPoints;
+            }, (error, committed, snapshot) => {
+                if (committed) {
+                    const finalPoints = snapshot.val();
+                    // 呼叫 Line 通知
+                    sendLineNotification(uid, amt, finalPoints);
+                }
+            });
+        }
+
+        async function customPoints(uid, name) {
+            const currentVal = prompt(`請輸入 ${name} 的新總點數：`);
+            if (currentVal !== null) {
+                const newPoints = parseInt(currentVal);
+                await db.ref('users/' + uid).update({ points: newPoints });
+                sendLineNotification(uid, "更新", newPoints, true);
+            }
+        }
+
+        // 發送通知給 GAS
+        function sendLineNotification(uid, change, total, isCustom = false) {
+            let msg = "";
+            if(isCustom) {
+                msg = `🔔 點數更新通知\n管理員已將您的總點數調整為：${total} 點`;
+            } else {
+                msg = `🔔 點數變動通知\n本次變動：${change > 0 ? '+' : ''}${change} 點\n目前累積總點數：${total} 點`;
+            }
+
+            const finalUrl = `${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`;
+            
+            // 使用 no-cors 模式避免跨網域阻擋
+            fetch(finalUrl, { mode: 'no-cors' })
+            .then(() => console.log("Line 通知指令已送出"))
+            .catch(err => console.error("通知發送失敗", err));
+        }
+
+        // --- 3. 商品管理邏輯 ---
+        function uploadProduct() {
+            const name = document.getElementById('pName').value;
+            const price = parseInt(document.getElementById('pPrice').value);
+            const img = document.getElementById('pImg').value;
+
+            if (!name || !price) return alert("請填寫商品名稱與點數");
+
+            db.ref('products').push({
+                name: name,
+                price: price,
+                img: img || "https://via.placeholder.com/150?text=No+Image"
+            }).then(() => {
+                alert("商品上架成功！");
+                document.getElementById('pName').value = '';
+                document.getElementById('pPrice').value = '';
+                document.getElementById('pImg').value = '';
+            });
+        }
+
+        db.ref('products').on('value', (snapshot) => {
+            const products = snapshot.val();
+            const list = document.getElementById('pList');
+            list.innerHTML = '';
+            for (let id in products) {
+                const p = products[id];
+                list.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="flex items-center">
+                            <img src="${p.img}" class="w-10 h-10 object-cover rounded mr-3">
+                            <div>
+                                <div class="text-sm font-bold text-slate-700">${p.name}</div>
+                                <div class="text-xs text-red-500">${p.price} 點</div>
+                            </div>
+                        </div>
+                        <button onclick="deleteProduct('${id}')" class="text-slate-300 hover:text-red-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="Scan 19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            }
+        });
+
+        function deleteProduct(id) {
+            if (confirm("確定要刪除此商品嗎？")) {
+                db.ref('products/' + id).remove();
+            }
+        }
+    </script>
+</body>
+</html>
