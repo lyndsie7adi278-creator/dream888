@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>點數兌換商城</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="bg-blue-600 rounded-3xl p-6 text-white shadow-lg mb-6 text-center">
+        <p class="text-xs opacity-70 mb-1">您的當前點數</p>
+        <h1 id="userPoints" class="text-4xl font-black">---</h1>
+    </div>
+
+    <div id="productGrid" class="grid grid-cols-2 gap-4">
+        </div>
+
+    <script>
+        // --- 設定區 ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            appId: "YOUR_APP_ID"
+        };
+        const LIFF_ID = "YOUR_LIFF_ID";
+        const GAS_URL = "你的_GAS_網址"; 
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let user = { id: "", points: 0 };
+
+        async function init() {
+            await liff.init({ liffId: LIFF_ID });
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            } else {
+                const profile = await liff.getProfile();
+                user.id = profile.userId;
+                syncData();
+            }
+        }
+
+        function syncData() {
+            // 監聽點數
+            db.ref('users/' + user.id).on('value', snap => {
+                user.points = snap.val() ? snap.val().points : 0;
+                document.getElementById('userPoints').innerText = user.points;
+            });
+
+            // 監聽並渲染商城商品
+            db.ref('products').on('value', snap => {
+                const products = snap.val();
+                const grid = document.getElementById('productGrid');
+                grid.innerHTML = '';
+                for (let id in products) {
+                    const p = products[id];
+                    grid.innerHTML += `
+                        <div class="bg-white rounded-2xl overflow-hidden shadow-sm p-3 flex flex-col items-center border">
+                            <img src="${p.img}" class="w-full h-24 object-cover rounded-lg mb-2">
+                            <p class="font-bold text-sm mb-1">${p.name}</p>
+                            <p class="text-red-500 font-bold text-xs mb-3">${p.price} 點</p>
+                            <button onclick="redeem('${p.name}', ${p.price})" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold">兌換</button>
+                        </div>`;
+                }
+            });
+        }
+
+        async function redeem(name, price) {
+            if (user.points < price) return alert("點數不足喔！");
+            if (confirm(`確定兌換「${name}」嗎？`)) {
+                const newTotal = user.points - price;
+                await db.ref('users/' + user.id).update({ points: newTotal });
+                
+                // 發送對話通知
+                const msg = `✅ 兌換成功！\n您剛剛兌換了：${name}\n消耗：${price} 點\n剩餘總點數：${newTotal} 點\n\n請截圖此畫面聯繫客服。`;
+                fetch(`${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(msg)}`, { mode: 'no-cors' })
+                .then(() => {
+                    liff.closeWindow(); // 兌換完自動關閉視窗
+                });
+            }
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
