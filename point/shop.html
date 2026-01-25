@@ -3,87 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>點數兌換商城</title>
+    <title>DREAM 夢幻商城</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .item-card { background: #1e293b; border: 1px solid rgba(234, 179, 8, 0.2); border-radius: 20px; transition: 0.3s; }
+        .item-card:hover { border-color: #eab308; }
+        .gold-text { color: #eab308; }
+        .gold-btn { background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); }
+    </style>
 </head>
-<body class="bg-gray-100 p-4">
-    <div class="bg-blue-600 rounded-3xl p-6 text-white shadow-lg mb-6 text-center">
-        <p class="text-xs opacity-70 mb-1">您的當前點數</p>
-        <h1 id="userPoints" class="text-4xl font-black">---</h1>
+<body class="p-5">
+    <div class="bg-slate-800/50 rounded-3xl p-8 mb-8 text-center shadow-2xl border border-slate-700">
+        <p class="text-slate-400 text-xs uppercase tracking-widest mb-1">Current Points</p>
+        <h1 id="userPoints" class="text-5xl font-black gold-text tracking-tighter">---</h1>
+        <p class="mt-2 text-[10px] text-slate-500" id="userIdDisplay">載入中...</p>
     </div>
+
+    <h2 class="text-xl font-bold mb-6 flex items-center">
+        <span class="w-1 h-6 bg-yellow-500 mr-3 rounded-full"></span> 兌換中心
+    </h2>
 
     <div id="productGrid" class="grid grid-cols-2 gap-4">
         </div>
 
     <script>
-        // --- 設定區 ---
-        const firebaseConfig = {
-  apiKey: "AIzaSyDJIhgbbCJv3f8y9xdSHUCTfJi_sjKBOqs",
-  authDomain: "dreampoint-b37df.firebaseapp.com",
-  projectId: "dreampoint-b37df",
-  storageBucket: "dreampoint-b37df.firebasestorage.app",
-  messagingSenderId: "454938973111",
-  appId: "1:454938973111:web:2191261a3175c8115d0e32",
-  measurementId: "G-H4L410HB29"
+        const firebaseConfig = { 
+            // 填入你的 Firebase Config
         };
         const LIFF_ID = "2008964915-gP6NfUpi";
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec"; 
-
+        const GAS_URL = "AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ";
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let user = { id: "", points: 0 };
 
         async function init() {
             await liff.init({ liffId: LIFF_ID });
-            if (!liff.isLoggedIn()) {
-                liff.login();
-            } else {
+            if (!liff.isLoggedIn()) { liff.login(); }
+            else {
                 const profile = await liff.getProfile();
                 user.id = profile.userId;
-                syncData();
+                document.getElementById('userIdDisplay').innerText = "ID: " + user.id.substring(0,8) + "...";
+                sync();
             }
         }
 
-        function syncData() {
-            // 監聽點數
-            db.ref('users/' + user.id).on('value', snap => {
-                user.points = snap.val() ? snap.val().points : 0;
-                document.getElementById('userPoints').innerText = user.points;
+        function sync() {
+            db.ref('users/' + user.id + '/points').on('value', snap => {
+                user.points = snap.val() || 0;
+                document.getElementById('userPoints').innerText = user.points.toLocaleString();
             });
 
-            // 監聽並渲染商城商品
             db.ref('products').on('value', snap => {
-                const products = snap.val();
+                const ps = snap.val();
                 const grid = document.getElementById('productGrid');
                 grid.innerHTML = '';
-                for (let id in products) {
-                    const p = products[id];
+                for (let id in ps) {
                     grid.innerHTML += `
-                        <div class="bg-white rounded-2xl overflow-hidden shadow-sm p-3 flex flex-col items-center border">
-                            <img src="${p.img}" class="w-full h-24 object-cover rounded-lg mb-2">
-                            <p class="font-bold text-sm mb-1">${p.name}</p>
-                            <p class="text-red-500 font-bold text-xs mb-3">${p.price} 點</p>
-                            <button onclick="redeem('${p.name}', ${p.price})" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold">兌換</button>
+                        <div class="item-card p-4 shadow-lg">
+                            <img src="${ps[id].img}" class="w-full h-32 object-cover rounded-xl mb-3">
+                            <p class="font-bold text-slate-100 mb-1 truncate">${ps[id].name}</p>
+                            <p class="gold-text font-black text-lg mb-3">${ps[id].price} <span class="text-[10px]">PTS</span></p>
+                            <button onclick="redeem('${id}', '${ps[id].name}', ${ps[id].price})" class="w-full gold-btn text-slate-900 py-2 rounded-xl text-xs font-bold shadow-lg">立即兌換</button>
                         </div>`;
                 }
             });
         }
 
-        async function redeem(name, price) {
-            if (user.points < price) return alert("點數不足喔！");
-            if (confirm(`確定兌換「${name}」嗎？`)) {
+        async function redeem(id, name, price) {
+            if (user.points < price) return alert("點數餘額不足！");
+            if (confirm(`確定要用 ${price} 點兌換「${name}」嗎？`)) {
                 const newTotal = user.points - price;
                 await db.ref('users/' + user.id).update({ points: newTotal });
-                
-                // 發送對話通知
-                const msg = `✅ 兌換成功！\n您剛剛兌換了：${name}\n消耗：${price} 點\n剩餘總點數：${newTotal} 點\n\n請截圖此畫面聯繫客服。`;
+                const msg = `💰 兌換成功！\n項目：${name}\n扣除：${price} 點\n剩餘：${newTotal} 點`;
                 fetch(`${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(msg)}`, { mode: 'no-cors' })
-                .then(() => {
-                    liff.closeWindow(); // 兌換完自動關閉視窗
-                });
+                .then(() => { alert("兌換成功！請看 Line 通知"); liff.closeWindow(); });
             }
         }
         window.onload = init;
