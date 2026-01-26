@@ -193,9 +193,9 @@
             db.ref(`users/${uid}/points`).transaction(p => (p||0)+val, (err, comm) => { 
                 if(comm) { 
                     // 格式：✅ +100 點數已入帳 或 💰 -100 點數已扣除
-                    const icon = val > 0 ? '✅' : '💰';
+                    const icon = val > 0 ? '🅿️' : '🅿️';
                     const sign = val > 0 ? '+' : '';
-                    const action = val > 0 ? '已入帳' : '已扣除';
+                    const action = val > 0 ? '已存入' : '已扣除';
                     const msg = `${icon} ${sign}${val} 點數${action}`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
                     document.getElementById(`in-${uid}`).value = ''; 
@@ -234,3 +234,4 @@
     </script>
 </body>
 </html>
+
