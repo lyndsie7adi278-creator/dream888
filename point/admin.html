@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>夢工廠後台 - 通知優化版</title>
+    <title>夢工廠後台 - 極簡通知版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
@@ -186,28 +186,31 @@
             } 
         }
 
-        // --- 修正加點通知：將數字移到最前面 ---
+        // --- 修正加點通知：純符號與數字 ---
         function adj(uid) { 
             const val = parseInt(document.getElementById(`in-${uid}`).value); 
             if(isNaN(val)) return alert('請輸入數字'); 
             db.ref(`users/${uid}/points`).transaction(p => (p||0)+val, (err, comm) => { 
                 if(comm) { 
-                    // 格式：[+100點] 餘額已更新 ✅
-                    const msg = `[${val > 0 ? '+' : ''}${val}點] 餘額已更新 ${val > 0 ? '✅' : '💰'}`;
+                    // 格式：✅ +100 點數已入帳 或 💰 -100 點數已扣除
+                    const icon = val > 0 ? '✅' : '💰';
+                    const sign = val > 0 ? '+' : '';
+                    const action = val > 0 ? '已入帳' : '已扣除';
+                    const msg = `${icon} ${sign}${val} 點數${action}`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
                     document.getElementById(`in-${uid}`).value = ''; 
                 } 
             }); 
         }
 
-        // --- 修正退款通知：將數字移到最前面 ---
+        // --- 修正退款通知：純符號與數字 ---
         function refundOrder(oid, uid, amount) { 
             if(!confirm(`確認取消並退款 ${amount} 點？`)) return; 
             db.ref(`users/${uid}/points`).transaction(p => (p||0) + amount, (err, comm) => { 
                 if(comm) { 
                     db.ref(`orders/${oid}`).remove(); 
-                    // 格式：[退款成功] +100點已退回 🎁
-                    const msg = `[退款成功] +${amount}點已退回 🎁`;
+                    // 格式：🎁 +100 點數已退回
+                    const msg = `🎁 +${amount} 點數已退回`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
                     alert('退款成功'); 
                 } 
