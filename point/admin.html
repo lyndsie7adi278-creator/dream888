@@ -49,7 +49,7 @@
                         <label class="text-[10px] text-slate-500 ml-1 uppercase tracking-widest">Category 商品分類</label>
                         <div class="flex gap-2">
                             <select id="pCat" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-yellow-500 font-bold">
-                                </select>
+                            </select>
                             <button onclick="addCategory()" class="bg-slate-700 hover:bg-slate-600 px-4 rounded-xl text-sm font-bold">＋</button>
                         </div>
                     </div>
@@ -106,13 +106,11 @@
         function tab(t) { ['u','o','p'].forEach(x => { document.getElementById('t'+x).classList.toggle('hidden', x!==t); document.getElementById('b'+x).className = x===t ? 'px-6 py-2 rounded-xl text-sm font-bold bg-yellow-600 text-slate-900' : 'px-6 py-2 rounded-xl text-sm font-bold text-slate-400'; }); }
         
         function load() {
-            // 監聽分類
             db.ref('categories').on('value', s => {
                 const data = s.val();
                 allCategories = data ? Object.values(data) : ["一般"];
                 renderCategoryOptions();
             });
-
             db.ref('users').on('value', s => { allUsers = s.val() || {}; renderUsers(); });
             db.ref('products').on('value', s => { allProducts = s.val() || {}; renderProducts(); });
             db.ref('orders').on('value', s => {
@@ -128,66 +126,42 @@
             });
         }
 
-        // 渲染分類下拉選單
         function renderCategoryOptions() {
             const select = document.getElementById('pCat');
-            select.innerHTML = '';
-            allCategories.forEach(cat => {
-                select.innerHTML += `<option value="${cat}">${cat}</option>`;
-            });
+            select.innerHTML = allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
         }
 
-        // 新增分類功能
         function addCategory() {
-            const newCat = prompt("請輸入新分類名稱 (例如: 一番賞, 限量品):");
-            if (newCat && !allCategories.includes(newCat)) {
-                db.ref('categories').push(newCat);
-            } else if (newCat) {
-                alert("此分類已存在或名稱無效");
-            }
+            const newCat = prompt("請輸入新分類名稱:");
+            if (newCat && !allCategories.includes(newCat)) db.ref('categories').push(newCat);
         }
 
         async function handleUpload(input) {
-            const file = input.files[0];
-            if (!file) return;
+            const file = input.files[0]; if (!file) return;
             const status = document.getElementById('uploadStatus');
-            status.classList.remove('hidden');
-            status.innerText = "正在優化圖片並上傳...";
+            status.classList.remove('hidden'); status.innerText = "正在優化圖片並上傳...";
             try {
                 const compressedFile = await compressImage(file);
                 const storageRef = storage.ref('products/' + Date.now() + "_" + file.name);
                 const snapshot = await storageRef.put(compressedFile);
                 const url = await snapshot.ref.getDownloadURL();
                 document.getElementById('pImg').value = url;
-                status.innerText = "✅ 上傳成功 (已壓縮)";
+                status.innerText = "✅ 上傳成功";
                 setTimeout(() => status.classList.add('hidden'), 3000);
-            } catch (err) {
-                console.error(err);
-                alert("上傳失敗，請確認 Storage 規則");
-                status.classList.add('hidden');
-            }
+            } catch (err) { alert("上傳失敗"); status.classList.add('hidden'); }
         }
 
         function compressImage(file) {
             return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
+                const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
+                    const img = new Image(); img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800;
-                        let width = img.width;
-                        let height = img.height;
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
+                        const MAX_WIDTH = 800; let width = img.width, height = img.height;
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                         canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', 0.8);
                     };
                 };
@@ -199,8 +173,7 @@
         function renderProducts() { 
             const l = document.getElementById('pList'); l.innerHTML = ''; 
             for(let id in allProducts) { 
-                const p = allProducts[id]; 
-                const isOn = p.status !== '下架'; 
+                const p = allProducts[id]; const isOn = p.status !== '下架'; 
                 l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center mb-2 ${!isOn?'opacity-50 grayscale':''}"> 
                     <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover bg-slate-900 shadow-inner"> 
                     <div class="flex-1 overflow-hidden"> 
@@ -217,49 +190,47 @@
             } 
         }
 
-        function adj(uid) { const val = parseInt(document.getElementById(`in-${uid}`).value); if(isNaN(val)) return alert('請輸入數字'); db.ref(`users/${uid}/points`).transaction(p => (p||0)+val, (err, comm) => { if(comm) { fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent((val>0?'+':'')+val + ' 點')}`, {mode:'no-cors'}); document.getElementById(`in-${uid}`).value = ''; } }); }
-        function refundOrder(oid, uid, amount) { if(!confirm(`確認取消並退款 ${amount} 點？`)) return; db.ref(`users/${uid}/points`).transaction(p => (p||0) + amount, (err, comm) => { if(comm) { db.ref(`orders/${oid}`).remove(); fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent('⚠️ 訂單已取消，'+amount+' 點已退回帳戶')}`, {mode:'no-cors'}); alert('退款成功'); } }); }
+        // 優化點數調整通知 (重點在最前面)
+        function adj(uid) { 
+            const val = parseInt(document.getElementById(`in-${uid}`).value); 
+            if(isNaN(val)) return alert('請輸入數字'); 
+            db.ref(`users/${uid}/points`).transaction(p => (p||0)+val, (err, comm) => { 
+                if(comm) { 
+                    // 改為：[+100點] 點數異動通知
+                    const msg = (val>0?'[+':'[') + val + '點] 點數餘額已更新';
+                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
+                    document.getElementById(`in-${uid}`).value = ''; 
+                } 
+            }); 
+        }
+
+        // 優化退款通知 (重點在最前面)
+        function refundOrder(oid, uid, amount) { 
+            if(!confirm(`確認取消並退款 ${amount} 點？`)) return; 
+            db.ref(`users/${uid}/points`).transaction(p => (p||0) + amount, (err, comm) => { 
+                if(comm) { 
+                    db.ref(`orders/${oid}`).remove(); 
+                    // 改為：[退款成功] +100點已退回帳戶
+                    const msg = `[退款成功] +${amount}點已退回帳戶。訂單已取消。`;
+                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
+                    alert('退款成功'); 
+                } 
+            }); 
+        }
+
         function deleteProd(id) { if(confirm('確定永久刪除？')) db.ref(`products/${id}`).remove(); }
         function toggleStatus(id, curr) { const next = curr === '下架' ? '上架' : '下架'; db.ref(`products/${id}`).update({ status: next }); }
         
         function save() { 
             const id = document.getElementById('editId').value; 
-            const data = { 
-                cat: document.getElementById('pCat').value || '一般', 
-                name: document.getElementById('pName').value, 
-                price: parseInt(document.getElementById('pPrice').value), 
-                img: document.getElementById('pImg').value, 
-                desc: document.getElementById('pDesc').value || '', 
-                status: document.getElementById('pStatus').value 
-            }; 
+            const data = { cat: document.getElementById('pCat').value || '一般', name: document.getElementById('pName').value, price: parseInt(document.getElementById('pPrice').value), img: document.getElementById('pImg').value, desc: document.getElementById('pDesc').value || '', status: document.getElementById('pStatus').value }; 
             if(!data.name || isNaN(data.price)) return alert('不完整'); 
             if(id) db.ref('products/'+id).update(data); else db.ref('products').push(data); 
             reset(); 
         }
 
-        function edit(id,c,n,p,i,d,s) { 
-            document.getElementById('editId').value = id; 
-            document.getElementById('pCat').value = c || '一般'; 
-            document.getElementById('pName').value = n; 
-            document.getElementById('pPrice').value = p; 
-            document.getElementById('pImg').value = i; 
-            document.getElementById('pDesc').value = d; 
-            document.getElementById('pStatus').value = s || '上架'; 
-            document.getElementById('fTitle').innerText = "✏️ 編輯商品"; 
-            window.scrollTo({top:0, behavior:'smooth'}); 
-        }
-
-        function reset() { 
-            document.getElementById('editId').value = ''; 
-            document.getElementById('pCat').value = allCategories[0] || '一般'; 
-            document.getElementById('pName').value = ''; 
-            document.getElementById('pPrice').value = ''; 
-            document.getElementById('pImg').value = ''; 
-            document.getElementById('pDesc').value = ''; 
-            document.getElementById('pStatus').value = '上架'; 
-            document.getElementById('fTitle').innerText = "🎁 商品編輯"; 
-        }
-
+        function edit(id,c,n,p,i,d,s) { document.getElementById('editId').value = id; document.getElementById('pCat').value = c || '一般'; document.getElementById('pName').value = n; document.getElementById('pPrice').value = p; document.getElementById('pImg').value = i; document.getElementById('pDesc').value = d; document.getElementById('pStatus').value = s || '上架'; document.getElementById('fTitle').innerText = "✏️ 編輯商品"; window.scrollTo({top:0, behavior:'smooth'}); }
+        function reset() { document.getElementById('editId').value = ''; document.getElementById('pCat').value = allCategories[0] || '一般'; document.getElementById('pName').value = ''; document.getElementById('pPrice').value = ''; document.getElementById('pImg').value = ''; document.getElementById('pDesc').value = ''; document.getElementById('pStatus').value = '上架'; document.getElementById('fTitle').innerText = "🎁 商品編輯"; }
         function toggleOrder(oid, curr) { const next = curr === '待出貨' ? '已出貨' : '待出貨'; db.ref(`orders/${oid}`).update({ status: next }); }
     </script>
 </body>
