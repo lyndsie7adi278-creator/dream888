@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>豪華電玩街機風扭蛋機</title>
+    <title>豪華 3D 質感扭蛋機</title>
     <style>
         :root {
-            --frame-metal: #4a4e69;
-            --panel-blue: #22333b;
-            --accent-pink: #ff4d6d;
-            --neon-glow: 0 0 15px rgba(255, 77, 109, 0.8);
-            --machine-width: 360px;
+            --machine-red: #e74c3c;
+            --machine-dark: #c0392b;
+            --glass-shine: rgba(255, 255, 255, 0.4);
+            --plastic-black: #2c3e50;
         }
 
         body {
@@ -19,286 +18,282 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #0b0c10;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            font-family: 'Arial', sans-serif;
             overflow: hidden;
         }
 
-        /* 整個機台的外殼層次 */
-        .arcade-gacha {
+        /* 扭蛋機整體架構 */
+        .gacha-system {
             position: relative;
-            width: var(--machine-width);
-            background: var(--frame-metal);
-            padding: 15px;
-            border-radius: 20px;
-            border: 4px solid #1f2833;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(255,255,255,0.1);
+            width: 380px;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
         }
 
-        /* 頂部裝飾燈箱 */
-        .machine-header {
-            width: 100%;
-            height: 50px;
-            background: #1f2833;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-bottom: 4px solid var(--accent-pink);
-            box-shadow: var(--neon-glow);
+        /* 頂部護蓋 */
+        .top-cap {
+            width: 240px;
+            height: 40px;
+            background: var(--machine-red);
+            border: 5px solid #fff;
+            margin: 0 auto -10px;
+            border-radius: 50px 50px 10px 10px;
+            position: relative;
+            z-index: 10;
+            box-shadow: inset 0 5px 10px rgba(255,255,255,0.5);
         }
 
-        .header-text {
-            color: #fff;
-            font-weight: bold;
-            letter-spacing: 5px;
-            text-shadow: var(--neon-glow);
-        }
-
-        /* 強化版透明圓艙 */
+        /* 玻璃艙體 - 強化折射感 */
         .glass-chamber {
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), rgba(0,0,0,0.3));
-            border: 8px solid #c5c6c7;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
             border-radius: 50%;
+            border: 8px solid #fff;
             margin: 0 auto;
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(2px);
             z-index: 5;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+            box-shadow: 
+                inset 0 0 60px rgba(0,0,0,0.3),
+                0 0 20px rgba(255,255,255,0.1);
         }
 
-        #physics-canvas { display: block; }
+        #physics-canvas { display: block; cursor: default; }
 
-        /* 中間機械面板 */
-        .control-section {
-            width: 100%;
-            height: 200px;
-            background: var(--panel-blue);
-            margin-top: -50px;
-            border-radius: 0 0 15px 15px;
-            border: 3px solid #000;
+        /* 厚實的機身底座 */
+        .machine-body {
+            width: 340px;
+            height: 280px;
+            background: linear-gradient(to bottom, var(--machine-red), var(--machine-dark));
+            border-radius: 20px 20px 50px 50px;
+            margin: -60px auto 0;
+            border: 6px solid #fff;
             position: relative;
             z-index: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            box-shadow: inset 0 10px 20px rgba(255,255,255,0.3);
         }
 
-        /* 側面散熱孔裝飾 */
-        .vents {
-            position: absolute;
-            left: 15px;
-            top: 60px;
-            width: 40px;
-            height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .vent-line { width: 100%; height: 4px; background: #000; border-radius: 2px; opacity: 0.5; }
-
-        /* 核心旋鈕 */
-        .crank-base {
-            width: 110px;
-            height: 110px;
-            background: #c5c6c7;
+        /* 投幣旋鈕區域 */
+        .crank-panel {
+            width: 160px;
+            height: 160px;
+            background: #ecf0f1;
             border-radius: 50%;
-            margin-top: 40px;
-            border: 6px solid #1f2833;
+            border: 6px solid #95a5a6;
+            margin: 50px auto 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
-            transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 8px 0 #45a29e;
-        }
-        .crank-base:active { transform: scale(0.9) rotate(360deg); box-shadow: 0 2px 0 #45a29e; }
-
-        .handle {
-            width: 80px;
-            height: 25px;
-            background: var(--accent-pink);
-            border-radius: 12px;
-            border: 3px solid #000;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.2), 0 5px 0 #bdc3c7;
         }
 
-        /* 出球口 - 深度感 */
-        .dispenser {
-            position: absolute;
-            bottom: 15px;
-            right: 25px;
+        .crank-handle {
             width: 100px;
-            height: 80px;
-            background: #000;
-            border-radius: 15px;
-            border: 4px solid #45a29e;
-            overflow: visible;
+            height: 100px;
+            background: #bdc3c7;
+            border-radius: 50%;
+            border: 4px solid #7f8c8d;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* 掉出來的雙色球 */
-        .gacha-ball {
+        .crank-handle::after {
+            content: '';
+            width: 85%;
+            height: 20px;
+            background: #7f8c8d;
+            border-radius: 10px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+
+        /* 出球口斜坡設計 */
+        .exit-chute {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 80px;
+            background: #1a1a1a;
+            border-radius: 15px 15px 30px 30px;
+            border-bottom: 8px solid #000;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.8);
+        }
+
+        /* 掉出來的大扭蛋球 */
+        .out-ball {
+            position: absolute;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-            border: 2px solid #000;
+            border: 3px solid #333;
             display: none;
-            z-index: 20;
+            z-index: 100;
             cursor: pointer;
             overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
-        .gacha-ball::before { content: ''; position: absolute; top: 0; width: 100%; height: 50%; background: var(--ball-color, #f00); }
-        .gacha-ball::after { content: ''; position: absolute; bottom: 0; width: 100%; height: 50%; background: #fff; }
+        /* 扭蛋球經典設計：透明上蓋 + 彩色下底 */
+        .out-ball::before {
+            content: ''; position: absolute; top: 0; width: 100%; height: 50%;
+            background: rgba(255,255,255,0.4); border-bottom: 2px solid rgba(0,0,0,0.1);
+        }
+        .out-ball::after {
+            content: ''; position: absolute; bottom: 0; width: 100%; height: 50%;
+            background: var(--ball-color, #f00);
+        }
 
-        @keyframes ball-out {
-            0% { transform: translate(-50%, -50px) scale(0) rotate(0); opacity: 0; }
-            50% { transform: translate(-50%, 20px) scale(1.1) rotate(180deg); opacity: 1; }
-            100% { transform: translate(-50%, 40px) scale(1) rotate(360deg); opacity: 1; filter: drop-shadow(0 5px 10px rgba(255,77,109,0.5)); }
+        @keyframes ball-drop-physics {
+            0% { transform: translate(-50%, -60px) scale(0); }
+            50% { transform: translate(-50%, 30px) scale(1.1); }
+            100% { transform: translate(-50%, 60px) scale(1) rotate(15deg); }
         }
-        .dropped { display: block !important; left: 50%; animation: ball-out 0.6s forwards; }
+        .is-dropped { display: block !important; left: 50%; animation: ball-drop-physics 0.5s forwards ease-out; }
 
-        /* 開獎 UI */
-        .prize-ui {
-            position: fixed;
-            top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            width: 300px; background: #1f2833; border: 4px solid var(--accent-pink);
-            border-radius: 20px; color: #fff; text-align: center; padding: 40px;
-            z-index: 100; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 50px rgba(0,0,0,0.8), var(--neon-glow);
+        /* 彈窗 UI */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 1000; }
+        .win-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 300px; background: #fff; border-radius: 40px; padding: 30px; text-align: center; z-index: 1001;
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 8px solid var(--machine-red);
         }
-        .prize-ui.active { transform: translate(-50%, -50%) scale(1); }
-        .prize-ui h1 { color: var(--accent-pink); margin: 20px 0; }
-        .btn-claim { background: var(--accent-pink); border: none; padding: 10px 30px; border-radius: 5px; color: #fff; font-weight: bold; cursor: pointer; }
+        .win-modal.active { transform: translate(-50%, -50%) scale(1); }
+        .win-modal h1 { color: var(--machine-red); font-size: 40px; margin: 10px 0; }
     </style>
 </head>
 <body>
 
-<div class="arcade-gacha">
-    <div class="machine-header">
-        <div class="header-text">LUCKY GACHA</div>
-    </div>
-
+<div class="gacha-system">
+    <div class="top-cap"></div>
     <div class="glass-chamber">
-        <canvas id="physics-canvas" width="300" height="300"></canvas>
+        <canvas id="physics-canvas" width="320" height="320"></canvas>
     </div>
-
-    <div class="control-section">
-        <div class="vents">
-            <div class="vent-line"></div><div class="vent-line"></div><div class="vent-line"></div><div class="vent-line"></div>
+    <div class="machine-body">
+        <div class="crank-panel">
+            <div class="crank-handle" id="main-crank"></div>
         </div>
-
-        <div class="crank-base" id="crank-btn">
-            <div class="handle"></div>
-        </div>
-        
-        <p style="color: #45a29e; font-size: 12px; font-weight: bold; margin-top: 10px;">TURN TO PLAY</p>
-
-        <div class="dispenser">
-            <div id="out-ball" class="gacha-ball"></div>
+        <div class="exit-chute">
+            <div id="final-ball" class="out-ball"></div>
         </div>
     </div>
 </div>
 
-<div class="prize-ui" id="prize-modal">
-    <p>SPECIAL PRIZE</p>
-    <h1 id="prize-name">10 POINTS</h1>
-    <button class="btn-claim" onclick="closePrize()">CLAIM</button>
+<div class="modal-overlay" id="overlay"></div>
+<div class="win-modal" id="modal">
+    <p style="font-weight: bold; color: #7f8c8d;">YOU GOT</p>
+    <h1 id="prize-val">10 點</h1>
+    <button onclick="resetGame()" style="background: var(--machine-red); color: white; border: none; padding: 12px 30px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 15px;">收下扭蛋</button>
 </div>
 
 <script>
     const canvas = document.getElementById('physics-canvas');
     const ctx = canvas.getContext('2d');
-    const crank = document.getElementById('crank-btn');
-    const outBall = document.getElementById('out-ball');
-    const prizeModal = document.getElementById('prize-modal');
+    const crank = document.getElementById('main-crank');
+    const finalBall = document.getElementById('final-ball');
+    const modal = document.getElementById('modal');
+    const overlay = document.getElementById('overlay');
 
-    const colors = ['#ff4d6d', '#ffb703', '#8ecae6', '#219ebc', '#fb8500', '#06d6a0', '#ef476f'];
+    const ballColors = ['#ff4d4d', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6', '#e67e22'];
     let balls = [];
-    let isSpinning = false;
+    let isRolling = false;
 
-    // 初始化物理球
-    for(let i=0; i<15; i++) {
+    // 初始化 10 顆大球
+    for(let i=0; i<10; i++) {
         balls.push({
-            x: 100 + Math.random()*100, y: 200 + Math.random()*50,
-            vx: 0, vy: 0, r: 20,
-            color: colors[i % colors.length]
+            x: 100 + Math.random()*120, y: 200 + Math.random()*50,
+            vx: 0, vy: 0, r: 28, // 增大球體半徑
+            color: ballColors[i % ballColors.length]
         });
     }
 
-    function draw() {
-        ctx.clearRect(0,0,300,300);
+    function drawBalls() {
+        ctx.clearRect(0,0,320,320);
         balls.forEach(b => {
             ctx.save();
             ctx.beginPath();
             ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
             ctx.clip();
-            // 繪製雙色
+            
+            // 下半部：有色塑料感
             ctx.fillStyle = b.color;
-            ctx.fillRect(b.x - b.r, b.y - b.r, b.r*2, b.r);
-            ctx.fillStyle = "#fff";
             ctx.fillRect(b.x - b.r, b.y, b.r*2, b.r);
+            // 上半部：半透明罩感
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            ctx.fillRect(b.x - b.r, b.y - b.r, b.r*2, b.r);
+            
+            // 增加光澤球體感
+            let grad = ctx.createRadialGradient(b.x - 10, b.y - 10, 5, b.x, b.y, b.r);
+            grad.addColorStop(0, 'rgba(255,255,255,0.4)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.2)');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
+
             // 描邊
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-            ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke();
+            ctx.strokeStyle = "rgba(0,0,0,0.3)"; ctx.lineWidth = 2; ctx.stroke();
             ctx.restore();
         });
     }
 
-    function update() {
+    function physicsLoop() {
         balls.forEach(b => {
-            if(isSpinning) {
-                b.vx += (Math.random()-0.5)*18;
-                b.vy += (Math.random()-0.5)*18;
+            if(isRolling) {
+                b.vx += (Math.random()-0.5)*20;
+                b.vy += (Math.random()-0.5)*20;
             } else {
-                b.vy += 0.8; // 重力
+                b.vy += 0.8;
             }
             b.x += b.vx; b.y += b.vy;
-            b.vx *= 0.95; b.vy *= 0.95;
+            b.vx *= 0.96; b.vy *= 0.96;
 
-            // 圓艙碰撞
-            const dx = b.x - 150, dy = b.y - 150;
+            const dx = b.x - 160, dy = b.y - 160;
             const dist = Math.sqrt(dx*dx + dy*dy);
-            if(dist + b.r > 142) {
+            if(dist + b.r > 152) {
                 const angle = Math.atan2(dy, dx);
-                b.x = 150 + Math.cos(angle)*(142 - b.r);
-                b.y = 150 + Math.sin(angle)*(142 - b.r);
-                b.vx *= -0.7; b.vy *= -0.7;
+                b.x = 160 + Math.cos(angle)*(152 - b.r);
+                b.y = 160 + Math.sin(angle)*(152 - b.r);
+                b.vx *= -0.6; b.vy *= -0.6;
             }
         });
-        draw();
-        requestAnimationFrame(update);
+        drawBalls();
+        requestAnimationFrame(physicsLoop);
     }
 
     crank.onclick = () => {
-        if(isSpinning) return;
-        isSpinning = true;
-        outBall.classList.remove('dropped');
-        
+        if(isRolling) return;
+        isRolling = true;
+        crank.style.transform = 'rotate(720deg)';
+        finalBall.classList.remove('is-dropped');
+
         setTimeout(() => {
-            isSpinning = false;
-            const winColor = colors[Math.floor(Math.random()*colors.length)];
-            outBall.style.setProperty('--ball-color', winColor);
-            outBall.classList.add('dropped');
-        }, 1800);
+            isRolling = false;
+            crank.style.transform = 'rotate(0deg)';
+            const winColor = ballColors[Math.floor(Math.random()*ballColors.length)];
+            finalBall.style.setProperty('--ball-color', winColor);
+            finalBall.classList.add('is-dropped');
+        }, 2000);
     };
 
-    outBall.onclick = () => {
-        const p = ['5 點', '10 點', '20 點', '再玩一次', '神秘獎品'];
-        document.getElementById('prize-name').innerText = p[Math.floor(Math.random()*p.length)];
-        prizeModal.classList.add('active');
+    finalBall.onclick = () => {
+        const prizes = ['5 點', '10 點', '20 點', '大獎 100 點'];
+        document.getElementById('prize-val').innerText = prizes[Math.floor(Math.random()*prizes.length)];
+        overlay.style.display = 'block';
+        modal.classList.add('active');
     };
 
-    function closePrize() {
-        prizeModal.classList.remove('active');
-        outBall.classList.remove('dropped');
+    function resetGame() {
+        overlay.style.display = 'none';
+        modal.classList.remove('active');
+        finalBall.classList.remove('is-dropped');
     }
 
-    update();
+    physicsLoop();
 </script>
 
 </body>
