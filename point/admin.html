@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>夢工廠後台 - 最終修正版</title>
+    <title>夢工廠後台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
@@ -36,7 +36,7 @@
 
         <div id="tu" class="space-y-4">
             <input type="text" id="userSearch" oninput="renderUsers()" placeholder="🔍 搜尋會員暱稱..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500">
-            <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden"><table class="w-full text-left"><tbody id="userTable" class="divide-y divide-slate-700"></tbody></table></div>
+            <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl"><table class="w-full text-left"><tbody id="userTable" class="divide-y divide-slate-700"></tbody></table></div>
         </div>
         
         <div id="to" class="hidden space-y-3"><div id="orderList"></div></div>
@@ -55,6 +55,7 @@
                     </div>
                     <input type="text" id="pName" placeholder="商品名稱" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
                     <input type="number" id="pPrice" placeholder="點數" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
+                    
                     <div class="space-y-2">
                         <label class="text-[10px] text-slate-500 ml-1 uppercase tracking-widest">Product Image</label>
                         <div class="flex gap-2">
@@ -63,6 +64,7 @@
                         </div>
                         <div id="uploadStatus" class="text-[10px] text-yellow-500 ml-1 hidden font-bold italic animate-pulse">處理中...</div>
                     </div>
+
                     <textarea id="pDesc" placeholder="商品描述" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm h-24"></textarea>
                     <div class="flex items-center gap-2 p-2 bg-slate-900 rounded-xl border border-slate-700">
                         <span class="text-xs text-slate-500 ml-2">狀態：</span>
@@ -122,7 +124,9 @@
 
         function renderCategoryOptions() {
             const select = document.getElementById('pCat');
+            const currentVal = select.value;
             select.innerHTML = allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+            if (currentVal) select.value = currentVal;
         }
 
         function addCategory() {
@@ -168,6 +172,7 @@
             const l = document.getElementById('pList'); l.innerHTML = ''; 
             for(let id in allProducts) { 
                 const p = allProducts[id]; const isOn = p.status !== '下架'; 
+                // 修正：這裡傳入參數必須與 edit 函數對應
                 l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center mb-2 ${!isOn?'opacity-50 grayscale':''}"> 
                     <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover bg-slate-900 shadow-inner"> 
                     <div class="flex-1 overflow-hidden"> 
@@ -177,23 +182,21 @@
                     </div> 
                     <div class="flex gap-1.5"> 
                         <button onclick="toggleStatus('${id}','${p.status}')" class="px-3 py-1.5 rounded-xl bg-slate-700 text-[11px] font-bold">${isOn?'下架':'上架'}</button> 
-                        <button onclick="edit('${id}','${p.cat}','${p.name}',${p.price},'${p.img}','${p.desc}','${p.status}')" class="px-3 py-1.5 rounded-xl bg-blue-900/40 text-blue-400 border border-blue-900 text-[11px] font-bold">編輯</button> 
+                        <button onclick="edit('${id}')" class="px-3 py-1.5 rounded-xl bg-blue-900/40 text-blue-400 border border-blue-900 text-[11px] font-bold">編輯</button> 
                         <button onclick="deleteProd('${id}')" class="px-3 py-1.5 rounded-xl bg-red-900/40 text-red-400 border border-red-900 text-[11px] font-bold">刪除</button> 
                     </div> 
                 </div>`; 
             } 
         }
 
-        // --- 修正加點通知：修正 icon 未定義錯誤 ---
         function adj(uid) { 
             const val = parseInt(document.getElementById(`in-${uid}`).value); 
             if(isNaN(val)) return alert('請輸入數字'); 
             db.ref(`users/${uid}/points`).transaction(p => (p||0)+val, (err, comm) => { 
                 if(comm) { 
+                    const emoji = val > 0 ? '✅' : '✅';
                     const sign = val > 0 ? '+' : '';
-                    const emoji = val > 0 ? '✅' : '💰';
                     const action = val > 0 ? '已存入' : '已扣除';
-                    // 傳送給 GAS 的訊息內容
                     const msg = `${emoji} ${sign}${val} 點數${action}`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
                     document.getElementById(`in-${uid}`).value = ''; 
@@ -201,13 +204,12 @@
             }); 
         }
 
-        // --- 修正退款通知：增加 msg 參數 ---
         function refundOrder(oid, uid, amount) { 
             if(!confirm(`確認取消並退款 ${amount} 點？`)) return; 
             db.ref(`users/${uid}/points`).transaction(p => (p||0) + amount, (err, comm) => { 
                 if(comm) { 
                     db.ref(`orders/${oid}`).remove(); 
-                    const msg = `🎁 +${amount} 點數已退回`;
+                    const msg = `✅ +${amount} 點數已退回`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
                     alert('退款成功'); 
                 } 
@@ -225,8 +227,32 @@
             reset(); 
         }
 
-        function edit(id,c,n,p,i,d,s) { document.getElementById('editId').value = id; document.getElementById('pCat').value = c || '一般'; document.getElementById('pName').value = n; document.getElementById('pPrice').value = p; document.getElementById('pImg').value = i; document.getElementById('pDesc').value = d; document.getElementById('pStatus').value = s || '上架'; document.getElementById('fTitle').innerText = "✏️ 編輯商品"; window.scrollTo({top:0, behavior:'smooth'}); }
-        function reset() { document.getElementById('editId').value = ''; document.getElementById('pCat').value = allCategories[0] || '一般'; document.getElementById('pName').value = ''; document.getElementById('pPrice').value = ''; document.getElementById('pImg').value = ''; document.getElementById('pDesc').value = ''; document.getElementById('pStatus').value = '上架'; document.getElementById('fTitle').innerText = "🎁 商品編輯"; }
+        // 修正：編輯函數現在直接從資料庫抓取最新資料，避免參數過多導致出錯
+        function edit(id) { 
+            const p = allProducts[id];
+            if(!p) return;
+            document.getElementById('editId').value = id; 
+            document.getElementById('pCat').value = p.cat || '一般'; 
+            document.getElementById('pName').value = p.name; 
+            document.getElementById('pPrice').value = p.price; 
+            document.getElementById('pImg').value = p.img; 
+            document.getElementById('pDesc').value = p.desc || ''; 
+            document.getElementById('pStatus').value = p.status || '上架'; 
+            document.getElementById('fTitle').innerText = "✏️ 編輯商品"; 
+            window.scrollTo({top:0, behavior:'smooth'}); 
+        }
+
+        function reset() { 
+            document.getElementById('editId').value = ''; 
+            document.getElementById('pCat').value = allCategories[0] || '一般'; 
+            document.getElementById('pName').value = ''; 
+            document.getElementById('pPrice').value = ''; 
+            document.getElementById('pImg').value = ''; 
+            document.getElementById('pDesc').value = ''; 
+            document.getElementById('pStatus').value = '上架'; 
+            document.getElementById('fTitle').innerText = "🎁 商品編輯"; 
+        }
+
         function toggleOrder(oid, curr) { const next = curr === '待出貨' ? '已出貨' : '待出貨'; db.ref(`orders/${oid}`).update({ status: next }); }
     </script>
 </body>
