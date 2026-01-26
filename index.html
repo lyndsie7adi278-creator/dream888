@@ -123,7 +123,7 @@ window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
 
 function renderGrid(){
     const grid=document.getElementById('pGrid');grid.innerHTML='';
-if(_cc==='ALL'){const f=document.createElement('div');f.className='p-card free-gift';f.onclick=()=>window.open('https://www.dream888.fun/','_blank');f.innerHTML=`<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXctebrvF17FEKRNCVKtFvYXcMcDyG10dzlcsb3oEz_W0LE2fPrW9BEY9WSH1Ve8Mq4Y3f3zGVP0H8pROO-q55UMUG1jN_I_vhDeIvCag-xyq0BUuK0wGuQo4rzNkjy8_jmUCU-5oPXtxCI-kzaCUk0x?key=YeWJ8xYXVRuqJ155W25d4Q" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;grid.appendChild(f)}
+if(_cc==='ALL'){const f=document.createElement('div');f.className='p-card free-gift';f.onclick=()=>window.open('https://www.dream888.fun/live/','_blank');f.innerHTML=`<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXctebrvF17FEKRNCVKtFvYXcMcDyG10dzlcsb3oEz_W0LE2fPrW9BEY9WSH1Ve8Mq4Y3f3zGVP0H8pROO-q55UMUG1jN_I_vhDeIvCag-xyq0BUuK0wGuQo4rzNkjy8_jmUCU-5oPXtxCI-kzaCUk0x?key=YeWJ8xYXVRuqJ155W25d4Q" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;grid.appendChild(f)}
     const keys=Object.keys(_g).sort((a,b)=>(_g[a].order||99)-(_g[b].order||99));
     keys.forEach(id=>{
         const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
@@ -146,6 +146,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
