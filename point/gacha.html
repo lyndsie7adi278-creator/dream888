@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>夢工廠幸運扭蛋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: "PingFang TC", sans-serif; }
+        .gold-text { color: #eab308; }
+        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(3deg); } 75% { transform: rotate(-3deg); } }
+        .shaking { animation: shake 0.1s infinite; }
+        .modal-bg { background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); }
+        .win-glow { box-shadow: 0 0 50px rgba(234, 179, 8, 0.5); }
+    </style>
+</head>
+<body class="p-6 flex flex-col items-center justify-center min-h-screen">
+
+    <div class="text-center mb-6">
+        <h1 class="text-3xl font-black gold-text italic tracking-tighter uppercase">Lucky Gacha</h1>
+        <p class="text-slate-400 text-xs mt-1">每次扭蛋消耗 <span class="gold-text font-bold">500</span> 點</p>
+    </div>
+
+    <div id="machine" class="relative w-64 h-80 bg-slate-800 rounded-t-[4rem] rounded-b-2xl border-4 border-slate-700 shadow-2xl overflow-hidden mb-6">
+        <div class="absolute top-0 inset-x-0 h-48 bg-slate-900/50 flex flex-wrap p-6 justify-center items-end gap-2" id="ballPool">
+            <div class="w-10 h-10 rounded-full bg-red-500 shadow-inner"></div>
+            <div class="w-10 h-10 rounded-full bg-blue-500 shadow-inner"></div>
+            <div class="w-10 h-10 rounded-full bg-yellow-500 shadow-inner"></div>
+            <div class="w-10 h-10 rounded-full bg-green-500 shadow-inner"></div>
+            <div class="w-10 h-10 rounded-full bg-purple-500 shadow-inner"></div>
+        </div>
+        <div class="absolute bottom-0 inset-x-0 h-24 bg-slate-700 flex flex-col items-center justify-center">
+            <div id="knob" class="w-12 h-12 bg-slate-800 border-4 border-slate-600 rounded-full transition-transform duration-1000"></div>
+            <div class="w-12 h-4 bg-black rounded-t-lg mt-2"></div>
+        </div>
+    </div>
+
+    <div class="bg-slate-800 px-6 py-2 rounded-2xl border border-slate-700 mb-6 text-center">
+        <p class="text-[9px] text-slate-500 uppercase font-bold">我的點數餘額</p>
+        <p id="userPoints" class="text-xl font-black gold-text leading-none">---</p>
+    </div>
+
+    <button onclick="playGacha()" id="playBtn" class="w-full max-w-xs py-4 rounded-2xl bg-gold text-slate-900 font-black text-lg active:scale-95 transition shadow-lg">啟動扭蛋</button>
+
+    <div id="resultModal" class="fixed inset-0 modal-bg z-50 hidden flex flex-col items-center justify-center p-8">
+        <div class="bg-slate-800 p-8 rounded-[2.5rem] border border-gold win-glow text-center">
+            <p class="text-gold font-bold text-xs mb-1 uppercase tracking-widest">Bingo!</p>
+            <h2 id="winItem" class="text-2xl font-black text-white mb-4">---</h2>
+            <div class="bg-slate-900 p-4 rounded-2xl mb-6 border border-slate-700">
+                <p id="winType" class="gold-text font-bold text-sm">---</p>
+            </div>
+            <button onclick="closeModal()" class="w-full py-4 rounded-2xl bg-slate-700 font-bold text-sm">收下獎勵</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+            authDomain: "dream8-7b161.firebaseapp.com", 
+            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+            projectId: "dream8-7b161", 
+            storageBucket: "dream8-7b161.firebasestorage.app" 
+        };
+        const LIFF_ID = "2008968610-8dLoGQie";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec";
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let user = { id: "", name: "", points: 0 };
+
+        async function init() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) { liff.login(); } else {
+                    const profile = await liff.getProfile();
+                    user.id = profile.userId;
+                    user.name = profile.displayName;
+                    db.ref('users/' + user.id + '/points').on('value', snap => {
+                        user.points = snap.val() || 0;
+                        document.getElementById('userPoints').innerText = user.points.toLocaleString();
+                    });
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function playGacha() {
+            if (user.points < 500) return alert("點數不足！");
+            const btn = document.getElementById('playBtn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
+            // 啟動前端動畫
+            document.getElementById('machine').classList.add('shaking');
+            document.getElementById('knob').style.transform = 'rotate(720deg)';
+
+            try {
+                // 向 GAS 請求抽獎結果 (安全性關鍵：機率在後端跑)
+                const response = await fetch(`${GAS_URL}?action=gacha&userId=${user.id}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    setTimeout(() => {
+                        document.getElementById('machine').classList.remove('shaking');
+                        document.getElementById('knob').style.transform = 'rotate(0deg)';
+                        showResult(result.prize);
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50');
+                    }, 2000);
+                } else {
+                    alert(result.msg);
+                    document.getElementById('machine').classList.remove('shaking');
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50');
+                }
+            } catch (err) {
+                alert("網路異常，請稍後再試");
+                document.getElementById('machine').classList.remove('shaking');
+                btn.disabled = false;
+            }
+        }
+
+        function showResult(p) {
+            document.getElementById('winItem').innerText = p.name;
+            document.getElementById('winType').innerText = p.type;
+            document.getElementById('resultModal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('resultModal').classList.add('hidden'); }
+        window.onload = init;
+    </script>
+</body>
+</html>
