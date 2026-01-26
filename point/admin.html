@@ -192,6 +192,7 @@
             if(isNaN(val)) return alert('請輸入數字'); 
             db.ref(`users/${uid}/points`).transaction(p => (p||0)+val, (err, comm) => { 
                 if(comm) { 
+                    const sign = val > 0 ? '+' : '';
                     const action = val > 0 ? '已存入' : '已扣除';
                     const msg = `${icon} ${sign}${val} 點數${action}`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
@@ -231,6 +232,7 @@
     </script>
 </body>
 </html>
+
 
 
 
