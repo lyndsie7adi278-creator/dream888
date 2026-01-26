@@ -15,7 +15,6 @@
         .cat-btn.active { background: #eab308; color: #111; font-weight: 700; border-color: #eab308; }
         .modal-bg { background: rgba(0,0,0,0.95); backdrop-filter: blur(12px); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .letter-normal { letter-spacing: 0.025em; }
         #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #eab308; color: #111; padding: 8px 20px; border-radius: 99px; font-weight: bold; font-size: 14px; z-index: 100; display: none; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3rem; }
         .desc-scroll::-webkit-scrollbar { width: 4px; }
@@ -27,7 +26,7 @@
 
     <div class="bg-slate-800 rounded-3xl p-6 mb-4 text-center border border-slate-700 shadow-2xl relative overflow-hidden">
         <div class="absolute top-0 right-0 p-4">
-            <button onclick="openHistory()" class="bg-slate-900/50 p-2 rounded-xl text-[11px] font-bold border border-slate-700 gold-text uppercase letter-normal active:scale-95 transition">兌換紀錄</button>
+            <button onclick="openHistory()" class="bg-slate-900/50 p-2 rounded-xl text-[11px] font-bold border border-slate-700 gold-text uppercase active:scale-95 transition">兌換紀錄</button>
         </div>
         <p class="text-slate-400 text-xs font-medium mb-1 uppercase tracking-widest">目前持有點數</p>
         <h1 id="userPoints" class="text-5xl font-bold gold-text">---</h1>
@@ -101,7 +100,7 @@
                     user.name = profile.displayName;
                     syncData();
                 }
-            } catch (err) { console.error("LIFF Init Error:", err); }
+            } catch (err) { console.error("LIFF Error:", err); }
         }
 
         function syncData() {
@@ -174,9 +173,11 @@
                         reason: `商城兌換: ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
                     });
 
-                    // 重要：通知格式簡化，確保 GAS 讀取成功
-                    const notifyMsg = `兌換成功\n項目：${currentItem.name} x ${qty}\n消耗：${totalCost} 點`;
-                    fetch(`${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(notifyMsg)}`, { mode: 'no-cors' });
+                    // 通知邏輯
+                    const notifyMsg = "兌換成功\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
+                    const finalUrl = GAS_URL + "?userId=" + user.id + "&msg=" + encodeURIComponent(notifyMsg);
+                    
+                    fetch(finalUrl, { mode: 'no-cors' });
 
                     alert("兌換成功！請跟官方Line確認收件資訊。");
                     closeModal();
@@ -194,7 +195,7 @@
                 Object.values(o).reverse().forEach(ord => {
                     const isDone = ord.status === '已出貨';
                     const hasTrack = ord.trackNo && ord.trackNo.trim() !== "";
-                    list.innerHTML += `<div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner"> <div class="flex justify-between items-start mb-3"> <div class="flex-1 pr-2"> <p class="font-bold text-slate-100 text-lg leading-tight">${ord.itemName}</p> <p class="text-[10px] text-slate-500 mt-1 uppercase">數量：${ord.qty} | 消耗 ${ord.total.toLocaleString()} 點</p> </div> <span class="text-[10px] px-3 py-1 rounded-full border whitespace-nowrap ${isDone?'border-green-500 text-green-500 font-black bg-green-500/10':'border-yellow-500 text-yellow-500 font-black bg-yellow-500/10'}">${ord.status}</span> </div> ${hasTrack ? `<div class="mt-4 p-4 bg-slate-900/80 rounded-2xl border border-blue-900/30"> <div class="flex items-center justify-between mb-2"> <span class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">7-11 編號</span> <button onclick="copyTrack('${ord.trackNo}')" class="text-[11px] bg-slate-700 text-white px-3 py-1 rounded-lg font-bold">複製</button> </div> <div class="flex items-center justify-between"> <code class="text-blue-400 font-mono text-base font-bold tracking-wider">${ord.trackNo}</code> <a href="https://tracking.shopmore.com.tw/" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold active:scale-90 transition">查詢</a> </div> </div>` : (isDone ? '<p class="text-[10px] text-slate-600 italic mt-2">※ 貨單處理中</p>' : '')} <p class="text-[10px] text-slate-600 mt-4 font-bold text-right">${new Date(ord.time).toLocaleString()}</p> </div>`;
+                    list.innerHTML += `<div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner"> <div class="flex justify-between items-start mb-3"> <div class="flex-1 pr-2"> <p class="font-bold text-slate-100 text-lg leading-tight">${ord.itemName}</p> <p class="text-[10px] text-slate-500 mt-1 uppercase">數量：${ord.qty} | 消耗 ${ord.total.toLocaleString()} 點</p> </div> <span class="text-[10px] px-3 py-1 rounded-full border whitespace-nowrap ${isDone?'border-green-500 text-green-500 font-black bg-green-500/10':'border-yellow-500 text-yellow-500 font-black bg-yellow-500/10'}">${ord.status}</span> </div> ${hasTrack ? `<div class="mt-4 p-4 bg-slate-900/80 rounded-2xl border border-blue-900/30"> <div class="flex items-center justify-between mb-2"> <span class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">7-11 貨單號碼</span> <button onclick="copyTrack('${ord.trackNo}')" class="text-[11px] bg-slate-700 text-white px-3 py-1 rounded-lg font-bold">複製</button> </div> <div class="flex items-center justify-between"> <code class="text-blue-400 font-mono text-base font-bold tracking-wider">${ord.trackNo}</code> <a href="https://tracking.shopmore.com.tw/" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold active:scale-90 transition">查詢</a> </div> </div>` : (isDone ? '<p class="text-[10px] text-slate-600 italic mt-2">※ 貨單處理中</p>' : '')} <p class="text-[10px] text-slate-600 mt-4 font-bold text-right">${new Date(ord.time).toLocaleString()}</p> </div>`;
                 });
             });
         }
