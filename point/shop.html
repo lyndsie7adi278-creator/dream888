@@ -54,9 +54,7 @@
                     <span id="mPrice" class="gold-text font-black text-2xl whitespace-nowrap"></span>
                 </div>
                 
-                <div class="h-44 overflow-y-auto mb-4 desc-scroll pr-1 border-y border-slate-700/50 py-3">
-                    <p id="mDesc" class="text-slate-400 text-sm leading-relaxed text-justify whitespace-pre-wrap"></p>
-                </div>
+                <div class="h-44 overflow-y-auto mb-4 desc-scroll pr-1 border-y border-slate-700/50 py-3 text-slate-400 text-sm leading-relaxed text-justify whitespace-pre-wrap" id="mDesc"></div>
 
                 <div class="flex items-center justify-between bg-slate-900 rounded-2xl p-2 mb-4 border border-slate-700 shadow-inner">
                     <button onclick="adjQty(-1)" class="w-10 h-10 text-2xl font-bold gold-text active:scale-75 transition">-</button>
@@ -196,20 +194,25 @@
 
         function closeModal() { document.getElementById('itemModal').classList.add('hidden'); }
 
+        // --- 核心修正函數：確保通知觸發 ---
         async function confirmRedeem() {
             const totalCost = (currentItem.price || 0) * qty;
             if(user.points < totalCost) return alert("您的點數餘額不足！");
+            
             if(confirm(`確定要兌換 ${qty} 個「${currentItem.name}」嗎？\n總計扣除：${totalCost.toLocaleString()} 點`)) {
                 try {
                     const newTotal = user.points - totalCost;
                     const orderId = db.ref('orders').push().key;
+
+                    // 1. 同步執行 Firebase 更新 (確保順序)
                     await db.ref('users/' + user.id).update({ points: newTotal });
-                    const orderData = {
+                    
+                    await db.ref('orders/' + orderId).set({
                         userId: user.id, userName: user.name,
                         itemName: currentItem.name, qty: qty, total: totalCost,
                         time: Date.now(), status: '待出貨'
-                    };
-                    await db.ref('orders/' + orderId).set(orderData);
+                    });
+
                     await db.ref('logs').push({
                         time: Date.now(),
                         userId: user.id,
@@ -218,11 +221,21 @@
                         change: -totalCost,
                         after: newTotal
                     });
-                    const lineMsg = `🎁 兌換成功！ -${totalCost} 點\n項目：${currentItem.name} x ${qty}`;
-                    fetch(`${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(lineMsg)}`, { mode: 'no-cors' });
+
+                    // 2. 觸發通知：訊息內容必須包含 "兌換成功" 四個字供 GAS 判斷
+                    // 移除訊息開頭的特殊符號 🎁 以防編號解析錯誤
+                    const notifyMsg = `兌換成功！\n項目：${currentItem.name} x ${qty}\n消耗點數：${totalCost}\n當前餘額：${newTotal}`;
+                    
+                    // 使用 fetch 發送到 GAS
+                    const finalUrl = `${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(notifyMsg)}`;
+                    fetch(finalUrl, { mode: 'no-cors' });
+
                     alert("兌換成功！請跟官方Line確認收件資訊。");
                     closeModal();
-                } catch (err) { alert("系統忙碌中，請稍後再試。"); }
+                } catch (err) { 
+                    console.error("Redeem Error:", err);
+                    alert("系統忙碌中，請稍後再試。"); 
+                }
             }
         }
 
