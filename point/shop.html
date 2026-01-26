@@ -25,6 +25,10 @@
             overflow: hidden;
             min-height: 3rem; 
         }
+
+        /* 滾動條樣式優化，讓用戶知道可以滑動 */
+        .desc-scroll::-webkit-scrollbar { width: 4px; }
+        .desc-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
 </head>
 <body class="p-4 pb-20">
@@ -43,33 +47,35 @@
 
     <div id="itemModal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-6">
         <div class="bg-slate-800 w-full max-w-sm rounded-[2.5rem] overflow-hidden border border-slate-700 shadow-2xl animate-in fade-in zoom-in duration-300">
-            <img id="mImg" src="" class="w-full h-56 object-cover bg-slate-900 shadow-inner">
+            <img id="mImg" src="" class="w-full h-48 object-cover bg-slate-900 shadow-inner">
             <div class="p-6">
-                <div class="flex justify-between items-start mb-3">
-                    <h2 id="mName" class="text-2xl font-bold flex-1 pr-2"></h2>
-                    <span id="mPrice" class="gold-text font-extrabold text-2xl whitespace-nowrap"></span>
+                <div class="flex justify-between items-start mb-2">
+                    <h2 id="mName" class="text-xl font-bold flex-1 pr-2 leading-tight"></h2>
+                    <span id="mPrice" class="gold-text font-black text-xl whitespace-nowrap"></span>
                 </div>
-                <div class="h-24 overflow-y-auto mb-6 no-scrollbar">
-                    <p id="mDesc" class="text-slate-400 text-base leading-relaxed text-justify whitespace-pre-wrap"></p>
+                
+                <div class="h-48 overflow-y-auto mb-4 desc-scroll pr-1 border-y border-slate-700/50 py-2">
+                    <p id="mDesc" class="text-slate-400 text-sm leading-relaxed text-justify whitespace-pre-wrap"></p>
                 </div>
-                <div class="flex items-center justify-between bg-slate-900 rounded-2xl p-2 mb-6 border border-slate-700 shadow-inner">
-                    <button onclick="adjQty(-1)" class="w-12 h-12 text-2xl font-bold gold-text active:scale-75 transition">-</button>
+
+                <div class="flex items-center justify-between bg-slate-900 rounded-2xl p-2 mb-4 border border-slate-700 shadow-inner">
+                    <button onclick="adjQty(-1)" class="w-10 h-10 text-2xl font-bold gold-text active:scale-75 transition">-</button>
                     <div class="text-center">
-                        <span id="mQty" class="text-xl font-bold">1</span>
-                        <p class="text-[10px] text-slate-500 font-bold uppercase">數量</p>
+                        <span id="mQty" class="text-lg font-bold">1</span>
+                        <p class="text-[9px] text-slate-500 font-bold uppercase">數量</p>
                     </div>
-                    <button onclick="adjQty(1)" class="w-12 h-12 text-2xl font-bold gold-text active:scale-75 transition">+</button>
+                    <button onclick="adjQty(1)" class="w-10 h-10 text-2xl font-bold gold-text active:scale-75 transition">+</button>
                 </div>
 
                 <div class="text-center mb-4 px-2">
                     <p class="text-[10px] text-red-500 font-bold animate-pulse leading-tight">
-                        ※ 點擊兌換即代表您已閱讀並同意上述兌換說明與收貨須知
+                        ※ 點擊兌換即代表您同意上述說明與收貨須知
                     </p>
                 </div>
 
                 <div class="flex gap-3">
-                    <button onclick="closeModal()" class="flex-1 py-4 rounded-2xl font-bold bg-slate-700 active:scale-95 transition text-sm">返回</button>
-                    <button onclick="confirmRedeem()" class="flex-[2] py-4 rounded-2xl font-bold bg-gold text-slate-900 shadow-lg active:scale-95 transition text-sm">確認兌換</button>
+                    <button onclick="closeModal()" class="flex-1 py-3.5 rounded-2xl font-bold bg-slate-700 active:scale-95 transition text-sm">返回</button>
+                    <button onclick="confirmRedeem()" class="flex-[2] py-3.5 rounded-2xl font-bold bg-gold text-slate-900 shadow-lg active:scale-95 transition text-sm">確認兌換</button>
                 </div>
             </div>
         </div>
@@ -177,6 +183,8 @@
             document.getElementById('mDesc').innerText = currentItem.desc || "此商品尚無詳細介紹內容。";
             document.getElementById('mQty').innerText = qty;
             document.getElementById('itemModal').classList.remove('hidden');
+            // 每次打開彈窗，自動滾動描述區域到頂部
+            document.querySelector('.desc-scroll').scrollTop = 0;
         }
 
         function adjQty(v) {
@@ -194,19 +202,13 @@
                 try {
                     const newTotal = user.points - totalCost;
                     const orderId = db.ref('orders').push().key;
-
-                    // 1. 更新使用者點數
                     await db.ref('users/' + user.id).update({ points: newTotal });
-                    
-                    // 2. 建立訂單
                     const orderData = {
                         userId: user.id, userName: user.name,
                         itemName: currentItem.name, qty: qty, total: totalCost,
                         time: Date.now(), status: '待出貨'
                     };
                     await db.ref('orders/' + orderId).set(orderData);
-
-                    // 3. 寫入日誌 Log
                     await db.ref('logs').push({
                         time: Date.now(),
                         userId: user.id,
@@ -215,11 +217,8 @@
                         change: -totalCost,
                         after: newTotal
                     });
-
-                    // 4. 發送 LINE 通知
                     const lineMsg = `🎁 兌換成功！ -${totalCost} 點\n項目：${currentItem.name} x ${qty}`;
                     fetch(`${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(lineMsg)}`, { mode: 'no-cors' });
-                    
                     alert("兌換成功！請跟官方Line確認收件資訊。");
                     closeModal();
                 } catch (err) { alert("系統忙碌中，請稍後再試。"); }
@@ -229,16 +228,14 @@
         function openHistory() {
             document.getElementById('historyModal').classList.remove('hidden');
             const list = document.getElementById('historyList');
-            list.innerHTML = '<div class="text-center py-10 text-slate-500 font-bold italic">連線夢工廠紀錄中...</div>';
+            list.innerHTML = '<div class="text-center py-10 text-slate-500 font-bold italic">讀取中...</div>';
             
             db.ref('orders').orderByChild('userId').equalTo(user.id).once('value', s => {
                 const o = s.val(); list.innerHTML = '';
                 if(!o) { list.innerHTML = '<div class="text-center py-10 text-slate-500">尚無兌換紀錄</div>'; return; }
-                
                 Object.values(o).reverse().forEach(ord => {
                     const isDone = ord.status === '已出貨';
                     const hasTrack = ord.trackNo && ord.trackNo.trim() !== "";
-                    
                     list.innerHTML += `
                     <div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner">
                         <div class="flex justify-between items-start mb-3">
@@ -252,11 +249,11 @@
                         <div class="mt-4 p-4 bg-slate-900/80 rounded-2xl border border-blue-900/30">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">7-11 交貨便編號</span>
-                                <button onclick="copyTrack('${ord.trackNo}')" class="text-[10px] bg-slate-700 text-white px-3 py-1 rounded-lg active:scale-90 transition font-bold">複製</button>
+                                <button onclick="copyTrack('${ord.trackNo}')" class="text-[11px] bg-slate-700 text-white px-3 py-1 rounded-lg active:scale-90 transition font-bold">複製</button>
                             </div>
                             <div class="flex items-center justify-between">
                                 <code class="text-blue-400 font-mono text-lg font-bold tracking-wider">${ord.trackNo}</code>
-                                <a href="https://emap.pcsc.com.tw/lib/lib001.aspx" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold shadow-lg shadow-blue-900/20 active:scale-90 transition">官網查詢</a>
+                                <a href="https://emap.pcsc.com.tw/lib/lib001.aspx" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold active:scale-90 transition">官網查詢</a>
                             </div>
                         </div>
                         ` : (isDone ? '<p class="text-[10px] text-slate-600 italic mt-2">※ 貨單處理中</p>' : '')}
