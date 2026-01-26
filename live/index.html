@@ -180,12 +180,10 @@
         if(d) {
             const takenCount = d.filter(x => x.taken).length;
             document.getElementById('d_ct').innerText = takenCount;
-            // 🚀 修改：進度條分母 40
             document.getElementById('p_br').style.width = (takenCount / 40 * 100) + "%";
             document.getElementById('g_d').innerHTML = d.slice(0, 40).map((x, i) => {
                 const n = parseInt(x.grade); 
                 const isTaken = x.taken; 
-                // 🚀 修改：前 10 號發出中獎發光
                 const isWinner = (n >= 1 && n <= 10);
                 const isRevealing = (_rI === i);
                 const isLocked = (isTaken && !_dn.has(n) && !_gS_rev);
@@ -199,7 +197,6 @@
         document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => {
             const ni = parseInt(n);
             const t = _dn.has(ni); 
-            // 🚀 1-10 統一套用金色 (tp)
             let c = (ni >= 1 && ni <= 10) ? 'tp' : '';
             return `<div class="p_item ${c} ${t?'tk':''}"><span class="p_badge">${_fm(n)}</span> ${m}</div>`;
         }).join('');
@@ -207,7 +204,6 @@
 
     async function _ex(i) {
         if(_ip) return; _ip = true;
-        // 🚀 修改：物理移除所有配率干預邏輯，完全隨機號碼
         _rT(_poolRef, (v) => {
             if (!v || v[i].taken) return v;
             v[i].taken = true; 
@@ -273,7 +269,6 @@
         let l=0, r=0, g=0;
         document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _0x_k_val) { 
             await _rm(_liveRef); 
-            // 🚀 修改：初始化 40 張卡片
             let n=[]; for(let i=1; i<=40; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); alert("DONE"); location.reload(); 
         } } };
         document.getElementById('r_st').onclick=()=>{ r++; if(r>=5){ r=0; const p = prompt(""); if(p === _0x_k_val) _sU('c'); } };
