@@ -10,7 +10,7 @@
     <style>
         :root { 
             --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; 
-            --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50;
+            --gold-glow: rgba(255, 215, 0, 0.6); --dark: #2c3e50;
         }
         * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; box-sizing: border-box; }
         body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
@@ -30,7 +30,6 @@
         .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
         .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
         
-        /* 🚀 1-10 統一金色光 */
         .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
         .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
 
@@ -44,11 +43,11 @@
         .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, #ffb7c5, #ff8fa3); display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; border: 2px solid #fff; color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 0 #e67e91; position: relative; }
         .t_s:not(.so):not(.rv):not(.pk)::after { content: "㊗️"; } 
         .t_s.so { background: #f2f2f2 !important; color: #bbb; box-shadow: none; cursor: default; }
-        .t_s.so::after { content: attr(data-val); font-size: 0.85rem; font-weight: bold; color: #ccc; }
+        .t_s.so::after { content: attr(data-display); font-size: 0.85rem; font-weight: bold; color: #ccc; }
         
-        /* 🚀 抽中 1-10 號卡片發金色光 */
+        /* 抽中 1-10 號卡片發金色光 */
         .t_s.rv { background: #fff9e6 !important; border: 3px solid var(--g) !important; box-shadow: 0 0 15px var(--gold-glow) !important; animation: prize-jump 1.2s infinite; z-index: 5; }
-        .t_s.rv::after { content: attr(data-val) !important; color: #222 !important; font-weight: 900 !important; font-size: 1.1rem !important; }
+        .t_s.rv::after { content: attr(data-display) !important; color: #222 !important; font-weight: 900 !important; font-size: 1.1rem !important; }
         
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
         .modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 300px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
@@ -70,7 +69,7 @@
 
 <div class="p_board">
     <div class="p_title">🎁 今日獎項對照 🎁</div>
-    <div class="p_grid" id="p_g"></div>
+    <div id="p_g" class="p_grid"></div>
 </div>
 
 <div class="progress-box">
@@ -82,7 +81,7 @@
 
 <div style="width: 90%; max-width: 450px; margin-bottom: 20px;">
     <div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時中獎紀錄</div>
-    <div class="h_list" id="h_l"></div>
+    <div id="h_l" class="h_list"></div>
     <div style="min-height:30px;" onclick="_g_st_ck()"></div>
     <div style="margin-top:20px; font-size:0.7rem; color:#bbb; text-align:center;">&copy; 2026 PREMIUM SLOTS PLATFORM</div>
 </div>
@@ -114,7 +113,15 @@
 
     window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; };
     window._clO = async () => { if (_tm) clearInterval(_tm); if (!_iv) { await _liveRef.update({ isRevealed: true }); setTimeout(() => _liveRef.remove(), 1200); } _ip = false; _iv = false; _s_i = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); };
-    window._ck_i_click = (i, s) => { if(s || _ip) return; _s_i = i; if(_u_c !== "" && _u_q > 0) _ex(i); else document.getElementById('_m_01').style.display = 'flex'; };
+    
+    // 修正點擊格子邏輯
+    window._ck_i_click = (i, s) => { 
+        if(s || _ip) return; 
+        _s_i = i; 
+        if(_u_c !== "" && _u_q > 0) _ex(i); 
+        else document.getElementById('_m_01').style.display = 'flex'; 
+    };
+
     window._v_cl = async () => { 
         const v = document.getElementById('_i_01').value.trim().toUpperCase(); 
         const s = await _Db.ref('coupons/' + v).get();
@@ -152,12 +159,12 @@
     }
 
     function _s_M(e) { if(!_id || !_cx || _iv) return; if (e.cancelable) e.preventDefault(); const r = _cv.getBoundingClientRect(); const x = (e.clientX || (e.touches?e.touches[0].clientX:0)) - r.left; const y = (e.clientY || (e.touches?e.touches[0].clientY:0)) - r.top; _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); if(!_iv) _ptsRef.push({ x: Math.round(x), y: Math.round(y) }); }
-    function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cx.canvas.height).data; let count = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) count++; if (count > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _liveRef.update({ isRevealed: true }); if (parseInt(window._l_w) <= 10) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
+    function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let count = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) count++; if (count > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _liveRef.update({ isRevealed: true }); if (parseInt(window._l_w) <= 10) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
     function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
     async function _rfQ() { if(!_u_c) return; const s = await _Db.ref('coupons/' + _u_c).get(); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span onclick="_sw_c()" style="cursor:pointer;color:#aaa;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('u_q').innerText = "點選格子驗證"; } }
     window._sw_c = () => { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; };
 
-    _histRef.on('value', (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item">👤 <b>${x.c}</b> <span>${_fm(x.g)}</span></div>`).join(''); } });
+    _histRef.on('value', (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>👤 <b>${x.c}</b> <span>${_fm(x.g)}</span></span></div>`).join(''); } });
     _poolRef.on('value', (s) => { 
         const d = s.val(); if(d) { 
             _ip = false; const tc = d.filter(x => x.taken).length;
@@ -167,7 +174,7 @@
                 const rv = (_rI === i); const lk = (taken && !_dn.has(ni));
                 let cls = `t_s ${taken && !rv && !lk ?'so':''} ${taken && winner && !rv && !lk ? 'rv' : ''} ${rv || lk ?'pk':''}`;
                 let disp = (taken && !rv && !lk) ? _fm(ni) : "";
-                return `<div class="${cls}" data-val="${disp}" onclick="_ck_i_click(${i}, ${taken})"></div>`; 
+                return `<div class="${cls}" data-display="${disp}" onclick="_ck_i_click(${i}, ${taken})"></div>`; 
             }).join(''); 
         } 
         document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
@@ -182,9 +189,8 @@
     window._l_st_ck = async () => { if(prompt("") === _p_key) { await _liveRef.remove(); let n=[]; for(let i=1;i<=40;i++)n.push(i); n.sort(()=>Math.random()-0.5); await _poolRef.set(n.map(v=>({grade:v,taken:false}))); await _histRef.set(null); location.reload(); } };
     window._r_st_ck = () => { if(prompt("") === _p_key) _sU('c'); };
     window._g_st_ck = () => { if(prompt("") === _p_key) _sU('g'); };
-    function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<input type="number" id="_i_02" value="1"><button onclick="_s1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>狀態：40張完全隨機分配</p>`; document.getElementById('_m_02').style.display='flex'; }
+    function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<input type="number" id="_i_02" value="1"><button onclick="_s1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>狀態：完全隨機分配中</p>`; document.getElementById('_m_02').style.display='flex'; }
     window._s1 = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _Db.ref('coupons/'+c).set(n); alert(c); };
-    window.onload = () => { _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ(); };
 </script>
 </body>
 </html>
