@@ -18,6 +18,7 @@
         .letter-normal { letter-spacing: 0.025em; }
         #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #eab308; color: #111; padding: 8px 20px; border-radius: 99px; font-weight: bold; font-size: 14px; z-index: 100; display: none; }
         
+        /* 兩行顯示優化 */
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -26,7 +27,7 @@
             min-height: 3rem; 
         }
 
-        /* 滾動條樣式優化，讓用戶知道可以滑動 */
+        /* 滾動條提示 */
         .desc-scroll::-webkit-scrollbar { width: 4px; }
         .desc-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
@@ -43,6 +44,7 @@
     </div>
 
     <div id="categoryBar" class="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar"></div>
+
     <div id="productGrid" class="grid grid-cols-2 gap-3 pb-10"></div>
 
     <div id="itemModal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-6">
@@ -69,7 +71,7 @@
 
                 <div class="text-center mb-4 px-2">
                     <p class="text-[10px] text-red-500 font-bold animate-pulse leading-tight">
-                        ※ 點擊兌換即代表您同意上述說明與收貨須知
+                        ※ 點擊兌換即代表您已閱讀並同意兌換說明與收貨須知
                     </p>
                 </div>
 
@@ -153,17 +155,26 @@
             });
         }
 
+        // --- 商品渲染 (含排序邏輯) ---
         function renderProducts(cat) {
             document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.innerText === cat));
             const grid = document.getElementById('productGrid');
             grid.innerHTML = '';
+            
+            // 轉換為陣列並進行排序
+            let items = [];
             for(let id in allProducts) {
-                const p = allProducts[id];
-                if(p.status === '下架') continue;
-                if(cat !== '全部' && p.cat !== cat) continue;
+                items.push({ id, ...allProducts[id] });
+            }
+            // 依照排序數字 (1最前) 排序
+            items.sort((a, b) => (a.sort || 99) - (b.sort || 99));
+
+            items.forEach(p => {
+                if(p.status === '下架') return;
+                if(cat !== '全部' && p.cat !== cat) return;
                 
                 grid.innerHTML += `
-                    <div onclick="openModal('${id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg flex flex-col">
+                    <div onclick="openModal('${p.id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg flex flex-col">
                         <img src="${p.img}" class="w-full h-36 object-cover border-b border-slate-700">
                         <div class="p-4 flex-1">
                             <p class="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wider">${p.cat || '一般'}</p>
@@ -171,7 +182,7 @@
                             <p class="gold-text font-black text-lg">${(p.price || 0).toLocaleString()} <span class="text-xs">點</span></p>
                         </div>
                     </div>`;
-            }
+            });
         }
 
         function openModal(id) {
@@ -180,11 +191,12 @@
             document.getElementById('mImg').src = currentItem.img;
             document.getElementById('mName').innerText = currentItem.name;
             document.getElementById('mPrice').innerText = currentItem.price.toLocaleString() + " 點";
-            document.getElementById('mDesc').innerText = currentItem.desc || "此商品尚無詳細介紹內容。";
+            document.getElementById('mDesc').innerText = currentItem.desc || "無說明";
             document.getElementById('mQty').innerText = qty;
             document.getElementById('itemModal').classList.remove('hidden');
-            // 每次打開彈窗，自動滾動描述區域到頂部
-            document.querySelector('.desc-scroll').scrollTop = 0;
+            // 重置描述區捲動位置
+            const descBox = document.querySelector('.desc-scroll');
+            if(descBox) descBox.scrollTop = 0;
         }
 
         function adjQty(v) {
@@ -194,6 +206,7 @@
 
         function closeModal() { document.getElementById('itemModal').classList.add('hidden'); }
 
+        // --- 確認兌換 (含日誌系統同步) ---
         async function confirmRedeem() {
             const totalCost = (currentItem.price || 0) * qty;
             if(user.points < totalCost) return alert("您的點數餘額不足！");
@@ -202,23 +215,32 @@
                 try {
                     const newTotal = user.points - totalCost;
                     const orderId = db.ref('orders').push().key;
+
+                    // 1. 更新使用者點數
                     await db.ref('users/' + user.id).update({ points: newTotal });
+                    
+                    // 2. 建立訂單
                     const orderData = {
                         userId: user.id, userName: user.name,
                         itemName: currentItem.name, qty: qty, total: totalCost,
                         time: Date.now(), status: '待出貨'
                     };
                     await db.ref('orders/' + orderId).set(orderData);
+
+                    // 3. 寫入異動日誌 Log (後台異動查詢會出現)
                     await db.ref('logs').push({
                         time: Date.now(),
                         userId: user.id,
                         userName: user.name,
                         reason: `商城兌換: ${currentItem.name} x${qty}`,
-                        change: -totalCost,
+                        change: -totalCost, // 扣點為負
                         after: newTotal
                     });
+
+                    // 4. 發送 LINE 通知
                     const lineMsg = `🎁 兌換成功！ -${totalCost} 點\n項目：${currentItem.name} x ${qty}`;
                     fetch(`${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(lineMsg)}`, { mode: 'no-cors' });
+                    
                     alert("兌換成功！請跟官方Line確認收件資訊。");
                     closeModal();
                 } catch (err) { alert("系統忙碌中，請稍後再試。"); }
@@ -232,16 +254,18 @@
             
             db.ref('orders').orderByChild('userId').equalTo(user.id).once('value', s => {
                 const o = s.val(); list.innerHTML = '';
-                if(!o) { list.innerHTML = '<div class="text-center py-10 text-slate-500">尚無兌換紀錄</div>'; return; }
+                if(!o) { list.innerHTML = '<div class="text-center py-10 text-slate-500 font-bold">尚無兌換紀錄</div>'; return; }
+                
                 Object.values(o).reverse().forEach(ord => {
                     const isDone = ord.status === '已出貨';
                     const hasTrack = ord.trackNo && ord.trackNo.trim() !== "";
+                    
                     list.innerHTML += `
                     <div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner">
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex-1 pr-2">
                                 <p class="font-bold text-slate-100 text-lg leading-tight">${ord.itemName}</p>
-                                <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-widest">數量：${ord.qty} | 消耗 ${ord.total.toLocaleString()} 點</p>
+                                <p class="text-[10px] text-slate-500 mt-1 uppercase">數量：${ord.qty} | 消耗 ${ord.total.toLocaleString()} 點</p>
                             </div>
                             <span class="text-[10px] px-3 py-1 rounded-full border whitespace-nowrap ${isDone?'border-green-500 text-green-500 font-black bg-green-500/10':'border-yellow-500 text-yellow-500 font-black bg-yellow-500/10'}">${ord.status}</span>
                         </div>
@@ -252,8 +276,8 @@
                                 <button onclick="copyTrack('${ord.trackNo}')" class="text-[11px] bg-slate-700 text-white px-3 py-1 rounded-lg active:scale-90 transition font-bold">複製</button>
                             </div>
                             <div class="flex items-center justify-between">
-                                <code class="text-blue-400 font-mono text-lg font-bold tracking-wider">${ord.trackNo}</code>
-                                <a href="https://tracking.shopmore.com.tw/" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold active:scale-90 transition">官網查詢</a>
+                                <code class="text-blue-400 font-mono text-base font-bold tracking-wider">${ord.trackNo}</code>
+                                <a href="https://emap.pcsc.com.tw/lib/lib001.aspx" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold active:scale-90 transition shadow-lg shadow-blue-900/50">官網查詢</a>
                             </div>
                         </div>
                         ` : (isDone ? '<p class="text-[10px] text-slate-600 italic mt-2">※ 貨單處理中</p>' : '')}
