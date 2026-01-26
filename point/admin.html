@@ -39,7 +39,9 @@
             <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl"><table class="w-full text-left"><tbody id="userTable" class="divide-y divide-slate-700"></tbody></table></div>
         </div>
         
-        <div id="to" class="hidden space-y-3"><div id="orderList"></div></div>
+        <div id="to" class="hidden space-y-3">
+            <div id="orderList" class="space-y-3"></div>
+        </div>
 
         <div id="tp" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-4 bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-xl h-fit sticky top-6">
@@ -55,7 +57,6 @@
                     </div>
                     <input type="text" id="pName" placeholder="商品名稱" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
                     <input type="number" id="pPrice" placeholder="點數" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
-                    
                     <div class="space-y-2">
                         <label class="text-[10px] text-slate-500 ml-1 uppercase tracking-widest">Product Image</label>
                         <div class="flex gap-2">
@@ -64,7 +65,6 @@
                         </div>
                         <div id="uploadStatus" class="text-[10px] text-yellow-500 ml-1 hidden font-bold italic animate-pulse">處理中...</div>
                     </div>
-
                     <textarea id="pDesc" placeholder="商品描述" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm h-24"></textarea>
                     <div class="flex items-center gap-2 p-2 bg-slate-900 rounded-xl border border-slate-700">
                         <span class="text-xs text-slate-500 ml-2">狀態：</span>
@@ -114,12 +114,33 @@
                 if(!o) return l.innerHTML = '<p class="text-center text-slate-500 py-10">無訂單紀錄</p>';
                 Object.keys(o).reverse().forEach(id => {
                     const ord = o[id]; const isDone = ord.status === '已出貨';
-                    l.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex justify-between items-center mb-2 ${isDone?'opacity-50':''}">
-                        <div><p class="font-bold">${ord.itemName} x${ord.qty}</p><p class="text-[10px] text-slate-400">${ord.userName} · ${new Date(ord.time).toLocaleString()}</p></div>
-                        <div class="flex gap-2 items-center"><span class="text-xs px-2 py-1 rounded border ${isDone?'border-green-500 text-green-500':'border-yellow-500 text-yellow-500'}">${ord.status}</span><button onclick="toggleOrder('${id}','${ord.status}')" class="bg-slate-700 px-3 py-1.5 rounded-xl text-[11px] font-bold">出貨</button><button onclick="refundOrder('${id}', '${ord.userId}', ${ord.total})" class="bg-red-900/40 text-red-400 border border-red-900 px-3 py-1.5 rounded-xl text-[11px] font-bold">退款</button></div>
+                    l.innerHTML += `
+                    <div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 space-y-4 ${isDone?'opacity-60':''}">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-lg font-bold text-yellow-500">${ord.itemName} x${ord.qty}</p>
+                                <p class="text-xs text-slate-400">${ord.userName} · ${new Date(ord.time).toLocaleString()}</p>
+                            </div>
+                            <span class="text-xs px-3 py-1 rounded-full border ${isDone?'border-green-500 text-green-500':'border-yellow-500 text-yellow-500'}">${ord.status}</span>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <input type="text" id="track-${id}" placeholder="輸入 7-11 交貨便編號" value="${ord.trackNo || ''}" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white">
+                            <button onclick="saveTrack('${id}')" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold">儲存編號</button>
+                        </div>
+
+                        <div class="flex gap-2 justify-end pt-2 border-t border-slate-700/50">
+                            <button onclick="toggleOrder('${id}','${ord.status}')" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold">${isDone?'設為待出貨':'設為已出貨'}</button>
+                            <button onclick="refundOrder('${id}', '${ord.userId}', ${ord.total})" class="bg-red-900/40 text-red-400 border border-red-900 px-4 py-2 rounded-xl text-xs font-bold">退款</button>
+                        </div>
                     </div>`;
                 });
             });
+        }
+
+        function saveTrack(oid) {
+            const no = document.getElementById(`track-${oid}`).value;
+            db.ref(`orders/${oid}`).update({ trackNo: no }).then(() => alert('編號已更新'));
         }
 
         function renderCategoryOptions() {
@@ -172,7 +193,6 @@
             const l = document.getElementById('pList'); l.innerHTML = ''; 
             for(let id in allProducts) { 
                 const p = allProducts[id]; const isOn = p.status !== '下架'; 
-                // 修正：這裡傳入參數必須與 edit 函數對應
                 l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center mb-2 ${!isOn?'opacity-50 grayscale':''}"> 
                     <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover bg-slate-900 shadow-inner"> 
                     <div class="flex-1 overflow-hidden"> 
@@ -227,7 +247,6 @@
             reset(); 
         }
 
-        // 修正：編輯函數現在直接從資料庫抓取最新資料，避免參數過多導致出錯
         function edit(id) { 
             const p = allProducts[id];
             if(!p) return;
@@ -253,7 +272,10 @@
             document.getElementById('fTitle').innerText = "🎁 商品編輯"; 
         }
 
-        function toggleOrder(oid, curr) { const next = curr === '待出貨' ? '已出貨' : '待出貨'; db.ref(`orders/${oid}`).update({ status: next }); }
+        function toggleOrder(oid, curr) { 
+            const next = curr === '待出貨' ? '已出貨' : '待出貨'; 
+            db.ref(`orders/${oid}`).update({ status: next }); 
+        }
     </script>
 </body>
 </html>
