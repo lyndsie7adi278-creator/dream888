@@ -40,7 +40,6 @@ window._clO = async () => {
 };
 
 window._ck_i = async (i, s) => { if(s || _ip) return; _s_i = i; const checkLive = await _gt(_liveRef); if(checkLive.exists() && !_ip) return; if(_u_c !== "" && _u_q > 0) { _rI = i; _ex(i); } else document.getElementById('_m_01').style.display = 'flex'; };
-window._sys_v1 = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _st(_rf(_0xDb, 'coupons/' + c), n); alert("CODE: " + c); };
 
 _oV(_histRef, (s) => {
     const d = s.val(); _dn.clear();
@@ -61,31 +60,35 @@ _oV(_poolRef, (s) => {
         
         document.getElementById('g_d').innerHTML = d.map((x, i) => {
             const n = parseInt(x.grade); 
+            // 🚀 修改：1-10 號抽到時發出金色光特效 (rv)
             const isWinner = (n >= 1 && n <= 10);
             const isRevealing = (_rI === i);
             const isLocked = (x.taken && !_dn.has(n) && !_gS_rev);
             
+            // 🏆 安全機制：Elements 面板看不到號碼
             const displayVal = (x.taken && !isRevealing && !isLocked) ? _fm(n) : "";
-            // 🚀 修改：統一使用金色光 (tp 類別)，移除 sp 類別
             const cls = `t_s ${x.taken && !isRevealing && !isLocked ?'so':''} ${x.taken && isWinner && !isRevealing && !isLocked ? 'rv' : ''} ${isRevealing || isLocked ?'pk':''}`;
             
             return `<div class="${cls}" onclick="window._ck_i(${i}, ${x.taken})">${displayVal}</div>`;
         }).join('');
     }
     document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => {
-        const t = _dn.has(parseInt(n)); 
-        // 🚀 修改：01-10 統一使用 tp (金色光)
-        let c = (n >= 1 && n <= 10) ? 'tp' : ''; 
-        return `<div class="p_item ${c} ${t?'tk':''}"><span class="p_badge">${_fm(n)}</span> ${m}</div>`;
+        const ni = parseInt(n);
+        const t = _dn.has(ni); 
+        // 🚀 修改：1-10 號看板統一套用金色光 (tp)
+        let c = (ni >= 1 && ni <= 10) ? 'tp' : '';
+        return `<div class="p_item ${c} ${t?'tk':''}"><span class="p_badge">${_fm(ni)}</span> ${m}</div>`;
     }).join('');
 });
 
 async function _ex(i) {
     if(_ip) return; _ip = true;
-    // 🚀 修改：移除所有物理交換限制，回歸純隨機
+    // 🚀 修改：回歸完全隨機配率，移除物理掉包邏輯
     _rT(_poolRef, (v) => {
         if (!v || v[i].taken) return v;
-        v[i].taken = true; window._l_w = v[i].grade; return v;
+        v[i].taken = true; 
+        window._l_w = v[i].grade; 
+        return v;
     }).then(async r => {
         if(r.committed) {
             await _rT(_rf(_0xDb, 'coupons/' + _u_c), c => (c > 0) ? c - 1 : 0);
@@ -137,26 +140,18 @@ function _s_M(e) {
     if(!_iv) _ps(_ptsRef, { x: Math.round(x), y: Math.round(y) }); 
 }
 function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; if (c > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _ud(_liveRef, { isRevealed: true }); if (parseInt(window._l_w) <= 10) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
-function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
+function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); b.innerText=`確認結果 (${s}s)`; _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
 
 window._v_cl = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; _ex(_s_i); } } else alert("碼錯誤"); };
 async function _rfQ() { if(!_u_c) return; const s = await _gt(_rf(_0xDb, 'coupons/' + _u_c)); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span onclick="window._sw()" style="cursor:pointer;color:#aaa;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); _u_c = ""; } }
 
-function _iS() {
-    let l=0, r=0, g=0;
-    document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _0x_k_val) { 
-        await _rm(_liveRef); 
-        let n=[]; for(let i=1; i<=40; i++) n.push(i); 
-        n.sort(()=>Math.random()-0.5); 
-        await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); 
-        await _st(_histRef, null); alert("DONE (40 CARDS)"); location.reload(); 
-    } } };
-    document.getElementById('r_st').onclick=()=>{ r++; if(r>=5){ r=0; const p = prompt(""); if(p === _0x_k_val) _sU('c'); } };
-}
-function _sU(t) { const b = document.getElementById('_ui_c'); b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; document.getElementById('_m_02').style.display='flex'; }
+let l=0, r=0, g=0;
+window._l_st_ck = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _0x_k_val) { await _rm(_liveRef); let n=[]; for(let i=1; i<=40; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); alert("DONE"); location.reload(); } } };
+window._r_st_ck = () => { r++; if(r>=5){ r=0; const p = prompt(""); if(p === _0x_k_val) _sU('c'); } };
+window._g_st_ck = () => { g++; if(g>=10){ g=0; if(prompt("") === _0x_k_val) _sU('g'); } };
 
-window.onload = () => { 
-    _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ(); _iV(); _iS();
-};
+function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>模式：完全隨機，1-10號金色發光</p>`; document.getElementById('_m_02').style.display='flex'; }
+window._sys_v1 = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _st(_rf(_0xDb, 'coupons/' + c), n); alert(c); };
+
+window.onload = () => { _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ(); _iV(); };
 window._sw = () => { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; };
-document.getElementById('_v_bt').onclick = window._v_cl;
