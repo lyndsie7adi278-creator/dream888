@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>夢工廠後台 - 旗艦管理版</title>
+    <title>夢工廠後台 - 高效管理版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
@@ -20,7 +20,7 @@
 <body class="p-6">
     <div id="lockScreen" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center">
         <div class="bg-slate-800 p-8 rounded-3xl w-80 text-center border border-slate-700 shadow-2xl">
-            <h2 class="text-xl font-bold mb-4 gold-text">DREAM ADMIN</h2>
+            <h2 class="text-xl font-bold mb-4 gold-text tracking-widest">DREAM ADMIN</h2>
             <input type="password" id="adminPass" placeholder="輸入管理密碼" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 mb-4 text-center text-yellow-500">
             <button onclick="checkPass()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold active:scale-95 transition">進入系統</button>
         </div>
@@ -49,7 +49,7 @@
                 <h2 id="fTitle" class="font-bold mb-4 text-yellow-500">🎁 商品編輯</h2>
                 <input type="hidden" id="editId">
                 <div class="space-y-4">
-                    <div class="space-y-2">
+                    <div class="space-y-1">
                         <label class="text-[10px] text-slate-500 ml-1 uppercase">Category 分類</label>
                         <div class="flex gap-2">
                             <select id="pCat" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-yellow-500 font-bold"></select>
@@ -58,10 +58,10 @@
                     </div>
                     <input type="text" id="pName" placeholder="商品名稱" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
                     <input type="number" id="pPrice" placeholder="點數" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
-                    <div class="space-y-2">
-                        <label class="text-[10px] text-slate-500 ml-1 uppercase">Product Image</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-500 ml-1 uppercase">Image 圖片網址</label>
                         <div class="flex gap-2">
-                            <input type="text" id="pImg" placeholder="圖片網址" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs">
+                            <input type="text" id="pImg" placeholder="網址" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs">
                             <label class="bg-slate-700 px-4 py-3 rounded-xl cursor-pointer text-xs font-bold transition hover:bg-slate-600">上傳<input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleUpload(this)"></label>
                         </div>
                         <div id="uploadStatus" class="text-[10px] text-yellow-500 ml-1 hidden italic">處理中...</div>
@@ -72,16 +72,19 @@
                         <select id="pStatus" class="bg-transparent text-yellow-500 font-bold text-sm"><option value="上架">上架</option><option value="下架">下架</option></select>
                     </div>
                     <button onclick="save()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition">儲存並發布</button>
-                    <button onclick="reset()" class="w-full text-slate-500 text-xs mt-1">清空欄位 (帶入預設文案)</button>
+                    <button onclick="reset()" class="w-full text-slate-500 text-xs mt-1">清空 (帶入預設文案)</button>
                 </div>
             </div>
-            <div class="lg:col-span-8 space-y-3" id="pList"></div>
+            <div class="lg:col-span-8 space-y-3">
+                <input type="text" id="prodSearch" oninput="renderProducts()" placeholder="🔍 搜尋商品名稱或分類..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 shadow-xl mb-4">
+                <div id="pList" class="space-y-3"></div>
+            </div>
         </div>
 
         <div id="tl" class="hidden space-y-4">
-            <div class="flex justify-between items-center px-2">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-2">
                 <h2 class="text-xl font-bold gold-text">點數異動對帳單</h2>
-                <p class="text-xs text-slate-500 italic">顯示最近 100 筆紀錄</p>
+                <input type="text" id="logSearch" oninput="renderLogs()" placeholder="🔍 搜尋會員暱稱查帳..." class="w-full md:w-64 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-yellow-500">
             </div>
             <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-x-auto shadow-2xl">
                 <table class="w-full text-left">
@@ -114,7 +117,7 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database(), storage = firebase.storage();
-        let allUsers = {}, allProducts = {}, allCategories = ["一般"];
+        let allUsers = {}, allProducts = {}, allCategories = ["一般"], allLogs = [];
 
         function checkPass() { if(document.getElementById('adminPass').value === ADMIN_PASSWORD) { document.getElementById('lockScreen').style.display='none'; sessionStorage.setItem('adm','1'); load(); } else alert('密碼錯誤'); }
         if(sessionStorage.getItem('adm')==='1') { document.getElementById('lockScreen').style.display='none'; load(); }
@@ -122,9 +125,7 @@
         function tab(t) { ['u','o','p','l'].forEach(x => { document.getElementById('t'+x).classList.toggle('hidden', x!==t); document.getElementById('b'+x).className = x===t ? 'px-5 py-2 rounded-xl text-sm font-bold bg-yellow-600 text-slate-900 transition' : 'px-5 py-2 rounded-xl text-sm font-bold text-slate-400 transition'; }); }
         
         function load() {
-            // 初始化執行一次 reset，確保一進來就有文案
             reset();
-
             db.ref('categories').on('value', s => { allCategories = s.val() ? Object.values(s.val()) : ["一般"]; renderCategoryOptions(); });
             db.ref('users').on('value', s => { allUsers = s.val() || {}; renderUsers(); });
             db.ref('products').on('value', s => { allProducts = s.val() || {}; renderProducts(); });
@@ -139,29 +140,37 @@
                             <span class="text-[10px] px-3 py-1 rounded-full border ${isDone?'border-green-500 text-green-500 font-black bg-green-500/10':'border-yellow-500 text-yellow-500 font-black bg-yellow-500/10'}">${ord.status}</span>
                         </div>
                         <div class="flex gap-2">
-                            <input type="text" id="track-${id}" placeholder="請在此輸入 7-11 交貨便編號" value="${ord.trackNo || ''}" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-yellow-500 font-mono tracking-widest shadow-inner">
-                            <button onclick="saveTrack('${id}')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition">儲存編號</button>
+                            <input type="text" id="track-${id}" placeholder="7-11 交貨便編號" value="${ord.trackNo || ''}" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-yellow-500 font-mono shadow-inner">
+                            <button onclick="saveTrack('${id}')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition">儲存</button>
                         </div>
                         <div class="flex gap-2 justify-end pt-2 border-t border-slate-700/50">
                             <button onclick="toggleOrder('${id}','${ord.status}')" class="bg-slate-700 px-4 py-2 rounded-xl text-[11px] font-bold active:scale-95 transition">${isDone?'設為待出貨':'設為已出貨'}</button>
-                            <button onclick="refundOrder('${id}', '${ord.userId}', ${ord.total})" class="bg-red-900/40 text-red-400 border border-red-900 px-4 py-2 rounded-xl text-[11px] font-bold active:scale-95 transition">取消訂單並退款</button>
+                            <button onclick="refundOrder('${id}', '${ord.userId}', ${ord.total})" class="bg-red-900/40 text-red-400 border border-red-900 px-4 py-2 rounded-xl text-[11px] font-bold active:scale-95 transition">取消並退款</button>
                         </div>
                     </div>`;
                 });
             });
-            db.ref('logs').limitToLast(100).on('value', s => {
-                const logs = s.val(), t = document.getElementById('logTable'); t.innerHTML = '';
-                if(!logs) return t.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-slate-500 font-bold">尚無異動紀錄</td></tr>';
-                Object.values(logs).reverse().forEach(log => {
-                    const isPlus = log.change >= 0;
-                    t.innerHTML += `<tr class="border-b border-slate-700/30 text-xs hover:bg-slate-700/20 transition">
-                        <td class="px-6 py-4 text-slate-500">${new Date(log.time).toLocaleString()}</td>
-                        <td class="px-6 py-4 font-bold text-slate-200">${log.userName}</td>
-                        <td class="px-6 py-4"><span class="px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-700 text-[10px]">${log.reason}</span></td>
-                        <td class="px-6 py-4 font-black ${isPlus?'log-plus':'log-minus'}">${isPlus?'+':''}${log.change}</td>
-                        <td class="px-6 py-4 text-right font-bold text-yellow-500/80">${log.after.toLocaleString()}</td>
-                    </tr>`;
-                });
+            // 日誌監聽
+            db.ref('logs').limitToLast(150).on('value', s => { 
+                allLogs = s.val() ? Object.values(s.val()).reverse() : []; 
+                renderLogs(); 
+            });
+        }
+
+        function renderLogs() {
+            const q = document.getElementById('logSearch').value.toLowerCase();
+            const t = document.getElementById('logTable'); t.innerHTML = '';
+            const filtered = allLogs.filter(log => !q || (log.userName && log.userName.toLowerCase().includes(q)));
+            if(filtered.length === 0) return t.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-slate-500 font-bold">無符合紀錄</td></tr>';
+            filtered.forEach(log => {
+                const isPlus = log.change >= 0;
+                t.innerHTML += `<tr class="border-b border-slate-700/30 text-xs hover:bg-slate-700/20 transition">
+                    <td class="px-6 py-4 text-slate-500 whitespace-nowrap">${new Date(log.time).toLocaleString()}</td>
+                    <td class="px-6 py-4 font-bold text-slate-200">${log.userName}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-700 text-[10px] whitespace-nowrap">${log.reason}</span></td>
+                    <td class="px-6 py-4 font-black ${isPlus?'log-plus':'log-minus'}">${isPlus?'+':''}${log.change}</td>
+                    <td class="px-6 py-4 text-right font-bold text-yellow-500/80">${log.after.toLocaleString()}</td>
+                </tr>`;
             });
         }
 
@@ -200,8 +209,26 @@
             });
         }
 
-        function renderUsers() { const q = document.getElementById('userSearch').value.toLowerCase(); const t = document.getElementById('userTable'); t.innerHTML = ''; for(let id in allUsers) { const name = allUsers[id].name || '未同步'; if(q && !name.toLowerCase().includes(q)) continue; t.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition"><td class="px-6 py-4 font-bold text-yellow-500">${name}<br><span class="text-[10px] text-slate-500">${id}</span></td><td class="px-6 py-4 font-bold text-lg">${(allUsers[id].points||0).toLocaleString()}</td><td class="px-6 py-4 text-right"><input type="number" id="in-${id}" placeholder="+/-" class="bg-slate-900 w-24 p-2 rounded-lg text-center border border-slate-700 mr-2 text-yellow-500"><button onclick="adj('${id}')" class="bg-white text-black px-4 py-2 rounded-lg font-bold text-xs active:scale-90 transition">調整</button></td></tr>`; } }
-        function renderProducts() { const l = document.getElementById('pList'); l.innerHTML = ''; for(let id in allProducts) { const p = allProducts[id]; const isOn = p.status !== '下架'; l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center mb-2 ${!isOn?'opacity-50 grayscale':''}"> <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover bg-slate-900"> <div class="flex-1 overflow-hidden"> <p class="text-[10px] font-bold ${isOn?'text-green-500':'text-red-500'}">${isOn?'● 上架中':'○ 已下架'}</p> <p class="font-bold text-slate-100 truncate">${p.name}</p> <p class="text-yellow-500 text-xs font-bold">${p.cat || '一般'} · ${p.price.toLocaleString()} 點</p> </div> <div class="flex gap-1.5"> <button onclick="toggleStatus('${id}','${p.status}')" class="px-3 py-1.5 rounded-xl bg-slate-700 text-[11px] font-bold">${isOn?'下架':'上架'}</button> <button onclick="edit('${id}')" class="px-3 py-1.5 rounded-xl bg-blue-900/40 text-blue-400 border border-blue-900 text-[11px] font-bold">編輯</button> <button onclick="deleteProd('${id}')" class="px-3 py-1.5 rounded-xl bg-red-900/40 text-red-400 border border-red-900 text-[11px] font-bold">刪除</button> </div> </div>`; } }
+        function renderUsers() { 
+            const q = document.getElementById('userSearch').value.toLowerCase(); 
+            const t = document.getElementById('userTable'); t.innerHTML = ''; 
+            for(let id in allUsers) { 
+                const name = allUsers[id].name || '未同步'; 
+                if(q && !name.toLowerCase().includes(q)) continue; 
+                t.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition"><td class="px-6 py-4 font-bold text-yellow-500">${name}<br><span class="text-[10px] text-slate-500">${id}</span></td><td class="px-6 py-4 font-bold text-lg">${(allUsers[id].points||0).toLocaleString()}</td><td class="px-6 py-4 text-right"><input type="number" id="in-${id}" placeholder="+/-" class="bg-slate-900 w-24 p-2 rounded-lg text-center border border-slate-700 mr-2 text-yellow-500"><button onclick="adj('${id}')" class="bg-white text-black px-4 py-2 rounded-lg font-bold text-xs active:scale-90 transition">調整</button></td></tr>`; 
+            } 
+        }
+
+        function renderProducts() { 
+            const q = document.getElementById('prodSearch').value.toLowerCase();
+            const l = document.getElementById('pList'); l.innerHTML = ''; 
+            for(let id in allProducts) { 
+                const p = allProducts[id]; 
+                const isOn = p.status !== '下架'; 
+                if(q && !p.name.toLowerCase().includes(q) && !(p.cat && p.cat.toLowerCase().includes(q))) continue;
+                l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center mb-2 ${!isOn?'opacity-50 grayscale':''}"> <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover bg-slate-900 shadow-inner"> <div class="flex-1 overflow-hidden"> <p class="text-[10px] font-bold ${isOn?'text-green-500':'text-red-500'}">${isOn?'● 上架中':'○ 已下架'}</p> <p class="font-bold text-slate-100 truncate">${p.name}</p> <p class="text-yellow-500 text-xs font-bold">${p.cat || '一般'} · ${p.price.toLocaleString()} 點</p> </div> <div class="flex gap-1.5"> <button onclick="toggleStatus('${id}','${p.status}')" class="px-3 py-1.5 rounded-xl bg-slate-700 text-[11px] font-bold">${isOn?'下架':'上架'}</button> <button onclick="edit('${id}')" class="px-3 py-1.5 rounded-xl bg-blue-900/40 text-blue-400 border border-blue-900 text-[11px] font-bold transition hover:bg-blue-800/60">編輯</button> <button onclick="deleteProd('${id}')" class="px-3 py-1.5 rounded-xl bg-red-900/40 text-red-400 border border-red-900 text-[11px] font-bold transition hover:bg-red-800/60">刪除</button> </div> </div>`; 
+            } 
+        }
 
         function adj(uid) { 
             const val = parseInt(document.getElementById(`in-${uid}`).value); 
@@ -209,7 +236,7 @@
             db.ref(`users/${uid}/points`).transaction(p => (p||0)+val, (err, comm, snap) => { 
                 if(comm) { 
                     const after = snap.val();
-                    writeLog(uid, allUsers[uid].name, "後台調整", val, after);
+                    writeLog(uid, allUsers[uid].name, "後台手動調整", val, after);
                     const msg = `✅ ${val > 0 ? '+' : ''}${val} 點數${val > 0 ? '已存入' : '已扣除'}`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
                     document.getElementById(`in-${uid}`).value = ''; 
@@ -223,19 +250,27 @@
                 if(comm) { 
                     const after = snap.val();
                     db.ref(`orders/${oid}`).remove(); 
-                    writeLog(uid, allUsers[uid].name, "訂單退款", amount, after);
+                    writeLog(uid, allUsers[uid].name, "訂單取消退款", amount, after);
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent('✅ +'+amount+' 點數已退回')}`, {mode:'no-cors'}); 
                     alert('退款成功'); 
                 } 
             }); 
         }
 
-        function deleteProd(id) { if(confirm('確定永久刪除？')) db.ref(`products/${id}`).remove(); }
+        function deleteProd(id) { if(confirm('確定永久刪除此商品？')) db.ref(`products/${id}`).remove(); }
         function toggleStatus(id, curr) { const next = curr === '下架' ? '上架' : '下架'; db.ref(`products/${id}`).update({ status: next }); }
-        function save() { const id = document.getElementById('editId').value; const data = { cat: document.getElementById('pCat').value || '一般', name: document.getElementById('pName').value, price: parseInt(document.getElementById('pPrice').value), img: document.getElementById('pImg').value, desc: document.getElementById('pDesc').value || '', status: document.getElementById('pStatus').value }; if(!data.name || isNaN(data.price)) return alert('資料不完整'); if(id) db.ref('products/'+id).update(data); else db.ref('products').push(data); reset(); }
+        
+        function save() { 
+            const id = document.getElementById('editId').value; 
+            const data = { cat: document.getElementById('pCat').value || '一般', name: document.getElementById('pName').value, price: parseInt(document.getElementById('pPrice').value), img: document.getElementById('pImg').value, desc: document.getElementById('pDesc').value || '', status: document.getElementById('pStatus').value }; 
+            if(!data.name || isNaN(data.price)) return alert('商品資料不完整'); 
+            if(id) db.ref('products/'+id).update(data); else db.ref('products').push(data); 
+            reset(); 
+        }
         
         function edit(id) { 
-            const p = allProducts[id]; if(!p) return;
+            const p = allProducts[id];
+            if(!p) return;
             document.getElementById('editId').value = id; 
             document.getElementById('pCat').value = p.cat || '一般'; 
             document.getElementById('pName').value = p.name; 
@@ -255,8 +290,6 @@
             document.getElementById('pImg').value = ''; 
             document.getElementById('pStatus').value = '上架'; 
             document.getElementById('fTitle').innerText = "🎁 商品編輯"; 
-            
-            // 重要修改：這裡設定每次重置時自動填入的完整文案
             document.getElementById('pDesc').value = "夢工廠商品兌換說明\n【商品狀態】 全新品\n【商品內容】 本項目採 「隨機款式」 出貨，\n圖片僅供參考，請以收到的實品為準。\n隨機商品包含各類熱門系列，恕不接受指定款式。\n\n【兌換須知】\n1.點數一經扣除兌換寄出商品，恕不接受退換貨。\n2.商品將於 2 個工作天內透過 7-11 交貨便免運費寄出。\n3.請務必跟官方Line確認您的7-11收件資訊正確，以免影響配送。\n4.若遇商品缺貨，管理員將主動聯繫並退回點數。\n\n【收貨須知：重要！】 ⚠️ 為保障雙方權益，拆封請務必「全程錄影」。\n請從包裹未拆封前的「外箱狀態」開始拍攝。\n影片需完整記錄拆箱過程至檢查商品外觀。\n若無完整開箱錄影證明，商品如有損壞或瑕疵等問題，恕不處理售後。\n如官方瑕疵依照情節處理。"; 
         }
 
