@@ -36,8 +36,7 @@
         .p_grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
         .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
         .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
-        
-        /* 🚀 1-10 統一套用金色光效 */
+
         .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
         .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
 
@@ -56,7 +55,7 @@
         
         .t_s.rv { 
             background: #fff9e6 !important; 
-            border: 3px solid var(--g) !important; /* 🚀 抽中 01-10 號發出金光 */
+            border: 3px solid var(--g) !important; 
             box-shadow: 0 0 15px var(--gold-glow) !important; 
             animation: prize-jump 1.2s ease-in-out infinite !important; 
             z-index: 5;
@@ -106,14 +105,8 @@
     
     <div style="min-height:30px; width:100%;" id="sys_sync_trigger"></div>
 
-    <div style="display:flex; justify-content:center; gap:20px; margin-top:20px;">
-        <div style="color:#bbb; font-size:0.65rem; border:1px solid #eee; padding:5px 12px; border-radius:50px;">🛡️ 雲端實時存證</div>
-        <div style="color:#bbb; font-size:0.65rem; border:1px solid #eee; padding:5px 12px; border-radius:50px;">🔐 全程公開透明</div>
-    </div>
-
     <div class="footer-info-premium">
-        &copy; 2026 <b>PREMIUM SLOTS PLATFORM</b><br>
-        Security Node: Firebase Global Cloud Infrastructure
+        &copy; 2026 <b>夢工廠</b><br>
     </div>
 </div>
 
@@ -147,11 +140,10 @@
     const _liveRef = _rf(_0xDb, 'live_scratch');
     const _ptsRef = _rf(_0xDb, 'live_scratch/points');
 
-    // 🚀 修改：獎項縮減為 10 個
     const _z = { 
-        1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 
-        5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件-1代", 
-        8: "星星人毛絨掛件-2代", 9: "星星人毛絨掛件-3代", 10: "點金奔騰系列手辦" 
+        1: "星星人怦然星動毛絨掛件", 2: "星星人怦然星動毛絨掛件", 3: "星星人怦然星動毛絨掛件", 4: "星星人怦然星動毛絨掛件", 
+        5: "星星人怦然星動毛絨掛件", 6: "星星人怦然星動毛絨掛件", 7: "星星人怦然星動毛絨掛件", 
+        8: "星星人怦然星動毛絨掛件", 9: "星星人怦然星動毛絨掛件", 10: "星星人怦然星動毛絨掛件" 
     };
 
     let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null;
