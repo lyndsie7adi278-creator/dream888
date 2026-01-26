@@ -3,176 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>夢工廠刮刮樂-穩定版</title>
+    <title>夢工廠刮刮樂</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        :root { --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; --gold-glow: rgba(255, 215, 0, 0.6); }
-        * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-select: none; box-sizing: border-box; }
-        body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        :root { 
+            --p: #ffb7c5; --a: #ff8fa3; --b: #fffcf9; --g: #ffd700; 
+            --gold-glow: rgba(255, 215, 0, 0.6); --silver-glow: rgba(0, 191, 255, 0.5); --dark: #2c3e50;
+        }
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none !important; 
+            -webkit-user-select: none; 
+            -moz-user-select: none; 
+            -ms-user-select: none;
+            -webkit-user-drag: none;
+        }
+        body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background-color: var(--b); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
+        
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
-        @keyframes gold-breath { 0%, 100% { box-shadow: 0 0 5px #fff; } 50% { box-shadow: 0 0 20px var(--g); border-color: var(--g); } }
+
+        @keyframes gold-breath { 0% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } 50% { box-shadow: 0 0 20px var(--gold-glow); border-color: var(--g); } 100% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } }
+        @keyframes silver-breath { 0% { box-shadow: 0 0 5px var(--silver-glow); border-color: #fff; } 50% { box-shadow: 0 0 15px var(--silver-glow); border-color: #00bfff; } 100% { box-shadow: 0 0 5px var(--silver-glow); border-color: #fff; } }
         @keyframes prize-jump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
         .header { text-align: center; padding: 20px 10px; width: 100%; position: sticky; top: 0; z-index: 100; background: var(--b); }
         h1 { color: var(--a); font-size: 1.4rem; margin: 0; display: flex; justify-content: center; align-items: center; gap: 15px; }
         .star-btn { cursor: pointer; font-size: 1.6rem; padding: 0 10px; }
         #u_q { background: white; padding: 6px 20px; border-radius: 20px; color: var(--a); font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-top: 10px; display: inline-block; font-size: 0.9rem; }
-        .ui-c { width: 92%; max-width: 450px; background: white; border-radius: 24px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 15px rgba(255,183,197,0.15); border: 1px solid #eee; }
-        .p_title { text-align: center; font-weight: 900; color: #ff6b81; margin-bottom: 15px; font-size: 1.1rem; }
+
+        .p_board { width: 90%; max-width: 450px; background: white; border-radius: 24px; padding: 18px; margin-top: 5px; box-shadow: 0 5px 25px rgba(255,183,197,0.2); border: 2px solid #fff; }
+        .p_title { text-align: center; font-weight: 900; color: #ff6b81; margin-bottom: 15px; font-size: 1.1rem; letter-spacing: 2px; }
         .p_grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
         .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
         .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
+        
+        /* 🚀 1-10 統一套用金色光效 */
         .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
-        .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; }
-        .prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
+
+        .progress-box { width: 90%; max-width: 450px; background: white; border-radius: 20px; margin: 15px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
+        .prog-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; font-weight: bold; margin-bottom: 8px; }
+        .prog-stats { font-size: 0.9rem; color: var(--a); font-weight: 900; }
+        .prog-bar-bg { width: 100%; height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
         .prog-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--a)); transition: width 0.8s ease; }
-        .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px auto; border: 1px solid #eee; }
+
+        .g_con { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 92%; max-width: 450px; padding: 15px; background: white; border-radius: 25px; box-shadow: 0 10px 40px rgba(255,183,197,0.2); margin: 15px 0; }
         .t_s { aspect-ratio: 1/1; background: linear-gradient(135deg, #ffb7c5, #ff8fa3); display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; border: 2px solid #fff; color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 0 #e67e91; position: relative; }
+        
         .t_s:not(.so):not(.rv):not(.pk)::after { content: "㊗️"; } 
         .t_s.so { background: #f2f2f2 !important; color: #bbb; box-shadow: none; cursor: default; }
-        .t_s.so::after { content: attr(data-num); font-size: 0.85rem; font-weight: bold; color: #ccc; }
-        .t_s.rv { background: #fff9e6 !important; border: 3px solid var(--g) !important; box-shadow: 0 0 15px var(--gold-glow) !important; animation: prize-jump 1.2s infinite; z-index: 5; }
-        .t_s.rv::after { content: attr(data-num) !important; color: #222 !important; font-weight: 900; }
+        .t_s.so::after { content: attr(data-display); font-size: 0.85rem; font-weight: bold; color: #ccc; }
+        
+        .t_s.rv { 
+            background: #fff9e6 !important; 
+            border: 3px solid var(--g) !important; /* 🚀 抽中 01-10 號發出金光 */
+            box-shadow: 0 0 15px var(--gold-glow) !important; 
+            animation: prize-jump 1.2s ease-in-out infinite !important; 
+            z-index: 5;
+        }
+        .t_s.rv::after { content: attr(data-display) !important; color: #222 !important; font-weight: 900 !important; font-size: 1.1rem !important; }
+
+        .t_s.pk { background: linear-gradient(135deg, #ffb7c5, #ff8fa3) !important; border: 2px solid #fff !important; animation: gold-breath 1s infinite !important; cursor: wait; }
+        .t_s.pk::after { content: "㊗️" !important; font-size: 1rem !important; color: white !important; }
+
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
-        .modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 310px; }
+        .modal-box { background: white; padding: 30px; border-radius: 28px; text-align: center; width: 300px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .s_card { position: relative; width: 320px; height: 220px; background: #fff; border-radius: 24px; overflow: hidden; border: 6px solid var(--g); display: flex; align-items: center; justify-content: center; }
-        .r_num { font-size: 6.5rem; font-weight: 900; color: #ff4757; }
+        .r_num { font-size: 6.5rem; font-weight: 900; color: #ff4757; line-height: 1; }
         .btn_c { display: none; margin-top: 40px; padding: 15px 60px; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
-        .h_list { background: white; border-radius: 15px; padding: 5px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
-        .h_item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
-        input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; text-align: center; font-size: 1rem; }
-        .btn_m { width: 100%; padding: 12px; border: none; background: var(--a); color: white; border-radius: 50px; font-weight: bold; cursor: pointer; }
+        
+        .h_box { width: 90%; max-width: 450px; margin-bottom: 20px; }
+        .h_list { background: white; border-radius: 15px; padding: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
+        .h_item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
+        
+        input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 15px; font-size: 1rem; text-align: center; box-sizing: border-box; }
+        .btn_m { width: 100%; padding: 12px; border: none; background: var(--a); color:white; border-radius: 50px; font-weight: bold; cursor: pointer; }
+        .footer-info-premium { margin: 20px 0 40px 0; font-size: 0.7rem; color: #b0b0b0; text-align: center; line-height: 2; }
     </style>
 </head>
 <body oncontextmenu="return false;">
-    <div class="header">
-        <h1><span class="star-btn" onclick="sysAction('reset')">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" onclick="sysAction('admin')">🌟</span></h1>
-        <div id="u_q">同步引擎啟動中...</div>
-    </div>
-    <div class="ui-c"><div class="p_title">🎁 今日獎項對照 🎁</div><div id="p_g" class="p_grid"></div></div>
-    <div class="ui-c">
-        <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#888;"><div>已刮取進度條</div><div style="color:var(--a);font-weight:900;"><span id="d_ct">0</span> / 40</div></div>
-        <div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div>
-    </div>
-    <div id="g_d" class="g_con"></div>
-    <div class="ui-c" style="margin-bottom:20px;">
-        <div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時中獎紀錄</div>
-        <div id="h_l" class="h_list"></div>
-    </div>
-    <div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button onclick="vCode()" class="btn_m">開始刮獎</button><button onclick="cModal('_m_01')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
-    <div id="_m_02" class="overlay"><div class="modal-box"><h3>管理控制台</h3><div id="_ui_c"></div><button onclick="cModal('_m_02')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">關閉</button></div></div>
-    <div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem;color:#ff4757;font-weight:bold;">號</span></div></div><button id="c_btn" class="btn_c" onclick="clScratch()">確認結果 (10s)</button></div>
 
-<script>
-    // 🚀 初始化 Firebase
-    const _Cf = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc" };
-    firebase.initializeApp(_Cf);
-    const _Db = firebase.database();
-    const _pRef = _Db.ref('ichiban_50_pool');
-    const _hRef = _Db.ref('history_50');
-    const _lRef = _Db.ref('live_scratch');
-    const _p_key = atob('MDgwNQ=='); 
+<div class="header">
+    <h1><span class="star-btn" id="l_st">🌟</span><span>夢工廠刮刮樂</span><span class="star-btn" id="r_st">🌟</span></h1>
+    <div id="u_q">點選任意空格開獎</div>
+</div>
 
-    const _z = { 1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件-1代", 8: "星星人毛絨掛件-2代", 9: "星星人毛絨掛件-3代", 10: "點金奔騰系列手辦" };
+<div class="p_board">
+    <div class="p_title">🎁 今日獎項對照 🎁</div>
+    <div class="p_grid" id="p_g"></div>
+</div>
 
-    let _u_c = localStorage.getItem('_u_c') || "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _M_D = [];
+<div class="progress-box">
+    <div class="prog-header"><div>已刮取進度條</div><div class="prog-stats"><span id="d_ct">0</span> / 40</div></div>
+    <div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div>
+</div>
+
+<div class="g_con" id="g_d"></div>
+
+<div class="h_box" style="margin-top:20px;">
+    <div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時中獎紀錄</div>
+    <div class="h_list" id="h_l"></div>
+    
+    <div style="min-height:30px; width:100%;" id="sys_sync_trigger"></div>
+
+    <div style="display:flex; justify-content:center; gap:20px; margin-top:20px;">
+        <div style="color:#bbb; font-size:0.65rem; border:1px solid #eee; padding:5px 12px; border-radius:50px;">🛡️ 雲端實時存證</div>
+        <div style="color:#bbb; font-size:0.65rem; border:1px solid #eee; padding:5px 12px; border-radius:50px;">🔐 全程公開透明</div>
+    </div>
+
+    <div class="footer-info-premium">
+        &copy; 2026 <b>PREMIUM SLOTS PLATFORM</b><br>
+        Security Node: Firebase Global Cloud Infrastructure
+    </div>
+</div>
+
+<div id="_m_01" class="overlay" onclick="window._o_cl(event, '_m_01')"><div class="modal-box"><h3 style="color:var(--a);">🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button id="_v_bt" class="btn_m">開始刮獎</button><button onclick="window._m_cl('_m_01')" style="background:none;border:none; color:#bbb; margin-top:10px; cursor:pointer;">取消</button></div></div>
+<div id="_m_02" class="overlay" onclick="window._o_cl(event, '_m_02')"><div class="modal-box"><h3 style="color:#666;" id="m_tit">系統控制</h3><div id="_ui_c"></div><button onclick="window._m_cl('_m_02')" style="background:none;border:none; color:#bbb; margin-top:10px; cursor:pointer;">關閉</button></div></div>
+
+<div class="overlay" id="ovl">
+    <div class="s_card" id="c_con">
+        <div style="display:flex; flex-direction:column; align-items:center;">
+            <span style="color:#888; font-weight:bold; font-size:0.8rem; margin-bottom:10px;">揭曉開獎號碼</span>
+            <div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem; color:#ff4757; font-weight:bold;">號</span></div>
+        </div>
+    </div>
+    <button class="btn_c" id="c_btn" onclick="window._clO()">確認結果 (10s)</button>
+</div>
+
+<script type="module">
+    import { initializeApp as _iA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase as _gD, ref as _rf, runTransaction as _rT, onValue as _oV, set as _st, get as _gt, push as _ps, remove as _rm, update as _ud, onChildAdded as _oCA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && (e.key === 'u' || e.key === 'U'))) e.preventDefault(); });
+
+    const _0x_p_path = atob('bm9kZV9zeW5jX3N0YXR1c19jYWNoZQ=='); 
+    const _0x_k_val = atob('MDgwNQ==');
+
+    const _Cf = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
+    const _Ap = _iA(_Cf); const _0xDb = _gD(_Ap);
+    
+    const _poolRef = _rf(_0xDb, 'ichiban_50_pool');
+    const _histRef = _rf(_0xDb, 'history_50');
+    const _liveRef = _rf(_0xDb, 'live_scratch');
+    const _ptsRef = _rf(_0xDb, 'live_scratch/points');
+
+    // 🚀 修改：獎項縮減為 10 個
+    const _z = { 
+        1: "🌟 百樂門 400%", 2: "星星人聖誕大抱枕", 3: "馬力全開毛絨掛件", 4: "馬戲團小丑搪膠毛絨掛件", 
+        5: "CryBaby海灘搪膠毛絨掛件", 6: "比奇堡居民二代", 7: "星星人毛絨掛件-1代", 
+        8: "星星人毛絨掛件-2代", 9: "星星人毛絨掛件-3代", 10: "點金奔騰系列手辦" 
+    };
+
+    let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null;
     const _fm = (n) => n.toString().padStart(2, '0');
 
-    // 🚀 全域函數定義，解決 onclick 找不到的問題
-    window.cModal = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; };
+    window._o_cl = (e, i) => { if(e.target.id === i) window._m_cl(i); };
+    window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; _s_i = null; };
     
-    window.clScratch = async () => { 
+    window._clO = async () => { 
         if (_tm) clearInterval(_tm); 
-        if (!_iv) { await _lRef.update({ isRevealed: true }); setTimeout(() => _lRef.remove(), 1200); } 
-        _ip = false; _iv = false; _s_i = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); 
+        if (!_iv) {
+            await _ud(_liveRef, { isRevealed: true }); 
+            setTimeout(async () => { await _rm(_liveRef); }, 1200);
+        } 
+        _ip = false; _iv = false; _s_i = null; _rI = null;
+        document.getElementById('ovl').style.display = 'none'; 
+        document.body.classList.remove('modal-open'); 
     };
 
-    window.vCode = async () => { 
-        const v = document.getElementById('_i_01').value.trim().toUpperCase(); 
-        const s = await _Db.ref('coupons/' + v).get();
-        if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; rfQ(); if(_s_i !== null) startEx(_s_i); } else alert("ERR"); 
-    };
+    window._ck_i = async (i, s) => { if(s || _ip) return; _s_i = i; const checkLive = await _gt(_liveRef); if(checkLive.exists() && !_ip) return; if(_u_c !== "" && _u_q > 0) { _rI = i; _ex(i); } else document.getElementById('_m_01').style.display = 'flex'; };
+    window._sys_v1 = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _st(_rf(_0xDb, 'coupons/' + c), n); alert("CODE: " + c); };
 
-    window.doClick = (i, taken) => { if(taken || _ip) return; _s_i = i; if(_u_c !== "" && _u_q > 0) startEx(i); else document.getElementById('_m_01').style.display = 'flex'; };
-
-    async function startEx(i) {
-        if(_ip) return; _ip = true;
-        const result = await _pRef.transaction((v) => {
-            if (!v || v[i].taken) return v;
-            v[i].taken = true; window._l_w = v[i].grade; return v;
-        });
-        if(result.committed) {
-            await _Db.ref('coupons/' + _u_c).transaction(c => (c > 0) ? c - 1 : 0);
-            await _hRef.push({ c: _u_c, g: window._l_w });
-            await _lRef.set({ winNum: window._l_w, isRevealed: false });
-            rfQ(); initCanvas();
-        } else { _ip = false; }
-    }
-
-    function initCanvas() { 
-        document.body.classList.add('modal-open'); document.getElementById('ovl').style.display = 'flex'; 
-        const c = document.getElementById('c_con'); let cv = c.querySelector('canvas'); 
-        if(!cv) { cv = document.createElement('canvas'); cv.style.position = 'absolute'; c.appendChild(cv); }
-        cv.width = c.offsetWidth; cv.height = c.offsetHeight; _cv = cv; _cx = cv.getContext('2d'); 
-        _cx.fillStyle = '#C0C0C0'; _cx.fillRect(0, 0, cv.width, cv.height);
-        document.getElementById('w_t').innerText = _fm(window._l_w);
-        _cv.onmousedown = (e) => { if(_iv) return; _id = true; moveHandle(e); };
-        _cv.ontouchstart = (e) => { if(_iv) return; _id = true; moveHandle(e); };
-        window.onmousemove = moveHandle; window.ontouchmove = moveHandle;
-        window.onmouseup = () => { if(_id) { _id = false; checkResult(); } };
-        window.ontouchend = () => { if(_id) { _id = false; checkResult(); } };
-    }
-
-    function moveHandle(e) { 
-        if(!_id || !_cx || _iv) return; if (e.cancelable) e.preventDefault();
-        const r = _cv.getBoundingClientRect(); const x = (e.clientX || (e.touches?e.touches[0].clientX:0)) - r.left; const y = (e.clientY || (e.touches?e.touches[0].clientY:0)) - r.top;
-        _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); 
-    }
-    
-    function checkResult() { 
-        const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let cnt = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) cnt++; 
-        if (cnt > (d.length/4)*0.45) { 
-            _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; 
-            if (!_iv) { 
-                _lRef.update({ isRevealed: true }); 
-                if (parseInt(window._l_w) <= 10) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                let s=10; _tm=setInterval(()=>{ s--; document.getElementById('c_btn').innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); clScratch(); } },1000);
-            } 
-        } 
-    }
-
-    async function rfQ() { 
-        if(!_u_c) return; const s = await _Db.ref('coupons/' + _u_c).get(); 
-        if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span onclick="localStorage.removeItem('_u_c'); location.reload();" style="cursor:pointer;color:#aaa;">[切換]</span>`; } 
-        else { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('u_q').innerText = "點選格子驗證代碼"; } 
-    }
-
-    // 🚀 資料監聽
-    _hRef.on('value', (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item">👤 <b>${x.c}</b> <span>${_fm(x.g)}</span></div>`).join(''); } });
-    _pRef.on('value', (s) => { 
-        const d = s.val(); if(d) { 
-            _ip = false; const tc = d.filter(x => x.taken).length;
-            document.getElementById('d_ct').innerText = tc; document.getElementById('p_br').style.width = (tc / 40 * 100) + "%"; 
-            document.getElementById('g_d').innerHTML = d.slice(0, 40).map((x, i) => { 
-                const ni = parseInt(x.grade); const taken = x.taken; const winner = (ni <= 10);
-                let cls = `t_s ${taken ?'so':''} ${taken && winner ? 'rv' : ''}`;
-                let disp = taken ? _fm(ni) : "";
-                return `<div class="${cls}" data-num="${disp}" onclick="doClick(${i}, ${taken})"></div>`; 
-            }).join(''); 
-        } 
-        document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
-            const ni = parseInt(n); const taken = _dn.has(ni); let cls = (ni <= 10) ? 'tp' : ''; 
-            return `<div class="p_item ${cls} ${taken?'tk':''}"><span class="p_badge">${_fm(ni)}</span> ${m}</div>`; 
-        }).join(''); 
-        rfQ();
+    _oV(_histRef, (s) => {
+        const d = s.val(); _dn.clear();
+        if(d) {
+            const r = Object.values(d).reverse();
+            r.forEach(x => _dn.add(parseInt(x.g)));
+            document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>👤 <b>${x.c}</b></span><span style="color:#ff4757;font-weight:900;">${_fm(x.g)}</span></div>`).join('');
+        }
     });
-    _lRef.on('value', (s) => { const d = s.val(); if (d) { if (document.getElementById('ovl').style.display !== 'flex') { _iv = true; _ip = true; window._l_w = d.winNum; initCanvas(); if(d.isRevealed) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; } } } else { if (document.getElementById('ovl').style.display === 'flex') clScratch(); } });
 
-    // 🚀 管理員動作
-    window.sysAction = async (t) => { if(prompt("") === _p_key) { if(t==='reset') { await _lRef.remove(); let n=[]; for(let i=1;i<=40;i++)n.push(i); n.sort(()=>Math.random()-0.5); await _pRef.set(n.map(v=>({grade:v,taken:false}))); await _hRef.set(null); location.reload(); } else { const b = document.getElementById('_ui_c'); b.innerHTML=`<input type="number" id="_i_02" value="1"><button onclick="sCode()" class="btn_m">SEND</button>`; document.getElementById('_m_02').style.display='flex'; } } };
-    window.sCode = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _Db.ref('coupons/'+c).set(n); alert(c); };
-    window.onload = () => { if(_u_c) rfQ(); };
+    _oV(_poolRef, (s) => {
+        const d = s.val();
+        if(d) {
+            const takenCount = d.filter(x => x.taken).length;
+            document.getElementById('d_ct').innerText = takenCount;
+            // 🚀 修改：進度條分母 40
+            document.getElementById('p_br').style.width = (takenCount / 40 * 100) + "%";
+            document.getElementById('g_d').innerHTML = d.slice(0, 40).map((x, i) => {
+                const n = parseInt(x.grade); 
+                const isTaken = x.taken; 
+                // 🚀 修改：前 10 號發出中獎發光
+                const isWinner = (n >= 1 && n <= 10);
+                const isRevealing = (_rI === i);
+                const isLocked = (isTaken && !_dn.has(n) && !_gS_rev);
+                
+                const displayVal = (isTaken && !isRevealing && !isLocked) ? _fm(n) : "";
+                const cls = `t_s ${isTaken && !isRevealing && !isLocked ?'so':''} ${isTaken && isWinner && !isRevealing && !isLocked ? 'rv' : ''} ${isRevealing || isLocked ?'pk':''}`;
+                
+                return `<div class="${cls}" data-display="${displayVal}" onclick="window._ck_i(${i}, ${isTaken})"></div>`;
+            }).join('');
+        }
+        document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => {
+            const ni = parseInt(n);
+            const t = _dn.has(ni); 
+            // 🚀 1-10 統一套用金色 (tp)
+            let c = (ni >= 1 && ni <= 10) ? 'tp' : '';
+            return `<div class="p_item ${c} ${t?'tk':''}"><span class="p_badge">${_fm(n)}</span> ${m}</div>`;
+        }).join('');
+    });
+
+    async function _ex(i) {
+        if(_ip) return; _ip = true;
+        // 🚀 修改：物理移除所有配率干預邏輯，完全隨機號碼
+        _rT(_poolRef, (v) => {
+            if (!v || v[i].taken) return v;
+            v[i].taken = true; 
+            window._l_w = v[i].grade; 
+            return v;
+        }).then(async r => {
+            if(r.committed) {
+                await _rT(_rf(_0xDb, 'coupons/' + _u_c), c => (c > 0) ? c - 1 : 0);
+                await _st(_ps(_histRef), { c: _u_c, g: window._l_w });
+                await _st(_liveRef, { winNum: window._l_w, isRevealed: false });
+                _rfQ(); _pp();
+            } else { _ip = false; _s_i = null; _rI = null; }
+        });
+    }
+
+    function _iV() {
+        _oV(_liveRef, (s) => { 
+            const d = s.val(); 
+            if (d) { 
+                _gS_rev = d.isRevealed;
+                if (!_ip) { _iv = true; _ip = true; _sh(_fm(d.winNum), d.isRevealed); } 
+                if (d.isRevealed && _cv) _cv.style.display = 'none';
+                if (d.isRevealed && _iv) document.getElementById('c_btn').style.display='block';
+            } else { _gS_rev = false; if (document.getElementById('ovl').style.display === 'flex') window._clO(); }
+        });
+        _oCA(_ptsRef, (s) => { if (_cx && _iv) { const p = s.val(); _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(p.x, p.y, 25, 0, Math.PI * 2); _cx.fill(); } });
+    }
+
+    function _sh(n, r) { 
+        document.body.classList.add('modal-open'); document.getElementById('w_t').innerText = n; document.getElementById('ovl').style.display = 'flex'; 
+        const c = document.getElementById('c_con'); const o = c.querySelector('canvas'); if(o) o.remove(); 
+        const cv = document.createElement('canvas'); 
+        cv.width = c.offsetWidth; cv.height = c.offsetHeight;
+        cv.style.position = 'absolute'; cv.style.zIndex = '2'; 
+        c.appendChild(cv); _cv = cv; _cx = cv.getContext('2d'); 
+        const fill = () => { _cx.fillStyle = '#C0C0C0'; _cx.fillRect(0, 0, cv.width, cv.height); if (r) cv.style.display = 'none'; };
+        fill(); requestAnimationFrame(fill);
+    }
+
+    function _pp() { 
+        _sh(_fm(window._l_w), false); 
+        _cv.onmousedown = _s_S; _cv.ontouchstart = _s_S; window.onmousemove = _s_M; window.ontouchmove = _s_M; window.onmouseup = _s_E; window.ontouchend = _s_E; 
+        _cv.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    }
+    function _s_S(e) { if(_iv) return; _id = true; _s_M(e); }
+    function _s_E() { if(_id) { _id = false; _ck(); } }
+    function _s_M(e) { 
+        if(!_id || !_cx || _iv) return; 
+        if (e.cancelable) e.preventDefault();
+        const r = _cv.getBoundingClientRect(); 
+        const x = (e.clientX || (e.touches?e.touches[0].clientX:0)) - r.left;
+        const y = (e.clientY || (e.touches?e.touches[0].clientY:0)) - r.top;
+        _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); 
+        if(!_iv) _ps(_ptsRef, { x: Math.round(x), y: Math.round(y) }); 
+    }
+    function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; if (c > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _ud(_liveRef, { isRevealed: true }); if (parseInt(window._l_w) <= 10) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
+    function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
+    
+    window._v_cl = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; _ex(_s_i); } } else alert("碼錯誤"); };
+    async function _rfQ() { if(!_u_c) return; const s = await _gt(_rf(_0xDb, 'coupons/' + _u_c)); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span onclick="window._sw()" style="cursor:pointer;color:#aaa;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); _u_c = ""; } }
+    
+    function _iS() {
+        let l=0, r=0, g=0;
+        document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _0x_k_val) { 
+            await _rm(_liveRef); 
+            // 🚀 修改：初始化 40 張卡片
+            let n=[]; for(let i=1; i<=40; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); alert("DONE"); location.reload(); 
+        } } };
+        document.getElementById('r_st').onclick=()=>{ r++; if(r>=5){ r=0; const p = prompt(""); if(p === _0x_k_val) _sU('c'); } };
+        document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g>=10){ g=0; const p = prompt(""); if(p === _0x_k_val) _sU('g'); } };
+    }
+    function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>物理限制：40張隨機 / 1-10金色燈效</p>`; document.getElementById('_m_02').style.display='flex'; }
+    
+    window.onload = () => { 
+        _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ(); _iV(); _iS();
+    };
+    window._sw = () => { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; };
+    document.getElementById('_v_bt').onclick = window._v_cl;
 </script>
 </body>
 </html>
