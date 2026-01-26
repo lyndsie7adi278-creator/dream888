@@ -17,15 +17,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .letter-normal { letter-spacing: 0.025em; }
         #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #eab308; color: #111; padding: 8px 20px; border-radius: 99px; font-weight: bold; font-size: 14px; z-index: 100; display: none; }
-        
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;  
-            overflow: hidden;
-            min-height: 3rem; 
-        }
-
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3rem; }
         .desc-scroll::-webkit-scrollbar { width: 4px; }
         .desc-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
@@ -42,7 +34,6 @@
     </div>
 
     <div id="categoryBar" class="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar"></div>
-
     <div id="productGrid" class="grid grid-cols-2 gap-3 pb-10"></div>
 
     <div id="itemModal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
@@ -53,24 +44,15 @@
                     <h2 id="mName" class="text-xl font-bold flex-1 pr-2 leading-tight"></h2>
                     <span id="mPrice" class="gold-text font-black text-2xl whitespace-nowrap"></span>
                 </div>
-                
                 <div class="h-44 overflow-y-auto mb-4 desc-scroll pr-1 border-y border-slate-700/50 py-3 text-slate-400 text-sm leading-relaxed text-justify whitespace-pre-wrap" id="mDesc"></div>
-
                 <div class="flex items-center justify-between bg-slate-900 rounded-2xl p-2 mb-4 border border-slate-700 shadow-inner">
                     <button onclick="adjQty(-1)" class="w-10 h-10 text-2xl font-bold gold-text active:scale-75 transition">-</button>
-                    <div class="text-center">
-                        <span id="mQty" class="text-lg font-bold">1</span>
-                        <p class="text-[9px] text-slate-500 font-bold uppercase">數量</p>
-                    </div>
+                    <div class="text-center"><span id="mQty" class="text-lg font-bold">1</span><p class="text-[9px] text-slate-500 font-bold uppercase">數量</p></div>
                     <button onclick="adjQty(1)" class="w-10 h-10 text-2xl font-bold gold-text active:scale-75 transition">+</button>
                 </div>
-
                 <div class="text-center mb-4 px-2">
-                    <p class="text-[10px] text-red-500 font-bold animate-pulse leading-tight">
-                        ※ 點擊兌換即代表您已閱讀並同意兌換說明與收貨須知
-                    </p>
+                    <p class="text-[10px] text-red-500 font-bold animate-pulse leading-tight">※ 點擊兌換即代表您已閱讀並同意兌換說明與收貨須知</p>
                 </div>
-
                 <div class="flex gap-3">
                     <button onclick="closeModal()" class="flex-1 py-4 rounded-2xl font-bold bg-slate-700 active:scale-95 transition text-sm">返回</button>
                     <button onclick="confirmRedeem()" class="flex-[2] py-4 rounded-2xl font-bold bg-gold text-slate-900 shadow-lg active:scale-95 transition text-sm">確認兌換</button>
@@ -113,9 +95,7 @@
         async function init() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
+                if (!liff.isLoggedIn()) { liff.login(); } else {
                     const profile = await liff.getProfile();
                     user.id = profile.userId;
                     user.name = profile.displayName;
@@ -138,16 +118,11 @@
 
         function updateCategoryBar() {
             const cats = new Set(['全部']);
-            for(let id in allProducts) {
-                if(allProducts[id].status !== '下架' && allProducts[id].cat) cats.add(allProducts[id].cat);
-            }
+            for(let id in allProducts) { if(allProducts[id].status !== '下架' && allProducts[id].cat) cats.add(allProducts[id].cat); }
             const bar = document.getElementById('categoryBar');
             bar.innerHTML = '';
             cats.forEach(c => {
-                bar.innerHTML += `
-                    <button onclick="renderProducts('${c}')" class="cat-btn px-6 py-2 rounded-full border border-slate-700 text-sm font-bold whitespace-nowrap transition ${c==='全部'?'active':''}">
-                        ${c}
-                    </button>`;
+                bar.innerHTML += `<button onclick="renderProducts('${c}')" class="cat-btn px-6 py-2 rounded-full border border-slate-700 text-sm font-bold whitespace-nowrap transition ${c==='全部'?'active':''}"> ${c} </button>`;
             });
         }
 
@@ -158,19 +133,10 @@
             let items = [];
             for(let id in allProducts) { items.push({ id, ...allProducts[id] }); }
             items.sort((a, b) => (a.sort || 99) - (b.sort || 99));
-
             items.forEach(p => {
                 if(p.status === '下架') return;
                 if(cat !== '全部' && p.cat !== cat) return;
-                grid.innerHTML += `
-                    <div onclick="openModal('${p.id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg flex flex-col">
-                        <img src="${p.img}" class="w-full h-36 object-cover border-b border-slate-700">
-                        <div class="p-4 flex-1">
-                            <p class="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wider">${p.cat || '一般'}</p>
-                            <h3 class="font-bold text-base mb-2 text-slate-100 line-clamp-2 leading-snug">${p.name}</h3>
-                            <p class="gold-text font-black text-lg">${(p.price || 0).toLocaleString()} <span class="text-xs">點</span></p>
-                        </div>
-                    </div>`;
+                grid.innerHTML += `<div onclick="openModal('${p.id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg flex flex-col"> <img src="${p.img}" class="w-full h-36 object-cover border-b border-slate-700"> <div class="p-4 flex-1"> <p class="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wider">${p.cat || '一般'}</p> <h3 class="font-bold text-base mb-2 text-slate-100 line-clamp-2 leading-snug">${p.name}</h3> <p class="gold-text font-black text-lg">${(p.price || 0).toLocaleString()} <span class="text-xs">點</span></p> </div> </div>`;
             });
         }
 
@@ -187,55 +153,34 @@
             if(descBox) descBox.scrollTop = 0;
         }
 
-        function adjQty(v) {
-            qty = Math.max(1, qty + v);
-            document.getElementById('mQty').innerText = qty;
-        }
-
+        function adjQty(v) { qty = Math.max(1, qty + v); document.getElementById('mQty').innerText = qty; }
         function closeModal() { document.getElementById('itemModal').classList.add('hidden'); }
 
-        // --- 核心修正函數：確保通知觸發 ---
         async function confirmRedeem() {
             const totalCost = (currentItem.price || 0) * qty;
             if(user.points < totalCost) return alert("您的點數餘額不足！");
-            
-            if(confirm(`確定要兌換 ${qty} 個「${currentItem.name}」嗎？\n總計扣除：${totalCost.toLocaleString()} 點`)) {
+            if(confirm(`確定兌換 ${qty} 個「${currentItem.name}」？\n扣除：${totalCost.toLocaleString()} 點`)) {
                 try {
                     const newTotal = user.points - totalCost;
                     const orderId = db.ref('orders').push().key;
 
-                    // 1. 同步執行 Firebase 更新 (確保順序)
                     await db.ref('users/' + user.id).update({ points: newTotal });
-                    
                     await db.ref('orders/' + orderId).set({
-                        userId: user.id, userName: user.name,
-                        itemName: currentItem.name, qty: qty, total: totalCost,
-                        time: Date.now(), status: '待出貨'
+                        userId: user.id, userName: user.name, itemName: currentItem.name, 
+                        qty: qty, total: totalCost, time: Date.now(), status: '待出貨'
                     });
-
                     await db.ref('logs').push({
-                        time: Date.now(),
-                        userId: user.id,
-                        userName: user.name,
-                        reason: `商城兌換: ${currentItem.name} x${qty}`,
-                        change: -totalCost,
-                        after: newTotal
+                        time: Date.now(), userId: user.id, userName: user.name,
+                        reason: `商城兌換: ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
                     });
 
-                    // 2. 觸發通知：訊息內容必須包含 "兌換成功" 四個字供 GAS 判斷
-                    // 移除訊息開頭的特殊符號 🎁 以防編號解析錯誤
-                    const notifyMsg = `兌換成功！\n項目：${currentItem.name} x ${qty}\n消耗點數：${totalCost}\n當前餘額：${newTotal}`;
-                    
-                    // 使用 fetch 發送到 GAS
-                    const finalUrl = `${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(notifyMsg)}`;
-                    fetch(finalUrl, { mode: 'no-cors' });
+                    // 重要：通知格式簡化，確保 GAS 讀取成功
+                    const notifyMsg = `兌換成功\n項目：${currentItem.name} x ${qty}\n消耗：${totalCost} 點`;
+                    fetch(`${GAS_URL}?userId=${user.id}&msg=${encodeURIComponent(notifyMsg)}`, { mode: 'no-cors' });
 
                     alert("兌換成功！請跟官方Line確認收件資訊。");
                     closeModal();
-                } catch (err) { 
-                    console.error("Redeem Error:", err);
-                    alert("系統忙碌中，請稍後再試。"); 
-                }
+                } catch (err) { alert("系統忙碌中，請稍後再試。"); }
             }
         }
 
@@ -249,39 +194,14 @@
                 Object.values(o).reverse().forEach(ord => {
                     const isDone = ord.status === '已出貨';
                     const hasTrack = ord.trackNo && ord.trackNo.trim() !== "";
-                    list.innerHTML += `
-                    <div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex-1 pr-2">
-                                <p class="font-bold text-slate-100 text-lg leading-tight">${ord.itemName}</p>
-                                <p class="text-[10px] text-slate-500 mt-1 uppercase">數量：${ord.qty} | 消耗 ${ord.total.toLocaleString()} 點</p>
-                            </div>
-                            <span class="text-[10px] px-3 py-1 rounded-full border whitespace-nowrap ${isDone?'border-green-500 text-green-500 font-black bg-green-500/10':'border-yellow-500 text-yellow-500 font-black bg-yellow-500/10'}">${ord.status}</span>
-                        </div>
-                        ${hasTrack ? `
-                        <div class="mt-4 p-4 bg-slate-900/80 rounded-2xl border border-blue-900/30">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">7-11 交貨便編號</span>
-                                <button onclick="copyTrack('${ord.trackNo}')" class="text-[11px] bg-slate-700 text-white px-3 py-1 rounded-lg active:scale-90 transition font-bold">複製</button>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <code class="text-blue-400 font-mono text-lg font-bold tracking-wider">${ord.trackNo}</code>
-                                <a href="https://tracking.shopmore.com.tw/" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold active:scale-90 transition shadow-lg shadow-blue-900/50">官網查詢</a>
-                            </div>
-                        </div>
-                        ` : (isDone ? '<p class="text-[10px] text-slate-600 italic mt-2">※ 貨單處理中</p>' : '')}
-                        <p class="text-[10px] text-slate-600 mt-4 font-bold text-right">${new Date(ord.time).toLocaleString()}</p>
-                    </div>`;
+                    list.innerHTML += `<div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner"> <div class="flex justify-between items-start mb-3"> <div class="flex-1 pr-2"> <p class="font-bold text-slate-100 text-lg leading-tight">${ord.itemName}</p> <p class="text-[10px] text-slate-500 mt-1 uppercase">數量：${ord.qty} | 消耗 ${ord.total.toLocaleString()} 點</p> </div> <span class="text-[10px] px-3 py-1 rounded-full border whitespace-nowrap ${isDone?'border-green-500 text-green-500 font-black bg-green-500/10':'border-yellow-500 text-yellow-500 font-black bg-yellow-500/10'}">${ord.status}</span> </div> ${hasTrack ? `<div class="mt-4 p-4 bg-slate-900/80 rounded-2xl border border-blue-900/30"> <div class="flex items-center justify-between mb-2"> <span class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">7-11 編號</span> <button onclick="copyTrack('${ord.trackNo}')" class="text-[11px] bg-slate-700 text-white px-3 py-1 rounded-lg font-bold">複製</button> </div> <div class="flex items-center justify-between"> <code class="text-blue-400 font-mono text-base font-bold tracking-wider">${ord.trackNo}</code> <a href="https://tracking.shopmore.com.tw/" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold active:scale-90 transition">查詢</a> </div> </div>` : (isDone ? '<p class="text-[10px] text-slate-600 italic mt-2">※ 貨單處理中</p>' : '')} <p class="text-[10px] text-slate-600 mt-4 font-bold text-right">${new Date(ord.time).toLocaleString()}</p> </div>`;
                 });
             });
         }
 
         function copyTrack(no) {
-            const el = document.createElement('textarea');
-            el.value = no;
-            document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-            const toast = document.getElementById('toast');
-            toast.style.display = 'block'; setTimeout(() => { toast.style.display = 'none'; }, 2000);
+            const el = document.createElement('textarea'); el.value = no; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            const toast = document.getElementById('toast'); toast.style.display = 'block'; setTimeout(() => { toast.style.display = 'none'; }, 2000);
         }
 
         function closeHistory() { document.getElementById('historyModal').classList.add('hidden'); }
