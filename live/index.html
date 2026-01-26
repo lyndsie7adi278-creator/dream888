@@ -65,7 +65,7 @@
         <div style="margin-bottom:40px; font-size:0.7rem; color:#bbb; text-align:center;">&copy; 2026 PREMIUM SLOTS PLATFORM</div>
     </div>
     <div id="_m_01" class="overlay"><div class="modal-box"><h3>🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button onclick="window._v_cl()" class="btn_m">開始刮獎</button><button onclick="window._m_cl('_m_01')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">取消</button></div></div>
-    <div id="_m_02" class="overlay"><div class="modal-box"><h3>管理</h3><div id="_ui_c"></div><button onclick="window._m_cl('_m_02')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">關閉</button></div></div>
+    <div id="_m_02" class="overlay"><div class="modal-box"><h3>管理控制</h3><div id="_ui_c"></div><button onclick="window._m_cl('_m_02')" style="background:none;border:none;color:#bbb;margin-top:10px;cursor:pointer;">關閉</button></div></div>
     <div class="overlay" id="ovl"><div class="s_card" id="c_con"><div><span id="w_t" class="r_num">?</span><span style="font-size:1.5rem;color:#ff4757;font-weight:bold;">號</span></div></div><button id="c_btn" class="btn_c" onclick="window._clO()">確認結果 (10s)</button></div>
 
 <script>
@@ -83,21 +83,24 @@
     let _u_c = localStorage.getItem('_u_c') || "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _rI = null;
     const _fm = (n) => n.toString().padStart(2, '0');
 
-    window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; };
+    window._m_cl = (i) => { document.getElementById(i).style.display = 'none'; _ip = false; _s_i = null; };
     window._clO = async () => { if (_tm) clearInterval(_tm); if (!_iv) { await _liveRef.update({ isRevealed: true }); setTimeout(() => _liveRef.remove(), 1200); } _ip = false; _iv = false; _s_i = null; _rI = null; document.getElementById('ovl').style.display = 'none'; document.body.classList.remove('modal-open'); };
     
-    // 🏆 物理點擊綁定，確保不卡死
-    window._ck_i_click = (i, s) => { if(s || _ip) return; _s_i = i; if(_u_c !== "" && _u_q > 0) _ex(i); else document.getElementById('_m_01').style.display = 'flex'; };
+    window._ck_i_click = (i, s) => { 
+        if(s || _ip) return; 
+        _s_i = i; 
+        if(_u_c !== "" && _u_q > 0) _ex(i); 
+        else document.getElementById('_m_01').style.display = 'flex'; 
+    };
 
     window._v_cl = async () => { 
         const v = document.getElementById('_i_01').value.trim().toUpperCase(); 
         const s = await _Db.ref('coupons/' + v).get();
-        if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; _rfQ(); if(_s_i !== null) _ex(_s_i); } else alert("ERR"); 
+        if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; _rfQ(); if(_s_i !== null) _ex(_s_i); } else alert("碼錯誤"); 
     };
 
     async function _ex(i) {
-        if(_ip) return; _ip = true;
-        // 🚀 完全隨機洗牌，移除所有物理掉包邏輯
+        if(_ip) return; _ip = true; _rI = i;
         const result = await _poolRef.transaction((v) => {
             if (!v || v[i].taken) return v;
             v[i].taken = true; window._l_w = v[i].grade; return v;
@@ -107,7 +110,7 @@
             await _histRef.push({ c: _u_c, g: window._l_w });
             await _liveRef.set({ winNum: window._l_w, isRevealed: false });
             _rfQ(); _pp();
-        } else { _ip = false; }
+        } else { _ip = false; _rI = null; }
     }
 
     function _sh(n, r) { 
@@ -140,22 +143,22 @@
         } 
     }
 
-    function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); b.innerText=`確認結果 (${s}s)`; _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
-    async function _rfQ() { if(!_u_c) return; const s = await _Db.ref('coupons/' + _u_c).get(); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span onclick="window._sw_c()" style="cursor:pointer;color:#aaa;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('u_q').innerText = "點選格子驗證"; } }
+    function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
+    async function _rfQ() { if(!_u_c) return; const s = await _Db.ref('coupons/' + _u_c).get(); if(s.exists() && s.val() > 0) { _u_q = s.val(); document.getElementById('u_q').innerHTML = `可用：${_u_q} (${_u_c}) <span onclick="_sw_c()" style="cursor:pointer;color:#aaa;">[切換]</span>`; } else { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('u_q').innerText = "點選格子驗證"; } }
     window._sw_c = () => { localStorage.removeItem('_u_c'); _u_c = ""; document.getElementById('_m_01').style.display = 'flex'; };
 
-    _histRef.on('value', (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item"><span>👤 <b>${x.c}</b> <span>${_fm(x.g)}</span></span></div>`).join(''); } });
+    _histRef.on('value', (s) => { const d = s.val(); _dn.clear(); if(d) { const r = Object.values(d).reverse(); r.forEach(x => _dn.add(parseInt(x.g))); document.getElementById('h_l').innerHTML = r.map(x => `<div class="h_item">👤 <b>${x.c}</b> <span>${_fm(x.g)}</span></span></div>`).join(''); } });
     _poolRef.on('value', (s) => { 
         const d = s.val(); if(d) { 
-            _ip = false; // 🏆 數據更新後物理釋放鎖定，防止卡死
+            _ip = false; // 🏆 數據同步後立即釋放鎖定
             const tc = d.filter(x => x.taken).length;
             document.getElementById('d_ct').innerText = tc; document.getElementById('p_br').style.width = (tc / 40 * 100) + "%"; 
-            document.getElementById('g_d').innerHTML = d.map((x, i) => { 
+            document.getElementById('g_d').innerHTML = d.slice(0, 40).map((x, i) => { 
                 const ni = parseInt(x.grade); const taken = x.taken; const winner = (ni <= 10);
                 const rv = (_rI === i); const lk = (taken && !_dn.has(ni));
                 let cls = `t_s ${taken && !rv && !lk ?'so':''} ${taken && winner && !rv && !lk ? 'rv' : ''} ${rv || lk ?'pk':''}`;
                 let disp = (taken && !rv && !lk) ? _fm(ni) : "";
-                return `<div class="${cls}" data-display="${disp}" onclick="window._ck_i_click(${i}, ${taken})"></div>`; 
+                return `<div class="${cls}" data-display="${disp}" onclick="_ck_i_click(${i}, ${taken})"></div>`; 
             }).join(''); 
         } 
         document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => { 
@@ -170,7 +173,7 @@
     window._l_st_ck = async () => { if(prompt("") === _p_key) { await _liveRef.remove(); let n=[]; for(let i=1;i<=40;i++)n.push(i); n.sort(()=>Math.random()-0.5); await _poolRef.set(n.map(v=>({grade:v,taken:false}))); await _histRef.set(null); location.reload(); } };
     window._r_st_ck = () => { if(prompt("") === _p_key) _sU('c'); };
     window._g_st_ck = () => { if(prompt("") === _p_key) _sU('g'); };
-    function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<input type="number" id="_i_02" value="1"><button onclick="window._s1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>狀態：40張隨機分配</p>`; document.getElementById('_m_02').style.display='flex'; }
+    function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<input type="number" id="_i_02" value="1"><button onclick="_s1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>物理限制：40張完全隨機</p>`; document.getElementById('_m_02').style.display='flex'; }
     window._s1 = async () => { const n = parseInt(document.getElementById('_i_02').value); const c = Math.random().toString(36).substring(2, 8).toUpperCase(); await _Db.ref('coupons/'+c).set(n); alert(c); };
     window.onload = () => { if(_u_c) _rfQ(); };
 </script>
