@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>極致質感扭蛋機 - Dream888</title>
+    <title>可愛風物理扭蛋機</title>
     <style>
         :root {
-            --metal-shiny: linear-gradient(145deg, #e6e6e6, #ffffff, #b3b3b3);
-            --metal-dark: linear-gradient(145deg, #7a7a7a, #333333);
-            --gold-gradient: linear-gradient(to bottom, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            --pink-main: #ff85a2;
+            --pink-light: #ffb3c6;
+            --blue-base: #70d6ff;
+            --white: #ffffff;
         }
 
         body {
@@ -17,260 +18,284 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #121212;
-            font-family: 'PingFang TC', sans-serif;
+            background: #fff5f7;
+            font-family: 'Arial', sans-serif;
             overflow: hidden;
         }
 
-        /* 扭蛋機容器 */
-        .machine-wrapper {
+        .gacha-container {
             position: relative;
             width: 360px;
-            perspective: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* 透明球體艙 - 強化 3D 光澤 */
-        .dome {
+        /* 頂部粉色蓋子 */
+        .machine-cap {
+            width: 180px;
+            height: 30px;
+            background: var(--pink-main);
+            border-radius: 15px 15px 5px 5px;
+            border: 4px solid #444;
+            z-index: 3;
+        }
+
+        /* 透明圓形玻璃艙 */
+        .glass-dome {
             width: 300px;
             height: 300px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.6);
+            border: 6px solid #444;
             border-radius: 50%;
-            margin: 0 auto;
-            border: 8px solid #ddd;
             position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(8px);
-            box-shadow: 
-                inset 0 20px 50px rgba(255,255,255,0.4),
-                inset 0 -20px 50px rgba(0,0,0,0.5),
-                0 15px 35px rgba(0,0,0,0.5);
+            margin-top: -10px;
             z-index: 2;
+            overflow: hidden;
+            box-shadow: inset -10px 10px 20px rgba(255,255,255,0.8);
         }
 
-        /* 艙內小球 */
-        .inner-ball {
+        /* Canvas 用來處理物理球 */
+        #physics-canvas {
             position: absolute;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            top: 0;
+            left: 0;
         }
 
-        /* 物理碰撞動畫 */
-        @keyframes chaos {
-            0% { transform: translate(0,0) rotate(0); }
-            25% { transform: translate(120px, -150px) rotate(180deg); }
-            50% { transform: translate(-100px, -180px) rotate(360deg); }
-            75% { transform: translate(80px, -50px) rotate(540deg); }
-            100% { transform: translate(0,0) rotate(720deg); }
-        }
-
-        .rolling { animation: chaos 0.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite; }
-
-        /* 金屬底座 */
-        .base {
-            width: 340px;
-            height: 320px;
-            background: var(--metal-shiny);
-            margin: -60px auto 0;
-            border-radius: 20px 20px 80px 80px;
-            border: 4px solid #999;
-            position: relative;
+        /* 下方機身 */
+        .machine-body {
+            width: 280px;
+            height: 220px;
+            background: var(--blue-base);
+            border: 6px solid #444;
+            border-radius: 20px 20px 60px 60px;
+            margin-top: -40px;
             z-index: 1;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.7);
+            position: relative;
+            box-shadow: 0 10px 0 #4da3ce;
         }
 
-        /* 旋鈕面板 */
-        .panel {
-            width: 180px;
-            height: 180px;
-            background: var(--metal-dark);
-            margin: 60px auto 0;
-            border-radius: 50%;
-            border: 10px solid #222;
-            box-shadow: inset 0 5px 15px rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .knob {
-            width: 120px;
-            height: 120px;
-            background: var(--metal-shiny);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid #666;
-            box-shadow: 0 10px 0 #666;
-        }
-
-        .knob::before {
-            content: '';
-            width: 90%;
-            height: 25px;
-            background: #444;
-            border-radius: 5px;
-        }
-
-        .knob:active { transform: rotate(360deg); }
-
-        /* 出球口 */
-        .exit-gate {
+        /* 旋鈕 */
+        .crank-area {
             position: absolute;
-            bottom: 40px;
+            top: 40px;
             left: 50%;
             transform: translateX(-50%);
             width: 100px;
-            height: 80px;
-            background: #000;
-            border-radius: 20px;
-            border: 5px solid #444;
-        }
-
-        /* 掉出來的球（可互動） */
-        #prize-ball {
-            position: absolute;
-            top: -40px;
-            left: 17px;
-            width: 60px;
-            height: 60px;
+            height: 100px;
+            background: #fff;
+            border: 4px solid #444;
             border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-            display: none;
-            z-index: 100;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            transition: 0.3s;
-        }
-
-        #prize-ball:hover { transform: scale(1.1); filter: brightness(1.2); }
-
-        @keyframes drop {
-            0% { transform: translateY(0) scale(0); }
-            100% { transform: translateY(130px) scale(1); }
-        }
-        .is-dropped { display: block !important; animation: drop 0.5s forwards; }
-
-        /* 獎勵彈窗 */
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            width: 280px;
-            background: white;
-            padding: 30px;
-            border-radius: 30px;
-            text-align: center;
-            z-index: 1000;
             transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 100px rgba(255,215,0,0.5);
         }
 
-        .modal.active { transform: translate(-50%, -50%) scale(1); }
-        .modal h2 { margin: 0; color: #d35400; font-size: 32px; }
-        .modal p { font-size: 18px; color: #666; }
-        .modal button { 
-            background: var(--gold-gradient); 
-            border: none; 
-            padding: 10px 30px; 
-            border-radius: 20px; 
-            font-weight: bold; 
-            cursor: pointer;
-            margin-top: 15px;
+        .crank-handle {
+            width: 80%;
+            height: 20px;
+            background: var(--pink-main);
+            border-radius: 10px;
+            border: 3px solid #444;
         }
 
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+        /* 出球口 */
+        .exit-hole {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 70px;
+            background: #444;
+            border-radius: 10px 10px 30px 30px;
+        }
+
+        /* 掉出來的球 */
+        .out-ball {
+            position: absolute;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 3px solid #444;
             display: none;
-            z-index: 999;
+            z-index: 10;
+            cursor: pointer;
+            overflow: hidden;
         }
+        
+        /* 雙色球樣式 */
+        .out-ball::before {
+            content: '';
+            position: absolute;
+            top: 0; width: 100%; height: 50%;
+            background: var(--ball-color, #ff4757);
+        }
+        .out-ball::after {
+            content: '';
+            position: absolute;
+            bottom: 0; width: 100%; height: 50%;
+            background: #fff;
+        }
+
+        @keyframes ball-drop {
+            0% { transform: translate(-50%, -100px) scale(0); }
+            100% { transform: translate(-50%, 20px) scale(1) rotate(20deg); }
+        }
+        .drop-active { display: block !important; animation: ball-drop 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        /* 開獎彈窗 */
+        .prize-modal {
+            position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 260px; background: #fff; border: 6px solid var(--pink-main);
+            border-radius: 30px; padding: 20px; text-align: center; z-index: 100;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .prize-modal.show { transform: translate(-50%, -50%) scale(1); }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 99; }
     </style>
 </head>
 <body>
 
-<div class="machine-wrapper">
-    <div class="dome" id="dome">
-        <div class="inner-ball" style="background: radial-gradient(circle at 30% 30%, #ff4d4d, #000); left: 20%; bottom: 10px;"></div>
-        <div class="inner-ball" style="background: radial-gradient(circle at 30% 30%, #4d94ff, #000); left: 45%; bottom: 20px;"></div>
-        <div class="inner-ball" style="background: radial-gradient(circle at 30% 30%, #ffd633, #000); left: 70%; bottom: 15px;"></div>
-        <div class="inner-ball" style="background: radial-gradient(circle at 30% 30%, #4dff88, #000); left: 35%; bottom: 40px;"></div>
+<div class="gacha-container">
+    <div class="machine-cap"></div>
+    <div class="glass-dome">
+        <canvas id="physics-canvas" width="300" height="300"></canvas>
     </div>
-
-    <div class="base">
-        <div class="panel">
-            <div class="knob" id="knob"></div>
+    <div class="machine-body">
+        <div class="crank-area" id="crank">
+            <div class="crank-handle"></div>
         </div>
-        <div class="exit-gate">
-            <div id="prize-ball"></div>
+        <div class="exit-hole">
+            <div id="result-ball" class="out-ball" style="left: 50%;"></div>
         </div>
     </div>
 </div>
 
 <div class="overlay" id="overlay"></div>
-<div class="modal" id="modal">
-    <p>🎉 恭喜獲得 🎉</p>
-    <h2 id="prize-text">5 點</h2>
-    <button onclick="closeModal()">收下獎勵</button>
+<div class="prize-modal" id="modal">
+    <h3 style="color: #ff85a2; margin: 10px 0;">🎉 恭喜中獎 🎉</h3>
+    <h1 id="prize-name" style="color: #444; margin: 10px 0;">5 點</h1>
+    <button onclick="closeModal()" style="background: var(--blue-base); border: none; padding: 10px 20px; border-radius: 20px; color: white; cursor: pointer; font-weight: bold;">太棒了！</button>
 </div>
 
 <script>
-    const knob = document.getElementById('knob');
-    const dome = document.getElementById('dome');
-    const prizeBall = document.getElementById('prize-ball');
+    const canvas = document.getElementById('physics-canvas');
+    const ctx = canvas.getContext('2d');
+    const crank = document.getElementById('crank');
+    const resultBall = document.getElementById('result-ball');
     const modal = document.getElementById('modal');
     const overlay = document.getElementById('overlay');
-    const prizeText = document.getElementById('prize-text');
 
-    const ballColors = ['#ff4d4d', '#4d94ff', '#ffd633', '#4dff88', '#ff4dff'];
-    let isRunning = false;
+    const ballColors = ['#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BFBC0', '#A0C4FF', '#BDB2FF', '#FFC6FF'];
+    let balls = [];
+    let isSpinning = false;
 
-    knob.addEventListener('click', () => {
-        if (isRunning) return;
-        isRunning = true;
+    // 初始化球
+    function initBalls() {
+        for (let i = 0; i < 12; i++) {
+            balls.push({
+                x: 100 + Math.random() * 100,
+                y: 200 + Math.random() * 50,
+                vx: 0,
+                vy: 0,
+                radius: 22,
+                color: ballColors[i % ballColors.length]
+            });
+        }
+    }
 
-        // 旋鈕轉動
-        knob.style.transform = 'rotate(360deg)';
-        prizeBall.classList.remove('is-dropped');
+    function drawBalls() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        balls.forEach(ball => {
+            // 繪製雙色球
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.clip();
+            
+            // 上半部顏色
+            ctx.fillStyle = ball.color;
+            ctx.fillRect(ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius);
+            // 下半部白色
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(ball.x - ball.radius, ball.y, ball.radius * 2, ball.radius);
+            
+            // 描邊
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#444";
+            ctx.stroke();
+            ctx.restore();
+        });
+    }
 
-        // 艙內球瘋狂碰撞
-        const balls = dome.querySelectorAll('.inner-ball');
-        balls.forEach(b => b.classList.add('rolling'));
+    function updatePhysics() {
+        balls.forEach(ball => {
+            if (isSpinning) {
+                ball.vx += (Math.random() - 0.5) * 15;
+                ball.vy += (Math.random() - 0.5) * 15;
+            } else {
+                ball.vy += 0.8; // 重力
+            }
+
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+            ball.vx *= 0.95; // 阻力
+            ball.vy *= 0.95;
+
+            // 圓形艙碰撞檢測
+            const dx = ball.x - 150;
+            const dy = ball.y - 150;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist + ball.radius > 145) {
+                const angle = Math.atan2(dy, dx);
+                ball.x = 150 + Math.cos(angle) * (145 - ball.radius);
+                ball.y = 150 + Math.sin(angle) * (145 - ball.radius);
+                ball.vx *= -0.6; // 反彈損耗
+                ball.vy *= -0.6;
+            }
+        });
+        drawBalls();
+        requestAnimationFrame(updatePhysics);
+    }
+
+    crank.addEventListener('click', () => {
+        if (isSpinning) return;
+        isSpinning = true;
+        crank.style.transform = 'translateX(-50%) rotate(720deg)';
+        resultBall.classList.remove('drop-active');
 
         setTimeout(() => {
-            balls.forEach(b => b.classList.remove('rolling'));
+            isSpinning = false;
+            crank.style.transform = 'translateX(-50%) rotate(0deg)';
             
-            // 出球
-            const color = ballColors[Math.floor(Math.random() * ballColors.length)];
-            prizeBall.style.background = `radial-gradient(circle at 30% 30%, ${color}, #000)`;
-            prizeBall.classList.add('is-dropped');
-            
-            knob.style.transform = 'rotate(0deg)';
-            isRunning = false;
-        }, 1500);
+            // 隨機選一個顏色掉出
+            const winColor = ballColors[Math.floor(Math.random() * ballColors.length)];
+            resultBall.style.setProperty('--ball-color', winColor);
+            resultBall.classList.add('drop-active');
+        }, 2000);
     });
 
-    // 點擊掉出來的球 -> 開獎儀式
-    prizeBall.addEventListener('click', () => {
-        // 模擬隨機獎項
-        const prizes = ['3 點', '5 點', '10 點', '特大獎！'];
-        prizeText.innerText = prizes[Math.floor(Math.random() * prizes.length)];
-        
-        // 顯示彈窗
+    resultBall.addEventListener('click', () => {
+        const prizes = ['3 點', '5 點', '10 點', '超級大獎！'];
+        document.getElementById('prize-name').innerText = prizes[Math.floor(Math.random() * prizes.length)];
         overlay.style.display = 'block';
-        modal.classList.add('active');
-        prizeBall.style.display = 'none';
+        modal.classList.add('show');
     });
 
     function closeModal() {
         overlay.style.display = 'none';
-        modal.classList.remove('active');
+        modal.classList.remove('show');
+        resultBall.classList.remove('drop-active');
     }
+
+    initBalls();
+    updatePhysics();
 </script>
 
 </body>
