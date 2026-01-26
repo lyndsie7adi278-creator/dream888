@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>夢工廠後台 - 點數對帳版</title>
+    <title>夢工廠後台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
@@ -203,7 +203,7 @@
                 if(comm) { 
                     const after = snap.val();
                     writeLog(uid, allUsers[uid].name, "手動調整", val, after);
-                    const msg = `${val > 0 ? '✅' : '💰'} ${val > 0 ? '+' : ''}${val} 點數${val > 0 ? '已存入' : '已扣除'}`;
+                    const msg = `${val > 0 ? '✅' : '✅'} ${val > 0 ? '+' : ''}${val} 點數${val > 0 ? '已存入' : '已扣除'}`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(msg)}`, {mode:'no-cors'}); 
                     document.getElementById(`in-${uid}`).value = ''; 
                 } 
@@ -217,7 +217,7 @@
                     const after = snap.val();
                     db.ref(`orders/${oid}`).remove(); 
                     writeLog(uid, allUsers[uid].name, "訂單退款", amount, after);
-                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent('🎁 +'+amount+' 點數已退回')}`, {mode:'no-cors'}); 
+                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent('✅ +'+amount+' 點數已退回')}`, {mode:'no-cors'}); 
                     alert('退款成功'); 
                 } 
             }); 
@@ -232,3 +232,4 @@
     </script>
 </body>
 </html>
+
