@@ -2,215 +2,283 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>豪華物理扭蛋機</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>夢幻彩球扭蛋機 - Dream888</title>
     <style>
+        /* 整體樣式設定 */
         :root {
-            --machine-color: #ff4757;
-            --glass-bg: rgba(255, 255, 255, 0.2);
+            --primary-red: #ff3e3e;
+            --dark-red: #c0392b;
+            --gold: #f1c40f;
+            --glass: rgba(255, 255, 255, 0.25);
+            --machine-width: 340px;
         }
 
         body {
+            margin: 0;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background: #2f3542;
-            margin: 0;
-            font-family: Arial, sans-serif;
+            background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
+            font-family: 'Microsoft JhengHei', sans-serif;
+            overflow: hidden;
         }
 
-        /* 扭蛋機主體 */
-        .gacha-container {
+        /* 扭蛋機外殼 */
+        .gacha-machine {
             position: relative;
-            width: 320px;
-            height: 500px;
+            width: var(--machine-width);
             display: flex;
             flex-direction: column;
             align-items: center;
+            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.8));
         }
 
-        /* 透明圓頂艙 */
-        .glass-dome {
-            width: 280px;
-            height: 280px;
-            background: var(--glass-bg);
+        /* 頂部裝飾 */
+        .machine-top {
+            width: 220px;
+            height: 40px;
+            background: var(--primary-red);
+            border-radius: 20px 20px 0 0;
             border: 4px solid #fff;
+            border-bottom: none;
+            z-index: 3;
+        }
+
+        /* 透明圓形艙 - 改進玻璃質感 */
+        .dome-container {
+            width: 300px;
+            height: 300px;
+            background: var(--glass);
             border-radius: 50%;
+            border: 6px solid #fff;
             position: relative;
             overflow: hidden;
-            box-shadow: inset 0 0 50px rgba(255,255,255,0.5);
+            backdrop-filter: blur(5px);
+            box-shadow: inset 0 0 80px rgba(255,255,255,0.4), 
+                        0 10px 20px rgba(0,0,0,0.3);
             z-index: 2;
-        }
-
-        /* 球的設計 */
-        .ball {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2);
-        }
-
-        /* 滾動動畫：隨機碰撞感 */
-        @keyframes ball-roll {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(80px, -100px) rotate(180deg); }
-            40% { transform: translate(-80px, -150px) rotate(360deg); }
-            60% { transform: translate(60px, -80px) rotate(540deg); }
-            80% { transform: translate(-40px, -120px) rotate(720deg); }
-            100% { transform: translate(0, 0) rotate(900deg); }
-        }
-
-        .rolling {
-            animation: ball-roll 0.8s ease-in-out infinite;
-        }
-
-        /* 機器下半部 */
-        .machine-body {
-            width: 260px;
-            height: 200px;
-            background: var(--machine-color);
-            border-radius: 20px 20px 50px 50px;
-            margin-top: -50px;
-            position: relative;
-            z-index: 1;
-            border: 5px solid #d63031;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* 旋鈕 */
-        .crank {
-            width: 80px;
-            height: 80px;
-            background: #f1f2f6;
-            border: 5px solid #747d8c;
-            border-radius: 50%;
-            margin-top: 30px;
-            cursor: pointer;
-            transition: transform 0.5s;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-weight: bold;
-            color: #2f3542;
         }
 
-        .crank:active {
-            transform: rotate(360deg);
-        }
-
-        /* 出蛋口 */
-        .exit {
-            width: 80px;
-            height: 60px;
-            background: #2f3542;
-            border-radius: 10px;
+        /* 內部的球 */
+        .ball {
             position: absolute;
-            bottom: 20px;
-            overflow: visible;
-        }
-
-        /* 掉出來的球 */
-        #result-ball {
             width: 45px;
             height: 45px;
             border-radius: 50%;
+            box-shadow: inset -6px -6px 12px rgba(0,0,0,0.3),
+                        inset 8px 8px 12px rgba(255,255,255,0.4);
+        }
+
+        /* 滾動動畫：更加劇烈的碰撞感 */
+        @keyframes ball-physics {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            15% { transform: translate(100px, -120px) rotate(120deg); }
+            30% { transform: translate(-90px, -180px) rotate(240deg); }
+            45% { transform: translate(80px, -60px) rotate(360deg); }
+            60% { transform: translate(-100px, -100px) rotate(480deg); }
+            80% { transform: translate(50px, -140px) rotate(600deg); }
+            100% { transform: translate(0, 0) rotate(720deg); }
+        }
+
+        .rolling {
+            animation: ball-physics 0.7s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite !important;
+        }
+
+        /* 機器下半部：金屬質感與層次 */
+        .machine-base {
+            width: 320px;
+            height: 280px;
+            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+            border-radius: 20px 20px 60px 60px;
+            margin-top: -60px;
+            position: relative;
+            z-index: 1;
+            border: 6px solid #fff;
+            box-shadow: inset 0 10px 20px rgba(255,255,255,0.3);
+        }
+
+        /* 投幣孔與旋鈕面板 */
+        .control-panel {
+            width: 200px;
+            height: 120px;
+            background: #ecf0f1;
+            margin: 60px auto 0;
+            border-radius: 15px;
+            border: 4px solid #bdc3c7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .crank-handle {
+            width: 70px;
+            height: 70px;
+            background: #bdc3c7;
+            border-radius: 50%;
+            border: 4px solid #7f8c8d;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 0 #95a5a6;
+        }
+
+        .crank-handle::after {
+            content: '';
+            width: 80%;
+            height: 15px;
+            background: #7f8c8d;
+            border-radius: 10px;
+        }
+
+        .crank-handle:active {
+            transform: rotate(360deg) scale(0.95);
+        }
+
+        /* 出蛋口設計 */
+        .prize-exit {
+            width: 100px;
+            height: 70px;
+            background: #2c3e50;
+            border-radius: 10px 10px 30px 30px;
             position: absolute;
-            top: -50px;
-            left: 17.5px;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom: 8px solid #1a252f;
+            display: flex;
+            justify-content: center;
+            overflow: visible;
+        }
+
+        /* 掉出的彩球 */
+        #spawned-ball {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            position: absolute;
+            top: -40px;
             display: none;
             z-index: 10;
         }
 
-        @keyframes drop-out {
-            0% { transform: translateY(0) scale(0.5); opacity: 0; }
-            50% { transform: translateY(60px) scale(1.2); opacity: 1; }
-            100% { transform: translateY(120px) scale(1); opacity: 1; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        @keyframes drop-animation {
+            0% { transform: translateY(0) scale(0); opacity: 0; }
+            40% { transform: translateY(60px) scale(1.1); opacity: 1; }
+            70% { transform: translateY(110px) rotate(15deg); }
+            100% { transform: translateY(140px) rotate(0deg); opacity: 1; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); }
         }
 
         .dropping {
             display: block !important;
-            animation: drop-out 0.6s forwards;
+            animation: drop-animation 0.8s forwards ease-out;
         }
 
-        /* 控制面板 */
-        .ui {
-            margin-top: 20px;
-            color: white;
-            text-align: center;
+        /* 文字裝飾 */
+        .brand-name {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 900;
+            text-shadow: 2px 2px 0 var(--dark-red);
+            margin-top: 15px;
+            letter-spacing: 2px;
+        }
+
+        .status-light {
+            width: 15px;
+            height: 15px;
+            background: #2ecc71;
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            box-shadow: 0 0 10px #2ecc71;
+        }
+
+        .status-light.busy {
+            background: #e74c3c;
+            box-shadow: 0 0 10px #e74c3c;
         }
     </style>
 </head>
 <body>
 
-<div class="gacha-container">
-    <div class="glass-dome" id="dome">
-        <div class="ball" style="background: #ffbe76; left: 30%; bottom: 10px;"></div>
-        <div class="ball" style="background: #ff7979; left: 50%; bottom: 15px;"></div>
-        <div class="ball" style="background: #badc58; left: 70%; bottom: 10px;"></div>
-        <div class="ball" style="background: #7ed6df; left: 40%; bottom: 30px;"></div>
-        <div class="ball" style="background: #e056fd; left: 60%; bottom: 25px;"></div>
+<div class="gacha-machine">
+    <div class="brand-name">DREAM 彩球挖挖樂</div>
+    <div class="machine-top"></div>
+
+    <div class="dome-container" id="dome">
+        <div class="ball" style="background: #e74c3c; left: 20%; bottom: 20px;"></div>
+        <div class="ball" style="background: #3498db; left: 40%; bottom: 10px;"></div>
+        <div class="ball" style="background: #f1c40f; left: 60%; bottom: 25px;"></div>
+        <div class="ball" style="background: #2ecc71; left: 75%; bottom: 15px;"></div>
+        <div class="ball" style="background: #9b59b6; left: 30%; bottom: 40px;"></div>
+        <div class="ball" style="background: #e67e22; left: 55%; bottom: 45px;"></div>
     </div>
 
-    <div class="machine-body">
-        <div class="crank" id="spin-btn">扭一下</div>
-        
-        <div class="exit">
-            <div id="result-ball"></div>
+    <div class="machine-base">
+        <div class="control-panel">
+            <div class="status-light" id="light"></div>
+            <div class="crank-handle" id="crank"></div>
+            <p style="font-size: 12px; color: #7f8c8d; font-weight: bold; margin-top: 5px;">SPIN</p>
         </div>
-    </div>
-
-    <div class="ui">
-        <h2 id="status">準備好挑戰了嗎？</h2>
+        
+        <div class="prize-exit">
+            <div id="spawned-ball"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    const spinBtn = document.getElementById('spin-btn');
-    const domeBalls = document.querySelectorAll('.ball');
-    const resultBall = document.getElementById('result-ball');
-    const statusText = document.getElementById('status');
+    const crank = document.getElementById('crank');
+    const dome = document.getElementById('dome');
+    const light = document.getElementById('light');
+    const spawnedBall = document.getElementById('spawned-ball');
+    const ballColors = ['#ff3e3e', '#00d2ff', '#32ff7e', '#fff200', '#ff9f1a', '#c56cf0'];
 
-    const colors = ['#ff4757', '#2e86de', '#ffa502', '#2ed573', '#e84393'];
+    let isSpinning = false;
 
-    spinBtn.addEventListener('click', () => {
-        if (spinBtn.style.pointerEvents === 'none') return;
+    crank.addEventListener('click', () => {
+        if (isSpinning) return;
 
-        // 1. 禁用按鈕
-        spinBtn.style.pointerEvents = 'none';
-        statusText.innerText = '轉動中...';
-        resultBall.classList.remove('dropping');
-        
-        // 2. 圓頂內的球開始物理滾動動畫
-        domeBalls.forEach(ball => {
+        isSpinning = true;
+        light.classList.add('busy');
+        spawnedBall.classList.remove('dropping');
+
+        // 1. 艙內的球開始瘋狂旋轉碰撞
+        const balls = dome.querySelectorAll('.ball');
+        balls.forEach(ball => {
             ball.classList.add('rolling');
-            // 隨機化每顆球的動畫時間，增加真實感
-            ball.style.animationDuration = (Math.random() * 0.4 + 0.4) + 's';
+            // 給每顆球稍微不同的隨機速度
+            ball.style.animationDuration = (Math.random() * 0.3 + 0.5) + 's';
         });
 
-        // 3. 模擬扭蛋時間
+        // 2. 模擬扭蛋運作時間
         setTimeout(() => {
             // 停止滾動
-            domeBalls.forEach(ball => ball.classList.remove('rolling'));
-
-            // 4. 產生中獎球掉落
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            resultBall.style.background = randomColor;
-            resultBall.classList.add('dropping');
+            balls.forEach(ball => ball.classList.remove('rolling'));
             
-            statusText.innerText = '恭喜獲得扭蛋！';
+            // 3. 隨機生成一顆「掉落的球」
+            const resultColor = ballColors[Math.floor(Math.random() * ballColors.length)];
+            spawnedBall.style.background = `radial-gradient(circle at 30% 30%, ${resultColor}, #000)`;
+            spawnedBall.classList.add('dropping');
 
-            // 5. 恢復按鈕
+            // 4. 重置狀態
             setTimeout(() => {
-                spinBtn.style.pointerEvents = 'auto';
+                isSpinning = false;
+                light.classList.remove('busy');
             }, 1000);
 
-        }, 2000); // 扭蛋轉動時間 2 秒
+        }, 2200);
     });
 </script>
 
