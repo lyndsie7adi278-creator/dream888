@@ -1,204 +1,218 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠旗艦扭蛋機</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <title>豪華物理扭蛋機</title>
     <style>
-        body { background: radial-gradient(circle at center, #1e293b 0%, #020617 100%); color: #f8fafc; font-family: "PingFang TC", sans-serif; height: 100vh; overflow: hidden; }
-        .gold-text { color: #eab308; text-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
-        
-        /* 扭蛋機本體 */
-        .machine-body {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 4px solid #334155;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255,255,255,0.1);
+        :root {
+            --machine-color: #ff4757;
+            --glass-bg: rgba(255, 255, 255, 0.2);
         }
 
-        /* 玻璃罩反光 */
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(1px);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #2f3542;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* 扭蛋機主體 */
+        .gacha-container {
+            position: relative;
+            width: 320px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 透明圓頂艙 */
+        .glass-dome {
+            width: 280px;
+            height: 280px;
+            background: var(--glass-bg);
+            border: 4px solid #fff;
+            border-radius: 50%;
             position: relative;
             overflow: hidden;
-        }
-        .glass::after {
-            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 50%, transparent 55%);
-            pointer-events: none;
+            box-shadow: inset 0 0 50px rgba(255,255,255,0.5);
+            z-index: 2;
         }
 
-        /* 扭蛋球物理震動 */
-        @keyframes ballShake {
-            0%, 100% { transform: translate(0, 0) rotate(0); }
-            20% { transform: translate(-5px, 5px) rotate(10deg); }
-            40% { transform: translate(5px, -5px) rotate(-10deg); }
-            60% { transform: translate(-3px, -3px) rotate(5deg); }
-            80% { transform: translate(3px, 3px) rotate(-5deg); }
-        }
-        .ball-active { animation: ballShake 0.2s infinite; }
-
-        /* 掉落動畫 */
-        @keyframes dropBall {
-            0% { transform: translateY(-100px) scale(0.5); opacity: 0; }
-            50% { transform: translateY(0) scale(1.2); }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        .ball-drop { animation: dropBall 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
-        /* 金屬旋鈕 */
-        .knob-metal {
-            background: conic-gradient(#475569, #1e293b, #475569, #94a3b8, #475569);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        /* 球的設計 */
+        .ball {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2);
         }
 
-        .win-card {
-            background: rgba(15, 23, 42, 0.9);
-            border: 2px solid #eab308;
-            box-shadow: 0 0 30px rgba(234, 179, 8, 0.3);
+        /* 滾動動畫：隨機碰撞感 */
+        @keyframes ball-roll {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(80px, -100px) rotate(180deg); }
+            40% { transform: translate(-80px, -150px) rotate(360deg); }
+            60% { transform: translate(60px, -80px) rotate(540deg); }
+            80% { transform: translate(-40px, -120px) rotate(720deg); }
+            100% { transform: translate(0, 0) rotate(900deg); }
+        }
+
+        .rolling {
+            animation: ball-roll 0.8s ease-in-out infinite;
+        }
+
+        /* 機器下半部 */
+        .machine-body {
+            width: 260px;
+            height: 200px;
+            background: var(--machine-color);
+            border-radius: 20px 20px 50px 50px;
+            margin-top: -50px;
+            position: relative;
+            z-index: 1;
+            border: 5px solid #d63031;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 旋鈕 */
+        .crank {
+            width: 80px;
+            height: 80px;
+            background: #f1f2f6;
+            border: 5px solid #747d8c;
+            border-radius: 50%;
+            margin-top: 30px;
+            cursor: pointer;
+            transition: transform 0.5s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #2f3542;
+        }
+
+        .crank:active {
+            transform: rotate(360deg);
+        }
+
+        /* 出蛋口 */
+        .exit {
+            width: 80px;
+            height: 60px;
+            background: #2f3542;
+            border-radius: 10px;
+            position: absolute;
+            bottom: 20px;
+            overflow: visible;
+        }
+
+        /* 掉出來的球 */
+        #result-ball {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            position: absolute;
+            top: -50px;
+            left: 17.5px;
+            display: none;
+            z-index: 10;
+        }
+
+        @keyframes drop-out {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            50% { transform: translateY(60px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(120px) scale(1); opacity: 1; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        }
+
+        .dropping {
+            display: block !important;
+            animation: drop-out 0.6s forwards;
+        }
+
+        /* 控制面板 */
+        .ui {
+            margin-top: 20px;
+            color: white;
+            text-align: center;
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center">
+<body>
 
-    <div class="text-center mb-6 z-10">
-        <h1 class="text-4xl font-black gold-text tracking-tighter italic uppercase">Dream Gacha</h1>
-        <p class="text-slate-500 text-[10px] tracking-[0.2em] font-bold">PREMIUM EDITION</p>
+<div class="gacha-container">
+    <div class="glass-dome" id="dome">
+        <div class="ball" style="background: #ffbe76; left: 30%; bottom: 10px;"></div>
+        <div class="ball" style="background: #ff7979; left: 50%; bottom: 15px;"></div>
+        <div class="ball" style="background: #badc58; left: 70%; bottom: 10px;"></div>
+        <div class="ball" style="background: #7ed6df; left: 40%; bottom: 30px;"></div>
+        <div class="ball" style="background: #e056fd; left: 60%; bottom: 25px;"></div>
     </div>
 
-    <div class="relative w-72">
-        <div class="machine-body rounded-t-[5rem] p-4 pb-0">
-            <div id="glassDisplay" class="glass h-64 rounded-t-[4rem] flex flex-wrap justify-center items-end p-6 gap-2 relative">
-                <div class="ball-item w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-lg"></div>
-                <div class="ball-item w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-lg"></div>
-                <div class="ball-item w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg"></div>
-                <div class="ball-item w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 shadow-lg"></div>
-                <div class="ball-item w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 shadow-lg"></div>
-                <div class="ball-item w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 shadow-lg"></div>
-            </div>
-        </div>
-
-        <div class="machine-body rounded-b-3xl h-44 border-t-0 relative flex flex-col items-center p-4">
-            <div class="absolute top-4 left-6 w-2 h-8 bg-black rounded-full border border-slate-600"></div>
-            
-            <div id="knob" class="knob-metal w-20 h-20 rounded-full border-4 border-slate-700 flex items-center justify-center transition-transform duration-700 cursor-pointer">
-                <div class="w-2 h-14 bg-slate-400/50 rounded-full"></div>
-            </div>
-
-            <div class="mt-4 w-24 h-12 bg-slate-950 rounded-t-2xl border-t-2 border-slate-800 shadow-inner flex items-center justify-center">
-                <div id="dropZone" class="hidden w-10 h-10 rounded-full bg-white/20 blur-sm"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-8 flex flex-col items-center gap-4 w-full px-10">
-        <div class="bg-slate-900/80 border border-slate-700 px-6 py-2 rounded-2xl flex items-center justify-between w-full">
-            <span class="text-[10px] font-bold text-slate-500 uppercase">Balance</span>
-            <span id="userPoints" class="text-xl font-black gold-text">---</span>
-        </div>
+    <div class="machine-body">
+        <div class="crank" id="spin-btn">扭一下</div>
         
-        <button onclick="playGacha()" id="playBtn" class="w-full py-4 bg-gold text-slate-950 font-black text-xl rounded-2xl shadow-[0_0_20px_rgba(234,179,8,0.4)] active:scale-95 transition disabled:grayscale disabled:opacity-50">
-            SPIN 500 PTS
-        </button>
-    </div>
-
-    <div id="resultModal" class="fixed inset-0 modal-bg z-50 hidden flex flex-col items-center justify-center p-10">
-        <div id="awardBall" class="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-600 mb-8 ball-drop shadow-[0_0_50px_#eab308]"></div>
-        
-        <div class="win-card p-8 rounded-[3rem] w-full max-w-xs text-center animate-in fade-in slide-in-from-bottom-10 duration-500 delay-500">
-            <p class="text-gold text-xs font-black tracking-widest uppercase mb-2">You Won!</p>
-            <h2 id="winItem" class="text-2xl font-black text-white mb-6 leading-tight">---</h2>
-            
-            <div class="bg-slate-950/50 p-4 rounded-2xl mb-6 border border-slate-800">
-                <p id="winType" class="text-slate-400 text-xs font-bold mb-1">獎項類型</p>
-                <p id="winTypeName" class="text-white font-black">---</p>
-            </div>
-            
-            <button onclick="closeModal()" class="w-full py-4 rounded-2xl bg-white text-slate-900 font-bold text-sm shadow-xl active:scale-95 transition">確認收下</button>
+        <div class="exit">
+            <div id="result-ball"></div>
         </div>
     </div>
 
-    <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
-            authDomain: "dream8-7b161.firebaseapp.com", 
-            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
-            projectId: "dream8-7b161"
-        };
-        const LIFF_ID = "2008968610-8dLoGQie";
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec";
+    <div class="ui">
+        <h2 id="status">準備好挑戰了嗎？</h2>
+    </div>
+</div>
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        let user = { id: "", points: 0 };
+<script>
+    const spinBtn = document.getElementById('spin-btn');
+    const domeBalls = document.querySelectorAll('.ball');
+    const resultBall = document.getElementById('result-ball');
+    const statusText = document.getElementById('status');
 
-        async function init() {
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) { liff.login(); } else {
-                    const profile = await liff.getProfile();
-                    user.id = profile.userId;
-                    db.ref('users/' + user.id + '/points').on('value', snap => {
-                        user.points = snap.val() || 0;
-                        document.getElementById('userPoints').innerText = user.points.toLocaleString();
-                    });
-                }
-            } catch (err) { console.error(err); }
-        }
+    const colors = ['#ff4757', '#2e86de', '#ffa502', '#2ed573', '#e84393'];
 
-        async function playGacha() {
-            if (user.points < 500) return alert("點數餘額不足");
-            const btn = document.getElementById('playBtn');
-            const knob = document.getElementById('knob');
-            const balls = document.querySelectorAll('.ball-item');
-            
-            btn.disabled = true;
-            knob.style.transform = 'rotate(720deg)';
-            balls.forEach(b => b.classList.add('ball-active'));
+    spinBtn.addEventListener('click', () => {
+        if (spinBtn.style.pointerEvents === 'none') return;
 
-            try {
-                const response = await fetch(`${GAS_URL}?action=gacha&userId=${user.id}`);
-                const result = await response.json();
-
-                if (result.success) {
-                    setTimeout(() => {
-                        balls.forEach(b => b.classList.remove('ball-active'));
-                        showResult(result.prize);
-                        knob.style.transform = 'rotate(0deg)';
-                        btn.disabled = false;
-                    }, 2000);
-                } else {
-                    alert(result.msg);
-                    resetMachine();
-                }
-            } catch (err) {
-                alert("網路異常");
-                resetMachine();
-            }
-        }
-
-        function resetMachine() {
-            document.getElementById('playBtn').disabled = false;
-            document.getElementById('knob').style.transform = 'rotate(0deg)';
-            document.querySelectorAll('.ball-item').forEach(b => b.classList.remove('ball-active'));
-        }
-
-        function showResult(p) {
-            document.getElementById('winItem').innerText = p.name;
-            document.getElementById('winTypeName').innerText = p.type;
-            document.getElementById('resultModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('resultModal').classList.add('hidden');
-        }
+        // 1. 禁用按鈕
+        spinBtn.style.pointerEvents = 'none';
+        statusText.innerText = '轉動中...';
+        resultBall.classList.remove('dropping');
         
-        window.onload = init;
-    </script>
+        // 2. 圓頂內的球開始物理滾動動畫
+        domeBalls.forEach(ball => {
+            ball.classList.add('rolling');
+            // 隨機化每顆球的動畫時間，增加真實感
+            ball.style.animationDuration = (Math.random() * 0.4 + 0.4) + 's';
+        });
+
+        // 3. 模擬扭蛋時間
+        setTimeout(() => {
+            // 停止滾動
+            domeBalls.forEach(ball => ball.classList.remove('rolling'));
+
+            // 4. 產生中獎球掉落
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            resultBall.style.background = randomColor;
+            resultBall.classList.add('dropping');
+            
+            statusText.innerText = '恭喜獲得扭蛋！';
+
+            // 5. 恢復按鈕
+            setTimeout(() => {
+                spinBtn.style.pointerEvents = 'auto';
+            }, 1000);
+
+        }, 2000); // 扭蛋轉動時間 2 秒
+    });
+</script>
+
 </body>
 </html>
