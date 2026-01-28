@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>糖果彈珠台 - 穩定物理版</title>
+    <title>糖果彈珠台 - 五球修復版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -51,7 +51,7 @@
     <div class="flex items-stretch gap-3 px-2 h-[80vh] w-full max-w-[480px]">
         <div class="machine-frame flex-grow">
             <canvas id="gameCanvas"></canvas>
-            <div id="ballIndicator" class="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-amber-900/40">球數: 1 / 5</div>
+            <div id="ballIndicator" class="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-amber-900/40 uppercase">Remaining: 5</div>
         </div>
         <div class="plunger-side plunger-outer">
             <div id="p-stick">
@@ -128,7 +128,15 @@
                     pins.push({ x: px, y: pinTop + i * rowSp });
                 }
             }
-            ball.x = canvas.width - 20; ball.y = canvas.height - 40;
+            resetToLaunch();
+        }
+
+        function resetToLaunch() {
+            ball.x = canvas.width - 20;
+            ball.y = canvas.height - 40;
+            ball.vx = 0; ball.vy = 0;
+            ball.active = false;
+            ball.hasLeftLane = false;
         }
 
         function drawBall(x, y) {
@@ -194,26 +202,20 @@
                 usedBalls++;
                 
                 document.getElementById('gameScore').innerText = score;
-                document.getElementById('gameState').innerText = `球數: ${Math.min(usedBalls + 1, 5)} / 5`;
+                document.getElementById('ballIndicator').innerText = `Remaining: ${5 - usedBalls}`;
                 
-                ball.active = false;
                 if (usedBalls < 5) {
-                    setTimeout(() => {
-                        ball.x = canvas.width - 20; ball.y = canvas.height - 40;
-                        ball.vx = 0; ball.vy = 0; ball.hasLeftLane = false;
-                        // 不主動設 active 為 true，等待下次拉桿
-                    }, 500);
+                    resetToLaunch();
                 } else {
+                    ball.active = false;
                     setTimeout(() => {
                         document.getElementById('finalScore').innerText = score;
                         document.getElementById('resultModal').classList.remove('hidden');
-                    }, 1000);
+                    }, 800);
                 }
             }
-            if (ball.y > canvas.height && ball.x >= laneX) {
-                ball.active = false;
-                setTimeout(() => { ball.x = canvas.width - 20; ball.y = canvas.height - 40; ball.vx = 0; ball.vy = 0; ball.hasLeftLane = false; }, 100);
-            }
+            // 沒衝上去掉回來
+            if (ball.y > canvas.height && ball.x >= laneX) resetToLaunch();
         }
 
         function animate() {
@@ -233,8 +235,11 @@
             pins.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2); ctx.fill(); });
             
             settledBalls.forEach(b => drawBall(b.x, b.y));
-            // 只要遊戲還沒結束，且球在準備位置或飛行中，就繪製球
-            if (usedBalls < 5) drawBall(ball.x, ball.y);
+            
+            // 只要遊戲還沒打完 5 顆，發射台上一定要畫出一顆球
+            if (usedBalls < 5) {
+                drawBall(ball.x, ball.y);
+            }
             
             update();
             requestAnimationFrame(animate);
