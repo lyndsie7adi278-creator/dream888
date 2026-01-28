@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠旗艦彈珠台 - 五球循環修正版</title>
+    <title>糖果彈珠台 - 穩定物理版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -13,7 +13,7 @@
             position: fixed; width: 100%; height: 100%; 
             overflow: hidden; touch-action: none; 
             background: #1a0f0a; margin: 0; 
-            overscroll-behavior: none; /* 禁用 LINE 下拉刷新 */
+            overscroll-behavior: none;
         }
         .wood-bg { background-color: #d2b48c; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern-polished.png'); }
         .machine-frame {
@@ -24,7 +24,6 @@
         .plunger-outer {
             width: 45px; height: 180px; background: #8b4513; border: 4px solid #422006;
             border-radius: 22px; display: flex; justify-content: center; align-self: flex-end; margin-bottom: 20px;
-            cursor: pointer;
         }
         #p-stick { width: 8px; height: 100px; background: #94a3b8; border-radius: 4px; margin-top: 5px; position: relative; }
         #p-knob {
@@ -38,15 +37,15 @@
 <body class="flex flex-col items-center wood-bg">
 
     <div class="w-full max-w-[420px] p-3 flex justify-between items-center gap-2">
-        <div class="bg-white/40 flex-1 px-3 py-1 rounded-xl border border-amber-900/20 shadow-sm text-center">
-            <p class="text-[8px] uppercase font-bold text-amber-900">持有點數</p>
+        <div class="bg-white/40 flex-1 px-3 py-1 rounded-xl border border-amber-900/20 text-center shadow-sm">
+            <p class="text-[8px] uppercase font-bold text-amber-900">持有</p>
             <p id="userPoints" class="text-lg font-black text-amber-900">---</p>
         </div>
-        <div class="bg-amber-900/80 flex-1 px-3 py-1 rounded-xl border border-amber-600 shadow-sm text-center">
+        <div class="bg-amber-900/80 flex-1 px-3 py-1 rounded-xl border border-amber-600 text-center shadow-sm">
             <p class="text-[8px] uppercase font-bold text-amber-100">本局積分</p>
             <p id="gameScore" class="text-lg font-black text-white">0</p>
         </div>
-        <button onclick="togglePrize(true)" class="bg-red-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-lg active:scale-95">獎項</button>
+        <button onclick="togglePrize(true)" class="bg-red-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-lg">獎項</button>
     </div>
 
     <div class="flex items-stretch gap-3 px-2 h-[80vh] w-full max-w-[480px]">
@@ -54,7 +53,7 @@
             <canvas id="gameCanvas"></canvas>
             <div id="ballIndicator" class="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-amber-900/40">球數: 1 / 5</div>
         </div>
-        <div class="plunger-side plunger-outer" id="plungerArea">
+        <div class="plunger-side plunger-outer">
             <div id="p-stick">
                 <div id="p-knob"></div>
             </div>
@@ -105,11 +104,9 @@
         let score = 0, usedBalls = 0, isDragging = false, startY = 0, dragOffset = 0;
         let arcCenterX, arcCenterY, arcRadius, laneX, holeWidth;
 
-        function togglePrize(show) {
-            document.getElementById('prizeModal').classList.toggle('modal-active', show);
-        }
+        function togglePrize(show) { document.getElementById('prizeModal').classList.toggle('modal-active', show); }
 
-        function initData() {
+        function initLayout() {
             const container = document.querySelector('.machine-frame');
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
@@ -120,44 +117,40 @@
             arcRadius = canvas.width / 2 - 5;
             
             pins = [];
-            const pinAreaTop = 160; 
-            const pinAreaBottom = canvas.height - 160; 
-            const rows = 10; 
-            const rowSpacing = (pinAreaBottom - pinAreaTop) / (rows - 1);
+            const pinTop = 160, pinBottom = canvas.height - 160, rows = 10;
+            const rowSp = (pinBottom - pinTop) / (rows - 1);
             for (let i = 0; i < rows; i++) {
                 const isSix = (i % 2 === 0);
-                const pinsInRow = isSix ? 6 : 5;
-                const spacing = laneX / 6;
-                for (let j = 0; j < pinsInRow; j++) {
-                    let pinX = isSix ? (laneX/12 + j*spacing) : (laneX/6 + j*spacing);
-                    pins.push({ x: pinX, y: pinAreaTop + i * rowSpacing });
+                const count = isSix ? 6 : 5;
+                const sp = laneX / 6;
+                for (let j = 0; j < count; j++) {
+                    let px = isSix ? (laneX/12 + j*sp) : (laneX/6 + j*sp);
+                    pins.push({ x: px, y: pinTop + i * rowSp });
                 }
             }
-            ball.x = canvas.width - 20;
-            ball.y = canvas.height - 40;
+            ball.x = canvas.width - 20; ball.y = canvas.height - 40;
         }
 
         function drawBall(x, y) {
-            let g = ctx.createRadialGradient(x-3, y-3, 1, x, y, 8.5);
-            g.addColorStop(0, '#ff6b6b'); g.addColorStop(1, '#8b0000');
+            let g = ctx.createRadialGradient(x-2, y-2, 1, x, y, 8.5);
+            g.addColorStop(0, '#ff7e7e'); g.addColorStop(1, '#8b0000');
             ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 8.5, 0, Math.PI*2); ctx.fill();
         }
 
         function update() {
             if (!ball.active) return;
-            const subSteps = 15;
-            for(let s=0; s<subSteps; s++) {
-                ball.vy += 0.22 / subSteps;
-                ball.x += ball.vx / subSteps;
-                ball.y += ball.vy / subSteps;
+            const steps = 15;
+            for(let s=0; s<steps; s++) {
+                ball.vy += 0.22 / steps;
+                ball.x += ball.vx / steps;
+                ball.y += ball.vy / steps;
 
                 // 槽位物理
                 if (ball.y > canvas.height - 110 && ball.x < laneX) {
                     const idx = Math.floor(ball.x / holeWidth);
-                    const leftW = idx * holeWidth + ball.r;
-                    const rightW = (idx + 1) * holeWidth - ball.r;
-                    if (ball.x < leftW) { ball.x = leftW; ball.vx *= -0.3; }
-                    if (ball.x > rightW) { ball.x = rightW; ball.vx *= -0.3; }
+                    const left = idx * holeWidth + ball.r, right = (idx + 1) * holeWidth - ball.r;
+                    if (ball.x < left) { ball.x = left; ball.vx *= -0.3; }
+                    if (ball.x > right) { ball.x = right; ball.vx *= -0.3; }
                 }
 
                 if (ball.x < laneX - ball.r) ball.hasLeftLane = true;
@@ -188,43 +181,44 @@
                 if (ball.y < ball.r) { ball.y = ball.r; ball.vy *= -0.5; }
             }
 
-            // 結算與五球循環邏輯
-            if (ball.y > canvas.height - 35 && ball.x < laneX) {
+            // 結算點判斷
+            if (ball.y > canvas.height - 30 && ball.x < laneX) {
                 const idx = Math.floor(ball.x / holeWidth);
                 score += holes[Math.min(idx, 9)];
                 const stack = holeOccupancy[idx];
                 
-                // 強制吸附中心
-                const finalX = idx * holeWidth + holeWidth/2;
-                const finalY = canvas.height - 20 - (stack * 18);
-                
-                settledBalls.push({ x: finalX, y: finalY });
+                // 強制絕對置中
+                const targetX = (idx + 0.5) * holeWidth;
+                settledBalls.push({ x: targetX, y: canvas.height - 20 - (stack * 18) });
                 holeOccupancy[idx]++;
                 usedBalls++;
                 
-                // 即時更新介面
                 document.getElementById('gameScore').innerText = score;
                 document.getElementById('gameState').innerText = `球數: ${Math.min(usedBalls + 1, 5)} / 5`;
                 
-                // 停止當前球
                 ball.active = false;
-
-                // 核心修復：延遲後判斷是否生成下一顆
-                setTimeout(() => {
-                    if (usedBalls < 5) {
-                        resetBall();
-                    } else {
+                if (usedBalls < 5) {
+                    setTimeout(() => {
+                        ball.x = canvas.width - 20; ball.y = canvas.height - 40;
+                        ball.vx = 0; ball.vy = 0; ball.hasLeftLane = false;
+                        // 不主動設 active 為 true，等待下次拉桿
+                    }, 500);
+                } else {
+                    setTimeout(() => {
                         document.getElementById('finalScore').innerText = score;
                         document.getElementById('resultModal').classList.remove('hidden');
-                    }
-                }, 100);
+                    }, 1000);
+                }
             }
-            if (ball.y > canvas.height && ball.x >= laneX) resetBall();
+            if (ball.y > canvas.height && ball.x >= laneX) {
+                ball.active = false;
+                setTimeout(() => { ball.x = canvas.width - 20; ball.y = canvas.height - 40; ball.vx = 0; ball.vy = 0; ball.hasLeftLane = false; }, 100);
+            }
         }
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 6; ctx.lineCap = "round";
+            ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 6;
             ctx.beginPath(); ctx.moveTo(laneX, canvas.height); ctx.lineTo(laneX, arcCenterY); ctx.stroke();
             ctx.beginPath(); ctx.arc(arcCenterX, arcCenterY, arcRadius, Math.PI, 0, false); ctx.stroke();
             for(let i=0; i<=10; i++) {
@@ -237,42 +231,41 @@
             });
             ctx.fillStyle = "#cd853f";
             pins.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2); ctx.fill(); });
-            settledBalls.forEach(b => drawBall(b.x, b.y));
             
-            // 只有當還有球且球不活動時，才畫出發射台上的預備球
-            if (usedBalls < 5 && !ball.active) drawBall(ball.x, ball.y);
-            // 畫活動中的球
-            if (ball.active) drawBall(ball.x, ball.y);
-
+            settledBalls.forEach(b => drawBall(b.x, b.y));
+            // 只要遊戲還沒結束，且球在準備位置或飛行中，就繪製球
+            if (usedBalls < 5) drawBall(ball.x, ball.y);
+            
             update();
             requestAnimationFrame(animate);
         }
 
-        const knob = document.getElementById('plungerArea');
-        knob.addEventListener('touchstart', (e) => {
-            if (ball.active || usedBalls >= 5) return;
-            isDragging = true; startY = e.touches[0].clientY;
-            e.preventDefault();
+        const pStick = document.getElementById('p-stick');
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.plunger-outer')) {
+                if (ball.active || usedBalls >= 5) return;
+                isDragging = true; startY = e.touches[0].clientY;
+            }
         }, { passive: false });
 
-        window.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            dragOffset = Math.max(0, Math.min(100, e.touches[0].clientY - startY));
-            document.getElementById('p-stick').style.transform = `translateY(${dragOffset}px)`;
-            e.preventDefault();
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                dragOffset = Math.max(0, Math.min(100, e.touches[0].clientY - startY));
+                pStick.style.transform = `translateY(${dragOffset}px)`;
+                e.preventDefault();
+            }
         }, { passive: false });
 
-        window.addEventListener('touchend', () => {
+        document.addEventListener('touchend', () => {
             if (!isDragging) return;
             isDragging = false;
-            if (dragOffset > 20) {
-                if (usedBalls === 0 && user.points < 10) return alert("點數不足！");
+            if (dragOffset > 25) {
                 if (usedBalls === 0) db.ref('users/' + user.id).update({ points: user.points - 10 });
                 ball.active = true;
                 ball.vy = -(dragOffset / 3.2); 
-                ball.vx = (Math.random() - 0.5) * 0.4; 
+                ball.vx = (Math.random() - 0.5) * 0.5; 
             }
-            document.getElementById('p-stick').style.transform = `translateY(0px)`;
+            pStick.style.transform = `translateY(0px)`;
             dragOffset = 0;
         });
 
@@ -288,7 +281,7 @@
                     });
                 }
             } catch (e) {}
-            initData();
+            initLayout();
             animate();
         }
         window.onload = init;
