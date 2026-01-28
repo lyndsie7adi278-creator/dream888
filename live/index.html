@@ -23,7 +23,6 @@
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
 
         @keyframes gold-breath { 0% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } 50% { box-shadow: 0 0 20px var(--gold-glow); border-color: var(--g); } 100% { box-shadow: 0 0 5px var(--gold-glow); border-color: #fff; } }
-        @keyframes silver-breath { 0% { box-shadow: 0 0 5px var(--silver-glow); border-color: #fff; } 50% { box-shadow: 0 0 15px var(--silver-glow); border-color: #00bfff; } 100% { box-shadow: 0 0 5px var(--silver-glow); border-color: #fff; } }
         @keyframes prize-jump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
         .header { text-align: center; padding: 20px 10px; width: 100%; position: sticky; top: 0; z-index: 100; background: var(--b); }
@@ -37,7 +36,11 @@
         .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
         .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
 
+        /* 🚀 01-08 號金色光 */
         .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
+        /* 🚀 09-14 號黑框小獎 */
+        .p_item.bp:not(.tk) { border: 2px solid #222; background: #f8f8f8; font-weight: bold; color: #333; }
+        
         .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
 
         .progress-box { width: 90%; max-width: 450px; background: white; border-radius: 20px; margin: 15px 0; padding: 15px; box-sizing: border-box; border: 1px solid #eee; }
@@ -102,12 +105,8 @@
 <div class="h_box" style="margin-top:20px;">
     <div style="font-weight:bold; color:var(--a); margin-bottom:10px;">🏆 即時紀錄</div>
     <div class="h_list" id="h_l"></div>
-    
     <div style="min-height:30px; width:100%;" id="sys_sync_trigger"></div>
-
-    <div class="footer-info-premium">
-        &copy; 2026 <b>夢工廠</b><br>
-    </div>
+    <div class="footer-info-premium"> &copy; 2026 <b>夢工廠</b><br> </div>
 </div>
 
 <div id="_m_01" class="overlay" onclick="window._o_cl(event, '_m_01')"><div class="modal-box"><h3 style="color:var(--a);">🎫 驗證代碼</h3><input type="text" id="_i_01" autocomplete="off"><button id="_v_bt" class="btn_m">開始刮獎</button><button onclick="window._m_cl('_m_01')" style="background:none;border:none; color:#bbb; margin-top:10px; cursor:pointer;">取消</button></div></div>
@@ -140,12 +139,11 @@
     const _liveRef = _rf(_0xDb, 'live_scratch');
     const _ptsRef = _rf(_0xDb, 'live_scratch/points');
 
-    // 🚀 修改：獎項調整為 14 個
     const _z = { 
         1: "星星人怦然星動毛絨掛件(五代)", 2: "星星人怦然星動毛絨掛件(五代)", 3: "星星人怦然星動毛絨掛件(五代)", 4: "星星人怦然星動毛絨掛件(五代)", 
-        5: "星星人怦然星動毛絨掛件(五代)", 6: "星星人怦然星動毛絨掛件(五代)", 7: "星星人怦然星動毛絨掛件(五代)", 
-        8: "星星人怦然星動毛絨掛件(五代)", 9: "星星人怦然星動毛絨掛件(五代)", 10: "星星人怦然星動毛絨掛件(五代)",
-        11: "星星人怦然星動毛絨掛件(五代)", 12: "星星人怦然星動毛絨掛件(五代)", 13: "星星人怦然星動毛絨掛件(五代)", 14: "星星人怦然星動毛絨掛件(五代)"
+        5: "星星人怦然星動毛絨掛件(五代)", 6: "星星人怦然星動毛絨掛件(五代)", 7: "星星人怦然星動毛絨掛件(五代)", 8: "星星人怦然星動毛絨掛件(五代)",
+        9: "星星人怦然星動毛絨掛件(五代)", 10: "星星人怦然星動毛絨掛件(五代)", 11: "星星人怦然星動毛絨掛件(五代)", 12: "星星人怦然星動毛絨掛件(五代)",
+        13: "星星人怦然星動毛絨掛件(五代)", 14: "星星人怦然星動毛絨掛件(五代)"
     };
 
     let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null;
@@ -182,7 +180,6 @@
         if(d) {
             const takenCount = d.filter(x => x.taken).length;
             document.getElementById('d_ct').innerText = takenCount;
-            // 🚀 修改：進度條分母 60
             document.getElementById('p_br').style.width = (takenCount / 60 * 100) + "%";
             document.getElementById('g_d').innerHTML = d.slice(0, 60).map((x, i) => {
                 const n = parseInt(x.grade); 
@@ -201,8 +198,11 @@
         document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => {
             const ni = parseInt(n);
             const t = _dn.has(ni); 
-            // 🚀 修改：前 8 號套用金色 (tp)
-            let c = (ni >= 1 && ni <= 8) ? 'tp' : '';
+            // 🚀 修改：前 8 號金色 (tp)，09-14 號黑框 (bp)
+            let c = '';
+            if (ni >= 1 && ni <= 8) c = 'tp';
+            else if (ni >= 9 && ni <= 14) c = 'bp';
+            
             return `<div class="p_item ${c} ${t?'tk':''}"><span class="p_badge">${_fm(n)}</span> ${m}</div>`;
         }).join('');
     });
@@ -274,13 +274,12 @@
         let l=0, r=0, g=0;
         document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _0x_k_val) { 
             await _rm(_liveRef); 
-            // 🚀 修改：初始化 60 張
-            let n=[]; for(let i=1; i<=60; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); alert("DONE (60 Cards)"); location.reload(); 
+            let n=[]; for(let i=1; i<=60; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); alert("DONE"); location.reload(); 
         } } };
         document.getElementById('r_st').onclick=()=>{ r++; if(r>=5){ r=0; const p = prompt(""); if(p === _0x_k_val) _sU('c'); } };
         document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g>=10){ g=0; const p = prompt(""); if(p === _0x_k_val) _sU('g'); } };
     }
-    function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>物理限制：60張隨機 / 1-8金色燈效</p>`; document.getElementById('_m_02').style.display='flex'; }
+    function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>物理限制：60張隨機 / 1-8金色燈效 / 9-14黑框</p>`; document.getElementById('_m_02').style.display='flex'; }
     
     window.onload = () => { 
         _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ(); _iV(); _iS();
