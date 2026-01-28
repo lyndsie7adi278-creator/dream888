@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠旗艦彈珠台 - 槽位隔離版</title>
+    <title>夢工廠旗艦彈珠台 - 完美不回流版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -32,11 +32,11 @@
 
     <div class="w-full max-w-[400px] p-4 flex justify-between items-center text-[#422006] font-black">
         <div class="bg-white/40 px-5 py-2 rounded-2xl border border-amber-900/20 shadow-sm">
-            <p class="text-[10px] uppercase">Wallet</p>
+            <p class="text-[10px] uppercase">Point</p>
             <p id="userPoints" class="text-xl">---</p>
         </div>
         <div class="bg-white/40 px-5 py-2 rounded-2xl border border-amber-900/20 text-right shadow-sm">
-            <p class="text-[10px] uppercase">Balls Left</p>
+            <p class="text-[10px] uppercase">Ball</p>
             <p id="gameState" class="text-xl">0 / 5</p>
         </div>
     </div>
@@ -54,9 +54,9 @@
 
     <div id="resultModal" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-[#fdf5e6] w-full max-w-sm rounded-[3rem] p-10 border-[10px] border-[#5d2e17] text-center shadow-2xl">
-            <h2 class="text-[#5d2e17] font-black text-2xl uppercase">Result</h2>
+            <h2 class="text-[#5d2e17] font-black text-2xl">本次總得分</h2>
             <h1 id="finalScore" class="text-7xl font-black text-red-600 my-6">0</h1>
-            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-[#5d2e17] text-white text-xl active:scale-95 transition">再玩一次 (10點)</button>
+            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-[#5d2e17] text-white text-xl active:scale-95 transition">再挑戰一次 (10點)</button>
         </div>
     </div>
 
@@ -76,7 +76,7 @@
         const ctx = canvas.getContext('2d');
 
         let user = { id: "", points: 0 };
-        let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8.5, active: false };
+        let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8.5, active: false, hasLeftLane: false };
         let settledBalls = [];
         let holeOccupancy = Array(10).fill(0);
         let pins = [];
@@ -99,14 +99,11 @@
 
         function initPins() {
             pins = [];
-            // 只在中間遊戲區生成釘子，避開發射道和底部分數區
             const pinAreaTop = 200;
             const pinAreaBottom = canvas.height - 120;
-            
             for (let i = 0; i < 7; i++) {
                 let rowCount = (i % 2 === 0) ? 6 : 7;
                 for (let j = 0; j < rowCount; j++) {
-                    // 加入隨機偏移量，讓每次進場釘子位置都不同
                     const randX = (Math.random() - 0.5) * 15;
                     const randY = (Math.random() - 0.5) * 10;
                     pins.push({ 
@@ -120,14 +117,14 @@
         function resetBall() {
             ball.x = canvas.width - 20;
             ball.y = canvas.height - 40;
-            ball.vx = 0; ball.vy = 0; ball.active = false;
+            ball.vx = 0; ball.vy = 0; ball.active = false; ball.hasLeftLane = false;
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. 軌道視覺
             ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 6; ctx.lineCap = "round";
+
+            // 1. 視覺導軌
             ctx.beginPath();
             ctx.moveTo(laneX, canvas.height); ctx.lineTo(laneX, arcCenterY);
             ctx.stroke();
@@ -135,16 +132,14 @@
             ctx.arc(arcCenterX, arcCenterY, arcRadius, Math.PI, 0, false);
             ctx.stroke();
 
-            // 2. 計分槽 (強化隔板無視覺穿透)
+            // 2. 計分槽隔板
             for(let i=0; i<=holes.length; i++) {
-                ctx.beginPath(); 
-                ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.lineWidth = 4;
                 ctx.moveTo(i * holeWidth, canvas.height - 100); 
-                ctx.lineTo(i * holeWidth, canvas.height); 
-                ctx.stroke();
+                ctx.lineTo(i * holeWidth, canvas.height); ctx.stroke();
             }
             holes.forEach((s, i) => {
-                ctx.fillStyle = "#8b4513"; ctx.font = "black 11px Arial"; ctx.textAlign = "center";
+                ctx.fillStyle = "#8b4513"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center";
                 ctx.fillText(s, i * holeWidth + holeWidth/2, canvas.height - 10);
             });
 
@@ -152,7 +147,6 @@
             ctx.fillStyle = "#cd853f";
             pins.forEach(p => { 
                 ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill(); 
-                // 釘子高光
                 ctx.fillStyle = "#fff8"; ctx.beginPath(); ctx.arc(p.x-1, p.y-1, 1, 0, Math.PI*2); ctx.fill();
                 ctx.fillStyle = "#cd853f";
             });
@@ -174,7 +168,7 @@
         function update() {
             if (!ball.active) return;
 
-            const subSteps = 15; // 極高精度防止高速穿牆
+            const subSteps = 15;
             const gravity = 0.22;
 
             for(let s=0; s<subSteps; s++) {
@@ -182,18 +176,34 @@
                 ball.x += ball.vx / subSteps;
                 ball.y += ball.vy / subSteps;
 
-                // --- A. 計分槽實體隔離邏輯 ---
+                // --- A. 計分槽物理隔離 ---
                 if (ball.y > canvas.height - 100 && ball.x < laneX) {
                     const idx = Math.floor(ball.x / holeWidth);
                     const leftWall = idx * holeWidth + ball.r;
                     const rightWall = (idx + 1) * holeWidth - ball.r;
-                    
-                    // 強制球在進入槽位後 X 軸座標被鎖在隔板之間
                     if (ball.x < leftWall) { ball.x = leftWall; ball.vx *= -0.3; }
                     if (ball.x > rightWall) { ball.x = rightWall; ball.vx *= -0.3; }
                 }
 
-                // --- B. 頂部弧形牆 ---
+                // --- B. 單向閥門物理牆 (核心修正) ---
+                // 判斷球是否已經成功飛出發射道
+                if (ball.x < laneX - ball.r) { ball.hasLeftLane = true; }
+
+                if (ball.hasLeftLane) {
+                    // 如果球已經在遊戲區，發射道的左牆變成雙面實體，絕對進不去
+                    if (ball.x > laneX - ball.r && ball.y > arcCenterY) {
+                        ball.x = laneX - ball.r;
+                        ball.vx *= -0.5;
+                    }
+                } else {
+                    // 如果還在發射道內，鎖死發射道的邊界
+                    if (ball.x < laneX + ball.r && ball.y > arcCenterY) {
+                        ball.x = Math.max(laneX + ball.r, ball.x);
+                        ball.vx = 0;
+                    }
+                }
+
+                // --- C. 頂部圓弧反射 ---
                 const dx = ball.x - arcCenterX;
                 const dy = ball.y - arcCenterY;
                 const dist = Math.sqrt(dx*dx + dy*dy);
@@ -206,14 +216,6 @@
                     if (dot > 0) {
                         ball.vx = (ball.vx - 1.8 * dot * nx) * 0.98;
                         ball.vy = (ball.vy - 1.8 * dot * ny) * 0.98;
-                    }
-                }
-
-                // --- C. 發射道保護 ---
-                if (ball.y > arcCenterY) {
-                    if (ball.x > laneX - ball.r) {
-                        if (ball.x < laneX + ball.r) { ball.x = laneX + ball.r; ball.vx *= -0.5; }
-                        if (ball.x > canvas.width - ball.r) { ball.x = canvas.width - ball.r; ball.vx *= -0.5; }
                     }
                 }
 
@@ -234,7 +236,7 @@
                 if (ball.y < ball.r) { ball.y = ball.r; ball.vy *= -0.5; }
             }
 
-            // --- 結算判定 ---
+            // 結算
             if (ball.y > canvas.height - 35 && ball.x < laneX) {
                 const idx = Math.floor(ball.x / holeWidth);
                 score += holes[Math.min(idx, 9)];
@@ -278,8 +280,9 @@
                 if (usedBalls === 0 && user.points < 10) return alert("點數不足！");
                 if (usedBalls === 0) db.ref('users/' + user.id).update({ points: user.points - 10 });
                 ball.active = true;
+                ball.hasLeftLane = false;
                 ball.vy = -(dragOffset / 3.2); 
-                ball.vx = (Math.random() - 0.5) * 0.8; 
+                ball.vx = (Math.random() - 0.5) * 0.5; 
             }
             stick.style.transform = `translateY(0px)`;
             dragOffset = 0;
