@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠旗艦彈珠台 - 軌道物理修正版</title>
+    <title>夢工廠旗艦彈珠台 - 軌道頂部封閉版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -54,9 +54,9 @@
 
     <div id="resultModal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-[#fdf5e6] w-full max-w-sm rounded-[3rem] p-10 border-[10px] border-[#5d2e17] text-center shadow-2xl">
-            <h2 class="text-[#5d2e17] font-black text-2xl uppercase tracking-widest">總結分數</h2>
+            <h2 class="text-[#5d2e17] font-black text-2xl uppercase tracking-widest">總得分</h2>
             <h1 id="finalScore" class="text-7xl font-black text-red-600 my-6">0</h1>
-            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-[#5d2e17] text-white text-xl active:scale-95 transition">再玩一次 (10點)</button>
+            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-[#5d2e17] text-white text-xl active:scale-95 transition">再來一局 (10點)</button>
         </div>
     </div>
 
@@ -116,18 +116,16 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const laneX = canvas.width - 40;
 
-            // 1. 繪製物理軌道 (視覺)
+            // 1. 物理軌道視覺
             ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 6; ctx.lineCap = "round";
-            
-            // 右側導向管
             ctx.beginPath();
             ctx.moveTo(laneX, canvas.height);
-            ctx.lineTo(laneX, 100); 
+            ctx.lineTo(laneX, 120); 
             ctx.stroke();
 
-            // 頂部導流弧線
+            // 頂部導引圓弧 (半徑加大，確保封閉)
             ctx.beginPath();
-            ctx.arc(canvas.width / 2, 100, canvas.width / 2 - 5, Math.PI, 0, false);
+            ctx.arc(canvas.width / 2, 120, canvas.width / 2 - 5, Math.PI, 0, false);
             ctx.stroke();
 
             // 2. 底部計分槽
@@ -136,7 +134,7 @@
                 ctx.beginPath(); ctx.moveTo(i * holeWidth, canvas.height - 80); ctx.lineTo(i * holeWidth, canvas.height); ctx.stroke();
             }
 
-            // 畫分數
+            // 分數文字
             holes.forEach((s, i) => {
                 ctx.fillStyle = "#8b4513"; ctx.font = "bold 9px Arial"; ctx.textAlign = "center";
                 ctx.fillText(s, i * holeWidth + holeWidth/2, canvas.height - 5);
@@ -146,10 +144,10 @@
             ctx.fillStyle = "#cd853f";
             pins.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill(); });
 
-            // 4. 球留存
+            // 4. 已落點球
             settledBalls.forEach(b => drawBall(b.x, b.y));
 
-            // 5. 活動球
+            // 5. 當前活動球
             if (usedBalls < 5) drawBall(ball.x, ball.y);
 
             update();
@@ -165,50 +163,58 @@
         function update() {
             if (!ball.active) return;
 
-            // 物理更新
             ball.vy += 0.25; 
             ball.x += ball.vx;
             ball.y += ball.vy;
 
             const laneX = canvas.width - 40;
-            const topY = 100;
+            const topArcY = 120; // 圓弧起始高度
 
-            // --- 軌道物理核心邏輯 ---
+            // --- 核心物理：頂部天花板封閉與導引 ---
+            
+            // 1. 基礎螢幕邊界碰撞 (防止球飛出螢幕)
+            if (ball.y < ball.r) { 
+                ball.y = ball.r; 
+                ball.vy *= -0.5; // 撞到最頂端會反彈回來
+            }
+            if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.5; }
+            if (ball.x > canvas.width - ball.r) { ball.x = canvas.width - ball.r; ball.vx *= -0.5; }
+
+            // 2. 發射軌道邏輯
             if (ball.inLane) {
-                // 強制將球鎖定在發射管寬度內
-                if (ball.x < laneX + ball.r && ball.y > topY) {
+                // 只要球在右邊軌道且還沒衝出頂端弧線，鎖死 X 座標
+                if (ball.x > laneX - ball.r && ball.y > topArcY) {
                     ball.x = Math.max(laneX + ball.r, ball.x);
-                    ball.vx = 0; // 垂直上升不左右抖動
+                    ball.vx = 0;
                 }
                 
-                // 衝過發射口進入弧形區
-                if (ball.y <= topY) {
-                    // 根據弧形路徑公式計算位置，確保球「黏」在弧形天花板
+                // 衝入頂部圓弧區
+                if (ball.y <= topArcY) {
                     const centerX = canvas.width / 2;
                     const radius = canvas.width / 2 - 5 - ball.r;
                     
-                    // 只有當球從右邊進入弧形區時觸發
+                    // 檢查球是否在圓弧右半邊
                     if (ball.x > centerX) {
-                        const angle = Math.atan2(ball.y - topY, ball.x - centerX);
-                        ball.x = centerX + Math.cos(angle) * radius;
-                        ball.y = topY + Math.sin(angle) * radius;
+                        // 強制球沿著圓弧滑行，不准穿透天花板
+                        const dx = ball.x - centerX;
+                        const dy = ball.y - topArcY;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
                         
-                        // 當球橫向跨過中線後，切換為自由模式
-                        if (ball.x < centerX) {
-                            ball.inLane = false; 
+                        if (dist > radius || ball.y < topArcY) {
+                            const angle = Math.atan2(dy, dx);
+                            ball.x = centerX + Math.cos(angle) * radius;
+                            ball.y = topArcY + Math.sin(angle) * radius;
                         }
+                        
+                        // 當球橫向移動到中線左側，代表已經順利「滾」進場內
+                        if (ball.x < centerX) { ball.inLane = false; }
                     } else {
                         ball.inLane = false;
                     }
                 }
             } else {
-                // 自由模式物理 (一般碰撞)
-                if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.5; }
-                if (ball.y < ball.r) { ball.y = ball.r; ball.vy *= -0.5; }
-                if (ball.x > canvas.width - ball.r) { ball.x = canvas.width - ball.r; ball.vx *= -0.5; }
-                
-                // 遊戲區發射管左牆碰撞
-                if (ball.x > laneX - ball.r && ball.y > topY) {
+                // 遊戲區自由落體碰撞
+                if (ball.x > laneX - ball.r && ball.y > topArcY) {
                     ball.x = laneX - ball.r; ball.vx *= -0.4;
                 }
 
@@ -224,7 +230,7 @@
                     }
                 });
 
-                // 結算與堆疊
+                // 結算與垂直堆疊
                 if (ball.y > canvas.height - 40 && ball.x < laneX) {
                     const holeWidth = laneX / holes.length;
                     let idx = Math.floor(ball.x / holeWidth);
@@ -244,10 +250,11 @@
                 }
             }
 
-            // 沒衝過頭掉回原點 (不扣球)
+            // 沒衝過頭掉回原點 (不扣球數)
             if (ball.y > canvas.height && ball.inLane) resetBall();
         }
 
+        // --- 拉桿手勢 ---
         const knob = document.getElementById('plunger-knob');
         const stick = document.getElementById('plunger-stick');
 
@@ -273,8 +280,8 @@
                 
                 ball.active = true;
                 ball.inLane = true;
-                ball.vy = -(dragOffset / 3.8); 
-                ball.vx = 0; // 發射道內維持垂直上升
+                ball.vy = -(dragOffset / 3.5); // 力道微調
+                ball.vx = 0; 
             }
             stick.style.transform = `translateY(0px)`;
             dragOffset = 0;
