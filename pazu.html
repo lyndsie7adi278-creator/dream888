@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠旗艦彈珠台 - 軌道頂部封閉版</title>
+    <title>夢工廠旗艦彈珠台 - 流體軌道修正版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -32,11 +32,11 @@
 
     <div class="w-full max-w-[400px] p-4 flex justify-between items-center text-[#422006] font-bold">
         <div class="bg-white/40 px-5 py-2 rounded-2xl border border-amber-900/20">
-            <p class="text-[10px] uppercase">Point</p>
+            <p class="text-[10px] uppercase font-black">Points</p>
             <p id="userPoints" class="text-xl">---</p>
         </div>
         <div class="bg-white/40 px-5 py-2 rounded-2xl border border-amber-900/20 text-right">
-            <p class="text-[10px] uppercase">Ball</p>
+            <p class="text-[10px] uppercase font-black">Balls</p>
             <p id="gameState" class="text-xl">0 / 5</p>
         </div>
     </div>
@@ -78,11 +78,10 @@
         let user = { id: "", points: 0 };
         let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8.5, active: false, inLane: true };
         let settledBalls = [];
-        let holeOccupancy = [0,0,0,0,0,0,0,0,0,0];
+        let holeOccupancy = Array(10).fill(0);
         let pins = [];
         let holes = [10, 30, 50, 100, 20, 20, 100, 50, 30, 10];
-        let score = 0, usedBalls = 0;
-        let isDragging = false, startY = 0, dragOffset = 0;
+        let score = 0, usedBalls = 0, isDragging = false, startY = 0, dragOffset = 0;
 
         function resize() {
             const container = document.querySelector('.canvas-container');
@@ -98,10 +97,7 @@
             for (let i = 0; i < 9; i++) {
                 let rowCount = (i % 2 === 0) ? 6 : 7;
                 for (let j = 0; j < rowCount; j++) {
-                    pins.push({ 
-                        x: (i % 2 === 0 ? 30 : 15) + j * (laneX/rowCount), 
-                        y: 160 + i * 42 
-                    });
+                    pins.push({ x: (i % 2 === 0 ? 30 : 15) + j * (laneX/rowCount), y: 170 + i * 42 });
                 }
             }
         }
@@ -115,39 +111,33 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const laneX = canvas.width - 40;
+            const arcTop = 130;
 
-            // 1. 物理軌道視覺
+            // 1. 軌道視覺
             ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 6; ctx.lineCap = "round";
             ctx.beginPath();
-            ctx.moveTo(laneX, canvas.height);
-            ctx.lineTo(laneX, 120); 
+            ctx.moveTo(laneX, canvas.height); ctx.lineTo(laneX, arcTop); 
             ctx.stroke();
 
-            // 頂部導引圓弧 (半徑加大，確保封閉)
+            // 頂部圓弧視覺
             ctx.beginPath();
-            ctx.arc(canvas.width / 2, 120, canvas.width / 2 - 5, Math.PI, 0, false);
+            ctx.arc(canvas.width / 2, arcTop, canvas.width / 2 - 5, Math.PI, 0, false);
             ctx.stroke();
 
-            // 2. 底部計分槽
+            // 2. 底部槽位
             const holeWidth = laneX / holes.length;
             for(let i=0; i<=holes.length; i++) {
                 ctx.beginPath(); ctx.moveTo(i * holeWidth, canvas.height - 80); ctx.lineTo(i * holeWidth, canvas.height); ctx.stroke();
             }
-
-            // 分數文字
             holes.forEach((s, i) => {
                 ctx.fillStyle = "#8b4513"; ctx.font = "bold 9px Arial"; ctx.textAlign = "center";
                 ctx.fillText(s, i * holeWidth + holeWidth/2, canvas.height - 5);
             });
 
-            // 3. 釘子
+            // 3. 釘子與球
             ctx.fillStyle = "#cd853f";
             pins.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill(); });
-
-            // 4. 已落點球
             settledBalls.forEach(b => drawBall(b.x, b.y));
-
-            // 5. 當前活動球
             if (usedBalls < 5) drawBall(ball.x, ball.y);
 
             update();
@@ -168,57 +158,41 @@
             ball.y += ball.vy;
 
             const laneX = canvas.width - 40;
-            const topArcY = 120; // 圓弧起始高度
+            const arcCenterY = 130;
+            const centerX = canvas.width / 2;
+            const radius = canvas.width / 2 - 5 - ball.r;
 
-            // --- 核心物理：頂部天花板封閉與導引 ---
-            
-            // 1. 基礎螢幕邊界碰撞 (防止球飛出螢幕)
-            if (ball.y < ball.r) { 
-                ball.y = ball.r; 
-                ball.vy *= -0.5; // 撞到最頂端會反彈回來
-            }
-            if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.5; }
-            if (ball.x > canvas.width - ball.r) { ball.x = canvas.width - ball.r; ball.vx *= -0.5; }
-
-            // 2. 發射軌道邏輯
+            // --- 修復：流體式軌道邏輯 ---
             if (ball.inLane) {
-                // 只要球在右邊軌道且還沒衝出頂端弧線，鎖死 X 座標
-                if (ball.x > laneX - ball.r && ball.y > topArcY) {
-                    ball.x = Math.max(laneX + ball.r, ball.x);
+                // 發射道鎖定
+                if (ball.y > arcCenterY) {
+                    ball.x = canvas.width - 20; // 絕對鎖定在道內中心
                     ball.vx = 0;
-                }
-                
-                // 衝入頂部圓弧區
-                if (ball.y <= topArcY) {
-                    const centerX = canvas.width / 2;
-                    const radius = canvas.width / 2 - 5 - ball.r;
+                } else {
+                    // 進入圓弧導引
+                    const dx = ball.x - centerX;
+                    const dy = ball.y - arcCenterY;
+                    const angle = Math.atan2(dy, dx);
                     
-                    // 檢查球是否在圓弧右半邊
-                    if (ball.x > centerX) {
-                        // 強制球沿著圓弧滑行，不准穿透天花板
-                        const dx = ball.x - centerX;
-                        const dy = ball.y - topArcY;
-                        const dist = Math.sqrt(dx*dx + dy*dy);
-                        
-                        if (dist > radius || ball.y < topArcY) {
-                            const angle = Math.atan2(dy, dx);
-                            ball.x = centerX + Math.cos(angle) * radius;
-                            ball.y = topArcY + Math.sin(angle) * radius;
-                        }
-                        
-                        // 當球橫向移動到中線左側，代表已經順利「滾」進場內
-                        if (ball.x < centerX) { ball.inLane = false; }
-                    } else {
-                        ball.inLane = false;
+                    // 強制黏著圓弧，不准撞牆反彈，直接滑行
+                    ball.x = centerX + Math.cos(angle) * radius;
+                    ball.y = arcCenterY + Math.sin(angle) * radius;
+
+                    // 當球滑過頂點並越過中線，完全釋放
+                    if (ball.x < centerX - 10) { 
+                        ball.inLane = false; 
+                        // 給予向左落下的初速
+                        ball.vx = -1.5;
+                        ball.vy = 0.5;
                     }
                 }
             } else {
-                // 遊戲區自由落體碰撞
-                if (ball.x > laneX - ball.r && ball.y > topArcY) {
-                    ball.x = laneX - ball.r; ball.vx *= -0.4;
-                }
+                // 自由碰撞
+                if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.5; }
+                if (ball.y < ball.r) { ball.y = ball.r; ball.vy *= -0.5; }
+                if (ball.x > canvas.width - ball.r) { ball.x = canvas.width - ball.r; ball.vx *= -0.5; }
+                if (ball.x > laneX - ball.r && ball.y > arcCenterY) { ball.x = laneX - ball.r; ball.vx *= -0.4; }
 
-                // 釘子碰撞
                 pins.forEach(p => {
                     const dx = ball.x - p.x, dy = ball.y - p.y;
                     const dist = Math.sqrt(dx*dx + dy*dy);
@@ -230,7 +204,7 @@
                     }
                 });
 
-                // 結算與垂直堆疊
+                // 結算
                 if (ball.y > canvas.height - 40 && ball.x < laneX) {
                     const holeWidth = laneX / holes.length;
                     let idx = Math.floor(ball.x / holeWidth);
@@ -249,12 +223,9 @@
                     }
                 }
             }
-
-            // 沒衝過頭掉回原點 (不扣球數)
             if (ball.y > canvas.height && ball.inLane) resetBall();
         }
 
-        // --- 拉桿手勢 ---
         const knob = document.getElementById('plunger-knob');
         const stick = document.getElementById('plunger-stick');
 
@@ -277,11 +248,10 @@
             if (dragOffset > 20) {
                 if (usedBalls === 0 && user.points < 10) return alert("點數不足！");
                 if (usedBalls === 0) db.ref('users/' + user.id).update({ points: user.points - 10 });
-                
                 ball.active = true;
                 ball.inLane = true;
-                ball.vy = -(dragOffset / 3.5); // 力道微調
-                ball.vx = 0; 
+                ball.vy = -(dragOffset / 3.4); 
+                ball.vx = 0;
             }
             stick.style.transform = `translateY(0px)`;
             dragOffset = 0;
