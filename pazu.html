@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠旗艦彈珠台 - 6/5經典釘陣</title>
+    <title>夢工廠旗艦彈珠台 - 獎勵升級版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -26,24 +26,31 @@
             width: 42px; height: 42px; background: radial-gradient(circle at 30% 30%, #ef4444, #7f1d1d);
             border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer;
         }
+        /* 獎項彈窗動畫 */
+        .modal-active { display: flex !important; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="flex flex-col items-center wood-bg">
 
-    <div class="w-full max-w-[400px] p-4 flex justify-between items-center text-[#422006] font-black">
-        <div class="bg-white/40 px-5 py-2 rounded-2xl border border-amber-900/20 shadow-sm">
-            <p class="text-[10px] uppercase tracking-widest">Points</p>
-            <p id="userPoints" class="text-xl">---</p>
+    <div class="w-full max-w-[420px] p-3 flex justify-between items-center gap-2">
+        <div class="bg-white/40 flex-1 px-3 py-1 rounded-xl border border-amber-900/20 shadow-sm text-center">
+            <p class="text-[8px] uppercase font-bold text-amber-900">持有點數</p>
+            <p id="userPoints" class="text-lg font-black text-amber-900">---</p>
         </div>
-        <div class="bg-white/40 px-5 py-2 rounded-2xl border border-amber-900/20 text-right shadow-sm">
-            <p class="text-[10px] uppercase tracking-widest">Balls</p>
-            <p id="gameState" class="text-xl">0 / 5</p>
+        <div class="bg-amber-900/80 flex-1 px-3 py-1 rounded-xl border border-amber-600 shadow-sm text-center">
+            <p class="text-[8px] uppercase font-bold text-amber-100">本局積分</p>
+            <p id="gameScore" class="text-lg font-black text-white">0</p>
         </div>
+        <button onclick="togglePrize(true)" class="bg-red-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-lg border-b-4 border-red-900 active:border-b-0">
+            獎項
+        </button>
     </div>
 
-    <div class="flex items-stretch gap-4 px-2 h-[82vh] w-full max-w-[450px]">
+    <div class="flex items-stretch gap-3 px-2 h-[80vh] w-full max-w-[480px]">
         <div class="machine-frame flex-grow">
             <canvas id="gameCanvas"></canvas>
+            <div id="ballIndicator" class="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-amber-900/40">BALLS: 0 / 5</div>
         </div>
         <div class="plunger-side plunger-outer">
             <div id="p-stick">
@@ -52,11 +59,24 @@
         </div>
     </div>
 
-    <div id="resultModal" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-6 backdrop-blur-md">
+    <div id="prizeModal" class="fixed inset-0 bg-black/70 z-[100] hidden items-center justify-center p-6 backdrop-blur-sm" onclick="togglePrize(false)">
+        <div class="bg-[#fdf5e6] w-full max-w-xs rounded-[2rem] p-6 border-8 border-[#5d2e17] shadow-2xl" onclick="event.stopPropagation()">
+            <h3 class="text-center font-black text-xl text-[#5d2e17] mb-4">🏆 積分獎勵表</h3>
+            <ul class="space-y-3 text-sm font-bold text-amber-900">
+                <li class="flex justify-between border-b border-amber-200 pb-1"><span>500分以上</span> <span>神秘大獎🎁</span></li>
+                <li class="flex justify-between border-b border-amber-200 pb-1"><span>400 - 499分</span> <span>高級模型🔥</span></li>
+                <li class="flex justify-between border-b border-amber-200 pb-1"><span>300 - 399分</span> <span>精美好禮✨</span></li>
+                <li class="flex justify-between border-b border-amber-200 pb-1"><span>200 - 299分</span> <span>安慰獎項🎈</span></li>
+            </ul>
+            <button onclick="togglePrize(false)" class="mt-6 w-full py-3 bg-amber-800 text-white rounded-xl font-bold">關閉視窗</button>
+        </div>
+    </div>
+
+    <div id="resultModal" class="fixed inset-0 bg-black/95 z-[110] hidden items-center justify-center p-6">
         <div class="bg-[#fdf5e6] w-full max-w-sm rounded-[3rem] p-10 border-[10px] border-[#5d2e17] text-center shadow-2xl">
-            <h2 class="text-[#5d2e17] font-black text-2xl">總分結算</h2>
+            <h2 class="text-[#5d2e17] font-black text-2xl">本局總積分</h2>
             <h1 id="finalScore" class="text-7xl font-black text-red-600 my-6">0</h1>
-            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-[#5d2e17] text-white text-xl active:scale-95 transition">再玩一次 (10點)</button>
+            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-[#5d2e17] text-white text-xl shadow-lg">新遊戲 (10點)</button>
         </div>
     </div>
 
@@ -84,6 +104,10 @@
         let score = 0, usedBalls = 0, isDragging = false, startY = 0, dragOffset = 0;
         let arcCenterX, arcCenterY, arcRadius, laneX, holeWidth;
 
+        function togglePrize(show) {
+            document.getElementById('prizeModal').classList.toggle('modal-active', show);
+        }
+
         function resize() {
             const container = document.querySelector('.machine-frame');
             canvas.width = container.clientWidth;
@@ -99,25 +123,18 @@
 
         function initPins() {
             pins = [];
-            const pinAreaTop = 155; // 釘子頂部往上移，緊貼圓弧出口
-            const pinAreaBottom = canvas.height - 120;
-            const rowCount = 10; // 增加排數
-            const rowSpacing = (pinAreaBottom - pinAreaTop) / (rowCount - 1);
+            const pinAreaTop = 160; 
+            const pinAreaBottom = canvas.height - 150; // 底部留白更多，不擋洞口
+            const rows = 10; 
+            const rowSpacing = (pinAreaBottom - pinAreaTop) / (rows - 1);
 
-            for (let i = 0; i < rowCount; i++) {
+            for (let i = 0; i < rows; i++) {
                 const isSix = (i % 2 === 0);
                 const pinsInRow = isSix ? 6 : 5;
-                const spacing = laneX / 6; // 固定 6 等分
+                const spacing = laneX / 6;
 
                 for (let j = 0; j < pinsInRow; j++) {
-                    let pinX;
-                    if (isSix) {
-                        // 6 顆：置中均分
-                        pinX = (laneX / 12) + j * spacing;
-                    } else {
-                        // 5 顆：剛好卡在 6 顆的中間
-                        pinX = (laneX / 6) + j * spacing;
-                    }
+                    let pinX = isSix ? (laneX/12 + j*spacing) : (laneX/6 + j*spacing);
                     pins.push({ x: pinX, y: pinAreaTop + i * rowSpacing });
                 }
             }
@@ -133,7 +150,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 6; ctx.lineCap = "round";
 
-            // 1. 導軌
+            // 1. 軌道
             ctx.beginPath();
             ctx.moveTo(laneX, canvas.height); ctx.lineTo(laneX, arcCenterY);
             ctx.stroke();
@@ -141,10 +158,10 @@
             ctx.arc(arcCenterX, arcCenterY, arcRadius, Math.PI, 0, false);
             ctx.stroke();
 
-            // 2. 分數區
+            // 2. 計分槽隔板
             for(let i=0; i<=10; i++) {
                 ctx.beginPath(); ctx.lineWidth = 4;
-                ctx.moveTo(i * holeWidth, canvas.height - 100); 
+                ctx.moveTo(i * holeWidth, canvas.height - 110); // 隔板拉長一點
                 ctx.lineTo(i * holeWidth, canvas.height); ctx.stroke();
             }
             holes.forEach((s, i) => {
@@ -152,7 +169,7 @@
                 ctx.fillText(s, i * holeWidth + holeWidth/2, canvas.height - 10);
             });
 
-            // 3. 固定釘子 (6/5蜂巢排法)
+            // 3. 釘子
             ctx.fillStyle = "#cd853f";
             pins.forEach(p => { 
                 ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2); ctx.fill(); 
@@ -160,7 +177,7 @@
                 ctx.fillStyle = "#cd853f";
             });
 
-            // 4. 球
+            // 4. 球體
             settledBalls.forEach(b => drawBall(b.x, b.y));
             if (usedBalls < 5) drawBall(ball.x, ball.y);
 
@@ -176,7 +193,6 @@
 
         function update() {
             if (!ball.active) return;
-
             const subSteps = 15;
             const gravity = 0.22;
 
@@ -186,7 +202,7 @@
                 ball.y += ball.vy / subSteps;
 
                 // 槽位隔離
-                if (ball.y > canvas.height - 100 && ball.x < laneX) {
+                if (ball.y > canvas.height - 110 && ball.x < laneX) {
                     const idx = Math.floor(ball.x / holeWidth);
                     const leftW = idx * holeWidth + ball.r;
                     const rightW = (idx + 1) * holeWidth - ball.r;
@@ -206,7 +222,7 @@
                     }
                 }
 
-                // 頂部圓弧反射
+                // 頂部圓弧
                 const dx = ball.x - arcCenterX;
                 const dy = ball.y - arcCenterY;
                 const dist = Math.sqrt(dx*dx + dy*dy);
@@ -245,7 +261,8 @@
                 settledBalls.push({ x: idx * holeWidth + holeWidth/2, y: canvas.height - 20 - (stack * 18) });
                 holeOccupancy[idx]++;
                 usedBalls++;
-                document.getElementById('gameState').innerText = `${usedBalls} / 5`;
+                document.getElementById('gameScore').innerText = score;
+                document.getElementById('gameState').innerText = `BALLS: ${usedBalls} / 5`;
                 resetBall();
                 if (usedBalls >= 5) {
                     setTimeout(() => {
@@ -281,8 +298,8 @@
                 if (usedBalls === 0) db.ref('users/' + user.id).update({ points: user.points - 10 });
                 ball.active = true;
                 ball.hasLeftLane = false;
-                ball.vy = -(dragOffset / 3.3); 
-                ball.vx = (Math.random() - 0.5) * 0.3; 
+                ball.vy = -(dragOffset / 3.2); 
+                ball.vx = (Math.random() - 0.5) * 0.4; 
             }
             stick.style.transform = `translateY(0px)`;
             dragOffset = 0;
