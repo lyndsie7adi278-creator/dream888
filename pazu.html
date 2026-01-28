@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>夢工廠極速彈珠台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: "PingFang TC", sans-serif; overflow: hidden; touch-action: none; }
+        .gold-text { color: #eab308; }
+        .bg-gold { background: #eab308; }
+        canvas { background: #1e293b; border: 4px solid #475569; border-radius: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: block; margin: 0 auto; }
+        .spring-box { position: absolute; right: 20px; bottom: 50px; width: 40px; height: 150px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 2px solid #475569; }
+        #spring { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #eab308, #b45309); transition: height 0.1s; }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="flex justify-between items-center mb-4 bg-slate-800 p-4 rounded-2xl border border-slate-700">
+        <div>
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest">持有金幣</p>
+            <p id="userPoints" class="text-xl font-bold gold-text">---</p>
+        </div>
+        <div class="text-right">
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest">目前積分 / 球數</p>
+            <p id="gameState" class="text-xl font-bold text-white">0 分 (剩 5 球)</p>
+        </div>
+    </div>
+
+    <div class="relative">
+        <canvas id="pinballCanvas"></canvas>
+        <div class="spring-box" id="springControl">
+            <div id="spring" style="height: 20px;"></div>
+        </div>
+    </div>
+
+    <div id="resultModal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-slate-800 w-full max-w-sm rounded-[2.5rem] p-8 border border-slate-700 text-center shadow-2xl">
+            <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mb-2">五球結算總分</p>
+            <h2 id="finalScore" class="text-6xl font-black gold-text mb-6">0</h2>
+            <p id="prizeMsg" class="text-slate-300 mb-8 leading-relaxed">恭喜！可以找 Line 官方領取好禮喔！</p>
+            <button onclick="location.reload()" class="w-full py-4 rounded-2xl font-bold bg-gold text-slate-900 shadow-lg active:scale-95 transition">再玩一次 (10點)</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco",
+            authDomain: "dream8-7b161.firebaseapp.com",
+            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com",
+            projectId: "dream8-7b161",
+            storageBucket: "dream8-7b161.firebasestorage.app",
+            messagingSenderId: "606218522479",
+            appId: "1:606218522479:web:2737643db3de735af7e29a"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const canvas = document.getElementById('pinballCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 設定 Canvas 大小
+        canvas.width = 320;
+        canvas.height = 500;
+
+        let user = { id: "", points: 0 };
+        let ball = { x: 300, y: 470, vx: 0, vy: 0, r: 8, active: false };
+        let pins = []; // 釘子
+        let holes = [10, 50, 20, 100, 20, 50, 10, 80, 30, 60]; // 10個孔的分數
+        let totalScore = 0;
+        let ballsLeft = 5;
+        let isCharging = false;
+        let chargePower = 0;
+
+        // 初始化釘子
+        for (let i = 0; i < 7; i++) {
+            for (let j = 0; j < 6; j++) {
+                pins.push({ x: 40 + j * 48 + (i % 2 * 24), y: 100 + i * 40 });
+            }
+        }
+
+        async function initLIFF() {
+            try {
+                await liff.init({ liffId: "2008968610-8dLoGQie" });
+                if (!liff.isLoggedIn()) { liff.login(); } else {
+                    const profile = await liff.getProfile();
+                    user.id = profile.userId;
+                    syncUser();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function syncUser() {
+            db.ref('users/' + user.id + '/points').on('value', snap => {
+                user.points = snap.val() || 0;
+                document.getElementById('userPoints').innerText = user.points.toLocaleString();
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 畫孔位
+            holes.forEach((score, i) => {
+                const x = i * 32;
+                ctx.fillStyle = "#334155";
+                ctx.fillRect(x + 2, 450, 28, 50);
+                ctx.fillStyle = "#eab308";
+                ctx.font = "bold 10px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(score, x + 16, 480);
+            });
+
+            // 畫釘子
+            ctx.fillStyle = "#94a3b8";
+            pins.forEach(p => {
+                ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+            });
+
+            // 畫彈珠
+            if (ball.active || ballsLeft > 0) {
+                ctx.fillStyle = "#f8fafc";
+                ctx.shadowBlur = 10; ctx.shadowColor = "#fff";
+                ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            updatePhysics();
+            requestAnimationFrame(draw);
+        }
+
+        function updatePhysics() {
+            if (!ball.active) return;
+
+            ball.vy += 0.2; // 重力
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // 牆壁碰撞
+            if (ball.x < ball.r || ball.x > canvas.width - ball.r) ball.vx *= -0.7;
+            if (ball.y < ball.r) ball.vy *= -0.7;
+
+            // 釘子碰撞
+            pins.forEach(p => {
+                const dx = ball.x - p.x;
+                const dy = ball.y - p.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < ball.r + 3) {
+                    const angle = Math.atan2(dy, dx);
+                    ball.vx = Math.cos(angle) * 5;
+                    ball.vy = Math.sin(angle) * 5;
+                }
+            });
+
+            // 落入孔位
+            if (ball.y > 450) {
+                const holeIdx = Math.floor(ball.x / 32);
+                const score = holes[Math.min(holeIdx, 9)];
+                totalScore += score;
+                ball.active = false;
+                ballsLeft--;
+                updateState();
+                
+                if (ballsLeft > 0) {
+                    resetBall();
+                } else {
+                    showResult();
+                }
+            }
+        }
+
+        function resetBall() {
+            ball.x = 300; ball.y = 470; ball.vx = 0; ball.vy = 0;
+        }
+
+        function updateState() {
+            document.getElementById('gameState').innerText = `${totalScore} 分 (剩 ${ballsLeft} 球)`;
+        }
+
+        // 彈簧操作邏輯
+        const springCtrl = document.getElementById('springControl');
+        const springEle = document.getElementById('spring');
+
+        springCtrl.addEventListener('touchstart', (e) => {
+            if (ball.active || ballsLeft <= 0) return;
+            isCharging = true;
+            chargePower = 0;
+        });
+
+        window.addEventListener('touchend', () => {
+            if (!isCharging) return;
+            isCharging = false;
+            launchBall();
+            springEle.style.height = "20px";
+        });
+
+        function launchBall() {
+            // 扣除點數邏輯 (第一球才扣)
+            if (ballsLeft === 5 && !ball.active) {
+                if (user.points < 10) return alert("點數不足 10 點！");
+                db.ref('users/' + user.id).update({ points: user.points - 10 });
+            }
+
+            ball.active = true;
+            ball.vy = -(chargePower / 5); // 向上衝
+            ball.vx = -1.5; // 稍微往左斜
+        }
+
+        // 模擬蓄力動畫
+        setInterval(() => {
+            if (isCharging) {
+                chargePower = Math.min(chargePower + 2, 100);
+                springEle.style.height = (20 + chargePower) + "px";
+            }
+        }, 20);
+
+        function showResult() {
+            document.getElementById('finalScore').innerText = totalScore;
+            document.getElementById('resultModal').classList.remove('hidden');
+            // 寫入日誌
+            db.ref('logs').push({
+                time: Date.now(), userId: user.id,
+                reason: `彈珠台結算: ${totalScore}分`, change: 0
+            });
+        }
+
+        window.onload = () => {
+            initLIFF();
+            draw();
+        };
+    </script>
+</body>
+</html>
