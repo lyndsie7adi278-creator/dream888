@@ -93,7 +93,7 @@
 </div>
 
 <div class="progress-box">
-    <div class="prog-header"><div>已刮取進度條</div><div class="prog-stats"><span id="d_ct">0</span> / 40</div></div>
+    <div class="prog-header"><div>已刮取進度條</div><div class="prog-stats"><span id="d_ct">0</span> / 60</div></div>
     <div class="prog-bar-bg"><div id="p_br" class="prog-bar-fill"></div></div>
 </div>
 
@@ -140,10 +140,12 @@
     const _liveRef = _rf(_0xDb, 'live_scratch');
     const _ptsRef = _rf(_0xDb, 'live_scratch/points');
 
+    // 🚀 修改：獎項調整為 14 個
     const _z = { 
         1: "星星人怦然星動毛絨掛件(五代)", 2: "星星人怦然星動毛絨掛件(五代)", 3: "星星人怦然星動毛絨掛件(五代)", 4: "星星人怦然星動毛絨掛件(五代)", 
         5: "星星人怦然星動毛絨掛件(五代)", 6: "星星人怦然星動毛絨掛件(五代)", 7: "星星人怦然星動毛絨掛件(五代)", 
-        8: "星星人怦然星動毛絨掛件(五代)", 9: "星星人怦然星動毛絨掛件(五代)", 10: "星星人怦然星動毛絨掛件(五代)" 
+        8: "星星人怦然星動毛絨掛件(五代)", 9: "星星人怦然星動毛絨掛件(五代)", 10: "星星人怦然星動毛絨掛件(五代)",
+        11: "星星人怦然星動毛絨掛件(五代)", 12: "星星人怦然星動毛絨掛件(五代)", 13: "星星人怦然星動毛絨掛件(五代)", 14: "星星人怦然星動毛絨掛件(五代)"
     };
 
     let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null;
@@ -180,11 +182,13 @@
         if(d) {
             const takenCount = d.filter(x => x.taken).length;
             document.getElementById('d_ct').innerText = takenCount;
-            document.getElementById('p_br').style.width = (takenCount / 40 * 100) + "%";
-            document.getElementById('g_d').innerHTML = d.slice(0, 40).map((x, i) => {
+            // 🚀 修改：進度條分母 60
+            document.getElementById('p_br').style.width = (takenCount / 60 * 100) + "%";
+            document.getElementById('g_d').innerHTML = d.slice(0, 60).map((x, i) => {
                 const n = parseInt(x.grade); 
                 const isTaken = x.taken; 
-                const isWinner = (n >= 1 && n <= 10);
+                // 🚀 修改：前 8 號發出中獎發光
+                const isWinner = (n >= 1 && n <= 8);
                 const isRevealing = (_rI === i);
                 const isLocked = (isTaken && !_dn.has(n) && !_gS_rev);
                 
@@ -197,7 +201,8 @@
         document.getElementById('p_g').innerHTML = Object.entries(_z).map(([n, m]) => {
             const ni = parseInt(n);
             const t = _dn.has(ni); 
-            let c = (ni >= 1 && ni <= 10) ? 'tp' : '';
+            // 🚀 修改：前 8 號套用金色 (tp)
+            let c = (ni >= 1 && ni <= 8) ? 'tp' : '';
             return `<div class="p_item ${c} ${t?'tk':''}"><span class="p_badge">${_fm(n)}</span> ${m}</div>`;
         }).join('');
     });
@@ -259,7 +264,7 @@
         _cx.globalCompositeOperation = 'destination-out'; _cx.beginPath(); _cx.arc(x, y, 28, 0, Math.PI * 2); _cx.fill(); 
         if(!_iv) _ps(_ptsRef, { x: Math.round(x), y: Math.round(y) }); 
     }
-    function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; if (c > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _ud(_liveRef, { isRevealed: true }); if (parseInt(window._l_w) <= 10) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
+    function _ck() { const d = _cx.getImageData(0, 0, _cv.width, _cv.height).data; let c = 0; for (let i=3; i<d.length; i+=4) if(d[i]===0) c++; if (c > (d.length/4)*0.45) { _cv.style.display = 'none'; document.getElementById('c_btn').style.display = 'block'; if (!_iv) { _ud(_liveRef, { isRevealed: true }); if (parseInt(window._l_w) <= 8) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); _at(); } } }
     function _at() { if(_tm) clearInterval(_tm); let s=10; const b = document.getElementById('c_btn'); _tm=setInterval(()=>{ s--; b.innerText=`確認結果 (${s}s)`; if(s<=0){ clearInterval(_tm); window._clO(); } },1000); }
     
     window._v_cl = async () => { const v = document.getElementById('_i_01').value.trim().toUpperCase(); const s = await _gt(_rf(_0xDb, 'coupons/' + v)); if(s.exists() && s.val() > 0) { _u_c = v; localStorage.setItem('_u_c', v); document.getElementById('_m_01').style.display = 'none'; await _rfQ(); if(_s_i !== null) { _rI = _s_i; _ex(_s_i); } } else alert("碼錯誤"); };
@@ -269,12 +274,13 @@
         let l=0, r=0, g=0;
         document.getElementById('l_st').onclick = async () => { l++; if(l >= 10){ l=0; const p = prompt(""); if(p === _0x_k_val) { 
             await _rm(_liveRef); 
-            let n=[]; for(let i=1; i<=40; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); alert("DONE"); location.reload(); 
+            // 🚀 修改：初始化 60 張
+            let n=[]; for(let i=1; i<=60; i++) n.push(i); n.sort(()=>Math.random()-0.5); await _st(_poolRef, n.map(v=>({grade:v,taken:false}))); await _st(_histRef, null); alert("DONE (60 Cards)"); location.reload(); 
         } } };
         document.getElementById('r_st').onclick=()=>{ r++; if(r>=5){ r=0; const p = prompt(""); if(p === _0x_k_val) _sU('c'); } };
         document.getElementById('sys_sync_trigger').onclick=()=>{ g++; if(g>=10){ g=0; const p = prompt(""); if(p === _0x_k_val) _sU('g'); } };
     }
-    function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>物理限制：40張隨機 / 1-10金色燈效</p>`; document.getElementById('_m_02').style.display='flex'; }
+    function _sU(t) { const b = document.getElementById('_ui_c'); if(t==='c') b.innerHTML=`<p>?</p><input type="number" id="_i_02" value="1"><button onclick="window._sys_v1()" class="btn_m">SEND</button>`; else b.innerHTML=`<p>物理限制：60張隨機 / 1-8金色燈效</p>`; document.getElementById('_m_02').style.display='flex'; }
     
     window.onload = () => { 
         _u_c = localStorage.getItem('_u_c') || ""; if(_u_c) _rfQ(); _iV(); _iS();
