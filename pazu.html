@@ -3,100 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠頂級復古彈珠台</title>
+    <title>夢工廠旗艦彈珠台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
-        body { background: #1a0f0a; color: #f8fafc; font-family: "PingFang TC", sans-serif; overflow: hidden; touch-action: none; }
-        
-        /* 木質外框質感 */
-        .machine-frame {
-            border: 12px solid #5d2e17;
-            border-radius: 40px;
-            background: #3e1f11;
-            box-shadow: 
-                inset 0 0 50px rgba(0,0,0,0.8),
-                0 20px 50px rgba(0,0,0,0.9);
-            position: relative;
+        /* 禁止全網頁下拉與縮放 */
+        html, body { 
+            position: fixed; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            touch-action: none; 
+            background: #1a0f0a; 
+            margin: 0;
         }
 
-        /* 拉桿區域 */
-        #plunger-area {
-            position: absolute;
-            right: 15px;
-            bottom: 20px;
-            width: 40px;
-            height: 180px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 20px;
-            border: 2px solid #5d2e17;
+        .game-layout {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            align-items: flex-end;
+            justify-content: center;
+            height: 85vh;
+            gap: 10px;
+            padding-bottom: 20px;
         }
 
-        /* 實體拉桿 */
+        /* 木質主機台 */
+        .machine-main {
+            border: 10px solid #5d2e17;
+            border-radius: 30px 30px 15px 15px;
+            background: #3e1f11;
+            position: relative;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* 側邊拉桿區 - 不擋畫面 */
+        .plunger-side {
+            width: 50px;
+            height: 250px;
+            background: linear-gradient(to bottom, #5d2e17, #2d140a);
+            border: 4px solid #713f12;
+            border-radius: 25px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
         #plunger-stick {
-            width: 12px;
-            height: 100px;
-            background: linear-gradient(to right, #94a3b8, #f1f5f9, #475569);
-            border-radius: 6px;
+            width: 10px;
+            height: 120px;
+            background: linear-gradient(to right, #94a3b8, #f8fafc, #475569);
+            border-radius: 5px;
+            margin-top: 10px;
             position: relative;
             transform-origin: top;
-            transition: transform 0.1s cubic-bezier(0, 0, 0.2, 1);
         }
 
-        /* 拉桿圓頭 */
         #plunger-knob {
             position: absolute;
             bottom: -30px;
             left: 50%;
             transform: translateX(-50%);
-            width: 35px;
-            height: 35px;
-            background: radial-gradient(circle at 30% 30%, #ff4d4d, #990000);
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, #e11d48, #881337);
             border-radius: 50%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
             cursor: pointer;
         }
 
-        .status-panel {
-            background: rgba(45, 20, 10, 0.9);
-            border: 2px solid #eab308;
-            box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
-        }
+        .gold-glow { text-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen">
+<body class="flex flex-col items-center">
 
-    <div class="w-full max-w-[350px] status-panel mb-4 p-4 rounded-3xl flex justify-between items-center">
-        <div>
+    <div class="w-full max-w-[400px] p-4 flex justify-between items-center text-white">
+        <div class="bg-black/40 p-2 px-4 rounded-xl border border-amber-900/50">
             <p class="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Points</p>
-            <p id="userPoints" class="text-xl font-black text-white">---</p>
+            <p id="userPoints" class="text-xl font-black gold-glow">---</p>
         </div>
-        <div class="text-right">
-            <p class="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Score / Balls</p>
-            <p id="gameState" class="text-xl font-black text-white">0 / 5</p>
+        <div class="bg-black/40 p-2 px-4 rounded-xl border border-amber-900/50 text-right">
+            <p class="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Score / Ball</p>
+            <p id="gameState" class="text-xl font-black">0 / 5</p>
         </div>
     </div>
 
-    <div class="machine-frame">
-        <canvas id="gameCanvas"></canvas>
-        
-        <div id="plunger-area">
+    <div class="game-layout">
+        <div class="machine-main">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <div class="plunger-side">
             <div id="plunger-stick">
                 <div id="plunger-knob"></div>
             </div>
         </div>
     </div>
 
-    <div id="resultModal" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-6">
-        <div class="bg-amber-50 w-full max-w-sm rounded-[3rem] p-10 border-8 border-amber-900 text-center shadow-2xl">
-            <h2 class="text-amber-900 font-black text-2xl mb-2">本局得分</h2>
-            <h1 id="finalScore" class="text-7xl font-black text-red-600 mb-8">0</h1>
-            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-amber-800 text-white text-xl shadow-lg active:scale-95 transition">再玩一次 (10點)</button>
+    <div id="resultModal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-amber-50 w-full max-w-sm rounded-[3rem] p-10 border-[10px] border-amber-900 text-center">
+            <h2 class="text-amber-900 font-black text-2xl">GAME OVER</h2>
+            <h1 id="finalScore" class="text-7xl font-black text-red-600 my-6">0</h1>
+            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-amber-800 text-white text-xl active:scale-95 transition">再玩一次 (10點)</button>
         </div>
     </div>
 
@@ -115,24 +124,22 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        canvas.width = 320;
-        canvas.height = 520;
+        // 畫布尺寸優化
+        canvas.width = 300;
+        canvas.height = 480;
 
         let user = { id: "", points: 0 };
-        let ball = { x: 302, y: 460, vx: 0, vy: 0, r: 8, active: false };
+        let ball = { x: 285, y: 440, vx: 0, vy: 0, r: 7, active: false };
         let pins = [];
-        let holes = [10, 50, 10, 100, 10, 10, 100, 10, 50, 10];
-        let totalScore = 0, ballsLeft = 5;
+        let holes = [10, 30, 50, 100, 20, 20, 100, 50, 30, 10];
+        let score = 0, ballsLeft = 5;
         let isDragging = false, startY = 0, dragOffset = 0;
 
-        // 初始化釘子 (經典三角排列)
-        for (let i = 0; i < 9; i++) {
-            let rowPins = i % 2 === 0 ? 7 : 8;
-            for (let j = 0; j < rowPins; j++) {
-                pins.push({ 
-                    x: (i % 2 === 0 ? 35 : 20) + j * 38, 
-                    y: 120 + i * 35 
-                });
+        // 初始化釘子 (蜂巢式排列)
+        for (let i = 0; i < 8; i++) {
+            let rowCount = i % 2 === 0 ? 6 : 7;
+            for (let j = 0; j < rowCount; j++) {
+                pins.push({ x: (i % 2 === 0 ? 40 : 20) + j * 42, y: 130 + i * 40 });
             }
         }
 
@@ -147,142 +154,129 @@
                         document.getElementById('userPoints').innerText = user.points.toLocaleString();
                     });
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
 
         function draw() {
-            // 背景木質紋理感
             ctx.fillStyle = "#2d140a";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 畫出軌道擋板
-            ctx.strokeStyle = "#5d2e17"; ctx.lineWidth = 6;
+            // 畫發射軌道 (僅右側一小段)
+            ctx.strokeStyle = "#5d2e17"; ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.moveTo(285, 520); ctx.lineTo(285, 120); // 右側發射道
-            ctx.arc(160, 120, 125, 0, Math.PI, true); // 頂部圓弧
+            ctx.moveTo(270, 480); ctx.lineTo(270, 100);
             ctx.stroke();
 
-            // 畫孔位
+            // 頂部導流弧線 - 讓球順暢滾出
+            ctx.beginPath();
+            ctx.arc(150, 100, 120, 0, Math.PI, true);
+            ctx.stroke();
+
+            // 畫洞口
             holes.forEach((s, i) => {
-                const x = i * 28.5;
+                const x = i * 30;
                 ctx.fillStyle = "#1a0f0a";
-                ctx.fillRect(x + 2, 470, 24, 50);
+                ctx.beginPath();
+                ctx.ellipse(x+15, 450, 12, 18, 0, 0, Math.PI*2);
+                ctx.fill();
                 ctx.fillStyle = "#eab308";
-                ctx.font = "bold 10px Arial"; ctx.textAlign = "center";
-                ctx.fillText(s, x + 14, 495);
+                ctx.font = "bold 9px Arial"; ctx.textAlign = "center";
+                ctx.fillText(s, x+15, 475);
             });
 
-            // 畫釘子
+            // 釘子
             pins.forEach(p => {
                 ctx.fillStyle = "#94a3b8";
-                ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#fff";
-                ctx.beginPath(); ctx.arc(p.x-1, p.y-1, 1, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2); ctx.fill();
             });
 
-            // 畫球
+            // 鋼珠
             if (ball.active || ballsLeft > 0) {
-                let grad = ctx.createRadialGradient(ball.x-3, ball.y-3, 1, ball.x, ball.y, ball.r);
-                grad.addColorStop(0, '#fff'); grad.addColorStop(1, '#64748b');
-                ctx.fillStyle = grad;
+                let g = ctx.createRadialGradient(ball.x-2, ball.y-2, 1, ball.x, ball.y, ball.r);
+                g.addColorStop(0, '#fff'); g.addColorStop(1, '#64748b');
+                ctx.fillStyle = g;
                 ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
             }
 
-            updatePhysics();
+            update();
             requestAnimationFrame(draw);
         }
 
-        function updatePhysics() {
+        function update() {
             if (!ball.active) return;
 
-            ball.vy += 0.22; // 重力
+            ball.vy += 0.2; 
             ball.x += ball.vx;
             ball.y += ball.vy;
 
-            // 軌道與牆壁碰撞
+            // 物理碰撞邏輯
             if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.5; }
             if (ball.y < ball.r) { ball.y = ball.r; ball.vy *= -0.5; }
-            
-            // 發射道右牆
-            if (ball.x > 285 - ball.r && ball.y > 110 && ball.vx > 0) {
-                ball.x = 285 - ball.r; ball.vx *= -0.5;
-            }
-            // 右外牆
-            if (ball.x > canvas.width - ball.r) {
-                ball.x = canvas.width - ball.r; ball.vx *= -0.5;
-            }
 
-            // 釘子碰撞
+            // 發射道碰撞 (防止球在發射中途跳出)
+            if (ball.x > 270 - ball.r && ball.y > 100 && ball.vx > 0) {
+                ball.x = 270 - ball.r; ball.vx *= -0.4;
+            }
+            if (ball.x > canvas.width - ball.r) { ball.x = canvas.width - ball.r; ball.vx *= -0.5; }
+
+            // 釘子反彈
             pins.forEach(p => {
                 const dx = ball.x - p.x, dy = ball.y - p.y;
                 const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < ball.r + 3) {
+                if (dist < ball.r + 2.5) {
                     const angle = Math.atan2(dy, dx);
                     const speed = Math.sqrt(ball.vx**2 + ball.vy**2);
-                    ball.vx = Math.cos(angle) * (speed * 0.7 + 1);
-                    ball.vy = Math.sin(angle) * (speed * 0.7 + 1);
+                    ball.vx = Math.cos(angle) * (speed * 0.7 + 0.8);
+                    ball.vy = Math.sin(angle) * (speed * 0.7 + 0.8);
                 }
             });
 
-            // 掉入孔位
-            if (ball.y > 480) {
-                let idx = Math.floor(ball.x / 28.5);
-                totalScore += holes[Math.min(idx, 9)];
+            // 結算落點
+            if (ball.y > 450) {
+                let idx = Math.floor(ball.x / 30);
+                score += holes[Math.min(idx, 9)];
                 ball.active = false;
                 ballsLeft--;
-                document.getElementById('gameState').innerText = `${totalScore} / ${ballsLeft}`;
-                if (ballsLeft > 0) {
-                    ball.x = 302; ball.y = 460; ball.vx = 0; ball.vy = 0;
-                } else {
-                    setTimeout(() => {
-                        document.getElementById('finalScore').innerText = totalScore;
-                        document.getElementById('resultModal').classList.remove('hidden');
-                    }, 500);
-                }
+                document.getElementById('gameState').innerText = `${score} / ${ballsLeft}`;
+                if (ballsLeft > 0) { ball.x = 285; ball.y = 440; ball.vx = 0; ball.vy = 0; }
+                else { setTimeout(() => { document.getElementById('finalScore').innerText = score; document.getElementById('resultModal').classList.remove('hidden'); }, 500); }
             }
         }
 
-        // --- 拉桿手勢邏輯 ---
         const knob = document.getElementById('plunger-knob');
         const stick = document.getElementById('plunger-stick');
 
         knob.addEventListener('touchstart', (e) => {
             if (ball.active || ballsLeft <= 0) return;
-            isDragging = true;
-            startY = e.touches[0].clientY;
-        });
+            isDragging = true; startY = e.touches[0].clientY;
+            e.preventDefault(); // 鎖定瀏覽器下拉
+        }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
             if (!isDragging) return;
-            let currentY = e.touches[0].clientY;
-            dragOffset = Math.max(0, Math.min(80, currentY - startY));
+            dragOffset = Math.max(0, Math.min(100, e.touches[0].clientY - startY));
             stick.style.transform = `translateY(${dragOffset}px)`;
-        });
+            e.preventDefault();
+        }, { passive: false });
 
         window.addEventListener('touchend', () => {
             if (!isDragging) return;
             isDragging = false;
-            
-            // 發射球
-            if (dragOffset > 10) {
-                if (ballsLeft === 5) { // 第一球扣點
-                    if (user.points < 10) {
-                        alert("點數不足！");
-                        stick.style.transform = `translateY(0px)`;
-                        return;
-                    }
-                    db.ref('users/' + user.id).update({ points: user.points - 10 });
+            if (dragOffset > 15) {
+                if (ballsLeft === 5 && user.points < 10) { 
+                    alert("點數不足！"); 
+                } else {
+                    if (ballsLeft === 5) db.ref('users/' + user.id).update({ points: user.points - 10 });
+                    ball.active = true;
+                    ball.vy = -(dragOffset / 5); ball.vx = 0;
                 }
-                
-                ball.active = true;
-                ball.vy = -(dragOffset / 4.5); // 根據拉多遠決定力道
-                ball.vx = 0;
             }
-            
-            // 拉桿彈回動畫
             stick.style.transform = `translateY(0px)`;
             dragOffset = 0;
         });
+
+        // 阻止網頁下拉
+        document.addEventListener('touchmove', (e) => { if(isDragging) e.preventDefault(); }, { passive: false });
 
         window.onload = () => { init(); draw(); };
     </script>
