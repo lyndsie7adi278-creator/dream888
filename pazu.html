@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>糖果彈珠台 - 觸覺震動版</title>
+    <title夢工廠彈珠台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -49,7 +49,7 @@
     </div>
 
     <div class="flex items-stretch gap-3 px-2 h-[80vh] w-full max-w-[480px]">
-        <div class="machine-frame flex-grow">
+        <div class="machine-frame flex-grow" id="gameArea">
             <canvas id="gameCanvas"></canvas>
             <div id="ballIndicator" class="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-amber-900/40 uppercase">Remaining: 5</div>
         </div>
@@ -104,12 +104,16 @@
         let score = 0, usedBalls = 0, isDragging = false, startY = 0, dragOffset = 0;
         let arcCenterX, arcCenterY, arcRadius, laneX, holeWidth;
 
-        // --- 震動輔助函數 ---
-        function haptic(ms) {
-            if (navigator.vibrate) navigator.vibrate(ms);
+        // --- 震動邏輯強化 ---
+        function haptic(pattern) {
+            try {
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(pattern);
+                }
+            } catch (e) { console.log("震動不支援"); }
         }
 
-        function togglePrize(show) { document.getElementById('prizeModal').classList.toggle('modal-active', show); }
+        function togglePrize(show) { document.getElementById('prizeModal').classList.toggle('modal-active', show); haptic(20); }
 
         function initLayout() {
             const container = document.querySelector('.machine-frame');
@@ -155,7 +159,6 @@
                 ball.x += ball.vx / steps;
                 ball.y += ball.vy / steps;
 
-                // 槽位物理
                 if (ball.y > canvas.height - 110 && ball.x < laneX) {
                     const idx = Math.floor(ball.x / holeWidth);
                     const left = idx * holeWidth + ball.r, right = (idx + 1) * holeWidth - ball.r;
@@ -189,8 +192,7 @@
                         const speed = Math.sqrt(ball.vx**2 + ball.vy**2);
                         ball.vx = Math.cos(angle) * (speed * 0.75 + 0.4); 
                         ball.vy = Math.sin(angle) * (speed * 0.75 + 0.4);
-                        // 碰撞針腳震動
-                        haptic(10);
+                        haptic(10); // 撞擊震動
                     }
                 });
                 if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.5; }
@@ -207,17 +209,15 @@
                 document.getElementById('gameScore').innerText = score;
                 document.getElementById('ballIndicator').innerText = `Remaining: ${5 - usedBalls}`;
                 
-                // 入洞震動回饋 (有節奏的震動)
-                haptic([40, 30, 40]);
+                haptic([40, 30, 40]); // 得分震動
                 
                 ball.active = false;
-                if (usedBalls < 5) {
-                    setTimeout(resetToLaunch, 500);
-                } else {
+                if (usedBalls < 5) { setTimeout(resetToLaunch, 500); }
+                else {
                     setTimeout(() => {
                         document.getElementById('finalScore').innerText = score;
                         document.getElementById('resultModal').classList.remove('hidden');
-                        haptic(200); // 遊戲結束大震動
+                        haptic(150);
                     }, 800);
                 }
             }
@@ -247,22 +247,20 @@
 
         const pStick = document.getElementById('p-stick');
         document.addEventListener('touchstart', (e) => {
+            // 在玩家第一次點擊螢幕時嘗試「解鎖」震動權限
+            haptic(1); 
             if (e.target.closest('.plunger-outer')) {
                 if (ball.active || usedBalls >= 5) return;
                 isDragging = true; startY = e.touches[0].clientY;
-                haptic(15); // 觸摸開始微震
             }
         }, { passive: false });
 
         document.addEventListener('touchmove', (e) => {
             if (isDragging) {
-                const prevOffset = dragOffset;
+                const prev = dragOffset;
                 dragOffset = Math.max(0, Math.min(100, e.touches[0].clientY - startY));
                 pStick.style.transform = `translateY(${dragOffset}px)`;
-                
-                // 蓄力震動：每拉動一段距離震一下
-                if (Math.abs(dragOffset - prevOffset) > 10) haptic(5);
-                
+                if (Math.abs(dragOffset - prev) > 8) haptic(5); // 拉桿過程微震
                 e.preventDefault();
             }
         }, { passive: false });
@@ -275,7 +273,7 @@
                 ball.active = true;
                 ball.vy = -(dragOffset / 3.2); 
                 ball.vx = (Math.random() - 0.5) * 0.5;
-                haptic(60); // 發射強震動
+                haptic(50); // 發射震動
             }
             pStick.style.transform = `translateY(0px)`;
             dragOffset = 0;
