@@ -28,9 +28,7 @@
         .p_item { display: flex; align-items: center; font-size: 0.8rem; color: #555; background: #fffafb; padding: 8px 10px; border-radius: 10px; border: 2px solid transparent; }
         .p_badge { background: var(--a); color: white; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 0.75rem; margin-right: 8px; min-width: 25px; text-align: center; }
 
-        /* 🚀 01-08 號金色呼吸燈 */
         .p_item.tp:not(.tk) { background: #fff9e6; border: 2px solid var(--g); animation: gold-breath 2s infinite; font-weight: 800; color: #d4a017; }
-        /* 🚀 09-14 號黑色邊框 */
         .p_item.bp:not(.tk) { border: 2px solid #222; background: #f8f8f8; font-weight: bold; color: #333; }
         .p_item.tk { opacity: 0.25; background: #eee !important; text-decoration: line-through; border-color: #ddd !important; }
 
@@ -45,8 +43,7 @@
         .t_s:not(.so):not(.rv):not(.bv):not(.pk)::after { content: "㊗️"; } 
         .t_s.so { background: #f2f2f2 !important; color: #bbb; box-shadow: none; cursor: default; }
         .t_s.so::after { content: attr(data-display); font-size: 0.85rem; font-weight: bold; color: #ccc; }
-        
-        /* 🏆 抽中 01-08 號：金色發光 */
+    
         .t_s.rv { 
             background: #fff9e6 !important; 
             border: 3px solid var(--g) !important; 
@@ -56,7 +53,6 @@
         }
         .t_s.rv::after { content: attr(data-display) !important; color: #d4a017 !important; font-weight: 900 !important; }
 
-        /* 🏆 抽中 09-14 號：粗黑框樣式 */
         .t_s.bv {
             background: #ffffff !important;
             border: 3px solid #222 !important;
@@ -136,8 +132,8 @@
     const _z = { 
         1: "怦然星動毛絨掛件(五代)", 2: "怦然星動毛絨掛件(五代)", 3: "怦然星動毛絨掛件(五代)", 4: "怦然星動毛絨掛件(五代)", 
         5: "怦然星動毛絨掛件(五代)", 6: "怦然星動毛絨掛件(五代)", 7: "怦然星動毛絨掛件(五代)", 8: "怦然星動毛絨掛件(五代)",
-        9: "怦然星動毛絨掛件(五代)", 10: "怦然星動毛絨掛件(五代)", 11: "怦然星動毛絨掛件(五代)", 12: "怦然星動毛絨掛件(五代)",
-        13: "怦然星動毛絨掛件(五代)", 14: "怦然星動毛絨掛件(五代)"
+        9: "隨機盲盒一款", 10: "隨機盲盒一款", 11: "隨機盲盒一款", 12: "隨機盲盒一款",
+        13: "隨機盲盒一款", 14: "隨機盲盒一款"
     };
 
     let _u_c = "", _u_q = 0, _s_i = null, _cv, _cx, _id = false, _ip = false, _iv = false, _dn = new Set(), _tm = null, _gS_rev = false, _rI = null;
