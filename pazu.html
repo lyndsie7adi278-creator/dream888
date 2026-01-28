@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠旗艦彈珠台 - 軌道鎖定版</title>
+    <title>夢工廠旗艦彈珠台 - 真實物理版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -12,31 +12,31 @@
         html, body { position: fixed; width: 100%; height: 100%; overflow: hidden; touch-action: none; background: #1a0f0a; margin: 0; }
         .wood-bg { background-color: #d2b48c; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern-polished.png'); }
         .machine-frame {
-            border: 10px solid #5d2e17; border-radius: 40px;
+            border: 12px solid #5d2e17; border-radius: 40px;
             box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.8);
             background: #fdf5e6; position: relative; overflow: hidden;
         }
         .plunger-outer {
-            width: 50px; height: 220px; background: #8b4513; border: 4px solid #422006;
-            border-radius: 25px; display: flex; justify-content: center; align-self: flex-end; margin-bottom: 20px;
+            width: 45px; height: 180px; background: #8b4513; border: 4px solid #422006;
+            border-radius: 22px; display: flex; justify-content: center; align-self: flex-end; margin-bottom: 20px;
         }
-        #p-stick { width: 10px; height: 130px; background: #94a3b8; border-radius: 5px; margin-top: 5px; position: relative; }
+        #p-stick { width: 8px; height: 100px; background: #94a3b8; border-radius: 4px; margin-top: 5px; position: relative; }
         #p-knob {
             position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
-            width: 45px; height: 45px; background: radial-gradient(circle at 30% 30%, #ef4444, #7f1d1d);
-            border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer;
+            width: 36px; height: 36px; background: radial-gradient(circle at 30% 30%, #ef4444, #7f1d1d);
+            border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.5); cursor: pointer;
         }
     </style>
 </head>
 <body class="flex flex-col items-center wood-bg">
 
     <div class="w-full max-w-[400px] p-4 flex justify-between items-center text-[#422006] font-bold">
-        <div class="bg-white/40 px-5 py-1 rounded-2xl border border-amber-900/20">
-            <p class="text-[9px] uppercase tracking-tighter">Points</p>
+        <div class="bg-white/40 px-5 py-1 rounded-2xl border border-amber-900/20 shadow-sm">
+            <p class="text-[9px] uppercase">Point</p>
             <p id="userPoints" class="text-lg">---</p>
         </div>
-        <div class="bg-white/40 px-5 py-1 rounded-2xl border border-amber-900/20 text-right">
-            <p class="text-[9px] uppercase tracking-tighter">Remaining</p>
+        <div class="bg-white/40 px-5 py-1 rounded-2xl border border-amber-900/20 text-right shadow-sm">
+            <p class="text-[9px] uppercase">Ball</p>
             <p id="gameState" class="text-lg">0 / 5</p>
         </div>
     </div>
@@ -45,7 +45,7 @@
         <div class="machine-frame flex-grow">
             <canvas id="gameCanvas"></canvas>
         </div>
-        <div class="plunger-outer">
+        <div class="plunger-side plunger-outer">
             <div id="p-stick">
                 <div id="p-knob"></div>
             </div>
@@ -54,9 +54,9 @@
 
     <div id="resultModal" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-[#fdf5e6] w-full max-w-sm rounded-[3rem] p-10 border-[10px] border-[#5d2e17] text-center shadow-2xl">
-            <h2 class="text-[#5d2e17] font-black text-2xl uppercase">遊戲結束</h2>
+            <h2 class="text-[#5d2e17] font-black text-2xl">總分結算</h2>
             <h1 id="finalScore" class="text-7xl font-black text-red-600 my-6">0</h1>
-            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-[#5d2e17] text-white text-xl active:scale-95 transition">再玩一場 (10點)</button>
+            <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-[#5d2e17] text-white text-xl active:scale-95 transition">再來一局 (10點)</button>
         </div>
     </div>
 
@@ -76,21 +76,22 @@
         const ctx = canvas.getContext('2d');
 
         let user = { id: "", points: 0 };
-        let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8.5, active: false, status: "idle" }; // idle, launching, free
+        let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8.5, active: false };
         let settledBalls = [];
         let holeOccupancy = Array(10).fill(0);
         let pins = [];
         let holes = [10, 20, 50, 100, 30, 30, 100, 50, 20, 10];
         let score = 0, usedBalls = 0, isDragging = false, startY = 0, dragOffset = 0;
 
-        let arcCenterX, arcCenterY, arcRadius;
+        let arcCenterX, arcCenterY, arcRadius, laneX;
 
         function resize() {
             const container = document.querySelector('.machine-frame');
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
+            laneX = canvas.width - 40;
             arcCenterX = canvas.width / 2;
-            arcCenterY = 150; 
+            arcCenterY = 140; 
             arcRadius = canvas.width / 2 - 5;
             initPins();
             resetBall();
@@ -98,27 +99,25 @@
 
         function initPins() {
             pins = [];
-            const laneX = canvas.width - 45;
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 9; i++) {
                 let rowCount = (i % 2 === 0) ? 6 : 7;
                 for (let j = 0; j < rowCount; j++) {
-                    pins.push({ x: (i % 2 === 0 ? 35 : 20) + j * (laneX/rowCount), y: 190 + i * 40 });
+                    pins.push({ x: (i % 2 === 0 ? 30 : 15) + j * (laneX/rowCount), y: 200 + i * 42 });
                 }
             }
         }
 
         function resetBall() {
-            ball.x = canvas.width - 22;
+            ball.x = canvas.width - 20;
             ball.y = canvas.height - 40;
-            ball.vx = 0; ball.vy = 0; ball.active = false; ball.status = "idle";
+            ball.vx = 0; ball.vy = 0; ball.active = false;
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const laneX = canvas.width - 45;
 
-            // 1. 視覺導軌
-            ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 8; ctx.lineCap = "round";
+            // 1. 軌道視覺
+            ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 6; ctx.lineCap = "round";
             ctx.beginPath();
             ctx.moveTo(laneX, canvas.height); ctx.lineTo(laneX, arcCenterY);
             ctx.stroke();
@@ -126,7 +125,7 @@
             ctx.arc(arcCenterX, arcCenterY, arcRadius, Math.PI, 0, false);
             ctx.stroke();
 
-            // 2. 底部計分格
+            // 2. 計分槽
             const holeWidth = laneX / holes.length;
             for(let i=0; i<=holes.length; i++) {
                 ctx.beginPath(); ctx.moveTo(i * holeWidth, canvas.height - 80); ctx.lineTo(i * holeWidth, canvas.height); ctx.stroke();
@@ -157,88 +156,93 @@
         function update() {
             if (!ball.active) return;
 
-            const subSteps = 6; // 增加細分運算次數，徹底解決穿牆
+            // 物理子步驟運算 (10倍精度，解決煞車與穿牆感)
+            const subSteps = 10;
+            const gravity = 0.25;
+
             for(let s=0; s<subSteps; s++) {
-                ball.vy += 0.25 / subSteps;
+                ball.vy += gravity / subSteps;
                 ball.x += ball.vx / subSteps;
                 ball.y += ball.vy / subSteps;
 
-                const laneX = canvas.width - 45;
-
-                // --- 狀態 A: 發射道強制模式 ---
-                if (ball.status === "launching") {
-                    // 強制將球鎖定在管子寬度中心，不准左右移動
-                    ball.x = canvas.width - 22;
-                    if (ball.y < arcCenterY) {
-                        ball.status = "free"; // 衝過頂點，交還給物理引擎
+                // --- 1. 右側發射道物理牆 (硬約束) ---
+                if (ball.x > laneX - ball.r && ball.y > arcCenterY) {
+                    if (ball.x < laneX + ball.r) { 
+                        // 球在管內：左右牆壁完全彈射，不損失動能
+                        if (ball.x < laneX + ball.r/2) { ball.x = laneX - ball.r; ball.vx *= -0.8; }
+                        else if (ball.x > canvas.width - ball.r) { ball.x = canvas.width - ball.r; ball.vx *= -0.8; }
+                    } else {
+                        // 防止從外部穿進管子
+                        ball.x = laneX - ball.r; ball.vx *= -0.5;
                     }
                 }
 
-                // --- 狀態 B: 自由物理模式 ---
-                if (ball.status === "free") {
-                    // 頂部圓弧實體牆碰撞
-                    const dx = ball.x - arcCenterX;
-                    const dy = ball.y - arcCenterY;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
+                // --- 2. 頂部弧形牆物理反射 (自然滑行) ---
+                const dx = ball.x - arcCenterX;
+                const dy = ball.y - arcCenterY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
 
-                    if (dist + ball.r > arcRadius && dy < 0) {
-                        const nx = dx / dist;
-                        const ny = dy / dist;
-                        ball.x = arcCenterX + nx * (arcRadius - ball.r);
-                        ball.y = arcCenterY + ny * (arcRadius - ball.r);
-                        const dot = ball.vx * nx + ball.vy * ny;
-                        ball.vx = (ball.vx - dot * nx) * 0.9;
-                        ball.vy = (ball.vy - dot * ny) * 0.9;
-                    }
-
-                    // 左右邊界
-                    if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.5; }
-                    if (ball.x > canvas.width - ball.r) { ball.x = canvas.width - ball.r; ball.vx *= -0.5; }
-
-                    // 遊戲區發射管壁碰撞 (防止球掉回發射道)
-                    if (ball.x > laneX - ball.r && ball.y > arcCenterY) {
-                        ball.x = laneX - ball.r; ball.vx *= -0.4;
-                    }
-
-                    // 釘子
-                    pins.forEach(p => {
-                        const pdx = ball.x - p.x, pdy = ball.y - p.y;
-                        const pdist = Math.sqrt(pdx*pdx + pdy*pdy);
-                        if (pdist < ball.r + 3) {
-                            const angle = Math.atan2(pdy, pdx);
-                            const speed = Math.sqrt(ball.vx**2 + ball.vy**2);
-                            ball.vx = Math.cos(angle) * (speed * 0.7 + 0.5);
-                            ball.vy = Math.sin(angle) * (speed * 0.7 + 0.5);
-                        }
-                    });
+                if (dist + ball.r > arcRadius && ball.y < arcCenterY) {
+                    const nx = dx / dist; // 法向量 X
+                    const ny = dy / dist; // 法向量 Y
+                    
+                    // 將球推回弧線內部
+                    ball.x = arcCenterX + nx * (arcRadius - ball.r);
+                    ball.y = arcCenterY + ny * (arcRadius - ball.r);
+                    
+                    // 真實物理反射公式：v_out = v_in - 2*(v_in · n)*n
+                    // 加上一點摩擦係數 (0.98) 讓它自然順滑
+                    const dot = ball.vx * nx + ball.vy * ny;
+                    ball.vx = (ball.vx - 1.8 * dot * nx) * 0.98;
+                    ball.vy = (ball.vy - 1.8 * dot * ny) * 0.98;
                 }
+
+                // --- 3. 釘子碰撞 ---
+                pins.forEach(p => {
+                    const pdx = ball.x - p.x, pdy = ball.y - p.y;
+                    const pdist = Math.sqrt(pdx*pdx + pdy*pdy);
+                    if (pdist < ball.r + 3) {
+                        const angle = Math.atan2(pdy, pdx);
+                        const speed = Math.sqrt(ball.vx**2 + ball.vy**2);
+                        ball.vx = Math.cos(angle) * (speed * 0.7 + 0.4);
+                        ball.vy = Math.sin(angle) * (speed * 0.7 + 0.4);
+                    }
+                });
+
+                // --- 4. 左右邊界 ---
+                if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.5; }
+                if (ball.x > canvas.width - ball.r && ball.y < arcCenterY) { ball.x = canvas.width - ball.r; ball.vx *= -0.5; }
+                if (ball.y < ball.r) { ball.y = ball.r; ball.vy *= -0.5; }
             }
 
-            // 結算
-            const laneX = canvas.width - 45;
+            // --- 5. 自然結算判定 (無吸力) ---
             if (ball.y > canvas.height - 40 && ball.x < laneX) {
                 const holeWidth = laneX / holes.length;
                 let idx = Math.floor(ball.x / holeWidth);
-                score += holes[Math.min(idx, 9)];
-                const stack = holeOccupancy[idx];
-                settledBalls.push({ x: idx * holeWidth + holeWidth/2, y: canvas.height - 18 - (stack * 18) });
-                holeOccupancy[idx]++;
-                usedBalls++;
-                document.getElementById('gameState').innerText = `${usedBalls} / 5`;
-                resetBall();
-                if (usedBalls >= 5) {
-                    setTimeout(() => {
-                        document.getElementById('finalScore').innerText = score;
-                        document.getElementById('resultModal').classList.remove('hidden');
-                    }, 800);
+                
+                // 確認球真的在孔的範圍內才停住
+                if (ball.y > canvas.height - 25) {
+                    score += holes[Math.min(idx, 9)];
+                    const stack = holeOccupancy[idx];
+                    settledBalls.push({ x: idx * holeWidth + holeWidth/2, y: canvas.height - 18 - (stack * 18) });
+                    holeOccupancy[idx]++;
+                    usedBalls++;
+                    document.getElementById('gameState').innerText = `${usedBalls} / 5`;
+                    resetBall();
+                    if (usedBalls >= 5) {
+                        setTimeout(() => {
+                            document.getElementById('finalScore').innerText = score;
+                            document.getElementById('resultModal').classList.remove('hidden');
+                        }, 800);
+                    }
                 }
             }
 
-            // 沒衝上去掉回來
+            // 沒衝過頭掉回發射口 (不扣球)
             if (ball.y > canvas.height && ball.x >= laneX) resetBall();
         }
 
-        // --- 拉桿手勢 ---
+        // --- 拉桿邏輯 ---
         const knob = document.getElementById('p-knob');
         const stick = document.getElementById('p-stick');
 
@@ -263,9 +267,8 @@
                 if (usedBalls === 0) db.ref('users/' + user.id).update({ points: user.points - 10 });
                 
                 ball.active = true;
-                ball.status = "launching";
                 ball.vy = -(dragOffset / 3); 
-                ball.vx = 0;
+                ball.vx = (Math.random() - 0.5); // 給一點點隨機擾動，更真實
             }
             stick.style.transform = `translateY(0px)`;
             dragOffset = 0;
