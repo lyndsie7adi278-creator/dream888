@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠旗艦彈珠台 - 質感升級版</title>
+    <title>夢工廠旗艦彈珠台 - 軌道優化版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -17,31 +17,31 @@
             background: #fdf5e6; position: relative; overflow: hidden;
         }
         .plunger-side {
-            width: 45px; height: 200px; background: #8b4513; border: 3px solid #422006;
-            border-radius: 22px; display: flex; justify-content: center; align-self: flex-end; margin-bottom: 20px;
+            width: 50px; height: 220px; background: #8b4513; border: 4px solid #422006;
+            border-radius: 25px; display: flex; justify-content: center; align-self: flex-end; margin-bottom: 20px;
         }
-        #plunger-stick { width: 8px; height: 100px; background: #94a3b8; border-radius: 4px; margin-top: 5px; position: relative; }
+        #plunger-stick { width: 10px; height: 130px; background: #94a3b8; border-radius: 5px; margin-top: 10px; position: relative; }
         #plunger-knob {
-            position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
-            width: 36px; height: 36px; background: radial-gradient(circle at 30% 30%, #ef4444, #7f1d1d);
-            border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.5); cursor: pointer;
+            position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
+            width: 45px; height: 45px; background: radial-gradient(circle at 30% 30%, #ff4d4d, #991b1b);
+            border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer;
         }
     </style>
 </head>
 <body class="flex flex-col items-center machine-bg">
 
     <div class="w-full max-w-[400px] p-4 flex justify-between items-center text-[#422006] font-bold">
-        <div class="bg-white/40 px-4 py-1 rounded-full border border-amber-900/20">
-            <p class="text-[9px] uppercase">Point</p>
-            <p id="userPoints" class="text-lg">---</p>
+        <div class="bg-white/40 px-5 py-2 rounded-2xl border border-amber-900/20">
+            <p class="text-[10px] uppercase">Point</p>
+            <p id="userPoints" class="text-xl">---</p>
         </div>
-        <div class="bg-white/40 px-4 py-1 rounded-full border border-amber-900/20 text-right">
-            <p class="text-[9px] uppercase">Balls</p>
-            <p id="gameState" class="text-lg">0 / 5</p>
+        <div class="bg-white/40 px-5 py-2 rounded-2xl border border-amber-900/20 text-right">
+            <p class="text-[10px] uppercase">Ball</p>
+            <p id="gameState" class="text-xl">0 / 5</p>
         </div>
     </div>
 
-    <div class="flex items-stretch gap-4 px-2 h-[80vh]">
+    <div class="flex items-stretch gap-4 px-2 h-[82vh] w-full max-w-[450px]">
         <div class="canvas-container flex-grow">
             <canvas id="gameCanvas"></canvas>
         </div>
@@ -54,7 +54,7 @@
 
     <div id="resultModal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-[#fdf5e6] w-full max-w-sm rounded-[3rem] p-10 border-[10px] border-[#5d2e17] text-center shadow-2xl">
-            <h2 class="text-[#5d2e17] font-black text-2xl uppercase">總積分</h2>
+            <h2 class="text-[#5d2e17] font-black text-2xl uppercase tracking-widest">總計積分</h2>
             <h1 id="finalScore" class="text-7xl font-black text-red-600 my-6">0</h1>
             <button onclick="location.reload()" class="w-full py-5 rounded-2xl font-black bg-[#5d2e17] text-white text-xl active:scale-95 transition">再玩一次 (10點)</button>
         </div>
@@ -75,13 +75,12 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // 初始化變數
         let user = { id: "", points: 0 };
         let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8.5, active: false };
         let settledBalls = [];
-        let holeOccupancy = [0,0,0,0,0,0,0,0,0,0]; // 追蹤每個洞有幾顆球
+        let holeOccupancy = [0,0,0,0,0,0,0,0,0,0];
         let pins = [];
-        let holes = [10, 20, 50, 100, 30, 30, 100, 50, 20, 10];
+        let holes = [10, 30, 50, 100, 20, 20, 100, 50, 30, 10];
         let score = 0, usedBalls = 0;
         let isDragging = false, startY = 0, dragOffset = 0;
 
@@ -95,17 +94,21 @@
 
         function initPins() {
             pins = [];
-            const gameWidth = canvas.width - 40; // 扣除發射道
+            const laneX = canvas.width - 40;
             for (let i = 0; i < 9; i++) {
-                let rowCount = (i % 2 === 0) ? 6 : 7;
+                let rowCount = (i % 2 === 0) ? 7 : 8;
                 for (let j = 0; j < rowCount; j++) {
-                    pins.push({ x: (i % 2 === 0 ? 40 : 20) + j * (gameWidth/rowCount), y: 140 + i * 40 });
+                    pins.push({ 
+                        x: (i % 2 === 0 ? 30 : 15) + j * (laneX/rowCount), 
+                        y: 150 + i * 42 
+                    });
                 }
             }
         }
 
         function resetBall() {
-            ball.x = canvas.width - 20; ball.y = canvas.height - 40;
+            ball.x = canvas.width - 20;
+            ball.y = canvas.height - 40;
             ball.vx = 0; ball.vy = 0; ball.active = false;
         }
 
@@ -113,40 +116,43 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const laneX = canvas.width - 40;
 
-            // 1. 畫出木質導軌 (核心修正)
+            // 1. 發射道物理邊界 (強化版)
             ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 6; ctx.lineCap = "round";
             
-            // 右側發射道牆壁 (一直延伸到頂端附近)
+            // 右側導向管左牆 (一直到頂部弧線開始處)
             ctx.beginPath();
             ctx.moveTo(laneX, canvas.height);
-            ctx.lineTo(laneX, 100);
+            ctx.lineTo(laneX, 100); 
             ctx.stroke();
 
-            // 頂部導流弧線 (球必須順著這個弧跑出去)
+            // 頂部半圓弧導軌
             ctx.beginPath();
-            ctx.arc(canvas.width / 2, 100, canvas.width / 2 - 5, Math.PI, 0);
+            ctx.arc(canvas.width / 2, 100, canvas.width / 2 - 5, Math.PI, 0, false);
             ctx.stroke();
 
-            // 2. 底部計分槽 (垂直隔板)
+            // 2. 底部計分槽
             const holeWidth = laneX / holes.length;
             for(let i=0; i<=holes.length; i++) {
-                ctx.beginPath(); ctx.moveTo(i * holeWidth, canvas.height - 80); ctx.lineTo(i * holeWidth, canvas.height); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(i * holeWidth, canvas.height - 80);
+                ctx.lineTo(i * holeWidth, canvas.height);
+                ctx.stroke();
             }
 
             // 畫分數
             holes.forEach((s, i) => {
-                ctx.fillStyle = "#8b4513"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center";
+                ctx.fillStyle = "#8b4513"; ctx.font = "bold 9px Arial"; ctx.textAlign = "center";
                 ctx.fillText(s, i * holeWidth + holeWidth/2, canvas.height - 5);
             });
 
             // 3. 釘子
-            ctx.fillStyle = "#b45309";
+            ctx.fillStyle = "#cd853f";
             pins.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill(); });
 
-            // 4. 繪製堆疊的球
+            // 4. 五珠存留
             settledBalls.forEach(b => drawBall(b.x, b.y));
 
-            // 5. 繪製活動球
+            // 5. 活動球
             if (usedBalls < 5) drawBall(ball.x, ball.y);
 
             update();
@@ -155,28 +161,32 @@
 
         function drawBall(x, y) {
             let g = ctx.createRadialGradient(x-3, y-3, 1, x, y, 8.5);
-            g.addColorStop(0, '#ff4d4d'); g.addColorStop(1, '#7f1d1d');
+            g.addColorStop(0, '#ff6b6b'); g.addColorStop(1, '#8b0000');
             ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 8.5, 0, Math.PI*2); ctx.fill();
-            ctx.strokeStyle = "#fff"; ctx.lineWidth = 0.5; ctx.stroke();
+            ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 1; ctx.stroke();
         }
 
         function update() {
             if (!ball.active) return;
 
-            ball.vy += 0.25; 
+            ball.vy += 0.25; // 重力
             ball.x += ball.vx;
             ball.y += ball.vy;
 
             const laneX = canvas.width - 40;
 
-            // 物理邊界碰撞
+            // 邊界物理碰撞
             if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.5; }
             if (ball.y < ball.r) { ball.y = ball.r; ball.vy *= -0.5; }
             if (ball.x > canvas.width - ball.r) { ball.x = canvas.width - ball.r; ball.vx *= -0.5; }
 
-            // 發射道物理 (球在 laneX 右邊時，被強制留在管子裡，直到 y < 100)
+            // 發射軌道邏輯 (絕對修正)
+            // 如果球在發射道內(x > laneX)，只要 y 還沒到 100 頂部，它就不能穿過左牆
             if (ball.x > laneX - ball.r && ball.y > 100) {
-                ball.x = laneX - ball.r; ball.vx *= -0.3;
+                if (ball.vx < 0) { // 試圖向左穿牆
+                    ball.x = laneX - ball.r;
+                    ball.vx *= -0.2;
+                }
             }
 
             // 釘子碰撞
@@ -186,24 +196,22 @@
                 if (dist < ball.r + 3) {
                     const angle = Math.atan2(dy, dx);
                     const speed = Math.sqrt(ball.vx**2 + ball.vy**2);
-                    ball.vx = Math.cos(angle) * (speed * 0.7 + 0.5);
-                    ball.vy = Math.sin(angle) * (speed * 0.7 + 0.5);
+                    ball.vx = Math.cos(angle) * (speed * 0.7 + 0.6);
+                    ball.vy = Math.sin(angle) * (speed * 0.7 + 0.6);
                 }
             });
 
-            // 掉入洞口與堆疊邏輯
+            // 結算與堆疊
             if (ball.y > canvas.height - 40 && ball.x < laneX) {
                 const holeWidth = laneX / holes.length;
                 let idx = Math.floor(ball.x / holeWidth);
                 score += holes[Math.min(idx, 9)];
                 
-                // 核心修正：堆疊位置 (每多一顆球，y 座標就往上移 ball.r*2)
-                const stackLevel = holeOccupancy[idx];
-                settledBalls.push({ 
-                    x: idx * holeWidth + holeWidth/2, 
-                    y: (canvas.height - 15) - (stackLevel * 18) 
-                });
+                // 垂直堆疊邏輯
+                const stack = holeOccupancy[idx];
+                settledBalls.push({ x: idx * holeWidth + holeWidth/2, y: canvas.height - 15 - (stack * 18) });
                 holeOccupancy[idx]++;
+                
                 usedBalls++;
                 document.getElementById('gameState').innerText = `${usedBalls} / 5`;
                 resetBall();
@@ -216,8 +224,8 @@
                 }
             }
 
-            // 沒力掉回來 (不計分)
-            if (ball.y > canvas.height - 10 && ball.x >= laneX) resetBall();
+            // 沒衝過頂部掉回原地 (不計分，不扣球)
+            if (ball.y > canvas.height - 20 && ball.x >= laneX) resetBall();
         }
 
         const knob = document.getElementById('plunger-knob');
@@ -240,13 +248,12 @@
             if (!isDragging) return;
             isDragging = false;
             if (dragOffset > 20) {
-                if (usedBalls === 0 && user.points < 10) { alert("點數不足！"); }
-                else {
-                    if (usedBalls === 0) db.ref('users/' + user.id).update({ points: user.points - 10 });
-                    ball.active = true;
-                    ball.vy = -(dragOffset / 4); // 力道
-                    ball.vx = -1.5; // 甩出去的初速
-                }
+                if (usedBalls === 0 && user.points < 10) return alert("點數不足！");
+                if (usedBalls === 0) db.ref('users/' + user.id).update({ points: user.points - 10 });
+                
+                ball.active = true;
+                ball.vy = -(dragOffset / 4.2); // 力道向上
+                ball.vx = -1.5; // 給予一個向左的慣性，配合頂部圓弧甩出
             }
             stick.style.transform = `translateY(0px)`;
             dragOffset = 0;
