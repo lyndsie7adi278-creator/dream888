@@ -11,24 +11,28 @@
     body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow-x: hidden; }
     
     .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
-    .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
+    .back-btn { background: none; border: 1.5px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
     .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
 
     .promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
     .lock-banner { display: none; background: var(--lock); color: white; padding: 12px; font-size: 0.95rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
     .soldout-banner { display: none; background: #ff4757; color: white; padding: 12px; font-size: 1.1rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
 
-    /* 🖼️ 輪播圖容器優化 */
-    .gallery-container { background: #000; width: 100%; max-width: 600px; margin: 0 auto; flex-shrink: 0; position: relative; }
-    .main-img-wrap { width: 100%; height: 40vh; max-height: 400px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; position: relative; }
-    #gMainImg { width: 100%; height: 100%; object-fit: contain; pointer-events: none; transition: opacity 0.5s ease-in-out; }
-    .slide-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10; }
-    .dot { width: 6px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 50%; transition: 0.3s; }
-    .dot.active { background: var(--p); width: 15px; border-radius: 10px; }
+    /* 🖼️ 藝廊容器 */
+    .gallery-container { background: #000; width: 100%; max-width: 600px; margin: 0 auto; flex-shrink: 0; }
+    .main-img-wrap { width: 100%; height: 40vh; max-height: 400px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
+    #gMainImg { width: 100%; height: 100%; object-fit: contain; pointer-events: none; transition: 0.3s; }
     
+    /* 🎞️ 縮圖列樣式 */
+    .thumb-bar { display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px; background: #000; scroll-behavior: smooth; }
+    .thumb-bar::-webkit-scrollbar { display: none; }
+    .thumb-item { width: 60px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 2px solid transparent; opacity: 0.5; transition: 0.3s; cursor: pointer; }
+    .thumb-item.active { border-color: var(--p); opacity: 1; transform: scale(1.05); }
+    .thumb-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
     .info-box { padding: 15px; background: var(--card); border-bottom: 2px solid #222; display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     
-    #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px 12px 120px; box-sizing: border-box; }
+    #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 10px 12px 120px; box-sizing: border-box; }
     
     .progress-container { margin-bottom: 20px; }
     .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaa; margin-bottom: 6px; font-weight: bold; }
@@ -62,10 +66,8 @@
 <div class="header"><a href="index.html" class="back-btn">← 返回</a><div class="balance-tag">P <span id="uBal">0</span></div></div>
 
 <div class="gallery-container">
-    <div class="main-img-wrap">
-        <img id="gMainImg" src="">
-        <div id="slideDots" class="slide-dots"></div>
-    </div>
+    <div class="main-img-wrap"><img id="gMainImg" src=""></div>
+    <div id="thumbBar" class="thumb-bar"></div>
 </div>
 
 <div class="info-box"><h2 id="gTitle">載入中...</h2><div id="priceDisplay" style="color:var(--p); font-weight:900; font-size:1.3rem;">-- P</div></div>
@@ -112,30 +114,20 @@ const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec"; 
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
-let _album = [], _curSlide = 0, _slideTimer = null;
+let _album = [];
 
 if(!_gid) location.href = 'index.html';
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
-// 🔴 輪播圖邏輯
-function startSlideshow(images) {
-    if(!images || images.length <= 1) return;
-    const imgEl = document.getElementById('gMainImg');
-    const dotBox = document.getElementById('slideDots');
-    
-    _album = images;
-    dotBox.innerHTML = _album.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
-    
-    if(_slideTimer) clearInterval(_slideTimer);
-    _slideTimer = setInterval(() => {
-        _curSlide = (_curSlide + 1) % _album.length;
-        imgEl.style.opacity = 0;
-        setTimeout(() => {
-            imgEl.src = _album[_curSlide];
-            imgEl.style.opacity = 1;
-            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === _curSlide));
-        }, 500);
-    }, 3500);
+// 🔴 縮圖點選切換邏輯
+window.changeSlide = (idx) => {
+    const mainImg = document.getElementById('gMainImg');
+    mainImg.style.opacity = 0;
+    setTimeout(() => {
+        mainImg.src = _album[idx];
+        mainImg.style.opacity = 1;
+        document.querySelectorAll('.thumb-item').forEach((it, i) => it.classList.toggle('active', i === idx));
+    }, 150);
 }
 
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
@@ -157,10 +149,22 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
     document.getElementById('gTitle').innerText = _gid;
     
-    // 🔴 優先抓取相簿，如果沒有則顯示主圖
+    // 🔴 渲染縮圖
     const imgs = (_data.album && _data.album.length > 0) ? _data.album : [_data.img];
-    document.getElementById('gMainImg').src = imgs[0];
-    if(imgs.length > 1) startSlideshow(imgs);
+    _album = imgs;
+    document.getElementById('gMainImg').src = _album[0];
+    
+    const bar = document.getElementById('thumbBar');
+    if(_album.length > 1) {
+        bar.style.display = 'flex';
+        bar.innerHTML = _album.map((url, i) => `
+            <div class="thumb-item ${i===0?'active':''}" onclick="changeSlide(${i})">
+                <img src="${url}">
+            </div>
+        `).join('');
+    } else {
+        bar.style.display = 'none';
+    }
 
     onValue(ref(_db, `games/${_gid}/pool`), snap => {
         const p = snap.val() || []; const grid = document.getElementById('poolGrid');
