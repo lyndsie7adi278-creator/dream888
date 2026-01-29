@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠點數商城</title>
+    <title>夢工廠點數商城 (B)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -33,6 +33,7 @@
     </div>
 
     <div id="categoryBar" class="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar"></div>
+    
     <div id="productGrid" class="grid grid-cols-2 gap-3 pb-10"></div>
 
     <div id="itemModal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
@@ -82,7 +83,6 @@
             measurementId: "G-J0YJNPZMR4"
         };
         const LIFF_ID = "2008968610-8dLoGQie";
-        // 🔴 確保這是 B 台專用的 GAS URL
         const GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec";
         
         firebase.initializeApp(firebaseConfig);
@@ -95,7 +95,9 @@
         async function init() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) { liff.login(); } else {
+                if (!liff.isLoggedIn()) { 
+                    liff.login(); 
+                } else {
                     const profile = await liff.getProfile();
                     user.id = profile.userId;
                     user.name = profile.displayName;
@@ -105,13 +107,14 @@
         }
 
         function syncData() {
-            // 🔴 修改點：對準 users_B 資料夾
+            // 🔴 修改點 1：對準 users_B
             db.ref('users_B/' + user.id + '/points').on('value', snap => {
                 user.points = snap.val() || 0;
                 document.getElementById('userPoints').innerText = user.points.toLocaleString();
             });
-            // 🟡 產品與分類保持共用（如果您希望兩台車賣的東西一樣）
-            db.ref('products').on('value', snap => {
+
+            // 🔴 修改點 2：對準 products_B
+            db.ref('products_B').on('value', snap => {
                 allProducts = snap.val() || {};
                 updateCategoryBar();
                 renderProducts('全部');
@@ -120,7 +123,11 @@
 
         function updateCategoryBar() {
             const cats = new Set(['全部']);
-            for(let id in allProducts) { if(allProducts[id].status !== '下架' && allProducts[id].cat) cats.add(allProducts[id].cat); }
+            for(let id in allProducts) { 
+                if(allProducts[id].status !== '下架' && allProducts[id].cat) {
+                    cats.add(allProducts[id].cat); 
+                }
+            }
             const bar = document.getElementById('categoryBar');
             bar.innerHTML = '';
             cats.forEach(c => {
@@ -129,16 +136,27 @@
         }
 
         function renderProducts(cat) {
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.innerText === cat));
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.innerText.trim() === cat));
             const grid = document.getElementById('productGrid');
             grid.innerHTML = '';
             let items = [];
             for(let id in allProducts) { items.push({ id, ...allProducts[id] }); }
+            
+            // 依照排序編號顯示
             items.sort((a, b) => (a.sort || 99) - (b.sort || 99));
+            
             items.forEach(p => {
                 if(p.status === '下架') return;
                 if(cat !== '全部' && p.cat !== cat) return;
-                grid.innerHTML += `<div onclick="openModal('${p.id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg flex flex-col"> <img src="${p.img}" class="w-full h-36 object-cover border-b border-slate-700"> <div class="p-4 flex-1"> <p class="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wider">${p.cat || '一般'}</p> <h3 class="font-bold text-base mb-2 text-slate-100 line-clamp-2 leading-snug">${p.name}</h3> <p class="gold-text font-black text-lg">${(p.price || 0).toLocaleString()} <span class="text-xs">點</span></p> </div> </div>`;
+                grid.innerHTML += `
+                    <div onclick="openModal('${p.id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg flex flex-col"> 
+                        <img src="${p.img}" class="w-full h-36 object-cover border-b border-slate-700 bg-slate-900"> 
+                        <div class="p-4 flex-1"> 
+                            <p class="text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-wider">${p.cat || '一般'}</p> 
+                            <h3 class="font-bold text-sm mb-2 text-slate-100 line-clamp-2 leading-snug">${p.name}</h3> 
+                            <p class="gold-text font-black text-lg">${(p.price || 0).toLocaleString()} <span class="text-[10px]">點</span></p> 
+                        </div> 
+                    </div>`;
             });
         }
 
@@ -151,7 +169,7 @@
             document.getElementById('mDesc').innerText = currentItem.desc || "無說明";
             document.getElementById('mQty').innerText = qty;
             document.getElementById('itemModal').classList.remove('hidden');
-            const descBox = document.querySelector('.desc-scroll');
+            const descBox = document.getElementById('mDesc');
             if(descBox) descBox.scrollTop = 0;
         }
 
@@ -161,12 +179,13 @@
         async function confirmRedeem() {
             const totalCost = (currentItem.price || 0) * qty;
             if(user.points < totalCost) return alert("您的點數餘額不足！");
-            if(confirm(`確定兌換 ${qty} 個「${currentItem.name}」？\n扣除：${totalCost.toLocaleString()} 點`)) {
+            
+            if(confirm(`確定兌換 ${qty} 個「${currentItem.name}」？\n將扣除：${totalCost.toLocaleString()} 點`)) {
                 try {
                     const newTotal = user.points - totalCost;
-                    // 🔴 修改點：訂單與日誌路徑建議也區分，方便對帳
                     const orderId = db.ref('orders_B').push().key;
 
+                    // 🔴 修改點 3：寫入 users_B, orders_B, logs_B
                     await db.ref('users_B/' + user.id).update({ points: newTotal });
                     await db.ref('orders_B/' + orderId).set({
                         userId: user.id, userName: user.name, itemName: currentItem.name, 
@@ -177,15 +196,16 @@
                         reason: `商城兌換: ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
                     });
 
-                    // 通知邏輯
-                    const notifyMsg = "兌換成功\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
-                    const finalUrl = GAS_URL + "?userId=" + user.id + "&msg=" + encodeURIComponent(notifyMsg);
-                    
-                    fetch(finalUrl, { mode: 'no-cors' });
+                    // LINE 通知
+                    const notifyMsg = "兌換成功(B台)\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
+                    fetch(GAS_URL + "?userId=" + user.id + "&msg=" + encodeURIComponent(notifyMsg), { mode: 'no-cors' });
 
                     alert("兌換成功！請跟官方Line確認收件資訊。");
                     closeModal();
-                } catch (err) { alert("系統忙碌中，請稍後再試。"); }
+                } catch (err) { 
+                    console.error(err);
+                    alert("系統忙碌中，請稍後再試。"); 
+                }
             }
         }
 
@@ -193,21 +213,51 @@
             document.getElementById('historyModal').classList.remove('hidden');
             const list = document.getElementById('historyList');
             list.innerHTML = '<div class="text-center py-10 text-slate-500 font-bold italic">讀取中...</div>';
-            // 🔴 修改點：讀取 orders_B
+            
+            // 🔴 修改點 4：讀取 orders_B
             db.ref('orders_B').orderByChild('userId').equalTo(user.id).once('value', s => {
                 const o = s.val(); list.innerHTML = '';
                 if(!o) { list.innerHTML = '<div class="text-center py-10 text-slate-500 font-bold">尚無兌換紀錄</div>'; return; }
+                
                 Object.values(o).reverse().forEach(ord => {
                     const isDone = ord.status === '已出貨';
                     const hasTrack = ord.trackNo && ord.trackNo.trim() !== "";
-                    list.innerHTML += `<div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner"> <div class="flex justify-between items-start mb-3"> <div class="flex-1 pr-2"> <p class="font-bold text-slate-100 text-lg leading-tight">${ord.itemName}</p> <p class="text-[10px] text-slate-500 mt-1 uppercase">數量：${ord.qty} | 消耗 ${ord.total.toLocaleString()} 點</p> </div> <span class="text-[10px] px-3 py-1 rounded-full border whitespace-nowrap ${isDone?'border-green-500 text-green-500 font-black bg-green-500/10':'border-yellow-500 text-yellow-500 font-black bg-yellow-500/10'}">${ord.status}</span> </div> ${hasTrack ? `<div class="mt-4 p-4 bg-slate-900/80 rounded-2xl border border-blue-900/30"> <div class="flex items-center justify-between mb-2"> <span class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">7-11 貨單號碼</span> <button onclick="copyTrack('${ord.trackNo}')" class="text-[11px] bg-slate-700 text-white px-3 py-1 rounded-lg font-bold">複製</button> </div> <div class="flex items-center justify-between"> <code class="text-blue-400 font-mono text-base font-bold tracking-wider">${ord.trackNo}</code> <a href="https://tracking.shopmore.com.tw/" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold active:scale-90 transition">查詢</a> </div> </div>` : (isDone ? '<p class="text-[10px] text-slate-600 italic mt-2">※ 貨單處理中</p>' : '')} <p class="text-[10px] text-slate-600 mt-4 font-bold text-right">${new Date(ord.time).toLocaleString()}</p> </div>`;
+                    list.innerHTML += `
+                        <div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner"> 
+                            <div class="flex justify-between items-start mb-3"> 
+                                <div class="flex-1 pr-2"> 
+                                    <p class="font-bold text-slate-100 text-lg leading-tight">${ord.itemName}</p> 
+                                    <p class="text-[10px] text-slate-500 mt-1 uppercase">數量：${ord.qty} | 消耗 ${ord.total.toLocaleString()} 點</p> 
+                                </div> 
+                                <span class="text-[10px] px-3 py-1 rounded-full border whitespace-nowrap ${isDone?'border-green-500 text-green-500 font-black bg-green-500/10':'border-yellow-500 text-yellow-500 font-black bg-yellow-500/10'}">${ord.status}</span> 
+                            </div> 
+                            ${hasTrack ? `
+                                <div class="mt-4 p-4 bg-slate-900/80 rounded-2xl border border-blue-900/30"> 
+                                    <div class="flex items-center justify-between mb-2"> 
+                                        <span class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">7-11 貨單號碼</span> 
+                                        <button onclick="copyTrack('${ord.trackNo}')" class="text-[11px] bg-slate-700 text-white px-3 py-1 rounded-lg font-bold">複製</button> 
+                                    </div> 
+                                    <div class="flex items-center justify-between"> 
+                                        <code class="text-blue-400 font-mono text-base font-bold tracking-wider">${ord.trackNo}</code> 
+                                        <a href="https://tracking.shopmore.com.tw/" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-xl font-bold active:scale-90 transition">查詢</a> 
+                                    </div> 
+                                </div>` : (isDone ? '<p class="text-[10px] text-slate-600 italic mt-2">※ 貨單處理中</p>' : '')} 
+                            <p class="text-[10px] text-slate-600 mt-4 font-bold text-right">${new Date(ord.time).toLocaleString()}</p> 
+                        </div>`;
                 });
             });
         }
 
         function copyTrack(no) {
-            const el = document.createElement('textarea'); el.value = no; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-            const toast = document.getElementById('toast'); toast.style.display = 'block'; setTimeout(() => { toast.style.display = 'none'; }, 2000);
+            const el = document.createElement('textarea'); 
+            el.value = no; 
+            document.body.appendChild(el); 
+            el.select(); 
+            document.execCommand('copy'); 
+            document.body.removeChild(el);
+            const toast = document.getElementById('toast'); 
+            toast.style.display = 'block'; 
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
         }
 
         function closeHistory() { document.getElementById('historyModal').classList.add('hidden'); }
