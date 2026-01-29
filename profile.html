@@ -51,6 +51,7 @@
         
         .status-tag { padding: 5px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 900; }
         .status-pending { background: #fff9e6; color: var(--wait); border: 1px solid #ffeebf; }
+        .status-shipping { background: #e3f2fd; color: #1976d2; border: 1px solid #bbdefb; }
         .status-completed { background: #eefdf4; color: var(--success); border: 1px solid #dcf7e6; }
         
         .item-val { font-weight: 900; font-size: 1.1rem; }
@@ -59,9 +60,15 @@
 
         .empty-state { text-align: center; padding: 80px 20px; color: #d0d5dd; font-weight: bold; }
         #copyToast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; z-index: 5000; display: none; }
+        
+        /* 針對物流編號的微調 */
+        .shipping-info { font-size: 0.7rem; color: #999; margin-top: 5px; display: block; }
+        .shipping-no { color: var(--primary); font-weight: 900; text-decoration: underline; }
     </style>
 </head>
 <body>
+
+    <div id="copyToast">✅ 已複製 UID</div>
 
     <div class="header">
         <a href="index.html" class="back-btn">← 回商城</a>
@@ -95,13 +102,10 @@
         <div id="tab-2" class="page-content"><div id="winsList"></div></div>
     </div>
 
-    <div id="copyToast">✅ 已複製 UID</div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 🔴 已更新為新專案 dream8-7b161
         const _cc = { 
             apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
             databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
@@ -171,20 +175,36 @@
             } else { list.innerHTML = '<div class="empty-state">尚無儲值申請紀錄</div>'; }
         });
 
-        // 監聽中獎紀錄
+        // 🔴 這裡根據您的要求，修正中獎存根渲染邏輯
         onValue(ref(_db, `winLogs`), s => {
             const list = document.getElementById('winsList');
-            const myWins = s.val() ? Object.values(s.val()).filter(w => w.user === _uid).sort((a,b) => b.time - a.time) : [];
+            const data = s.val() || {};
+            const myWins = Object.values(data).filter(w => w.user === _uid).sort((a,b) => b.time - a.time);
+            
             if(myWins.length) {
-                list.innerHTML = myWins.map(w => `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <b>${w.prize}</b>
-                            <small>${w.game} | ${new Date(w.time).toLocaleString()}</small>
+                list.innerHTML = myWins.map(w => {
+                    // 根據後台設定顯示狀態
+                    let statusClass = "status-pending"; 
+                    let statusText = w.status || "待處理";
+                    if(statusText === "出貨中") statusClass = "status-shipping";
+                    if(statusText === "已完成") statusClass = "status-completed";
+
+                    // 交貨便編號
+                    const shippingNo = w.shippingNo ? `<span class="shipping-info">交貨便編號：<b class="shipping-no">${w.shippingNo}</b></span>` : "";
+
+                    return `
+                        <div class="list-item" style="flex-direction: column; align-items: flex-start;">
+                            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                                <div class="item-info">
+                                    <b>${w.prize}</b>
+                                    <small>${w.game} | ${new Date(w.time).toLocaleString()}</small>
+                                    ${shippingNo}
+                                </div>
+                                <div class="status-tag ${statusClass}">${statusText}</div>
+                            </div>
                         </div>
-                        <div class="win-tag" style="background:#fff9fa; color:#ff8fa3; padding:5px 10px; border-radius:10px; font-size:0.75rem; font-weight:900;">中獎紀錄</div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             } else { list.innerHTML = '<div class="empty-state">尚未中獎</div>'; }
         });
     </script>
