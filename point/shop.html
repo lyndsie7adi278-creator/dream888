@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠點數商城 (B台)</title>
+    <title>夢工廠點數商城</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -28,7 +28,7 @@
         <div class="absolute top-0 right-0 p-4">
             <button onclick="openHistory()" class="bg-slate-900/50 p-2 rounded-xl text-[11px] font-bold border border-slate-700 gold-text uppercase active:scale-95 transition">兌換紀錄</button>
         </div>
-        <p class="text-slate-400 text-xs font-medium mb-1 uppercase tracking-widest">目前持有點數 (B台)</p>
+        <p class="text-slate-400 text-xs font-medium mb-1 uppercase tracking-widest">目前持有點數</p>
         <h1 id="userPoints" class="text-5xl font-bold gold-text">---</h1>
     </div>
 
@@ -174,11 +174,11 @@
                     });
                     await db.ref('logs_B').push({
                         time: Date.now(), userId: user.id, userName: user.name,
-                        reason: `商城兌換 (B台): ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
+                        reason: `商城兌換: ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
                     });
 
                     // 通知邏輯
-                    const notifyMsg = "【B台】兌換成功\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
+                    const notifyMsg = "兌換成功\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
                     const finalUrl = GAS_URL + "?userId=" + user.id + "&msg=" + encodeURIComponent(notifyMsg);
                     
                     fetch(finalUrl, { mode: 'no-cors' });
