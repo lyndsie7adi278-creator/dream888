@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠點數商城</title>
+    <title>夢工廠點數商城 (B台)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -28,7 +28,7 @@
         <div class="absolute top-0 right-0 p-4">
             <button onclick="openHistory()" class="bg-slate-900/50 p-2 rounded-xl text-[11px] font-bold border border-slate-700 gold-text uppercase active:scale-95 transition">兌換紀錄</button>
         </div>
-        <p class="text-slate-400 text-xs font-medium mb-1 uppercase tracking-widest">目前持有點數</p>
+        <p class="text-slate-400 text-xs font-medium mb-1 uppercase tracking-widest">目前持有點數 (B台)</p>
         <h1 id="userPoints" class="text-5xl font-bold gold-text">---</h1>
     </div>
 
@@ -82,6 +82,7 @@
             measurementId: "G-J0YJNPZMR4"
         };
         const LIFF_ID = "2008968610-8dLoGQie";
+        // 🔴 確保這是 B 台專用的 GAS URL
         const GAS_URL = "https://script.google.com/macros/s/AKfycbwuvNZo2rJ3kkcWPoKfBOiw7megpwxSu5X9rIEuxjcgDYMJ5ElWJekTQ_H7Xz-o0oQ/exec";
         
         firebase.initializeApp(firebaseConfig);
@@ -104,10 +105,12 @@
         }
 
         function syncData() {
-            db.ref('users/' + user.id + '/points').on('value', snap => {
+            // 🔴 修改點：對準 users_B 資料夾
+            db.ref('users_B/' + user.id + '/points').on('value', snap => {
                 user.points = snap.val() || 0;
                 document.getElementById('userPoints').innerText = user.points.toLocaleString();
             });
+            // 🟡 產品與分類保持共用（如果您希望兩台車賣的東西一樣）
             db.ref('products').on('value', snap => {
                 allProducts = snap.val() || {};
                 updateCategoryBar();
@@ -161,20 +164,21 @@
             if(confirm(`確定兌換 ${qty} 個「${currentItem.name}」？\n扣除：${totalCost.toLocaleString()} 點`)) {
                 try {
                     const newTotal = user.points - totalCost;
-                    const orderId = db.ref('orders').push().key;
+                    // 🔴 修改點：訂單與日誌路徑建議也區分，方便對帳
+                    const orderId = db.ref('orders_B').push().key;
 
-                    await db.ref('users/' + user.id).update({ points: newTotal });
-                    await db.ref('orders/' + orderId).set({
+                    await db.ref('users_B/' + user.id).update({ points: newTotal });
+                    await db.ref('orders_B/' + orderId).set({
                         userId: user.id, userName: user.name, itemName: currentItem.name, 
                         qty: qty, total: totalCost, time: Date.now(), status: '待出貨'
                     });
-                    await db.ref('logs').push({
+                    await db.ref('logs_B').push({
                         time: Date.now(), userId: user.id, userName: user.name,
-                        reason: `商城兌換: ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
+                        reason: `商城兌換 (B台): ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
                     });
 
                     // 通知邏輯
-                    const notifyMsg = "兌換成功\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
+                    const notifyMsg = "【B台】兌換成功\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
                     const finalUrl = GAS_URL + "?userId=" + user.id + "&msg=" + encodeURIComponent(notifyMsg);
                     
                     fetch(finalUrl, { mode: 'no-cors' });
@@ -189,7 +193,8 @@
             document.getElementById('historyModal').classList.remove('hidden');
             const list = document.getElementById('historyList');
             list.innerHTML = '<div class="text-center py-10 text-slate-500 font-bold italic">讀取中...</div>';
-            db.ref('orders').orderByChild('userId').equalTo(user.id).once('value', s => {
+            // 🔴 修改點：讀取 orders_B
+            db.ref('orders_B').orderByChild('userId').equalTo(user.id).once('value', s => {
                 const o = s.val(); list.innerHTML = '';
                 if(!o) { list.innerHTML = '<div class="text-center py-10 text-slate-500 font-bold">尚無兌換紀錄</div>'; return; }
                 Object.values(o).reverse().forEach(ord => {
