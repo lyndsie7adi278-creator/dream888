@@ -2,8 +2,10 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>夢工廠後台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>夢工廠後台 - 分類強化版</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
@@ -15,6 +17,7 @@
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         .log-plus { color: #4ade80; }
         .log-minus { color: #f87171; }
+        .modal-active { display: flex !important; }
     </style>
 </head>
 <body class="p-6">
@@ -53,6 +56,7 @@
                         <label class="text-[10px] text-slate-500 ml-1 uppercase">分類與初始排序</label>
                         <div class="flex gap-2">
                             <select id="pCat" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-yellow-500 font-bold"></select>
+                            <button onclick="addCategory()" class="bg-slate-700 text-white w-10 rounded-xl font-bold hover:bg-slate-600 transition">+</button>
                             <input type="number" id="pSort" placeholder="序" class="w-16 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-center">
                         </div>
                     </div>
@@ -117,8 +121,10 @@
         
         function load() {
             reset();
-            // 🔴 所有路徑皆改為 _B
-            db.ref('categories_B').on('value', s => { allCategories = s.val() ? Object.values(s.val()) : ["一般"]; renderCategoryOptions(); });
+            db.ref('categories_B').on('value', s => { 
+                allCategories = s.val() ? Object.values(s.val()) : ["一般"]; 
+                renderCategoryOptions(); 
+            });
             db.ref('users_B').on('value', s => { allUsers = s.val() || {}; renderUsers(); });
             db.ref('products_B').on('value', s => { allProducts = s.val() || {}; renderProducts(); });
             db.ref('orders_B').on('value', s => {
@@ -159,10 +165,25 @@
             });
         }
 
-        // 🔴 資料寫入與讀取全數對準 _B
         function writeLog(uid, name, reason, change, after) { db.ref('logs_B').push({ time: Date.now(), userId: uid, userName: name, reason: reason, change: change, after: after }); }
         function saveTrack(oid) { const no = document.getElementById(`track-${oid}`).value; db.ref(`orders_B/${oid}`).update({ trackNo: no }).then(() => alert('編號已更新')); }
-        function renderCategoryOptions() { const select = document.getElementById('pCat'); const val = select.value; select.innerHTML = allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); if (val) select.value = val; }
+        
+        function renderCategoryOptions() { 
+            const select = document.getElementById('pCat'); 
+            const currentVal = select.value; 
+            select.innerHTML = allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); 
+            if (currentVal && allCategories.includes(currentVal)) select.value = currentVal; 
+        }
+
+        // 新增分類功能
+        function addCategory() {
+            const newCat = prompt("請輸入新分類名稱：");
+            if (!newCat) return;
+            if (allCategories.includes(newCat)) return alert("此分類已存在");
+            db.ref('categories_B').push(newCat).then(() => {
+                alert("分類已新增");
+            });
+        }
 
         async function handleUpload(input) {
             const file = input.files[0]; if (!file) return;
@@ -193,7 +214,6 @@
             for(let id in allProducts) { items.push({ id, ...allProducts[id] }); }
             items.sort((a, b) => (a.sort || 99) - (b.sort || 99));
             items.forEach(p => { 
-                const isOn = p.status !== '下架'; 
                 if(q && !p.name.toLowerCase().includes(q)) return;
                 l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center mb-2"> 
                     <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover bg-slate-900"> 
@@ -272,13 +292,10 @@
             document.getElementById('pImg').value = ''; 
             document.getElementById('pStatus').value = '上架'; 
             document.getElementById('pSort').value = '99';
-document.getElementById('pDesc').value = "夢工廠商品兌換說明\n【商品狀態】 全新品\n【商品內容】 本項目採 「隨機款式」 出貨，\n圖片僅供參考，請以收到的實品為準。\n隨機商品包含各類熱門系列，恕不接受指定款式。\n\n【兌換須知】\n1.點數一經扣除兌換寄出商品，恕不接受退換貨。\n2.商品將於 2 個工作天內透過 7-11 交貨便免運費寄出。\n3.請務必跟官方Line確認您的7-11收件資訊正確，以免影響配送。\n4.若遇商品缺貨，將主動聯繫並退回點數。\n\n【收貨須知：重要！】 ⚠️ 為保障雙方權益，拆封請務必「全程錄影」。\n請從包裹未拆封前的「外箱狀態」開始拍攝。\n影片需完整記錄拆箱過程至檢查商品外觀。\n若無完整開箱錄影證明，商品如有損壞或瑕疵等問題，恕不處理售後。\n如官方瑕疵依照情節處理。\n\n※玩具商品皆為工廠大量製造，任何塗裝小溢色、漆面略不平整、盒子有二次膠、關節構件處鬆緊等小瑕疵皆屬正常現象。";
+            document.getElementById('pDesc').value = "夢工廠商品兌換說明\n【商品狀態】 全新品\n【商品內容】 本項目採 「隨機款式」 出貨，\n圖片僅供參考，請以收到的實品為準。\n隨機商品包含各類熱門系列，恕不接受指定款式。\n\n【兌換須知】\n1.點數一經扣除兌換寄出商品，恕不接受退換貨。\n2.商品將於 2 個工作天內透過 7-11 交貨便免運費寄出。\n3.請務必跟官方Line確認您的7-11收件資訊正確，以免影響配送。\n4.若遇商品缺貨，將主動聯繫並退回點數。\n\n【收貨須知：重要！】 ⚠️ 為保障雙方權益，拆封請務必「全程錄影」。\n請從包裹未拆封前的「外箱狀態」開始拍攝。\n影片需完整記錄拆箱過程至檢查商品外觀。\n若無完整開箱錄影證明，商品如有損壞或瑕疵等問題，恕不處理售後。\n如官方瑕疵依照情節處理。\n\n※玩具商品皆為工廠大量製造，任何塗裝小溢色、漆面略不平整、盒子有二次膠、關節構件處鬆緊等小瑕疵皆屬正常現象。";
         }
 
         function toggleOrder(oid, curr) { const next = curr === '待出貨' ? '已出貨' : '待出貨'; db.ref(`orders_B/${oid}`).update({ status: next }); }
     </script>
 </body>
 </html>
-
-
-
