@@ -14,7 +14,6 @@
     .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
     .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
 
-    /* 功能 Banner */
     .promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
     .lock-banner { display: none; background: var(--lock); color: white; padding: 12px; font-size: 0.95rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
     .soldout-banner { display: none; background: #ff4757; color: white; padding: 12px; font-size: 1.1rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
@@ -27,13 +26,11 @@
     
     #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px 12px 120px; box-sizing: border-box; }
     
-    /* 進度條 */
     .progress-container { margin-bottom: 20px; }
     .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaa; margin-bottom: 6px; font-weight: bold; }
     .progress-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
     .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s; }
 
-    /* 獎項監控 */
     .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
     .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
@@ -99,12 +96,13 @@ import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } fr
 const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
 const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec";
+
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
 
 if(!_gid) location.href = 'index.html';
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
-// 監聽排隊鎖定
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
     const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
     if(_tInterval) clearInterval(_tInterval);
@@ -118,7 +116,6 @@ onValue(ref(_db, `games/${_gid}/lock`), snap => {
     } else { b.style.display = 'none'; _q = null; }
 });
 
-// 監聽遊戲設定與號碼池渲染
 onValue(ref(_db, `gameSettings/${_gid}`), s => {
     _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
@@ -129,7 +126,6 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         const p = snap.val() || []; const grid = document.getElementById('poolGrid');
         const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
         
-        // 進度條與開盤 Banner 邏輯
         const _pct = Math.round((_s / _data.total) * 100);
         document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
         document.getElementById('progFill').style.width = `${_pct}%`;
@@ -142,13 +138,11 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P`;
         } else { banner.style.display = 'none'; document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`; }
         
-        // 獎項監控標籤
         document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
             const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
             return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
         }).join('');
 
-        // 格子渲染
         grid.innerHTML = '';
         p.forEach((t, i) => {
             const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
@@ -172,42 +166,33 @@ async function buyTicket(idx) {
     if(_isClosed) return; const n = Date.now();
     if(_q && _q.user !== _uid && _q.expire > n) return alert(`他人包台中`);
     
-    const pRef = ref(_db, `games/${_gid}/pool`);
-    const pSnap = await get(pRef);
-    const poolArr = pSnap.val() || [];
+    // 初步檢查餘額
+    const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
+    const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
+    const poolArr = poolSnap.val() || [];
     if(poolArr[idx].taken) return alert("已被購買");
 
-    const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
     const _sold = poolArr.filter(x => x.taken).length;
     let pr = (_data.promoCount > 0 && _sold < _data.promoCount) ? _data.promoPrice : _data.price;
     
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
-    // 🔴 核心保護邏輯隱蔽化：vZ = safeZone, cK = prizes
-    const _vT = _sold + 1;
-    const _cK = (_data.prizes || []).map(x => Number(x.num));
-    let _tV = Number(poolArr[idx].grade);
-
-    if (_vT <= (_data.safeZone || 0) && _cK.includes(_tV)) {
-        const _sIdx = poolArr.findIndex((t, i) => !t.taken && i !== idx && !_cK.includes(Number(t.grade)));
-        if (_sIdx !== -1) {
-            const _tmp = poolArr[idx].grade;
-            poolArr[idx].grade = poolArr[_sIdx].grade;
-            poolArr[_sIdx].grade = _tmp;
-            await set(pRef, poolArr);
-            _tV = Number(poolArr[idx].grade);
+    document.body.style.pointerEvents = "none";
+    const script = document.createElement('script');
+    script.src = `${GAS_URL}?gid=${_gid}&uid=${_uid}&idx=${idx}&pr=${pr}&callback=gasCallback`;
+    document.body.appendChild(script);
+    
+    window.gasCallback = (res) => {
+        document.body.style.pointerEvents = "auto";
+        if(res.success) {
+            // 伺服器端已經處理完扣款、位移、標記狀態，前端直接渲染
+            initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
+        } else {
+            alert(res.msg || "購買失敗");
         }
-    }
-
-    let _exp = (!_q || _q.user !== _uid || _q.expire < n) ? n + 180000 : Math.min(_q.expire + 30000, n + 900000);
-    
-    await update(ref(_db, `games/${_gid}/lock`), { user: _uid, expire: _exp });
-    await update(ref(_db, `users/${_uid}`), { balance: cur - pr });
-    await update(ref(_db, `games/${_gid}/pool/${idx}`), { taken: true, revealed: false, user: _uid });
-    await set(push(ref(_db, `users/${_uid}/logs`)), { game: _gid, cost: pr, time: serverTimestamp() });
-    
-    initCanvas((idx+1).toString().padStart(2,'0'), _tV.toString().padStart(2, '0'), idx);
+        script.remove();
+    };
 }
 
 function initCanvas(no, val, poolIdx) {
@@ -231,8 +216,8 @@ function initCanvas(no, val, poolIdx) {
 }
 
 async function syncStatus(idx, val) {
-    // 🔴 刮開後永久同步到卡片上
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
+    
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
     if(hit) {
         const pool = (await get(ref(_db, `games/${_gid}/pool`))).val() || [];
