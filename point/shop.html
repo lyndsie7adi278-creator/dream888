@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠點數商城 (B)</title>
+    <title>夢工廠點數商城</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -16,7 +16,7 @@
         .modal-bg { background: rgba(0,0,0,0.95); backdrop-filter: blur(12px); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #eab308; color: #111; padding: 8px 20px; border-radius: 99px; font-weight: bold; font-size: 14px; z-index: 100; display: none; }
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3rem; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.5rem; }
         .desc-scroll::-webkit-scrollbar { width: 4px; }
         .desc-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
@@ -107,13 +107,11 @@
         }
 
         function syncData() {
-            // 🔴 修改點 1：對準 users_B
             db.ref('users_B/' + user.id + '/points').on('value', snap => {
                 user.points = snap.val() || 0;
                 document.getElementById('userPoints').innerText = user.points.toLocaleString();
             });
 
-            // 🔴 修改點 2：對準 products_B
             db.ref('products_B').on('value', snap => {
                 allProducts = snap.val() || {};
                 updateCategoryBar();
@@ -142,19 +140,22 @@
             let items = [];
             for(let id in allProducts) { items.push({ id, ...allProducts[id] }); }
             
-            // 依照排序編號顯示
             items.sort((a, b) => (a.sort || 99) - (b.sort || 99));
             
             items.forEach(p => {
                 if(p.status === '下架') return;
                 if(cat !== '全部' && p.cat !== cat) return;
+                // 分類文字標題加大：text-sm + font-black
+                // 商品名稱特大化：text-xl + font-black
                 grid.innerHTML += `
                     <div onclick="openModal('${p.id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg flex flex-col"> 
                         <img src="${p.img}" class="w-full h-36 object-cover border-b border-slate-700 bg-slate-900"> 
                         <div class="p-4 flex-1"> 
-                            <p class="text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-wider">${p.cat || '一般'}</p> 
-                            <h3 class="font-bold text-sm mb-2 text-slate-100 line-clamp-2 leading-snug">${p.name}</h3> 
-                            <p class="gold-text font-black text-lg">${(p.price || 0).toLocaleString()} <span class="text-[10px]">點</span></p> 
+                            <div class="inline-block bg-yellow-500/10 border border-yellow-500/30 rounded px-2 py-0.5 mb-2">
+                                <p class="text-sm text-yellow-500 font-black uppercase tracking-wider">${p.cat || '一般'}</p> 
+                            </div>
+                            <h3 class="font-black text-xl mb-2 text-slate-100 line-clamp-2 leading-tight">${p.name}</h3> 
+                            <p class="gold-text font-black text-xl">${(p.price || 0).toLocaleString()} <span class="text-xs">點</span></p> 
                         </div> 
                     </div>`;
             });
@@ -185,7 +186,6 @@
                     const newTotal = user.points - totalCost;
                     const orderId = db.ref('orders_B').push().key;
 
-                    // 🔴 修改點 3：寫入 users_B, orders_B, logs_B
                     await db.ref('users_B/' + user.id).update({ points: newTotal });
                     await db.ref('orders_B/' + orderId).set({
                         userId: user.id, userName: user.name, itemName: currentItem.name, 
@@ -196,8 +196,7 @@
                         reason: `商城兌換: ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
                     });
 
-                    // LINE 通知
-                    const notifyMsg = "兌換成功(B台)\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
+                    const notifyMsg = "兌換成功\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
                     fetch(GAS_URL + "?userId=" + user.id + "&msg=" + encodeURIComponent(notifyMsg), { mode: 'no-cors' });
 
                     alert("兌換成功！請跟官方Line確認收件資訊。");
@@ -214,7 +213,6 @@
             const list = document.getElementById('historyList');
             list.innerHTML = '<div class="text-center py-10 text-slate-500 font-bold italic">讀取中...</div>';
             
-            // 🔴 修改點 4：讀取 orders_B
             db.ref('orders_B').orderByChild('userId').equalTo(user.id).once('value', s => {
                 const o = s.val(); list.innerHTML = '';
                 if(!o) { list.innerHTML = '<div class="text-center py-10 text-slate-500 font-bold">尚無兌換紀錄</div>'; return; }
@@ -223,7 +221,7 @@
                     const isDone = ord.status === '已出貨';
                     const hasTrack = ord.trackNo && ord.trackNo.trim() !== "";
                     list.innerHTML += `
-                        <div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner"> 
+                        <div class="bg-slate-900/50 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner mb-4"> 
                             <div class="flex justify-between items-start mb-3"> 
                                 <div class="flex-1 pr-2"> 
                                     <p class="font-bold text-slate-100 text-lg leading-tight">${ord.itemName}</p> 
