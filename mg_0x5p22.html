@@ -205,8 +205,8 @@ function startSync(){
                 <td>
                     <div class="win-status-row">
                         <select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input">
-                            <option value="待處理" ${i.status==='待處理'?'selected':''}>待處理</option>
-                            <option value="出貨中" ${i.status==='出貨中'?'selected':''}>出貨中</option>
+                            <option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option>
+                            <option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option>
                             <option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option>
                         </select>
                         <input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" 
