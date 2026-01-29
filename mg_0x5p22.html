@@ -18,6 +18,8 @@ body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--
 .card{background:var(--card);border-radius:15px;padding:20px;border:1px solid rgba(255,255,255,.05);margin-bottom:20px}
 .title{font-size:1.1rem;color:var(--p);font-weight:700;margin-bottom:20px;display:block}
 input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8px;border:1px solid #333;background:#000;color:#fff;box-sizing:border-box;font-size:.9rem}
+.file-input-wrapper { background: #000; border: 1px dashed var(--p); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; cursor: pointer; position: relative; }
+.file-input-wrapper input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .btn{background:var(--p);color:#000;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:800;transition:.2s}
 .btn-sm{padding:8px 12px;font-size:.85rem;margin-right:5px;margin-top:5px}
 .btn-danger{background:#ff4757;color:#fff}.btn-unlock{background:var(--lock);color:#fff}.btn-success{background:var(--success);color:#fff}
@@ -35,6 +37,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .win-table th{text-align:left;color:var(--p);padding:10px;border-bottom:2px solid #222}
 .win-table td{padding:10px;border-bottom:1px solid #222}
 .dynamic-row{display:flex;gap:8px;margin-bottom:8px}.dynamic-row input{margin-bottom:0}
+.upload-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #333; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -52,10 +55,41 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div class="main">
 <div id="mon" class="page active"><span class="title">商品即時監控</span><div id="monList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px"></div></div>
 <div id="deposit" class="page"><span class="title">儲值上分申請審核</span><div id="depositListContainer"></div></div>
-<div id="game" class="page"><span class="title" id="gameActionTitle">新增商品</span><div class="card" style="max-width:600px;margin:0 auto"><input type="text" id="gId" placeholder="遊戲 ID"><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><select id="gCat"><option value="">請先到公告頁面建立分類</option></select><input type="number" id="gOrder" placeholder="排序" value="99"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input type="number" id="gTotal" placeholder="總籤數"><input type="number" id="gPrice" placeholder="單抽原價"></div><div class="safe-box"><input type="number" id="gSafeZone" placeholder="大獎保護區"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><input type="number" id="pCount" placeholder="優惠張數"><input type="number" id="pPrice" placeholder="優惠價格"></div></div>
-<div style="margin-bottom:10px;color:var(--p);font-weight:700">商品主圖(封面)：</div><input type="text" id="gImg" placeholder="封面圖網址 (必填)">
-<div style="margin-bottom:10px;color:var(--p);font-weight:700">展示圖片(相簿)：</div><div id="albumContainer"></div><button class="btn btn-sm" onclick="addAlbumInput()">＋ 新增展示圖</button>
-<div style="margin-top:20px;margin-bottom:10px;color:var(--p);font-weight:700">獎項設定：</div><div id="prizeContainer"></div><button class="btn btn-sm" onclick="addPrizeInput()">＋ 新增獎項</button><div style="display:flex;gap:10px;margin-top:20px"><button class="btn" style="flex:2" id="publishBtn" onclick="publishGame()">發布並洗牌</button><button class="btn btn-danger" style="flex:1;display:none" id="cancelEditBtn" onclick="resetGameForm()">取消</button></div></div><hr style="border:0;border-top:1px solid #333;margin:30px 0"><div id="quickAdjustList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:15px"></div></div>
+<div id="game" class="page"><span class="title" id="gameActionTitle">新增商品</span><div class="card" style="max-width:600px;margin:0 auto">
+    <input type="text" id="gId" placeholder="遊戲 ID">
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px">
+        <select id="gCat"><option value="">請先到公告頁面建立分類</option></select>
+        <input type="number" id="gOrder" placeholder="排序" value="99">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <input type="number" id="gTotal" placeholder="總籤數">
+        <input type="number" id="gPrice" placeholder="單抽原價">
+    </div>
+    <div class="safe-box">
+        <input type="number" id="gSafeZone" placeholder="大獎保護區">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+            <input type="number" id="pCount" placeholder="優惠張數">
+            <input type="number" id="pPrice" placeholder="優惠價格">
+        </div>
+    </div>
+    <div style="margin-bottom:10px;color:var(--p);font-weight:700">商品主圖(封面)：</div>
+    <div class="file-input-wrapper">
+        <span id="mainImgStatus">點擊上傳圖片</span>
+        <input type="file" accept="image/*" onchange="handleFileUpload(this, 'gImg', 'mainImgStatus')">
+    </div>
+    <input type="hidden" id="gImg"> <div style="margin-bottom:10px;color:var(--p);font-weight:700">展示圖片(相簿)：</div>
+    <div id="albumContainer"></div>
+    <button class="btn btn-sm" onclick="addAlbumInput()">＋ 上傳展示圖</button>
+
+    <div style="margin-top:20px;margin-bottom:10px;color:var(--p);font-weight:700">獎項設定：</div>
+    <div id="prizeContainer"></div>
+    <button class="btn btn-sm" onclick="addPrizeInput()">＋ 新增獎項</button>
+    
+    <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="btn" style="flex:2" id="publishBtn" onclick="publishGame()">發布並洗牌</button>
+        <button class="btn btn-danger" style="flex:1;display:none" id="cancelEditBtn" onclick="resetGameForm()">取消</button>
+    </div>
+</div><hr style="border:0;border-top:1px solid #333;margin:30px 0"><div id="quickAdjustList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:15px"></div></div>
 <div id="win_logs" class="page"><span class="title">全服中獎即時紀錄</span><div class="card"><table class="win-table"><thead><tr><th>時間</th><th>玩家</th><th>商品</th><th>獎項</th></tr></thead><tbody id="globalWinItems"></tbody></table></div></div>
 <div id="user" class="page"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><span class="title" style="margin:0">會員數據管理</span><button class="btn btn-sm" onclick="createUser()">＋ 新增會員</button></div><div id="userListContainer"></div></div>
 <div id="ann" class="page"><span class="title">首頁公告</span><textarea id="annContent" rows="8" placeholder="跑馬燈內容..."></textarea><button class="btn" style="width:100%;margin-bottom:30px" onclick="saveAnnouncement()">同步公告</button>
@@ -65,18 +99,19 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,push,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import {getStorage, ref as sRef, uploadBytes, getDownloadURL} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// 🔴 修改點：這裡已更換為您新專案的設定
 const _cc = { 
     apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
     databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
     projectId: "dream8-7b161", 
-    appId: "1:606218522479:web:2737643db3de735af7e29a" 
+    appId: "1:606218522479:web:2737643db3de735af7e29a",
+    storageBucket: "dream8-7b161.appspot.com" // 🔴 確保這行正確
 };
 
-// 🔴 修改點：initializeApp 使用 _cc
 const app = initializeApp(_cc);
 const db = getDatabase(app);
+const storage = getStorage(app);
 let isEditing = false;
 
 window.onload=()=>{
@@ -88,13 +123,56 @@ window.onload=()=>{
     }
 };
 
+// 🟢 圖片上傳邏輯
+window.handleFileUpload = async (input, targetId, statusId) => {
+    const file = input.files[0];
+    if(!file) return;
+    const status = document.getElementById(statusId);
+    status.innerText = "⏳ 上傳中...";
+    
+    try {
+        const path = `games/${Date.now()}_${file.name}`;
+        const storageRef = sRef(storage, path);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        
+        document.getElementById(targetId).value = url;
+        status.innerText = "✅ 上傳成功";
+        // 如果是相簿欄位，可以顯示預覽
+        if(input.nextElementSibling && input.nextElementSibling.tagName === 'IMG') {
+            input.nextElementSibling.src = url;
+        }
+    } catch (e) {
+        console.error(e);
+        status.innerText = "❌ 上傳失敗";
+        alert("圖片上傳失敗，請檢查 Firebase Storage 權限設定。");
+    }
+};
+
 window.toggleSidebar=()=>document.getElementById('sidebar').classList.toggle('open');
 window.switchTab=id=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));document.getElementById(id).classList.add('active');if(window.innerWidth<=768)toggleSidebar()};
 window.toggleUser=uid=>document.getElementById(`content-${uid}`).classList.toggle('show');
 window.closeLog=()=>document.getElementById('logModal').style.display='none';
 
 window.addPrizeInput=(num='',name='')=>{const d=document.createElement('div');d.className='dynamic-row';d.innerHTML=`<input type="number" placeholder="號碼" value="${num}" style="flex:1"><input type="text" placeholder="名稱" value="${name}" style="flex:2"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`;document.getElementById('prizeContainer').appendChild(d)};
-window.addAlbumInput=(url='')=>{const d=document.createElement('div');d.className='dynamic-row';d.innerHTML=`<input type="text" placeholder="圖網址 URL" value="${url}" style="flex:1"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`;document.getElementById('albumContainer').appendChild(d)};
+
+// 修改展示圖為上傳模式
+window.addAlbumInput=(url='')=>{
+    const id = "alb_" + Math.random().toString(36).substr(2, 9);
+    const d=document.createElement('div');
+    d.className='dynamic-row';
+    d.style.alignItems = 'center';
+    d.innerHTML=`
+        <div class="file-input-wrapper" style="flex:1; margin-bottom:0; padding:8px;">
+            <span id="st-${id}">${url ? '✅ 已有圖片' : '選取圖片'}</span>
+            <input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')">
+        </div>
+        <input type="hidden" id="in-${id}" value="${url}">
+        <img src="${url || ''}" class="upload-preview" style="${url?'':'display:none'}">
+        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+    `;
+    document.getElementById('albumContainer').appendChild(d)
+};
 
 function startSync(){
     onValue(ref(db,'settings/categories'),s=>{
@@ -220,9 +298,12 @@ window.delCat=async(idx)=>{if(confirm("刪除分類？")){const s=await get(ref(
 window.forceUnlock=async id=>{if(confirm(`解除 [${id}] 包台？`)){await remove(ref(db,`games/${id}/lock`));alert("已解鎖")}};
 
 window.publishGame = async () => {
-    const id = document.getElementById('gId').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value, prs = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')).map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value })), alb = Array.from(document.querySelectorAll('#albumContainer .dynamic-row')).map(r => r.querySelector('input').value).filter(v => v.trim());
+    const id = document.getElementById('gId').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value, prs = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')).map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value })), alb = Array.from(document.querySelectorAll('#albumContainer .dynamic-row')).map(r => r.querySelector('input[type="hidden"]').value).filter(v => v.trim());
     if (!id || !tot || 0 === prs.length || !cat) return alert("資訊不全(分類必選)");
     const d = { total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: !1 };
+    
+    if(!d.img) return alert("請務必上傳封面圖片");
+
     await update(ref(db, `gameSettings/${id}`), d);
     if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功");
     resetGameForm();
@@ -241,8 +322,10 @@ window.resetShuffle = async id => {
     }
 };
 
-window.loadGameToEdit=async id=>{const s=await get(ref(db,`gameSettings/${id}`)),g=s.val();if(!g)return;isEditing=!0;document.getElementById('gId').value=id;document.getElementById('gId').disabled=!0;document.getElementById('gCat').value=g.category;document.getElementById('gTotal').value=g.total;document.getElementById('gPrice').value=g.price;document.getElementById('gSafeZone').value=g.safeZone||0;document.getElementById('pCount').value=g.promoCount||0;document.getElementById('pPrice').value=g.promoPrice||0;document.getElementById('gImg').value=g.img;document.getElementById('gOrder').value=g.order||99;const aC=document.getElementById('albumContainer');aC.innerHTML='';if(g.album)g.album.forEach(u=>addAlbumInput(u));const pC=document.getElementById('prizeContainer');pC.innerHTML='';g.prizes.forEach(p=>addPrizeInput(p.num,p.name));document.getElementById('gameActionTitle').innerText="編輯:"+id;document.getElementById('publishBtn').innerText="更新資訊";document.getElementById('cancelEditBtn').style.display="block";switchTab('game')};
-window.resetGameForm=()=>{isEditing=!1;document.getElementById('gId').value='';document.getElementById('gId').disabled=!1;document.getElementById('prizeContainer').innerHTML='';document.getElementById('albumContainer').innerHTML='';document.getElementById('cancelEditBtn').style.display="none";document.getElementById('gameActionTitle').innerText="商品發布與戰略配率";document.getElementById('publishBtn').innerText="發布並洗牌"};
+window.loadGameToEdit=async id=>{const s=await get(ref(db,`gameSettings/${id}`)),g=s.val();if(!g)return;isEditing=!0;document.getElementById('gId').value=id;document.getElementById('gId').disabled=!0;document.getElementById('gCat').value=g.category;document.getElementById('gTotal').value=g.total;document.getElementById('gPrice').value=g.price;document.getElementById('gSafeZone').value=g.safeZone||0;document.getElementById('pCount').value=g.promoCount||0;document.getElementById('pPrice').value=g.promoPrice||0;document.getElementById('gImg').value=g.img;
+document.getElementById('mainImgStatus').innerText = "✅ 已有圖片 (可點擊更換)";
+document.getElementById('gOrder').value=g.order||99;const aC=document.getElementById('albumContainer');aC.innerHTML='';if(g.album)g.album.forEach(u=>addAlbumInput(u));const pC=document.getElementById('prizeContainer');pC.innerHTML='';g.prizes.forEach(p=>addPrizeInput(p.num,p.name));document.getElementById('gameActionTitle').innerText="編輯:"+id;document.getElementById('publishBtn').innerText="更新資訊";document.getElementById('cancelEditBtn').style.display="block";switchTab('game')};
+window.resetGameForm=()=>{isEditing=!1;document.getElementById('gId').value='';document.getElementById('gId').disabled=!1;document.getElementById('prizeContainer').innerHTML='';document.getElementById('albumContainer').innerHTML='';document.getElementById('cancelEditBtn').style.display="none";document.getElementById('gameActionTitle').innerText="商品發布與戰略配率";document.getElementById('publishBtn').innerText="發布並洗牌";document.getElementById('mainImgStatus').innerText="點擊上傳圖片";document.getElementById('gImg').value=''};
 window.showLogs=async uid=>{const s=await get(ref(db,`users/${uid}/logs`)),l=s.val()||{},c=document.getElementById('logItems');c.innerHTML='';Object.values(l).reverse().forEach(i=>{c.innerHTML+=`<div style="padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;"><span>${i.game}<br><small>${new Date(i.time).toLocaleString()}</small></span><b>-${i.cost}P</b></div>`});document.getElementById('logModal').style.display='flex'};
 window.updNum=(id,f,v)=>update(ref(db,`gameSettings/${id}`),{[f]:Number(v)});
 window.addBal=async uid=>{const a=prompt("調整餘額:");if(a){const s=await get(ref(db,`users/${uid}/balance`));await update(ref(db,`users/${uid}`),{balance:(s.val()||0)+parseInt(a)})}};
