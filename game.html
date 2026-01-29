@@ -98,7 +98,7 @@ const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
 
 // 🔴 修改點：填入您的 GAS 部署網址
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec"; 
+const GAS_URL = "YOUR_GAS_URL"; 
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
 
