@@ -108,10 +108,19 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
-        const _app = initializeApp(_cc); const _db = getDatabase(_app);
+        // 🔴 已更新為新專案 dream8-7b161
+        const _cc = { 
+            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+            projectId: "dream8-7b161", 
+            appId: "1:606218522479:web:2737643db3de735af7e29a" 
+        };
+
+        const _app = initializeApp(_cc); 
+        const _db = getDatabase(_app);
         const _uid = localStorage.getItem('myScratchCode');
 
+        // 通知的 GAS 網址保持不變
         const GAS_URL = "https://script.google.com/macros/s/AKfycbz07UGZEQrF2A9IRlYkqnFQv4ZbquNaIb4PDsEKXxnd7DrzUrL_9oBsHl2oB3ThEItf/exec"; 
 
         if(!_uid) location.href = 'index.html';
@@ -141,6 +150,7 @@
             btn.innerText = "提交申請中...";
 
             try {
+                // 寫入新資料庫
                 await push(ref(_db, `depositRequests`), {
                     uid: _uid,
                     amount: Number(amt),
@@ -148,6 +158,7 @@
                     time: serverTimestamp()
                 });
 
+                // 通知客服
                 fetch(GAS_URL, {
                     method: "POST",
                     mode: "no-cors", 
