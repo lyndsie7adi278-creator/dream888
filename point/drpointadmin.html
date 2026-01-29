@@ -75,7 +75,7 @@
                         <span class="text-xs text-slate-500 ml-2">狀態：</span>
                         <select id="pStatus" class="bg-transparent text-yellow-500 font-bold text-sm"><option value="上架">上架</option><option value="下架">下架</option></select>
                     </div>
-                    <button onclick="save()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition">儲存並發布到</button>
+                    <button onclick="save()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition">儲存並發布</button>
                     <button onclick="reset()" class="w-full text-slate-500 text-xs mt-1">清空</button>
                 </div>
             </div>
@@ -143,7 +143,7 @@
                         </div>
                         <div class="flex gap-2 justify-end pt-2 border-t border-slate-700/50">
                             <button onclick="toggleOrder('${id}','${ord.status}')" class="bg-slate-700 px-4 py-2 rounded-xl text-[11px] font-bold active:scale-95 transition">${isDone?'設為待出貨':'設為已出貨'}</button>
-                            <button onclick="refundOrder('${id}', '${ord.userId}', ${ord.total})" class="bg-red-900/40 text-red-400 border border-red-900 px-4 py-2 rounded-xl text-[11px] font-bold active:scale-95 transition">取消並退款</button>
+                            <button onclick="refundOrder('${id}', '${ord.userId}', ${ord.total}, '${ord.itemName}')" class="bg-red-900/40 text-red-400 border border-red-900 px-4 py-2 rounded-xl text-[11px] font-bold active:scale-95 transition">取消並退款</button>
                         </div>
                     </div>`;
                 });
@@ -175,14 +175,11 @@
             if (currentVal && allCategories.includes(currentVal)) select.value = currentVal; 
         }
 
-        // 新增分類功能
         function addCategory() {
             const newCat = prompt("請輸入新分類名稱：");
             if (!newCat) return;
             if (allCategories.includes(newCat)) return alert("此分類已存在");
-            db.ref('categories_B').push(newCat).then(() => {
-                alert("分類已新增");
-            });
+            db.ref('categories_B').push(newCat).then(() => alert("分類已新增"));
         }
 
         async function handleUpload(input) {
@@ -215,11 +212,13 @@
             items.sort((a, b) => (a.sort || 99) - (b.sort || 99));
             items.forEach(p => { 
                 if(q && !p.name.toLowerCase().includes(q)) return;
+                // 分類文字標籤 (加大視覺)
                 l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center mb-2"> 
                     <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover bg-slate-900"> 
                     <div class="flex-1 overflow-hidden"> 
-                        <p class="font-bold text-slate-100 truncate">${p.name}</p> 
-                        <p class="text-yellow-500 text-xs font-bold">${p.cat || '一般'} · ${p.price.toLocaleString()} 點</p> 
+                        <p class="font-black text-blue-400 text-sm uppercase tracking-tighter mb-0.5">${p.cat || '一般'}</p> 
+                        <p class="font-bold text-slate-100 text-base truncate">${p.name}</p> 
+                        <p class="text-yellow-500 text-xs font-bold">${p.price.toLocaleString()} 點</p> 
                     </div> 
                     <div class="flex gap-1">
                         <button onclick="edit('${p.id}')" class="px-2 py-1.5 rounded-lg bg-blue-900/40 text-blue-400 border border-blue-900 text-[10px] font-bold">編輯</button> 
@@ -242,14 +241,19 @@
             }); 
         }
 
-        function refundOrder(oid, uid, amount) { 
-            if(!confirm(`確認取消此訂單並退款 ${amount} 點？`)) return; 
+        function refundOrder(oid, uid, amount, itemName) { 
+            if(!confirm(`確認取消「${itemName}」並退款 ${amount} 點？`)) return; 
             db.ref(`users_B/${uid}/points`).transaction(p => (p||0) + amount, (err, comm, snap) => { 
                 if(comm) { 
                     const after = snap.val(); 
                     db.ref(`orders_B/${oid}`).remove(); 
                     writeLog(uid, allUsers[uid].name, "訂單取消退款", amount, after); 
-                    alert('退款成功'); 
+                    
+                    // 退款 LINE 通知觸發
+                    const notifyMsg = `⚠️ 訂單取消暨退款通知\n項目：${itemName}\n狀態：訂單已由管理員取消，原扣除之 ${amount} 點已全數退回您的帳戶。`;
+                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(notifyMsg)}`, {mode:'no-cors'});
+                    
+                    alert('退款成功，已發送 LINE 通知'); 
                 } 
             }); 
         }
@@ -299,4 +303,3 @@
     </script>
 </body>
 </html>
-
