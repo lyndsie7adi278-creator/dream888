@@ -1,192 +1,138 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-    <title>夢工廠 | 會員中心</title>
-    <style>
-        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --success: #2ecc71; --wait: #f1c40f; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
-        
-        .header { padding: 15px 20px; display: flex; align-items: center; background: #fff; box-shadow: 0 1px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
-        .back-btn { background: none; border: 1.5px solid var(--primary); color: var(--primary); padding: 5px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; font-weight: 900; }
-        
-        .user-panel { 
-            padding: 50px 20px 60px; 
-            background: linear-gradient(135deg, #ff8fa3 0%, #ffb1bf 100%); 
-            text-align: center; color: #fff; position: relative; 
-            border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-            box-shadow: 0 10px 30px rgba(255,143,163,0.3);
-        }
-        
-        .avatar-wrap { position: relative; width: 95px; height: 95px; margin: 0 auto 15px; }
-        .avatar { width: 100%; height: 100%; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--primary); font-weight: 900; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border: 4px solid rgba(255,255,255,0.4); }
-        .nickname-box { font-size: 1.4rem; font-weight: 900; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .uid-tag { font-size: 0.7rem; color: #fff; letter-spacing: 1px; background: rgba(0,0,0,0.1); padding: 4px 14px; border-radius: 50px; display: inline-block; margin-top: 5px; backdrop-filter: blur(5px); cursor: pointer; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>夢工廠 | 會員中心</title>
+<style>
+    :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; }
+    body { margin: 0; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; padding-bottom: 50px; }
+    .header { padding: 20px; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); display: flex; align-items: center; gap: 15px; }
+    .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; }
+    
+    .user-info { padding: 25px 20px; background: linear-gradient(180deg, #000, var(--card)); text-align: center; }
+    .uid-tag { font-size: 0.8rem; color: #888; margin-bottom: 8px; }
+    .balance-val { font-size: 2.5rem; font-weight: 900; color: var(--p); }
 
-        .balance-card { 
-            margin: 25px auto -85px; background: rgba(255,255,255,0.95); 
-            width: 88%; padding: 20px; border-radius: 25px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08); position: relative; z-index: 5;
-        }
-        .balance-label { font-size: 0.75rem; color: #999; font-weight: bold; margin-bottom: 8px; }
-        .balance-amount { font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 15px; }
-        .balance-amount span { color: var(--gold); }
-        .deposit-btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,143,163,0.3); transition: 0.3s; }
+    .section-title { padding: 15px 20px; font-size: 1.1rem; font-weight: 900; color: var(--p); border-left: 4px solid var(--p); margin: 20px 0 10px; background: rgba(255,184,0,0.05); }
+    
+    .win-item { background: var(--card); margin: 10px 15px; padding: 15px; border-radius: 15px; border: 1px solid #222; position: relative; }
+    .win-time { font-size: 0.75rem; color: #666; margin-bottom: 8px; }
+    .win-name { font-size: 1.1rem; font-weight: bold; color: #fff; margin-bottom: 10px; }
+    
+    /* 狀態標籤樣式 */
+    .status-box { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px dashed #333; }
+    .status-row { display: flex; justify-content: space-between; align-items: center; }
+    .status-tag { padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .status-pending { background: #555; color: #ccc; }    /* 待處理 */
+    .status-shipping { background: #2980b9; color: #fff; } /* 出貨中 */
+    .status-delivered { background: #27ae60; color: #fff; } /* 已送達 */
+    
+    .shipping-no { font-family: monospace; color: var(--p); background: rgba(255,184,0,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.9rem; }
+    .copy-btn { font-size: 0.7rem; color: #aaa; text-decoration: underline; cursor: pointer; }
 
-        .tabs { display: flex; background: transparent; margin-top: 90px; padding: 5px 10px; position: sticky; top: 58px; z-index: 4; gap: 5px; }
-        .tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 0.85rem; font-weight: 900; color: #bbb; cursor: pointer; position: relative; }
-        .tab-btn.active { color: var(--primary); }
-        .tab-btn.active::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: var(--primary); border-radius: 10px; }
-
-        .content-area { flex-grow: 1; padding: 10px 15px 100px; max-width: 500px; margin: 0 auto; width: 100%; }
-        .page-content { display: none; animation: fadeIn 0.4s ease; }
-        .page-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .list-item { background: #fff; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .item-info b { display: block; font-size: 0.95rem; color: #333; margin-bottom: 4px; font-weight: 900; }
-        .item-info small { color: #ccc; font-size: 0.7rem; font-weight: bold; }
-        
-        .status-tag { padding: 5px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 900; }
-        .status-pending { background: #fff9e6; color: var(--wait); border: 1px solid #ffeebf; }
-        .status-completed { background: #eefdf4; color: var(--success); border: 1px solid #dcf7e6; }
-        
-        .item-val { font-weight: 900; font-size: 1.1rem; }
-        .val-minus { color: var(--primary); }
-        .val-plus { color: var(--success); }
-
-        .empty-state { text-align: center; padding: 80px 20px; color: #d0d5dd; font-weight: bold; }
-        #copyToast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; z-index: 5000; display: none; }
-    </style>
+    .empty-msg { text-align: center; padding: 40px; color: #444; }
+</style>
 </head>
 <body>
 
-    <div class="header">
-        <a href="index.html" class="back-btn">← 回商城</a>
-    </div>
+<div class="header">
+    <a href="index.html" class="back-btn">← 回首頁</a>
+    <div style="font-weight:900;">會員中心</div>
+</div>
 
-    <div class="user-panel">
-        <div class="avatar-wrap"><div class="avatar" id="avatarLetter">?</div></div>
-        <div class="nickname-box"><span id="uNick">---</span></div>
-        <div class="uid-tag" onclick="copyUid()">ID: <span id="displayUid">--------</span> 📋</div>
-        
-        <div class="balance-card">
-            <div class="balance-label">我的點數</div>
-            <div class="balance-amount"><span>P</span> <span id="uBal">0</span></div>
-            <button class="deposit-btn" onclick="location.href='deposit.html'">💳 儲值點數</button>
-        </div>
-    </div>
+<div class="user-info">
+    <div class="uid-tag">會員 ID: <span id="displayUid">------</span></div>
+    <div style="color:#aaa; font-size:0.9rem;">目前餘額</div>
+    <div class="balance-val"><span id="uBal">0</span> <small style="font-size:1rem;">P</small></div>
+</div>
 
-    <div class="tabs">
-        <div class="tab-btn active" onclick="switchTab(0)">消費明細</div>
-        <div class="tab-btn" onclick="switchTab(1)">儲值紀錄</div>
-        <div class="tab-btn" onclick="switchTab(2)">中獎存根</div>
-    </div>
+<div class="section-title">🏆 我的中獎存根</div>
+<div id="winList">
+    <div class="empty-msg">載入中...</div>
+</div>
 
-    <div class="content-area">
-        <div id="tab-0" class="page-content active"><div id="billingList"></div></div>
-        
-        <div id="tab-1" class="page-content">
-            <div id="depositList"></div>
-        </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        <div id="tab-2" class="page-content"><div id="winsList"></div></div>
-    </div>
+const firebaseConfig = { 
+    apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+    databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+    projectId: "dream8-7b161", 
+    appId: "1:606218522479:web:2737643db3de735af7e29a" 
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const uid = localStorage.getItem('myScratchCode');
 
-    <div id="copyToast">✅ 已複製 UID</div>
+if(!uid) location.href = 'index.html';
+document.getElementById('displayUid').innerText = uid;
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+// 監聽餘額
+onValue(ref(db, `users/${uid}/balance`), s => {
+    document.getElementById('uBal').innerText = (s.val() || 0).toLocaleString();
+});
 
-        // 🔴 已更新為新專案 dream8-7b161
-        const _cc = { 
-            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
-            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
-            projectId: "dream8-7b161", 
-            appId: "1:606218522479:web:2737643db3de735af7e29a" 
-        };
-        
-        const _app = initializeApp(_cc); 
-        const _db = getDatabase(_app);
-        const _uid = localStorage.getItem('myScratchCode');
+// 監聽中獎紀錄
+onValue(ref(db, `winLogs`), snap => {
+    const list = document.getElementById('winList');
+    const data = snap.val();
+    if(!data) {
+        list.innerHTML = '<div class="empty-msg">尚無中獎紀錄</div>';
+        return;
+    }
 
-        if(!_uid) location.href = 'index.html';
-        document.getElementById('displayUid').innerText = _uid;
+    // 篩選出屬於該用戶的紀錄並排序（新的在前）
+    const myWins = Object.keys(data)
+        .map(key => ({ id: key, ...data[key] }))
+        .filter(item => item.user === uid)
+        .sort((a, b) => b.time - a.time);
 
-        window.copyUid = () => {
-            navigator.clipboard.writeText(_uid);
-            const t = document.getElementById('copyToast');
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 2000);
-        };
+    if(myWins.length === 0) {
+        list.innerHTML = '<div class="empty-msg">尚無中獎紀錄</div>';
+        return;
+    }
 
-        window.switchTab = (idx) => {
-            document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-            document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
-        };
+    list.innerHTML = myWins.map(item => {
+        const date = new Date(item.time).toLocaleString();
+        // 狀態文字處理
+        let statusClass = "status-pending";
+        let statusText = item.status || "待處理";
+        if(statusText === "出貨中") statusClass = "status-shipping";
+        if(statusText === "已完成") statusClass = "status-delivered";
 
-        // 監聽用戶基本資料與消費紀錄
-        onValue(ref(_db, `users/${_uid}`), s => {
-            const u = s.val(); if(!u) return;
-            document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
-            document.getElementById('uNick').innerText = u.nickname || "新玩家";
-            document.getElementById('avatarLetter').innerText = (u.nickname || _uid).charAt(0).toUpperCase();
+        const shippingNo = item.shippingNo || "尚未填寫";
 
-            const bList = document.getElementById('billingList');
-            if(u.logs) {
-                const logs = Object.values(u.logs).sort((a,b) => b.time - a.time);
-                bList.innerHTML = logs.map(l => `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <b>${l.game || '點數調整'}</b>
-                            <small>${new Date(l.time).toLocaleString()}</small>
-                        </div>
-                        <div class="item-val val-minus">-${l.cost} P</div>
+        return `
+            <div class="win-item">
+                <div class="win-time">${date}</div>
+                <div class="win-name">${item.prize}</div>
+                <div style="font-size:0.8rem; color:#888; margin-bottom:10px;">來自遊戲：${item.game}</div>
+                
+                <div class="status-box">
+                    <div class="status-row">
+                        <span style="font-size:0.85rem; color:#aaa;">物流狀態</span>
+                        <span class="status-tag ${statusClass}">${statusText}</span>
                     </div>
-                `).join('');
-            } else { bList.innerHTML = '<div class="empty-state">尚無消費紀錄</div>'; }
-        });
-
-        // 監聽儲值申請紀錄
-        onValue(ref(_db, `depositRequests`), s => {
-            const list = document.getElementById('depositList');
-            const allReq = s.val() ? Object.values(s.val()) : [];
-            const myReq = allReq.filter(r => r.uid === _uid).sort((a,b) => b.time - a.time);
-            
-            if(myReq.length) {
-                list.innerHTML = myReq.map(r => `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <b>儲值 ${r.amount} NTD</b>
-                            <small>${new Date(r.time).toLocaleString()}</small>
-                        </div>
-                        <div class="status-tag ${r.status === 'pending' ? 'status-pending' : 'status-completed'}">
-                            ${r.status === 'pending' ? '⏳ 審核中' : '✅ 已入點'}
+                    <div class="status-row">
+                        <span style="font-size:0.85rem; color:#aaa;">交貨便編號</span>
+                        <div>
+                            <span class="shipping-no" id="no_${item.id}">${shippingNo}</span>
+                            ${item.shippingNo ? `<span class="copy-btn" onclick="copyNo('${item.id}')">複製</span>` : ''}
                         </div>
                     </div>
-                `).join('');
-            } else { list.innerHTML = '<div class="empty-state">尚無儲值申請紀錄</div>'; }
-        });
+                </div>
+            </div>
+        `;
+    }).join('');
+});
 
-        // 監聽中獎紀錄
-        onValue(ref(_db, `winLogs`), s => {
-            const list = document.getElementById('winsList');
-            const myWins = s.val() ? Object.values(s.val()).filter(w => w.user === _uid).sort((a,b) => b.time - a.time) : [];
-            if(myWins.length) {
-                list.innerHTML = myWins.map(w => `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <b>${w.prize}</b>
-                            <small>${w.game} | ${new Date(w.time).toLocaleString()}</small>
-                        </div>
-                        <div class="win-tag" style="background:#fff9fa; color:#ff8fa3; padding:5px 10px; border-radius:10px; font-size:0.75rem; font-weight:900;">中獎紀錄</div>
-                    </div>
-                `).join('');
-            } else { list.innerHTML = '<div class="empty-state">尚未中獎</div>'; }
-        });
-    </script>
+// 複製功能
+window.copyNo = (id) => {
+    const text = document.getElementById('no_' + id).innerText;
+    navigator.clipboard.writeText(text).then(() => alert('編號已複製: ' + text));
+};
+</script>
 </body>
 </html>
