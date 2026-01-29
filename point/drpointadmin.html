@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>夢工廠後台 (B台)</title>
+    <title>夢工廠後台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
@@ -28,7 +28,7 @@
 
     <div class="max-w-6xl mx-auto">
         <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-            <h1 class="text-3xl font-bold gold-text tracking-tight">夢工廠管理後台 <span class="text-white text-sm bg-red-600 px-2 py-1 rounded">B台</span></h1>
+            <h1 class="text-3xl font-bold gold-text tracking-tight">夢工廠 <span class="text-white text-sm bg-red-600 px-2 py-1 rounded">後台</span></h1>
             <nav class="bg-slate-800 p-1.5 rounded-2xl flex gap-1 border border-slate-700 shadow-xl flex-wrap justify-center">
                 <button onclick="tab('u')" id="bu" class="px-5 py-2 rounded-xl text-sm font-bold bg-yellow-600 text-slate-900 transition">會員管理</button>
                 <button onclick="tab('o')" id="bo" class="px-5 py-2 rounded-xl text-sm font-bold text-slate-400 transition">訂單管理</button>
@@ -46,7 +46,7 @@
 
         <div id="tp" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-4 bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-xl h-fit sticky top-6">
-                <h2 id="fTitle" class="font-bold mb-4 text-yellow-500">🎁 B 台商品編輯</h2>
+                <h2 id="fTitle" class="font-bold mb-4 text-yellow-500">🎁 商品編輯</h2>
                 <input type="hidden" id="editId">
                 <div class="space-y-4">
                     <div class="space-y-1">
@@ -215,8 +215,8 @@
             db.ref(`users_B/${uid}/points`).transaction(p => (p||0)+val, (err, comm, snap) => { 
                 if(comm) { 
                     const after = snap.val(); 
-                    writeLog(uid, allUsers[uid].name, "後台手動調整 (B台)", val, after); 
-                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent('✅ B台點數變動: ' + val)}`, {mode:'no-cors'});
+                    writeLog(uid, allUsers[uid].name, "後台手動調整", val, after); 
+                    fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent('✅ 點數變動: ' + val)}`, {mode:'no-cors'});
                     document.getElementById(`in-${uid}`).value = ''; 
                 } 
             }); 
@@ -228,7 +228,7 @@
                 if(comm) { 
                     const after = snap.val(); 
                     db.ref(`orders_B/${oid}`).remove(); 
-                    writeLog(uid, allUsers[uid].name, "B台訂單取消退款", amount, after); 
+                    writeLog(uid, allUsers[uid].name, "訂單取消退款", amount, after); 
                     alert('退款成功'); 
                 } 
             }); 
@@ -272,10 +272,11 @@
             document.getElementById('pImg').value = ''; 
             document.getElementById('pStatus').value = '上架'; 
             document.getElementById('pSort').value = '99';
-            document.getElementById('pDesc').value = "B台商品說明文字範本..."; 
+            document.getElementById('pDesc').value = "商品說明文字範本..."; 
         }
 
         function toggleOrder(oid, curr) { const next = curr === '待出貨' ? '已出貨' : '待出貨'; db.ref(`orders_B/${oid}`).update({ status: next }); }
     </script>
 </body>
 </html>
+
