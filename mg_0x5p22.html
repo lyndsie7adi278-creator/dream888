@@ -38,6 +38,9 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .win-table td{padding:10px;border-bottom:1px solid #222}
 .dynamic-row{display:flex;gap:8px;margin-bottom:8px}.dynamic-row input{margin-bottom:0}
 .upload-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #333; margin-top: 5px; }
+/* 物流管理樣式 */
+.win-status-row { display: flex; flex-direction: column; gap: 5px; }
+.win-shipping-input { padding: 5px !important; margin-bottom: 0 !important; font-size: 0.75rem !important; border: 1px solid #444 !important; }
 </style>
 </head>
 <body>
@@ -77,7 +80,8 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
         <span id="mainImgStatus">點擊上傳圖片</span>
         <input type="file" accept="image/*" onchange="handleFileUpload(this, 'gImg', 'mainImgStatus')">
     </div>
-    <input type="hidden" id="gImg"> <div style="margin-bottom:10px;color:var(--p);font-weight:700">展示圖片(相簿)：</div>
+    <input type="hidden" id="gImg"> 
+    <div style="margin-bottom:10px;color:var(--p);font-weight:700">展示圖片(相簿)：</div>
     <div id="albumContainer"></div>
     <button class="btn btn-sm" onclick="addAlbumInput()">＋ 上傳展示圖</button>
 
@@ -90,7 +94,9 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
         <button class="btn btn-danger" style="flex:1;display:none" id="cancelEditBtn" onclick="resetGameForm()">取消</button>
     </div>
 </div><hr style="border:0;border-top:1px solid #333;margin:30px 0"><div id="quickAdjustList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:15px"></div></div>
-<div id="win_logs" class="page"><span class="title">全服中獎即時紀錄</span><div class="card"><table class="win-table"><thead><tr><th>時間</th><th>玩家</th><th>商品</th><th>獎項</th></tr></thead><tbody id="globalWinItems"></tbody></table></div></div>
+
+<div id="win_logs" class="page"><span class="title">全服中獎即時紀錄</span><div class="card"><table class="win-table"><thead><tr><th>時間/玩家</th><th>商品/獎項</th><th>出貨管理</th></tr></thead><tbody id="globalWinItems"></tbody></table></div></div>
+
 <div id="user" class="page"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><span class="title" style="margin:0">會員數據管理</span><button class="btn btn-sm" onclick="createUser()">＋ 新增會員</button></div><div id="userListContainer"></div></div>
 <div id="ann" class="page"><span class="title">首頁公告</span><textarea id="annContent" rows="8" placeholder="跑馬燈內容..."></textarea><button class="btn" style="width:100%;margin-bottom:30px" onclick="saveAnnouncement()">同步公告</button>
 <span class="title">商城分類管理</span><div class="card"><div id="catManageList"></div><div class="dynamic-row" style="margin-top:15px"><input type="text" id="newCatIn" placeholder="輸入新分類名稱" style="flex:1"><button class="btn btn-sm" onclick="addNewCat()">新增分類</button></div></div></div>
@@ -106,7 +112,7 @@ const _cc = {
     databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
     projectId: "dream8-7b161", 
     appId: "1:606218522479:web:2737643db3de735af7e29a",
-    storageBucket: "dream8-7b161.appspot.com" // 🔴 確保這行正確
+    storageBucket: "dream8-7b161.appspot.com"
 };
 
 const app = initializeApp(_cc);
@@ -123,30 +129,20 @@ window.onload=()=>{
     }
 };
 
-// 🟢 圖片上傳邏輯
 window.handleFileUpload = async (input, targetId, statusId) => {
     const file = input.files[0];
     if(!file) return;
     const status = document.getElementById(statusId);
     status.innerText = "⏳ 上傳中...";
-    
     try {
         const path = `games/${Date.now()}_${file.name}`;
         const storageRef = sRef(storage, path);
         await uploadBytes(storageRef, file);
         const url = await getDownloadURL(storageRef);
-        
         document.getElementById(targetId).value = url;
         status.innerText = "✅ 上傳成功";
-        // 如果是相簿欄位，可以顯示預覽
-        if(input.nextElementSibling && input.nextElementSibling.tagName === 'IMG') {
-            input.nextElementSibling.src = url;
-        }
-    } catch (e) {
-        console.error(e);
-        status.innerText = "❌ 上傳失敗";
-        alert("圖片上傳失敗，請檢查 Firebase Storage 權限設定。");
-    }
+        if(input.nextElementSibling && input.nextElementSibling.tagName === 'IMG') input.nextElementSibling.src = url;
+    } catch (e) { status.innerText = "❌ 上傳失敗"; alert("上傳失敗"); }
 };
 
 window.toggleSidebar=()=>document.getElementById('sidebar').classList.toggle('open');
@@ -155,22 +151,11 @@ window.toggleUser=uid=>document.getElementById(`content-${uid}`).classList.toggl
 window.closeLog=()=>document.getElementById('logModal').style.display='none';
 
 window.addPrizeInput=(num='',name='')=>{const d=document.createElement('div');d.className='dynamic-row';d.innerHTML=`<input type="number" placeholder="號碼" value="${num}" style="flex:1"><input type="text" placeholder="名稱" value="${name}" style="flex:2"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`;document.getElementById('prizeContainer').appendChild(d)};
-
-// 修改展示圖為上傳模式
 window.addAlbumInput=(url='')=>{
     const id = "alb_" + Math.random().toString(36).substr(2, 9);
     const d=document.createElement('div');
-    d.className='dynamic-row';
-    d.style.alignItems = 'center';
-    d.innerHTML=`
-        <div class="file-input-wrapper" style="flex:1; margin-bottom:0; padding:8px;">
-            <span id="st-${id}">${url ? '✅ 已有圖片' : '選取圖片'}</span>
-            <input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')">
-        </div>
-        <input type="hidden" id="in-${id}" value="${url}">
-        <img src="${url || ''}" class="upload-preview" style="${url?'':'display:none'}">
-        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
-    `;
+    d.className='dynamic-row'; d.style.alignItems = 'center';
+    d.innerHTML=`<div class="file-input-wrapper" style="flex:1; margin-bottom:0; padding:8px;"><span id="st-${id}">${url ? '✅ 已有圖片' : '選取圖片'}</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')"></div><input type="hidden" id="in-${id}" value="${url}"><img src="${url || ''}" class="upload-preview" style="${url?'':'display:none'}"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`;
     document.getElementById('albumContainer').appendChild(d)
 };
 
@@ -205,12 +190,33 @@ function startSync(){
             adj.appendChild(aC)
     })});
 
+    // 🟢 整合物流管理的中獎紀錄渲染
     onValue(ref(db,'winLogs'),s=>{
         const l=document.getElementById('globalWinItems');
-        l.innerHTML='';const logs=s.val()||{};
-        Object.values(logs).reverse().slice(0,50).forEach(i=>{
-            l.innerHTML+=`<tr><td><small>${new Date(i.time).toLocaleString()}</small></td><td><b>${i.user}</b></td><td>${i.game}</td><td style="color:var(--p)">${i.prize}</td></tr>`
-    })});
+        l.innerHTML=''; const data = s.val() || {};
+        const entries = Object.keys(data).sort((a,b) => data[b].time - data[a].time).slice(0,50);
+        
+        entries.forEach(key => {
+            const i = data[key];
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b></td>
+                <td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td>
+                <td>
+                    <div class="win-status-row">
+                        <select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input">
+                            <option value="待處理" ${i.status==='待處理'?'selected':''}>待處理</option>
+                            <option value="出貨中" ${i.status==='出貨中'?'selected':''}>出貨中</option>
+                            <option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option>
+                        </select>
+                        <input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" 
+                               onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input">
+                    </div>
+                </td>
+            `;
+            l.appendChild(tr);
+        });
+    });
 
     onValue(ref(db,'users'),s=>{
         const c=document.getElementById('userListContainer');
@@ -228,24 +234,21 @@ function startSync(){
     onValue(ref(db, 'depositRequests'), s => {
         const container = document.getElementById('depositListContainer');
         const badge = document.getElementById('depositBadge');
-        container.innerHTML = '';
-        const data = s.val() || {};
+        container.innerHTML = ''; const data = s.val() || {};
         const pendingRequests = Object.entries(data).filter(([k, v]) => v.status === 'pending');
-        if (pendingRequests.length > 0) {
-            badge.innerText = pendingRequests.length;
-            badge.style.display = 'inline-block';
-        } else {
-            badge.style.display = 'none';
-            container.innerHTML = '<div class="card" style="text-align:center;color:#666;">目前沒有待處理的申請</div>';
-        }
+        if (pendingRequests.length > 0) { badge.innerText = pendingRequests.length; badge.style.display = 'inline-block'; } 
+        else { badge.style.display = 'none'; container.innerHTML = '<div class="card" style="text-align:center;color:#666;">目前沒有待處理的申請</div>'; }
         pendingRequests.sort((a, b) => b[1].time - a[1].time).forEach(([key, req]) => {
-            const item = document.createElement('div');
-            item.className = 'request-item';
+            const item = document.createElement('div'); item.className = 'request-item';
             item.innerHTML = `<div class="request-header"><div><b style="color:var(--p)">${req.amount} NTD</b><br><small style="color:#888">UID: ${req.uid} | ${new Date(req.time).toLocaleString()}</small></div><div><button class="btn btn-sm btn-success" onclick="approveDeposit('${key}', '${req.uid}', ${req.amount})">核准上分</button><button class="btn btn-sm btn-danger" onclick="rejectDeposit('${key}')">拒絕/刪除</button></div></div>`;
             container.appendChild(item);
         });
     });
 }
+
+// 🟢 更新中獎紀錄狀態功能
+window.updateWinStatus = (key, status) => { update(ref(db, `winLogs/${key}`), { status: status }); };
+window.updateWinShipping = (key, no) => { update(ref(db, `winLogs/${key}`), { shippingNo: no }); };
 
 function fisherYatesShuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -301,9 +304,7 @@ window.publishGame = async () => {
     const id = document.getElementById('gId').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value, prs = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')).map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value })), alb = Array.from(document.querySelectorAll('#albumContainer .dynamic-row')).map(r => r.querySelector('input[type="hidden"]').value).filter(v => v.trim());
     if (!id || !tot || 0 === prs.length || !cat) return alert("資訊不全(分類必選)");
     const d = { total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: !1 };
-    
     if(!d.img) return alert("請務必上傳封面圖片");
-
     await update(ref(db, `gameSettings/${id}`), d);
     if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功");
     resetGameForm();
