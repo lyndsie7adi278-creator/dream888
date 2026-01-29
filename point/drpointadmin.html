@@ -80,7 +80,16 @@
                 </div>
             </div>
             <div class="lg:col-span-8 space-y-3">
-                <input type="text" id="prodSearch" oninput="renderProducts()" placeholder="🔍 搜尋商品名稱..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 shadow-xl mb-4">
+                <div class="flex gap-2 mb-4">
+                    <div class="flex-1">
+                        <input type="text" id="prodSearch" oninput="renderProducts()" placeholder="🔍 搜尋商品名稱..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 shadow-xl">
+                    </div>
+                    <div class="w-40">
+                        <select id="pFilterCat" onchange="renderProducts()" class="w-full h-full bg-slate-800 border border-slate-700 rounded-2xl px-4 text-yellow-500 font-bold shadow-xl">
+                            <option value="全部">全部分類</option>
+                        </select>
+                    </div>
+                </div>
                 <div id="pList" class="space-y-3"></div>
             </div>
         </div>
@@ -170,8 +179,11 @@
         
         function renderCategoryOptions() { 
             const select = document.getElementById('pCat'); 
+            const filterSelect = document.getElementById('pFilterCat');
             const currentVal = select.value; 
-            select.innerHTML = allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); 
+            const optHtml = allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+            select.innerHTML = optHtml;
+            filterSelect.innerHTML = `<option value="全部">全部分類</option>` + optHtml;
             if (currentVal && allCategories.includes(currentVal)) select.value = currentVal; 
         }
 
@@ -206,17 +218,26 @@
 
         function renderProducts() { 
             const q = document.getElementById('prodSearch').value.toLowerCase();
+            const catFilter = document.getElementById('pFilterCat').value;
             const l = document.getElementById('pList'); l.innerHTML = ''; 
             let items = [];
             for(let id in allProducts) { items.push({ id, ...allProducts[id] }); }
             items.sort((a, b) => (a.sort || 99) - (b.sort || 99));
             items.forEach(p => { 
                 if(q && !p.name.toLowerCase().includes(q)) return;
-                // 分類文字標籤 (加大視覺)
-                l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center mb-2"> 
+                if(catFilter !== '全部' && p.cat !== catFilter) return;
+
+                const isOff = p.status === '下架';
+                
+                l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center mb-2 ${isOff?'opacity-60':''}"> 
                     <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover bg-slate-900"> 
                     <div class="flex-1 overflow-hidden"> 
-                        <p class="font-black text-blue-400 text-sm uppercase tracking-tighter mb-0.5">${p.cat || '一般'}</p> 
+                        <div class="flex items-center gap-2">
+                            <p class="font-black text-blue-400 text-sm uppercase tracking-tighter">${p.cat || '一般'}</p> 
+                            <span class="text-[9px] px-1.5 py-0.5 rounded border ${isOff?'border-red-500 text-red-500':'border-green-500 text-green-500'} font-bold">
+                                ${isOff?'已下架':'上架中'}
+                            </span>
+                        </div>
                         <p class="font-bold text-slate-100 text-base truncate">${p.name}</p> 
                         <p class="text-yellow-500 text-xs font-bold">${p.price.toLocaleString()} 點</p> 
                     </div> 
@@ -249,7 +270,6 @@
                     db.ref(`orders_B/${oid}`).remove(); 
                     writeLog(uid, allUsers[uid].name, "訂單取消退款", amount, after); 
                     
-                    // 退款 LINE 通知觸發
                     const notifyMsg = `⚠️ 訂單取消通知\n項目：${itemName}\n狀態：訂單已取消，原扣除之 ${amount} 點已全數退回您的帳戶。`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(notifyMsg)}`, {mode:'no-cors'});
                     
@@ -296,11 +316,10 @@
             document.getElementById('pImg').value = ''; 
             document.getElementById('pStatus').value = '上架'; 
             document.getElementById('pSort').value = '99';
-            document.getElementById('pDesc').value = "❗夢工廠商品兌換說明❗\n【商品狀態】 全新品\n【商品內容】 本項目採 「隨機款式」 出貨，\n圖片僅供參考，請以收到的實品為準。\n隨機商品包含各類熱門系列，恕不接受指定款式。\n\n【兌換須知】\n1.點數一經扣除兌換寄出商品，恕不接受退換貨。\n2.商品將於 2 個工作天內透過 7-11 交貨便免運費寄出。\n3.請務必跟官方Line確認您的7-11收件資訊正確，以免影響配送。\n4.若遇商品缺貨，將主動聯繫並退回點數。\n\n【收貨須知：重要！】 ⚠️ 為保障雙方權益，拆封請務必「全程錄影」。\n請從包裹未拆封前的「外箱狀態」開始拍攝。\n影片需完整記錄拆箱過程至檢查商品外觀。\n若無完整開箱錄影證明，商品如有損壞或瑕疵等問題，恕不處理售後。\n如官方瑕疵依照情節處理。\n\n※玩具商品皆為工廠大量製造，任何塗裝小溢色、漆面略不平整、盒子有二次膠、關節構件處鬆緊等小瑕疵皆屬正常現象。";
+            document.getElementById('pDesc').value = "❗夢工廠商品兌換說明❗\n【商品狀態】 全新品\n【商品內容】 本項目採 「隨機款式」 出貨，\n圖片僅供參考，請以收到的實品為準。\n隨機商品包含各類熱門系列，恕不接受指定款式。\n\n【兌換須知】\n1.點數一經扣除兌換寄出商品，恕不接受退換貨。\n2.商品將於 2 個工作天內透過 7-11 交貨便免運費寄出。\n3.請務必跟官方Line確認您的7-11收件資訊正確，以免影響配送。\n4.若遇商品缺貨，將主動聯繫並退回點數。\n\n【收貨須知：重要！】 ⚠️ 為保障雙方權益，拆封請務必「全程錄影」。\n請從包裹未拆封前的「外箱狀態」開始拍攝。\n影片需完整記錄拆箱過程至檢查商品外觀。\n若無完整開箱錄影證明，商品如有損壞或瑕疵等問題，恕不處理售後。\n如官方瑕疵依照情節處理。\n\n※玩具商品皆為工廠大量製造，任何塗裝小溢色、漆面略不平整、盒子有二次膠、關節構件處鬆緊等小疵皆屬正常現象。";
         }
 
         function toggleOrder(oid, curr) { const next = curr === '待出貨' ? '已出貨' : '待出貨'; db.ref(`orders_B/${oid}`).update({ status: next }); }
     </script>
 </body>
 </html>
-
