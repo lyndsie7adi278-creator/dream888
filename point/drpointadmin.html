@@ -250,7 +250,7 @@
                     writeLog(uid, allUsers[uid].name, "訂單取消退款", amount, after); 
                     
                     // 退款 LINE 通知觸發
-                    const notifyMsg = `⚠️ 訂單取消暨退款通知\n項目：${itemName}\n狀態：訂單已由管理員取消，原扣除之 ${amount} 點已全數退回您的帳戶。`;
+                    const notifyMsg = `⚠️ 訂單取消通知\n項目：${itemName}\n狀態：訂單已取消，原扣除之 ${amount} 點已全數退回您的帳戶。`;
                     fetch(`${GAS_URL}?userId=${uid}&msg=${encodeURIComponent(notifyMsg)}`, {mode:'no-cors'});
                     
                     alert('退款成功，已發送 LINE 通知'); 
@@ -303,3 +303,4 @@
     </script>
 </body>
 </html>
+
