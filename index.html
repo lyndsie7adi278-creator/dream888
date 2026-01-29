@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>夢工廠 | 刮刮樂商城</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
 :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800}
 * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
@@ -80,8 +81,18 @@ input{width:100%;padding:14px;margin:8px 0;border:1px solid #eee;border-radius:1
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {getDatabase,ref,onValue,get,update,set} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-const _cc = { apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", projectId: "dream8-7b161", appId: "1:606218522479:web:2737643db3de735af7e29a" };
-const _app=initializeApp(_c),_db=getDatabase(_app),_sk=localStorage.getItem('myScratchCode');
+
+// 🔴 這裡已經更新為您新家的 Firebase 設定
+const _c = { 
+    apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+    databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+    projectId: "dream8-7b161", 
+    appId: "1:606218522479:web:2737643db3de735af7e29a" 
+};
+
+const _app=initializeApp(_c);
+const _db=getDatabase(_app);
+const _sk=localStorage.getItem('myScratchCode');
 let _g={},_cc='ALL',_u=null;
 
 const _mt=document.getElementById('menuToggle'),_md=document.getElementById('menuDropdown');
@@ -89,21 +100,19 @@ _mt.onclick=(e)=>{e.stopPropagation();_md.classList.toggle('show')};
 window.onclick=()=>_md.classList.remove('show');
 window.openAnn=()=>{document.getElementById('annModal').style.display='flex';_md.classList.remove('show')};
 
-// 🟢 處理右上角點擊邏輯
 window.handleUserClick = () => {
-    if(_sk) {
-        location.href = 'profile.html'; // 已登入，跳轉新頁面
-    } else {
-        openLogin(); // 未登入，彈出登入視窗
-    }
+    if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
 };
 
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
 function init(){
+    // 讀取公告
     get(ref(_db,'settings/announcement')).then(s=>{if(s.exists()){document.getElementById('annBody').innerText=s.val();document.getElementById('mq').innerText=s.val();}});
+    // 讀取遊戲設定
     onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{};renderCats();renderGrid()});
+    // 登入歡迎語
     if(_sk){
         onValue(ref(_db,`users/${_sk}`),s=>{
             const u=s.val(); if(!u)return;
@@ -123,21 +132,38 @@ window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
 
 function renderGrid(){
     const grid=document.getElementById('pGrid');grid.innerHTML='';
-if(_cc==='ALL'){const f=document.createElement('div');f.className='p-card free-gift';f.onclick=()=>window.open('https://www.dream888.fun/live/','_blank');f.innerHTML=`<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXctebrvF17FEKRNCVKtFvYXcMcDyG10dzlcsb3oEz_W0LE2fPrW9BEY9WSH1Ve8Mq4Y3f3zGVP0H8pROO-q55UMUG1jN_I_vhDeIvCag-xyq0BUuK0wGuQo4rzNkjy8_jmUCU-5oPXtxCI-kzaCUk0x?key=YeWJ8xYXVRuqJ155W25d4Q" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;grid.appendChild(f)}
+    if(_cc==='ALL'){
+        const f=document.createElement('div');
+        f.className='p-card free-gift';
+        f.onclick=()=>window.open('https://www.dream888.fun/live/','_blank');
+        f.innerHTML=`<img src="https://i.ibb.co/VWVvG9fQ/0.png" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
+        grid.appendChild(f);
+    }
+    
+    // 依 order 排序
     const keys=Object.keys(_g).sort((a,b)=>(_g[a].order||99)-(_g[b].order||99));
     keys.forEach(id=>{
         const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
-        const sId=id.replace(/\s+/g,'-'),card=document.createElement('div');card.className=`p-card ${it.isSoldOut?'soldout':''}`;card.onclick=()=>location.href=`game.html?id=${id}`;
-        card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${id}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;grid.appendChild(card);
+        const sId=id.replace(/\s+/g,'-');
+        const card=document.createElement('div');
+        card.className=`p-card ${it.isSoldOut?'soldout':''}`;
+        card.onclick=()=>location.href=`game.html?id=${id}`;
+        card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${id}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
+        grid.appendChild(card);
+        
+        // 🟢 這裡的監聽路徑也同步更新
         onValue(ref(_db,`games/${id}`),s=>{
-            const d=s.val()||{},l=d.lock,p=d.pool||[],sB=document.getElementById(`status-${sId}`),pB=document.getElementById(`promo-${sId}`),nB=document.getElementById(`name-${sId}`);
+            const d=s.val()||{},l=d.lock,p=d.pool||[],sB=document.getElementById(`status-${sId}`),pB=document.getElementById(`promo-${sId}`);
             if(!sB)return;
             if(it.isSoldOut){sB.innerHTML=`<div class="soldout-tag">SOLD OUT / 已停盤</div>`;pB.innerHTML="";}
             else if(l&&l.expire>Date.now()){sB.innerHTML=`<div class="lock-tag">🔒 玩家包台中</div>`;pB.innerHTML="";}
             else{
                 const sold=p.filter(x=>x.taken).length;
-                if(it.promoCount>0&&sold<it.promoCount){sB.innerHTML=`<div class="p-price-value">P${it.promoPrice} <span class="promo-tag">開盤優惠</span></div>`;pB.innerHTML=`<div class="promo-info">前${it.promoCount}刮 P${it.promoPrice} / 後 P${it.price}</div>`}
-                else{sB.innerHTML=`<div class="p-price-value">一刮 / P${it.price||0}</div>`;pB.innerHTML=""}
+                if(it.promoCount>0&&sold<it.promoCount){
+                    sB.innerHTML=`<div class="p-price-value">P${it.promoPrice} <span class="promo-tag">開盤優惠</span></div>`;
+                    pB.innerHTML=`<div class="promo-info">前${it.promoCount}刮 P${it.promoPrice} / 後 P${it.price}</div>`;
+                }
+                else{sB.innerHTML=`<div class="p-price-value">一刮 / P${it.price||0}</div>`;pB.innerHTML="";}
             }
         });
     });
@@ -146,8 +172,3 @@ init();
 </script>
 </body>
 </html>
-
-
-
-
-
