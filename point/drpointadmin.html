@@ -38,7 +38,7 @@
         </header>
 
         <div id="tu" class="space-y-4">
-            <input type="text" id="userSearch" oninput="renderUsers()" placeholder="🔍 搜尋 B 台會員暱稱..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 shadow-xl">
+            <input type="text" id="userSearch" oninput="renderUsers()" placeholder="🔍 搜尋 會員暱稱..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 shadow-xl">
             <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl"><table class="w-full text-left"><tbody id="userTable" class="divide-y divide-slate-700"></tbody></table></div>
         </div>
         
@@ -71,18 +71,18 @@
                         <span class="text-xs text-slate-500 ml-2">狀態：</span>
                         <select id="pStatus" class="bg-transparent text-yellow-500 font-bold text-sm"><option value="上架">上架</option><option value="下架">下架</option></select>
                     </div>
-                    <button onclick="save()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition">儲存並發布到 B 台</button>
+                    <button onclick="save()" class="w-full bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition">儲存並發布到</button>
                     <button onclick="reset()" class="w-full text-slate-500 text-xs mt-1">清空</button>
                 </div>
             </div>
             <div class="lg:col-span-8 space-y-3">
-                <input type="text" id="prodSearch" oninput="renderProducts()" placeholder="🔍 搜尋 B 台商品名稱..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 shadow-xl mb-4">
+                <input type="text" id="prodSearch" oninput="renderProducts()" placeholder="🔍 搜尋商品名稱..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 shadow-xl mb-4">
                 <div id="pList" class="space-y-3"></div>
             </div>
         </div>
 
         <div id="tl" class="hidden space-y-4">
-            <h2 class="text-xl font-bold gold-text px-2">B 台點數異動對帳單</h2>
+            <h2 class="text-xl font-bold gold-text px-2">點數異動對帳單</h2>
             <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-x-auto shadow-2xl">
                 <table class="w-full text-left">
                     <thead class="bg-slate-900/50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
@@ -123,7 +123,7 @@
             db.ref('products_B').on('value', s => { allProducts = s.val() || {}; renderProducts(); });
             db.ref('orders_B').on('value', s => {
                 const o = s.val(), l = document.getElementById('orderList'); l.innerHTML = '';
-                if(!o) return l.innerHTML = '<p class="text-center py-10 text-slate-500 font-bold">目前暫無 B 台訂單</p>';
+                if(!o) return l.innerHTML = '<p class="text-center py-10 text-slate-500 font-bold">目前暫無訂單</p>';
                 Object.keys(o).reverse().forEach(id => {
                     const ord = o[id], isDone = ord.status === '已出貨';
                     l.innerHTML += `<div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 space-y-4 shadow-xl ${isDone?'opacity-70':''}">
@@ -279,4 +279,5 @@
     </script>
 </body>
 </html>
+
 
