@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>DREAM CMS | 旗艦戰略中控台</title>
 <style>
 :root{--p:#ffb800;--bg:#05070a;--card:#11141b;--text:#e2e8f0;--border:rgba(255,184,0,0.3);--lock:#3498db;--success:#2ecc71}
@@ -44,7 +44,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
     <div class="logo">DREAM ADMIN</div>
     <div class="nav-link active" onclick="switchTab('mon')">📊 商品監控</div>
     <div class="nav-link" onclick="switchTab('deposit')">💳 儲值審核 <span id="depositBadge" style="background:#ff4757; color:#fff; border-radius:50%; padding:2px 6px; font-size:0.6rem; display:none;">0</span></div>
-    <div class="nav-link" onclick="switchTab('game')">📦 新增商品</div>
+    <div class="nav-link" onclick="switchTab('game')">📦 商品管理</div>
     <div class="nav-link" onclick="switchTab('win_logs')">🏆 中獎紀錄</div>
     <div class="nav-link" onclick="switchTab('user')">👤 會員資料</div>
     <div class="nav-link" onclick="switchTab('ann')">📜 公告/分類</div>
@@ -66,10 +66,28 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,push,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const _cc = { apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", projectId: "dream8-7b161", appId: "1:606218522479:web:2737643db3de735af7e29a" };
-const app=initializeApp(config),db=getDatabase(app);let isEditing=!1;
+// 🔴 修改點：這裡已更換為您新專案的設定
+const _cc = { 
+    apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+    databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+    projectId: "dream8-7b161", 
+    appId: "1:606218522479:web:2737643db3de735af7e29a" 
+};
 
-window.onload=()=>{if("8888"===prompt("管理授權碼:")){document.body.style.display="block";startSync()}else location.href="index.html"};
+// 🔴 修改點：initializeApp 使用 _cc
+const app = initializeApp(_cc);
+const db = getDatabase(app);
+let isEditing = false;
+
+window.onload=()=>{
+    if("8888"===prompt("管理授權碼:")){
+        document.body.style.display="block";
+        startSync();
+    }else{
+        location.href="index.html";
+    }
+};
+
 window.toggleSidebar=()=>document.getElementById('sidebar').classList.toggle('open');
 window.switchTab=id=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));document.getElementById(id).classList.add('active');if(window.innerWidth<=768)toggleSidebar()};
 window.toggleUser=uid=>document.getElementById(`content-${uid}`).classList.toggle('show');
@@ -151,7 +169,6 @@ function startSync(){
     });
 }
 
-// 🔵 洗牌核心邏輯 (Fisher-Yates)
 function fisherYatesShuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -160,32 +177,23 @@ function fisherYatesShuffle(array) {
   return array;
 }
 
-// 🔴 核心：洗牌寫入邏輯 (修復位置固定問題)
 async function runMasterShuffle(id, g) {
     const pN = g.prizes.map(p => Number(p.num)); 
     let allNumbers = [];
     for (let i = 1; i <= g.total; i++) allNumbers.push(i);
-
-    // 完全混洗
     allNumbers = fisherYatesShuffle(allNumbers);
-
     let losePool = allNumbers.filter(n => !pN.includes(n));
     let winPool = allNumbers.filter(n => pN.includes(n));
     const safeZoneSize = Number(g.safeZone) || 0;
-    
     let finalNumbers = [];
     if (safeZoneSize > 0 && losePool.length >= safeZoneSize) {
-        // 大獎保護邏輯：前N抽必為普獎
         const frontSafe = losePool.splice(0, safeZoneSize);
         let restMixed = fisherYatesShuffle([...losePool, ...winPool]);
         finalNumbers = [...frontSafe, ...restMixed];
     } else {
         finalNumbers = allNumbers;
     }
-
     const pool = finalNumbers.map(n => ({ grade: Number(n), taken: false, revealed: false }));
-    
-    // 強制重設 Pool 資料
     await remove(ref(db, `games/${id}/pool`));
     await set(ref(db, `games/${id}/pool`), pool);
     return true;
