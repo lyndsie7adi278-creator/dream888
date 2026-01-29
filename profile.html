@@ -183,8 +183,8 @@
             if(myWins.length) {
                 list.innerHTML = myWins.map(w => {
                     let statusClass = "status-pending"; 
-                    let statusText = w.status || "待處理";
-                    if(statusText === "出貨中") statusClass = "status-shipping";
+                    let statusText = w.status || "待出貨";
+                    if(statusText === "已出貨") statusClass = "status-shipping";
                     if(statusText === "已完成") statusClass = "status-completed";
 
                     // 交貨便區塊邏輯
