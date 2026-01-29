@@ -1,138 +1,182 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>夢工廠 | 會員中心</title>
-<style>
-    :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; }
-    body { margin: 0; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; padding-bottom: 50px; }
-    .header { padding: 20px; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); display: flex; align-items: center; gap: 15px; }
-    .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; }
-    
-    .user-info { padding: 25px 20px; background: linear-gradient(180deg, #000, var(--card)); text-align: center; }
-    .uid-tag { font-size: 0.8rem; color: #888; margin-bottom: 8px; }
-    .balance-val { font-size: 2.5rem; font-weight: 900; color: var(--p); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+    <title>夢工廠 | 儲值申請</title>
+    <style>
+        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --danger: #ff4757; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; padding-bottom: 50px; }
+       
+        .header { padding: 15px 20px; display: flex; align-items: center; background: #fff; box-shadow: 0 1px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
+        .back-btn { background: none; border: 1.5px solid var(--primary); color: var(--primary); padding: 5px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; font-weight: 900; }
 
-    .section-title { padding: 15px 20px; font-size: 1.1rem; font-weight: 900; color: var(--p); border-left: 4px solid var(--p); margin: 20px 0 10px; background: rgba(255,184,0,0.05); }
-    
-    .win-item { background: var(--card); margin: 10px 15px; padding: 15px; border-radius: 15px; border: 1px solid #222; position: relative; }
-    .win-time { font-size: 0.75rem; color: #666; margin-bottom: 8px; }
-    .win-name { font-size: 1.1rem; font-weight: bold; color: #fff; margin-bottom: 10px; }
-    
-    /* 狀態標籤樣式 */
-    .status-box { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px dashed #333; }
-    .status-row { display: flex; justify-content: space-between; align-items: center; }
-    .status-tag { padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
-    .status-pending { background: #555; color: #ccc; }    /* 待處理 */
-    .status-shipping { background: #2980b9; color: #fff; } /* 出貨中 */
-    .status-delivered { background: #27ae60; color: #fff; } /* 已送達 */
-    
-    .shipping-no { font-family: monospace; color: var(--p); background: rgba(255,184,0,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.9rem; }
-    .copy-btn { font-size: 0.7rem; color: #aaa; text-decoration: underline; cursor: pointer; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+        
+        .card { background: #fff; border-radius: 25px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02); }
+        .section-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ""; width: 4px; height: 18px; background: var(--primary); border-radius: 10px; }
 
-    .empty-msg { text-align: center; padding: 40px; color: #444; }
-</style>
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: bold; color: #999; margin-bottom: 8px; }
+        input { width: 100%; padding: 15px; border: 2px solid #f0f2f5; border-radius: 15px; font-size: 1.2rem; font-weight: 900; color: var(--primary); outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); background: #fff9fa; }
+
+        .bank-info { background: #fdfdfd; border: 1px dashed #ddd; border-radius: 15px; padding: 15px; margin-top: 10px; }
+        .bank-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; }
+        .bank-row span { color: #888; }
+        .bank-row b { color: #333; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        
+        .copy-btn { background: var(--primary); color: #fff; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .copy-btn:active { transform: scale(0.9); opacity: 0.8; }
+
+        .warning-box { background: #fff5f5; border-radius: 15px; padding: 15px; margin: 20px 0; border: 1px solid #ffebeb; }
+        .warning-box h4 { margin: 0 0 8px; color: var(--danger); font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+        .warning-box p { margin: 0; font-size: 0.75rem; color: #cc6666; line-height: 1.6; font-weight: bold; }
+
+        .submit-btn { 
+            background: var(--primary); color: #fff; border: none; width: 100%; padding: 18px; 
+            border-radius: 50px; font-size: 1.1rem; font-weight: 900; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255,143,163,0.3); transition: 0.3s;
+        }
+        .submit-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+        .m-box { background: #fff; padding: 30px; border-radius: 30px; text-align: center; width: 100%; max-width: 320px; }
+        
+        #copyTip { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; display: none; z-index: 3000; }
+    </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-<div class="header">
-    <a href="index.html" class="back-btn">← 回首頁</a>
-    <div style="font-weight:900;">會員中心</div>
-</div>
+    <div id="copyTip">✅ 已複製到剪貼簿</div>
 
-<div class="user-info">
-    <div class="uid-tag">會員 ID: <span id="displayUid">------</span></div>
-    <div style="color:#aaa; font-size:0.9rem;">目前餘額</div>
-    <div class="balance-val"><span id="uBal">0</span> <small style="font-size:1rem;">P</small></div>
-</div>
+    <div class="header">
+        <a href="profile.html" class="back-btn">← 返回</a>
+    </div>
 
-<div class="section-title">🏆 我的中獎存根</div>
-<div id="winList">
-    <div class="empty-msg">載入中...</div>
-</div>
+    <div class="container">
+        <div class="card">
+            <div class="section-title">填寫儲值金額</div>
+            <div class="input-group">
+                <label>儲值台幣 (NTD)</label>
+                <input type="number" id="amountIn" placeholder="最小金額 100" min="100">
+            </div>
+            <div style="text-align: center; color: #999; font-size: 0.9rem;">
+                預計獲得：<b id="pOut" style="color:var(--gold); font-size: 1.2rem;">0</b> P
+            </div>
+        </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-const firebaseConfig = { 
-    apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
-    databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
-    projectId: "dream8-7b161", 
-    appId: "1:606218522479:web:2737643db3de735af7e29a" 
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const uid = localStorage.getItem('myScratchCode');
-
-if(!uid) location.href = 'index.html';
-document.getElementById('displayUid').innerText = uid;
-
-// 監聽餘額
-onValue(ref(db, `users/${uid}/balance`), s => {
-    document.getElementById('uBal').innerText = (s.val() || 0).toLocaleString();
-});
-
-// 監聽中獎紀錄
-onValue(ref(db, `winLogs`), snap => {
-    const list = document.getElementById('winList');
-    const data = snap.val();
-    if(!data) {
-        list.innerHTML = '<div class="empty-msg">尚無中獎紀錄</div>';
-        return;
-    }
-
-    // 篩選出屬於該用戶的紀錄並排序（新的在前）
-    const myWins = Object.keys(data)
-        .map(key => ({ id: key, ...data[key] }))
-        .filter(item => item.user === uid)
-        .sort((a, b) => b.time - a.time);
-
-    if(myWins.length === 0) {
-        list.innerHTML = '<div class="empty-msg">尚無中獎紀錄</div>';
-        return;
-    }
-
-    list.innerHTML = myWins.map(item => {
-        const date = new Date(item.time).toLocaleString();
-        // 狀態文字處理
-        let statusClass = "status-pending";
-        let statusText = item.status || "待處理";
-        if(statusText === "出貨中") statusClass = "status-shipping";
-        if(statusText === "已完成") statusClass = "status-delivered";
-
-        const shippingNo = item.shippingNo || "尚未填寫";
-
-        return `
-            <div class="win-item">
-                <div class="win-time">${date}</div>
-                <div class="win-name">${item.prize}</div>
-                <div style="font-size:0.8rem; color:#888; margin-bottom:10px;">來自遊戲：${item.game}</div>
-                
-                <div class="status-box">
-                    <div class="status-row">
-                        <span style="font-size:0.85rem; color:#aaa;">物流狀態</span>
-                        <span class="status-tag ${statusClass}">${statusText}</span>
-                    </div>
-                    <div class="status-row">
-                        <span style="font-size:0.85rem; color:#aaa;">交貨便編號</span>
-                        <div>
-                            <span class="shipping-no" id="no_${item.id}">${shippingNo}</span>
-                            ${item.shippingNo ? `<span class="copy-btn" onclick="copyNo('${item.id}')">複製</span>` : ''}
-                        </div>
-                    </div>
+        <div class="card">
+            <div class="section-title">指定匯款帳戶</div>
+            <div class="bank-info">
+                <div class="bank-row">
+                    <span>銀行代碼</span>
+                    <b>396 街口 </b>
+                </div>
+                <div class="bank-row">
+                    <span>帳戶號碼</span>
+                    <b>903515547 <button class="copy-btn" onclick="copyText('903515547')">複製</button></b>
                 </div>
             </div>
-        `;
-    }).join('');
-});
+            <p style="font-size: 0.7rem; color: #aaa; margin-top: 10px;">※ 匯款完成後請點擊下方按鈕，系統將會通知客服查帳。</p>
+        </div>
 
-// 複製功能
-window.copyNo = (id) => {
-    const text = document.getElementById('no_' + id).innerText;
-    navigator.clipboard.writeText(text).then(() => alert('編號已複製: ' + text));
-};
-</script>
+        <div class="warning-box">
+            <h4>⚠️ 儲值須知與提醒</h4>
+            <p>
+                1. 點數匯率為 台幣 1 : P幣 1，儲值後僅供商城內消費使用。<br>
+                2. <b>絕對禁止：</b>本商城不提供點數換回現金之服務。<br>
+                3. 點擊送出申請即代表已完成匯款並同意上述規範。
+            </p>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" onclick="submitRequest()">我已匯款，送出申請</button>
+    </div>
+
+    <div id="resModal" class="modal">
+        <div class="m-box">
+            <div style="font-size: 3rem; margin-bottom: 15px;">✅</div>
+            <h3 style="margin: 0 0 10px;">申請已送出</h3>
+            <p style="color: #666; font-size: 0.9rem; line-height: 1.6;">已發送通知給客服。<br>5分鐘內查帳完成後會立刻幫您入點！</p>
+            <button class="submit-btn" style="margin-top: 20px;" onclick="location.href='profile.html'">確認並返回</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // 🔴 已更新為新專案 dream8-7b161
+        const _cc = { 
+            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+            projectId: "dream8-7b161", 
+            appId: "1:606218522479:web:2737643db3de735af7e29a" 
+        };
+
+        const _app = initializeApp(_cc); 
+        const _db = getDatabase(_app);
+        const _uid = localStorage.getItem('myScratchCode');
+
+        // 通知的 GAS 網址保持不變
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbz07UGZEQrF2A9IRlYkqnFQv4ZbquNaIb4PDsEKXxnd7DrzUrL_9oBsHl2oB3ThEItf/exec"; 
+
+        if(!_uid) location.href = 'index.html';
+
+        window.copyText = (text) => {
+            navigator.clipboard.writeText(text).then(() => {
+                const tip = document.getElementById('copyTip');
+                tip.style.display = 'block';
+                setTimeout(() => tip.style.display = 'none', 2000);
+            });
+        };
+
+        const amountInput = document.getElementById('amountIn');
+        const displayOutput = document.getElementById('pOut');
+        const calcP = () => {
+            const val = amountInput.value;
+            displayOutput.innerText = val && val > 0 ? val : 0;
+        };
+        amountInput.addEventListener('input', calcP);
+
+        window.submitRequest = async () => {
+            const amt = amountInput.value;
+            if(!amt || amt < 100) return alert("請輸入正確的儲值金額 (最小 100)");
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "提交申請中...";
+
+            try {
+                // 寫入新資料庫
+                await push(ref(_db, `depositRequests`), {
+                    uid: _uid,
+                    amount: Number(amt),
+                    status: "pending",
+                    time: serverTimestamp()
+                });
+
+                // 通知客服
+                fetch(GAS_URL, {
+                    method: "POST",
+                    mode: "no-cors", 
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({
+                        uid: _uid,
+                        amount: amt
+                    })
+                });
+                
+                document.getElementById('resModal').style.display = 'flex';
+            } catch (e) {
+                console.error(e);
+                alert("申請出錯，請聯繫客服");
+                btn.disabled = false;
+                btn.innerText = "我已匯款，送出申請";
+            }
+        };
+    </script>
 </body>
 </html>
