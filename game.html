@@ -149,9 +149,12 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
     document.getElementById('gTitle').innerText = _gid;
     
-    // 🔴 渲染縮圖
-    const imgs = (_data.album && _data.album.length > 0) ? _data.album : [_data.img];
-    _album = imgs;
+    // 🔴 核心修正：合併封面圖與相簿
+    const mainImg = _data.img || "";
+    const albumList = _data.album || [];
+    // 確保第一張是封面圖，並且過濾掉可能重複的網址
+    _album = [mainImg, ...albumList.filter(url => url !== mainImg)].filter(url => url !== "");
+    
     document.getElementById('gMainImg').src = _album[0];
     
     const bar = document.getElementById('thumbBar');
