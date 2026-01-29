@@ -11,7 +11,7 @@
     body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow-x: hidden; }
     
     .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
-    .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
+    .back-btn { background: none; border: 1.5px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
     .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
 
     .promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
@@ -54,7 +54,7 @@
 </head>
 <body oncontextmenu="return false;">
 
-<div id="promoBanner" class="promo-banner">🔥 開盤大優惠！剩餘 <b id="promoLeft">0</b> 抽，每抽 <b id="promoVal">0</b> P</div>
+<div id="promoBanner" class="promo-banner">🔥 開盤大優惠！剩餘 <b id="promoLeft">0</b> 抽</div>
 <div class="header"><a href="index.html" class="back-btn">← 返回</a><div class="balance-tag">P <span id="uBal">0</span></div></div>
 
 <div class="gallery-container">
@@ -93,10 +93,17 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const _cc = { apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", projectId: "dream8-7b161", appId: "1:606218522479:web:2737643db3de735af7e29a" };
+// 🔴 已對準新資料庫
+const _cc = { 
+    apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+    databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+    projectId: "dream8-7b161", 
+    appId: "1:606218522479:web:2737643db3de735af7e29a" 
+};
 const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
 
+// 🔴 您的 GAS URL
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec"; 
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
@@ -104,7 +111,6 @@ let _data = null, _isClosed = false, _q = null, _tInterval = null;
 if(!_gid) location.href = 'index.html';
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
-// 監聽排隊鎖定看板
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
     const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
     if(_tInterval) clearInterval(_tInterval);
@@ -119,7 +125,6 @@ onValue(ref(_db, `games/${_gid}/lock`), snap => {
     } else { b.style.display = 'none'; _q = null; }
 });
 
-// 監聽遊戲設定與號碼池渲染
 onValue(ref(_db, `gameSettings/${_gid}`), s => {
     _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
@@ -138,7 +143,7 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         const pLeft = (_data.promoCount || 0) - _s;
         const banner = document.getElementById('promoBanner');
         if(pLeft > 0 && !_isClosed) {
-            banner.style.display = 'block'; document.getElementById('promoLeft').innerText = pLeft; document.getElementById('promoVal').innerText = _data.promoPrice;
+            banner.style.display = 'block'; document.getElementById('promoLeft').innerText = pLeft; 
             document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P`;
         } else { banner.style.display = 'none'; document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`; }
         
@@ -168,10 +173,8 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
 
 async function buyTicket(idx) {
     if(_isClosed) return; const n = Date.now();
-    // 檢查包台狀態
     if(_q && _q.user !== _uid && _q.expire > n) return alert(`玩家 ${_q.user} 正在包台中`);
     
-    // 初步檢查餘額與格位
     const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
     const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
     const poolArr = poolSnap.val() || [];
@@ -183,7 +186,6 @@ async function buyTicket(idx) {
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
-    // 🚀 執行 GAS 雲端請求 (隱藏所有判定邏輯)
     document.body.style.pointerEvents = "none"; 
     const script = document.createElement('script');
     script.src = `${GAS_URL}?gid=${_gid}&uid=${_uid}&idx=${idx}&pr=${pr}&callback=gasCallback`;
@@ -192,8 +194,10 @@ async function buyTicket(idx) {
     window.gasCallback = (res) => {
         document.body.style.pointerEvents = "auto";
         if(res.success) {
-            // 雲端處理成功，渲染刮卡
-            initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
+            // 🔴 關鍵點：使用 res.val (GAS 決定的最終號碼)
+            const displayNo = (idx + 1).toString().padStart(2, '0');
+            const luckyVal = res.val.toString().padStart(2, '0');
+            initCanvas(displayNo, luckyVal, idx);
         } else {
             alert(res.msg || "系統繁忙，請稍後再試");
         }
@@ -203,7 +207,8 @@ async function buyTicket(idx) {
 
 function initCanvas(no, val, poolIdx) {
     const o = document.getElementById('scratchOverlay'), b = document.getElementById('scratchBox');
-    document.getElementById('selNum').innerText = no; document.getElementById('luckyVal').innerText = val;
+    document.getElementById('selNum').innerText = no; 
+    document.getElementById('luckyVal').innerText = val; // 這裡顯示正確號碼
     o.style.display = 'flex';
     const old = document.getElementById('scratch-canvas'); if(old) old.remove();
     const c = document.createElement('canvas'); c.id = 'scratch-canvas'; c.width = 300; c.height = 300; b.appendChild(c);
@@ -222,8 +227,8 @@ function initCanvas(no, val, poolIdx) {
 }
 
 async function syncStatus(idx, val) {
-    // 同步 revealed 使格位顯示紅字
-    await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
+    // 🔴 關鍵點：強制將該索引位置的 grade 更新為剛剛刮開的號碼
+    await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true, grade: Number(val) });
     
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
     if(hit) {
@@ -246,6 +251,3 @@ async function syncStatus(idx, val) {
 </script>
 </body>
 </html>
-
-
-
