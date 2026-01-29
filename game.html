@@ -97,7 +97,7 @@ const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "h
 const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/execL"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec"; 
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
 
@@ -246,4 +246,5 @@ async function syncStatus(idx, val) {
 </script>
 </body>
 </html>
+
 
