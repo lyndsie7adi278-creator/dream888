@@ -35,7 +35,6 @@
         .balance-amount span { color: var(--gold); }
         .deposit-btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,143,163,0.3); transition: 0.3s; }
 
-        /* 分頁按鈕 - 三個分頁 */
         .tabs { display: flex; background: transparent; margin-top: 90px; padding: 5px 10px; position: sticky; top: 58px; z-index: 4; gap: 5px; }
         .tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 0.85rem; font-weight: 900; color: #bbb; cursor: pointer; position: relative; }
         .tab-btn.active { color: var(--primary); }
@@ -50,7 +49,6 @@
         .item-info b { display: block; font-size: 0.95rem; color: #333; margin-bottom: 4px; font-weight: 900; }
         .item-info small { color: #ccc; font-size: 0.7rem; font-weight: bold; }
         
-        /* 狀態標籤 */
         .status-tag { padding: 5px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 900; }
         .status-pending { background: #fff9e6; color: var(--wait); border: 1px solid #ffeebf; }
         .status-completed { background: #eefdf4; color: var(--success); border: 1px solid #dcf7e6; }
@@ -103,8 +101,16 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
-        const _app = initializeApp(_cc); const _db = getDatabase(_app);
+        // 🔴 已更新為新專案 dream8-7b161
+        const _cc = { 
+            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+            projectId: "dream8-7b161", 
+            appId: "1:606218522479:web:2737643db3de735af7e29a" 
+        };
+        
+        const _app = initializeApp(_cc); 
+        const _db = getDatabase(_app);
         const _uid = localStorage.getItem('myScratchCode');
 
         if(!_uid) location.href = 'index.html';
@@ -144,7 +150,7 @@
             } else { bList.innerHTML = '<div class="empty-state">尚無消費紀錄</div>'; }
         });
 
-        // 監聽儲值申請紀錄 (新功能)
+        // 監聽儲值申請紀錄
         onValue(ref(_db, `depositRequests`), s => {
             const list = document.getElementById('depositList');
             const allReq = s.val() ? Object.values(s.val()) : [];
