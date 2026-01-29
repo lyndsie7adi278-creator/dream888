@@ -96,18 +96,22 @@ import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } fr
 const _cc = { apiKey: "AIzaSyCnzsglCCm8QQXmRSi8g96JKW5k7b18BcE", databaseURL: "https://dream-169dc-default-rtdb.firebaseio.com", projectId: "dream-169dc", appId: "1:214137228622:web:84d14bad85d865ee94e21f" };
 const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec";
+
+// 🔴 修改點：填入您的 GAS 部署網址
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec"; 
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
 
 if(!_gid) location.href = 'index.html';
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
+// 監聽排隊鎖定看板
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
     const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
     if(_tInterval) clearInterval(_tInterval);
     if(l && l.expire > n) {
-        _q = l; b.style.display = 'block'; document.getElementById('lockUser').innerText = l.user === _uid ? "您" : l.user;
+        _q = l; b.style.display = 'block'; 
+        document.getElementById('lockUser').innerText = l.user === _uid ? "您" : l.user;
         const _run = () => {
             const r = Math.round((l.expire - Date.now()) / 1000);
             if(r <= 0) { clearInterval(_tInterval); b.style.display = 'none'; _q = null; }
@@ -116,6 +120,7 @@ onValue(ref(_db, `games/${_gid}/lock`), snap => {
     } else { b.style.display = 'none'; _q = null; }
 });
 
+// 監聽遊戲設定與號碼池渲染
 onValue(ref(_db, `gameSettings/${_gid}`), s => {
     _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
@@ -164,9 +169,10 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
 
 async function buyTicket(idx) {
     if(_isClosed) return; const n = Date.now();
-    if(_q && _q.user !== _uid && _q.expire > n) return alert(`他人包台中`);
+    // 檢查包台狀態
+    if(_q && _q.user !== _uid && _q.expire > n) return alert(`玩家 ${_q.user} 正在包台中`);
     
-    // 初步檢查餘額
+    // 初步檢查餘額與格位
     const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
     const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
     const poolArr = poolSnap.val() || [];
@@ -178,7 +184,8 @@ async function buyTicket(idx) {
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
-    document.body.style.pointerEvents = "none";
+    // 🚀 執行 GAS 雲端請求 (隱藏所有判定邏輯)
+    document.body.style.pointerEvents = "none"; 
     const script = document.createElement('script');
     script.src = `${GAS_URL}?gid=${_gid}&uid=${_uid}&idx=${idx}&pr=${pr}&callback=gasCallback`;
     document.body.appendChild(script);
@@ -186,10 +193,10 @@ async function buyTicket(idx) {
     window.gasCallback = (res) => {
         document.body.style.pointerEvents = "auto";
         if(res.success) {
-            // 伺服器端已經處理完扣款、位移、標記狀態，前端直接渲染
+            // 雲端處理成功，渲染刮卡
             initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
         } else {
-            alert(res.msg || "購買失敗");
+            alert(res.msg || "系統繁忙，請稍後再試");
         }
         script.remove();
     };
@@ -216,18 +223,25 @@ function initCanvas(no, val, poolIdx) {
 }
 
 async function syncStatus(idx, val) {
+    // 同步 revealed 使格位顯示紅字
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
     
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
     if(hit) {
-        const pool = (await get(ref(_db, `games/${_gid}/pool`))).val() || [];
+        const pSnap = await get(ref(_db, `games/${_gid}/pool`));
+        const pool = pSnap.val() || [];
         const m = (_data.prizes || []).map(p => Number(p.num));
         const won = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length;
         if(won >= m.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
+        
         document.getElementById('res_msg').innerHTML = `🎊 恭喜獲獎 🎊<br>${hit.name}`;
-        document.getElementById('res_img').src = hit.img || _data.img; confetti({ particleCount: 150, spread: 70 });
+        document.getElementById('res_img').src = hit.img || _data.img; 
+        confetti({ particleCount: 150, spread: 70 });
         push(ref(_db, `winLogs`), { user: _uid, game: _gid, prize: hit.name, time: serverTimestamp() });
-    } else { document.getElementById('res_msg').innerText = "銘謝惠顧"; document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png"; }
+    } else { 
+        document.getElementById('res_msg').innerText = "銘謝惠顧"; 
+        document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png"; 
+    }
     setTimeout(() => { document.getElementById('resModal').style.display = 'flex'; }, 400);
 }
 </script>
