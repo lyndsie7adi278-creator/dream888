@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>夢工廠後台</title>
+    <title>夢工廠後台 - 拖拉排序增強版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         body { background: #0f172a; color: #f8fafc; font-family: "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif; -webkit-tap-highlight-color: transparent; }
         .gold-text { color: #eab308; }
@@ -17,8 +18,12 @@
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         .log-plus { color: #4ade80; }
         .log-minus { color: #f87171; }
-        /* 行動端編輯器平滑展開 */
         #editFormContainer { transition: all 0.3s ease-in-out; }
+        /* 拖拽中的樣式 */
+        .sortable-ghost { opacity: 0.4; border: 2px dashed #eab308 !important; background: #1e293b !important; }
+        .sortable-drag { border: 2px solid #eab308 !important; background: #0f172a !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
+        .handle { cursor: grab; color: #475569; transition: color 0.2s; }
+        .handle:active { cursor: grabbing; color: #eab308; }
         @media (max-width: 1024px) {
             .mobile-hide { display: none; }
             .mobile-show { display: block; }
@@ -60,74 +65,70 @@
             <div id="orderList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
         </div>
 
-        <div id="tp" class="hidden flex flex-col lg:grid lg:grid-cols-12 gap-6 relative">
-            
-            <div id="editFormContainer" class="lg:col-span-4 bg-slate-800 p-5 rounded-3xl border border-slate-700 shadow-xl h-fit lg:sticky lg:top-28 z-50 overflow-hidden">
-                <div class="flex justify-between items-center mb-4" onclick="toggleMobileEdit()">
-                    <h2 id="fTitle" class="font-bold text-yellow-500 flex items-center gap-2 text-lg">
-                        🎁 <span id="fAction">新增商品</span>
-                    </h2>
-                    <button class="lg:hidden bg-slate-700 px-3 py-1 rounded-lg text-xs" id="toggleBtn">展開/收合</button>
-                </div>
-                
-                <div id="editFields" class="space-y-4 hidden lg:block">
-                    <input type="hidden" id="editId">
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="col-span-2">
+        <div id="tp" class="hidden">
+            <div class="flex flex-col lg:grid lg:grid-cols-12 gap-6 relative">
+                <div id="editFormContainer" class="lg:col-span-4 bg-slate-800 p-5 rounded-3xl border border-slate-700 shadow-xl h-fit lg:sticky lg:top-28 z-50 overflow-hidden">
+                    <div class="flex justify-between items-center mb-4" onclick="toggleMobileEdit()">
+                        <h2 id="fTitle" class="font-bold text-yellow-500 flex items-center gap-2 text-lg">
+                            🎁 <span id="fAction">新增商品</span>
+                        </h2>
+                        <button class="lg:hidden bg-slate-700 px-3 py-1 rounded-lg text-xs" id="toggleBtn">展開/收合</button>
+                    </div>
+                    
+                    <div id="editFields" class="space-y-4 hidden lg:block">
+                        <input type="hidden" id="editId">
+                        <div class="space-y-1">
                             <label class="text-[10px] text-slate-500 ml-1 uppercase font-bold">分類</label>
                             <div class="flex gap-1">
                                 <select id="pCat" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-yellow-500 font-bold"></select>
                                 <button onclick="addCategory()" class="bg-slate-700 text-white w-10 rounded-xl font-bold active:scale-90">+</button>
                             </div>
                         </div>
-                        <div>
-                            <label class="text-[10px] text-slate-500 ml-1 uppercase font-bold">排序</label>
-                            <input type="number" id="pSort" placeholder="序" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-center">
-                        </div>
-                    </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] text-slate-500 ml-1 uppercase font-bold">名稱與點數</label>
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-slate-500 ml-1 uppercase font-bold">名稱與點數</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="pName" placeholder="商品名稱" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
+                                <input type="number" id="pPrice" placeholder="點數" class="w-24 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-slate-500 ml-1 uppercase font-bold">圖片</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="pImg" placeholder="https://..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs">
+                                <label class="bg-slate-700 px-4 py-3 rounded-xl cursor-pointer text-xs font-bold transition hover:bg-slate-600 flex items-center">
+                                    📤<input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleUpload(this)">
+                                </label>
+                            </div>
+                            <div id="uploadStatus" class="text-[10px] text-yellow-500 ml-1 hidden animate-pulse">上傳處理中...</div>
+                        </div>
+
+                        <textarea id="pDesc" placeholder="商品詳細描述" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm h-32"></textarea>
+                        
+                        <div class="flex items-center justify-between p-2 bg-slate-900 rounded-xl border border-slate-700">
+                            <span class="text-xs text-slate-500 ml-2">販售狀態：</span>
+                            <select id="pStatus" class="bg-transparent text-yellow-500 font-bold text-sm px-4">
+                                <option value="上架">✅ 上架銷售</option>
+                                <option value="下架">❌ 下架隱藏</option>
+                            </select>
+                        </div>
+
                         <div class="flex gap-2">
-                            <input type="text" id="pName" placeholder="商品名稱" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
-                            <input type="number" id="pPrice" placeholder="點數" class="w-24 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm">
+                            <button onclick="save()" class="flex-1 bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition">儲存發布</button>
+                            <button onclick="reset()" class="bg-slate-700 text-white px-4 rounded-xl font-bold">清空</button>
                         </div>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-[10px] text-slate-500 ml-1 uppercase font-bold">圖片 (網址或上傳)</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="pImg" placeholder="https://..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs">
-                            <label class="bg-slate-700 px-4 py-3 rounded-xl cursor-pointer text-xs font-bold transition hover:bg-slate-600 flex items-center">
-                                📤<input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleUpload(this)">
-                            </label>
-                        </div>
-                        <div id="uploadStatus" class="text-[10px] text-yellow-500 ml-1 hidden animate-pulse">上傳處理中...</div>
-                    </div>
-
-                    <textarea id="pDesc" placeholder="商品詳細描述" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm h-32 focus:h-48 transition-all"></textarea>
-                    
-                    <div class="flex items-center justify-between p-2 bg-slate-900 rounded-xl border border-slate-700">
-                        <span class="text-xs text-slate-500 ml-2">販售狀態：</span>
-                        <select id="pStatus" class="bg-transparent text-yellow-500 font-bold text-sm px-4">
-                            <option value="上架">✅ 上架銷售</option>
-                            <option value="下架">❌ 下架隱藏</option>
-                        </select>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <button onclick="save()" class="flex-1 bg-yellow-600 text-slate-900 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition">儲存發布</button>
-                        <button onclick="reset()" class="bg-slate-700 text-white px-4 rounded-xl font-bold">清空</button>
+                        <p class="text-[10px] text-slate-500 text-center italic">※ 排序請直接在右側列表拖拉</p>
                     </div>
                 </div>
-            </div>
 
-            <div class="lg:col-span-8 space-y-3">
-                <div class="flex flex-col md:flex-row gap-2 mb-4 sticky top-[120px] md:top-[80px] z-40 bg-[#0f172a] pb-2">
-                    <input type="text" id="prodSearch" oninput="renderProducts()" placeholder="🔍 搜尋商品..." class="flex-1 bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 shadow-xl">
-                    <select id="pFilterCat" onchange="renderProducts()" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 font-bold shadow-xl"></select>
+                <div class="lg:col-span-8 space-y-3">
+                    <div class="flex flex-col md:flex-row gap-2 mb-4 sticky top-[120px] md:top-[80px] z-40 bg-[#0f172a] pb-2">
+                        <input type="text" id="prodSearch" oninput="renderProducts()" placeholder="🔍 搜尋商品..." class="flex-1 bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 shadow-xl">
+                        <select id="pFilterCat" onchange="renderProducts()" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-yellow-500 font-bold shadow-xl"></select>
+                    </div>
+                    <div id="pList" class="space-y-3 pb-20"></div>
                 </div>
-                <div id="pList" class="space-y-3 pb-20"></div>
             </div>
         </div>
 
@@ -136,7 +137,7 @@
             <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-x-auto shadow-2xl">
                 <table class="w-full text-left min-w-[600px]">
                     <thead class="bg-slate-900/50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
-                        <tr><th class="px-6 py-4">時間</th><th class="px-6 py-4">會員</th><th class="px-6 py-4">內容</th><th class="px-6 py-4 text-center">異動</th><th class="px-6 py-4 text-right">餘額</th></tr>
+                        <tr><th class="px-4 py-3">時間</th><th class="px-4 py-3">會員</th><th class="px-4 py-3">內容</th><th class="px-4 py-3 text-center">異動</th><th class="px-4 py-3 text-right">餘額</th></tr>
                     </thead>
                     <tbody id="logTable" class="divide-y divide-slate-700/50"></tbody>
                 </table>
@@ -171,7 +172,6 @@
             window.scrollTo(0,0);
         }
 
-        // 手機端編輯框展開邏輯
         function toggleMobileEdit(forceOpen = false) {
             const fields = document.getElementById('editFields');
             if (forceOpen) fields.classList.remove('hidden');
@@ -202,7 +202,7 @@
                         </div>
                         <div class="flex gap-2 justify-between items-center pt-2 border-t border-slate-700/50">
                             <button onclick="refundOrder('${id}', '${ord.userId}', ${ord.total}, '${ord.itemName}')" class="text-red-400 text-[10px] font-bold underline">取消退款</button>
-                            <button onclick="toggleOrder('${id}','${ord.status}')" class="bg-slate-700 px-4 py-1.5 rounded-xl text-[10px] font-bold active:scale-95 transition">${isDone?'改待出貨':'改已出貨'}</button>
+                            <button onclick="toggleOrder('${id}','${ord.status}')" class="bg-slate-700 px-4 py-1.5 rounded-xl text-[10px] font-bold active:scale-95 transition">${isDone?'待出貨':'已出貨'}</button>
                         </div>
                     </div>`;
                 });
@@ -233,7 +233,7 @@
             const currentVal = select.value; 
             const optHtml = allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
             select.innerHTML = optHtml;
-            filterSelect.innerHTML = `<option value="全部">🔍 分類</option>` + optHtml;
+            filterSelect.innerHTML = `<option value="全部">🔍 分類篩選</option>` + optHtml;
             if (currentVal && allCategories.includes(currentVal)) select.value = currentVal; 
         }
 
@@ -273,26 +273,58 @@
             let items = [];
             for(let id in allProducts) { items.push({ id, ...allProducts[id] }); }
             items.sort((a, b) => (a.sort || 99) - (b.sort || 99));
+            
             items.forEach(p => { 
                 if(q && !p.name.toLowerCase().includes(q)) return;
                 if(catFilter !== '全部' && p.cat !== catFilter) return;
                 const isOff = p.status === '下架';
-                l.innerHTML += `<div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center ${isOff?'opacity-40 grayscale':''} relative"> 
-                    <img src="${p.img}" class="w-16 h-16 rounded-xl object-cover bg-slate-900 border border-slate-700"> 
+                const div = document.createElement('div');
+                div.setAttribute('data-id', p.id);
+                div.className = `bg-slate-800 p-3 rounded-2xl border border-slate-700 flex gap-4 items-center ${isOff?'opacity-40 grayscale':''} relative`;
+                div.innerHTML = `
+                    <div class="handle px-1 py-4 text-xl">⠿</div>
+                    <img src="${p.img}" class="w-14 h-14 md:w-16 md:h-16 rounded-xl object-cover bg-slate-900 border border-slate-700 shrink-0"> 
                     <div class="flex-1 overflow-hidden"> 
                         <div class="flex items-center gap-2">
                             <p class="font-black text-blue-400 text-[10px] uppercase tracking-tighter">${p.cat || '一般'}</p> 
                             <span class="text-[8px] px-1 py-0.5 rounded border ${isOff?'border-red-500 text-red-500':'border-green-500 text-green-500'} font-bold">${isOff?'下架':'售'}</span>
                         </div>
                         <p class="font-bold text-slate-100 text-sm truncate">${p.name}</p> 
-                        <p class="text-yellow-500 text-xs font-black">${p.price.toLocaleString()} 點 <span class="text-slate-500 font-normal ml-2">#${p.sort||99}</span></p> 
+                        <p class="text-yellow-500 text-xs font-black">${p.price.toLocaleString()} 點</p> 
                     </div> 
                     <div class="flex flex-col gap-1">
                         <button onclick="edit('${p.id}')" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-[11px] font-bold shadow-md active:scale-90">編輯</button> 
                         <button onclick="deleteProd('${p.id}')" class="px-4 py-2 rounded-lg bg-red-900/40 text-red-400 border border-red-900 text-[11px] font-bold active:scale-90">刪除</button> 
-                    </div>
-                </div>`; 
+                    </div>`;
+                l.appendChild(div);
             }); 
+
+            // 初始化拖拉功能
+            if (catFilter === '全部') {
+                new Sortable(l, {
+                    handle: '.handle',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    dragClass: 'sortable-drag',
+                    onEnd: function() {
+                        const newOrder = [];
+                        document.querySelectorAll('#pList > div').forEach((el, index) => {
+                            const id = el.getAttribute('data-id');
+                            newOrder.push({ id, sort: index + 1 });
+                        });
+                        updateSortToFirebase(newOrder);
+                    }
+                });
+            }
+        }
+
+        async function updateSortToFirebase(orderData) {
+            const updates = {};
+            orderData.forEach(item => { updates[`products_B/${item.id}/sort`] = item.sort; });
+            try {
+                await db.ref().update(updates);
+                console.log("排序已更新");
+            } catch (e) { alert("排序儲存失敗"); }
         }
 
         function adj(uid) { 
@@ -331,13 +363,17 @@
                 price: parseInt(document.getElementById('pPrice').value), 
                 img: document.getElementById('pImg').value, 
                 desc: document.getElementById('pDesc').value || '', 
-                status: document.getElementById('pStatus').value,
-                sort: parseInt(document.getElementById('pSort').value) || 99
+                status: document.getElementById('pStatus').value
             }; 
             if(!data.name || isNaN(data.price)) return alert('資料不全'); 
-            if(id) db.ref('products_B/'+id).update(data); else db.ref('products_B').push(data); 
+            if(id) {
+                db.ref('products_B/'+id).update(data);
+            } else {
+                data.sort = 999; // 新商品預設排最後
+                db.ref('products_B').push(data);
+            }
             reset(); 
-            if(window.innerWidth < 1024) toggleMobileEdit(); // 存完後自動收合
+            if(window.innerWidth < 1024) toggleMobileEdit();
         }
         
         function edit(id) { 
@@ -350,9 +386,8 @@
             document.getElementById('pImg').value = p.img; 
             document.getElementById('pDesc').value = p.desc || ''; 
             document.getElementById('pStatus').value = p.status || '上架'; 
-            document.getElementById('pSort').value = p.sort || 99;
             window.scrollTo({top:0, behavior:'smooth'}); 
-            toggleMobileEdit(true); // 編輯時自動展開
+            toggleMobileEdit(true);
         }
 
         function reset() { 
@@ -362,8 +397,7 @@
             document.getElementById('pPrice').value = ''; 
             document.getElementById('pImg').value = ''; 
             document.getElementById('pStatus').value = '上架'; 
-            document.getElementById('pSort').value = '99';
-            document.getElementById('pDesc').value = "❗夢工廠商品兌換說明❗\n【商品狀態】 全新品\n【商品內容】 本項目採 「隨機款式」 出貨，\n圖片僅供參考，請以收到的實品為準。\n隨機商品包含各類熱門系列，恕不接受指定款式。\n\n【兌換須知】\n1.點數一經扣除兌換寄出商品，恕不接受退換貨。\n2.商品將於 2 個工作天內透過 7-11 交貨便免運費寄出。\n3.請務必跟官方Line確認您的收件資訊正確，以免影響配送。\n4.若遇商品缺貨，將主動聯繫並退回點數。\n\n【收貨須知：重要！】 ⚠️ 為保障雙方權益，拆封請務必「全程錄影」。\n請從包裹未拆封前的「外箱狀態」開始拍攝。\n影片需完整記錄拆箱過程至檢查商品外觀。\n若無完整開箱錄影證明，商品如有損壞或瑕疵等問題，恕不處理售後。\n如官方瑕疵依照情節處理。\n\n※玩具商品皆為工廠大量製造，任何塗裝小溢色、漆面略不平整、盒子有二次膠、關節構件處鬆緊等小疵皆屬正常現象。";
+            document.getElementById('pDesc').value = "❗夢工廠商品兌換說明❗\n【商品狀態】 全新品\n【商品內容】 本項目採 「隨機款式」 出貨，\n圖片僅供參考，請以收到的實品為準。\n隨機商品包含各類熱門系列，恕不接受指定款式。\n\n【兌換須知】\n1.點數一經扣除兌換寄出商品，恕不接受退換貨。\n2.商品將於 2 個工作天內透過 7-11 交貨便免運費寄出。\n3.請務必跟官方Line確認您的7-11收件資訊正確，以免影響配送。\n4.若遇商品缺貨，將主動聯繫並退回點數。\n\n【收貨須知：重要！】 ⚠️ 為保障雙方權益，拆封請務必「全程錄影」。\n請從包裹未拆封前的「外箱狀態」開始拍攝。\n影片需完整記錄拆箱過程至檢查商品外觀。\n若無完整開箱錄影證明，商品如有損壞或瑕疵等問題，恕不處理售後。\n如官方瑕疵依照情節處理。\n\n※玩具商品皆為工廠大量製造，任何塗裝小溢色、漆面略不平整、盒子有二次膠、關節構件處鬆緊等小疵皆屬正常現象。";
         }
 
         function toggleOrder(oid, curr) { const next = curr === '待出貨' ? '已出貨' : '待出貨'; db.ref(`orders_B/${oid}`).update({ status: next }); }
