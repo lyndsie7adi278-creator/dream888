@@ -11,19 +11,17 @@
     body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow-x: hidden; }
     
     .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
-    .back-btn { background: none; border: 1.5px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
+    .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
     .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
 
     .promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
     .lock-banner { display: none; background: var(--lock); color: white; padding: 12px; font-size: 0.95rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
     .soldout-banner { display: none; background: #ff4757; color: white; padding: 12px; font-size: 1.1rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
 
-    /* 🖼️ 藝廊容器 */
     .gallery-container { background: #000; width: 100%; max-width: 600px; margin: 0 auto; flex-shrink: 0; }
     .main-img-wrap { width: 100%; height: 40vh; max-height: 400px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
     #gMainImg { width: 100%; height: 100%; object-fit: contain; pointer-events: none; transition: 0.3s; }
     
-    /* 🎞️ 縮圖列樣式 */
     .thumb-bar { display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px; background: #000; scroll-behavior: smooth; }
     .thumb-bar::-webkit-scrollbar { display: none; }
     .thumb-item { width: 60px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 2px solid transparent; opacity: 0.5; transition: 0.3s; cursor: pointer; }
@@ -31,7 +29,6 @@
     .thumb-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
     .info-box { padding: 15px; background: var(--card); border-bottom: 2px solid #222; display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-    
     #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 10px 12px 120px; box-sizing: border-box; }
     
     .progress-container { margin-bottom: 20px; }
@@ -52,8 +49,12 @@
 
     .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
     .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
-    #luckyVal { font-size: 10rem; font-weight: 900; color: #ff4757; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
+    /* 🔴 修改：幸運數字縮小為 6rem */
+    #luckyVal { font-size: 6rem; font-weight: 900; color: #ff4757; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
     #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
+
+    /* 🔴 新增：直接跳轉按鈕樣式 */
+    .quick-confirm-btn { margin-top: 25px; background: none; color: #888; border: 1px solid #444; padding: 10px 20px; border-radius: 50px; font-size: 0.8rem; cursor: pointer; }
 
     .modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); }
     .m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
@@ -93,6 +94,7 @@
     <div style="text-align:center;">
         <div style="color:var(--p); font-weight:900; font-size:1.5rem; margin-bottom:15px;">NO. <span id="selNum">--</span></div>
         <div class="scratch-box" id="scratchBox"><div id="luckyVal">?</div></div>
+        <button class="quick-confirm-btn" id="skipScratchBtn">不想刮了？點此直接開牌</button>
     </div>
 </div>
 
@@ -119,7 +121,6 @@ let _album = [];
 if(!_gid) location.href = 'index.html';
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
-// 🔴 縮圖點選切換邏輯
 window.changeSlide = (idx) => {
     const mainImg = document.getElementById('gMainImg');
     mainImg.style.opacity = 0;
@@ -149,10 +150,8 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
     document.getElementById('gTitle').innerText = _gid;
     
-    // 🔴 核心修正：合併封面圖與相簿
     const mainImg = _data.img || "";
     const albumList = _data.album || [];
-    // 確保第一張是封面圖，並且過濾掉可能重複的網址
     _album = [mainImg, ...albumList.filter(url => url !== mainImg)].filter(url => url !== "");
     
     document.getElementById('gMainImg').src = _album[0];
@@ -241,23 +240,48 @@ async function buyTicket(idx) {
 
 function initCanvas(no, val, poolIdx) {
     const o = document.getElementById('scratchOverlay'), b = document.getElementById('scratchBox');
+    const skipBtn = document.getElementById('skipScratchBtn');
     document.getElementById('selNum').innerText = no; 
     document.getElementById('luckyVal').innerText = val; 
     o.style.display = 'flex';
+    
     const old = document.getElementById('scratch-canvas'); if(old) old.remove();
     const c = document.createElement('canvas'); c.id = 'scratch-canvas'; c.width = 300; c.height = 300; b.appendChild(c);
     const ctx = c.getContext('2d'); ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0, 0, 300, 300);
+    
     let draw = false;
-    const _draw = (e) => {
-        if(!draw) return; const r = c.getBoundingClientRect();
-        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - r.left, y = (e.clientY || (e.touches && e.touches[0].clientY)) - r.top;
-        ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
-        const pix = ctx.getImageData(0, 0, 300, 300).data; let cl = 0; for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) cl++;
-        if(cl > (300*300*0.55)) { draw = false; syncStatus(poolIdx, val); }
+    let isFinished = false; // 避免重複觸發同步
+
+    const finishScratch = () => {
+        if(isFinished) return;
+        isFinished = true;
+        draw = false;
+        syncStatus(poolIdx, val);
     };
+
+    // 🔴 點擊跳過按鈕
+    skipBtn.onclick = () => { finishScratch(); };
+
+    const _draw = (e) => {
+        if(!draw || isFinished) return; 
+        const r = c.getBoundingClientRect();
+        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - r.left, 
+              y = (e.clientY || (e.touches && e.touches[0].clientY)) - r.top;
+        
+        ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
+        
+        // 🔴 修改：判定比例改為 0.85 (85%)
+        const pix = ctx.getImageData(0, 0, 300, 300).data; 
+        let cl = 0; 
+        for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) cl++;
+        if(cl > (300*300*0.85)) { finishScratch(); }
+    };
+
     c.addEventListener('touchstart', (e) => { draw = true; e.preventDefault(); }, {passive: false});
-    c.addEventListener('touchmove', _draw, {passive: false}); c.addEventListener('mousedown', () => draw = true);
-    window.addEventListener('mouseup', () => draw = false); c.addEventListener('mousemove', _draw);
+    c.addEventListener('touchmove', _draw, {passive: false}); 
+    c.addEventListener('mousedown', () => draw = true);
+    window.addEventListener('mouseup', () => draw = false); 
+    c.addEventListener('mousemove', _draw);
 }
 
 async function syncStatus(idx, val) {
