@@ -41,8 +41,8 @@
             <img id="mImg" src="" class="w-full h-72 object-cover bg-slate-900 shadow-inner">
             <div class="p-6">
                 <div class="flex justify-between items-start mb-3">
-                    <h2 id="mName" class="text-base font-bold flex-1 pr-2 leading-tight"></h2>
-                    <span id="mPrice" class="gold-text font-black text-2xl whitespace-nowrap"></span>
+                    <h2 id="mName" style="font-size: 16px !important; font-weight: 700 !important; line-height: 1.25 !important;" class="flex-1 pr-2 text-white"></h2>
+                    <span id="mPrice" class="gold-text font-black text-xl whitespace-nowrap"></span>
                 </div>
                 <div class="h-44 overflow-y-auto mb-4 desc-scroll pr-1 border-y border-slate-700/50 py-3 text-slate-400 text-sm leading-relaxed text-justify whitespace-pre-wrap" id="mDesc"></div>
                 <div class="flex items-center justify-between bg-slate-900 rounded-2xl p-2 mb-4 border border-slate-700 shadow-inner">
@@ -139,9 +139,7 @@
             grid.innerHTML = '';
             let items = [];
             for(let id in allProducts) { items.push({ id, ...allProducts[id] }); }
-            
             items.sort((a, b) => (a.sort || 99) - (b.sort || 99));
-            
             items.forEach(p => {
                 if(p.status === '下架') return;
                 if(cat !== '全部' && p.cat !== cat) return;
@@ -194,7 +192,7 @@
                         reason: `商城兌換: ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
                     });
 
-                    const notifyMsg = "兌換成功(B台)\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
+                    const notifyMsg = "兌換成功\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
                     fetch(GAS_URL + "?userId=" + user.id + "&msg=" + encodeURIComponent(notifyMsg), { mode: 'no-cors' });
 
                     alert("兌換成功！請跟官方Line確認收件資訊。");
