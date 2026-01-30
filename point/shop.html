@@ -145,8 +145,6 @@
             items.forEach(p => {
                 if(p.status === '下架') return;
                 if(cat !== '全部' && p.cat !== cat) return;
-                // 分類文字標題加大：text-sm + font-black
-                // 商品名稱特大化：text-xl + font-black
                 grid.innerHTML += `
                     <div onclick="openModal('${p.id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg flex flex-col"> 
                         <img src="${p.img}" class="w-full h-36 object-cover border-b border-slate-700 bg-slate-900"> 
@@ -196,7 +194,7 @@
                         reason: `商城兌換: ${currentItem.name} x${qty}`, change: -totalCost, after: newTotal
                     });
 
-                    const notifyMsg = "兌換成功\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
+                    const notifyMsg = "兌換成功(B台)\n項目：" + currentItem.name + " x " + qty + "\n本次消耗：" + totalCost + " 點";
                     fetch(GAS_URL + "?userId=" + user.id + "&msg=" + encodeURIComponent(notifyMsg), { mode: 'no-cors' });
 
                     alert("兌換成功！請跟官方Line確認收件資訊。");
