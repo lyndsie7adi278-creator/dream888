@@ -19,8 +19,6 @@
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.5rem; }
         .desc-scroll::-webkit-scrollbar { width: 4px; }
         .desc-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        /* 💡 新增樣式：確保圖片完整顯示不被切掉 */
-        .img-fit-contain { object-fit: contain !important; background-color: #020617; }
     </style>
 </head>
 <body class="p-4 pb-20">
@@ -40,10 +38,10 @@
 
     <div id="itemModal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 w-full max-w-md rounded-[2.5rem] overflow-hidden border border-slate-700 shadow-2xl animate-in fade-in zoom-in duration-300">
-            <img id="mImg" src="" class="w-full h-72 object-contain bg-slate-900 shadow-inner">
+            <img id="mImg" src="" class="w-full h-72 object-cover bg-slate-900 shadow-inner">
             <div class="p-6">
                 <div class="flex justify-between items-start mb-3">
-                    <h2 id="mName" class="text-base font-bold flex-1 pr-2 leading-tight"></h2>
+                    <h2 id="mName" class="font-bold flex-1 pr-2 leading-tight"></h2>
                     <span id="mPrice" class="gold-text font-black text-2xl whitespace-nowrap"></span>
                 </div>
                 <div class="h-44 overflow-y-auto mb-4 desc-scroll pr-1 border-y border-slate-700/50 py-3 text-slate-400 text-sm leading-relaxed text-justify whitespace-pre-wrap" id="mDesc"></div>
@@ -147,10 +145,9 @@
             items.forEach(p => {
                 if(p.status === '下架') return;
                 if(cat !== '全部' && p.cat !== cat) return;
-                // 💡 列表圖片改為 object-contain 以防裁切
                 grid.innerHTML += `
                     <div onclick="openModal('${p.id}')" class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 active:scale-95 transition shadow-lg flex flex-col"> 
-                        <img src="${p.img}" class="w-full h-36 object-contain bg-slate-900 border-b border-slate-700"> 
+                        <img src="${p.img}" class="w-full h-36 object-cover border-b border-slate-700 bg-slate-900"> 
                         <div class="p-4 flex-1"> 
                             <div class="inline-block bg-yellow-500/10 border border-yellow-500/30 rounded px-2 py-0.5 mb-2">
                                 <p class="text-sm text-yellow-500 font-black uppercase tracking-wider">${p.cat || '一般'}</p> 
@@ -166,7 +163,12 @@
             currentItem = { id, ...allProducts[id] };
             qty = 1;
             document.getElementById('mImg').src = currentItem.img;
-            document.getElementById('mName').innerText = currentItem.name;
+            
+            // 🛠️ 核心修改：獲取元素並強制注入 15px 字體樣式，優先權最高
+            const nameEl = document.getElementById('mName');
+            nameEl.innerText = currentItem.name;
+            nameEl.style.setProperty('font-size', '15px', 'important');
+            
             document.getElementById('mPrice').innerText = currentItem.price.toLocaleString() + " 點";
             document.getElementById('mDesc').innerText = currentItem.desc || "無說明";
             document.getElementById('mQty').innerText = qty;
@@ -259,7 +261,7 @@
             setTimeout(() => { toast.style.display = 'none'; }, 2000);
         }
 
-        function closeHistory() { document.getElementById('historyModal').classList.add('hidden'); }
+        function closeModal() { document.getElementById('itemModal').classList.add('hidden'); }
         window.onload = init;
     </script>
 </body>
