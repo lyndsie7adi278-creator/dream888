@@ -320,19 +320,20 @@ function startSync(){
 window.updateWinStatus = (key, status) => { update(ref(db, `winLogs/${key}`), { status: status }); };
 window.updateWinShipping = (key, no) => { update(ref(db, `winLogs/${key}`), { shippingNo: no }); };
 
-// 🟢 在 admin.html 找到對應位置替換，嚴禁刪減其他初始化內容
+// 🟢 請在 admin.html 中找到 runMasterShuffle 並替換（保持其餘初始化不變）
 async function runMasterShuffle(id, g) {
-    showLoading("正在重新洗牌...");
+    showLoading("正在重新洗牌 (含保護區)...");
     try {
+        // 1. 取得中獎號碼清單 (強制轉數字)
         const winningNums = g.prizes.map(p => Number(p.num)); 
         let allNumbers = [];
         for (let i = 1; i <= g.total; i++) { allNumbers.push(i); }
 
-        // 分離池子
+        // 2. 分離：中獎池 vs 沒中獎池
         let winPool = allNumbers.filter(n => winningNums.includes(n));
         let losePool = allNumbers.filter(n => !winningNums.includes(n));
 
-        // 1. 先把沒中獎的池子打亂 (避免保護區永遠是固定那幾號)
+        // 🟢 重點修正 1：先打亂「沒中獎池」，確保保護區 4 張也是隨機的
         for (let i = losePool.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [losePool[i], losePool[j]] = [losePool[j], losePool[i]];
@@ -342,13 +343,14 @@ async function runMasterShuffle(id, g) {
         let finalNumbers = [];
 
         if (safeSize > 0 && losePool.length >= safeSize) {
-            // 2. 提取前 X 張保護區
+            // 3. 提取保護區 (前 X 張不中獎)
             const frontSafe = losePool.splice(0, safeSize);
             
-            // 3. 核心修正：將剩下的「所有號碼」跟「中獎號碼」混合
+            // 🟢 重點修正 2：將剩下的「所有沒中獎號碼」跟「中獎號碼」混合
             let restMixed = [...losePool, ...winPool];
             
-            // 4. 對剩下的混合池進行徹底大洗牌 (這樣大獎才不會固定在第 5 張)
+            // 🟢 重點修正 3：對剩下的混合池進行徹底大洗牌 (Fisher-Yates)
+            // 這樣大獎才會隨機散佈在剩下的位置，不會填滿，也不會固定在第 5 張
             for (let i = restMixed.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [restMixed[i], restMixed[j]] = [restMixed[j], restMixed[i]];
@@ -364,17 +366,18 @@ async function runMasterShuffle(id, g) {
             }
         }
 
-        // 5. 寫入資料庫
-        const pool = finalNumbers.map(val => ({
-            grade: Number(val),
+        // 4. 物理級寫入：確保每一格 grade 是從陣列取出的單一數值
+        const pool = finalNumbers.map(v => ({
+            grade: Number(v),
             taken: false,
             revealed: false
         }));
 
+        // 5. 更新 Firebase
         await set(ref(db, `games/${id}/pool`), pool);
         return true;
     } catch (e) {
-        alert("洗牌失敗：" + e.message);
+        alert("洗牌演算法出錯：" + e.message);
     } finally {
         hideLoading();
     }
