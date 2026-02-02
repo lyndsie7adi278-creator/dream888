@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
     <title>夢工廠 | 會員中心</title>
     <style>
-        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --success: #2ecc71; --wait: #f1c40f; }
+        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --success: #2ecc71; --wait: #f1c40f; --alliance: #6c5ce7; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
         
@@ -30,13 +30,18 @@
             width: 88%; padding: 20px; border-radius: 25px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.08); position: relative; z-index: 5;
         }
-        .balance-label { font-size: 0.75rem; color: #999; font-weight: bold; margin-bottom: 8px; }
-        .balance-amount { font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 15px; }
+        .balance-label { font-size: 0.75rem; color: #999; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .balance-amount { font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 15px; text-align: left; }
         .balance-amount span { color: var(--gold); }
+        
+        /* 盟友佣金專屬樣式 */
+        .commission-tag { font-size: 0.7rem; background: #eee; color: #666; padding: 2px 8px; border-radius: 5px; }
+        .commission-tag b { color: var(--alliance); }
+
         .deposit-btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,143,163,0.3); transition: 0.3s; }
 
-        .tabs { display: flex; background: transparent; margin-top: 90px; padding: 5px 10px; position: sticky; top: 58px; z-index: 4; gap: 5px; }
-        .tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 0.85rem; font-weight: 900; color: #bbb; cursor: pointer; position: relative; }
+        .tabs { display: flex; background: transparent; margin-top: 90px; padding: 5px 10px; position: sticky; top: 58px; z-index: 4; gap: 5px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab-btn { flex: 0 0 auto; padding: 12px 15px; text-align: center; font-size: 0.85rem; font-weight: 900; color: #bbb; cursor: pointer; position: relative; white-space: nowrap; }
         .tab-btn.active { color: var(--primary); }
         .tab-btn.active::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: var(--primary); border-radius: 10px; }
 
@@ -44,6 +49,12 @@
         .page-content { display: none; animation: fadeIn 0.4s ease; }
         .page-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 地推中心樣式 */
+        .alliance-box { background: #fff; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .ref-url-box { background: #f0f2f5; padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 0.75rem; color: #666; word-break: break-all; border: 1px dashed var(--alliance); }
+        .alliance-btn { background: var(--alliance); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; }
+        .notice-card { background: #fff9e6; border-left: 4px solid var(--wait); padding: 15px; border-radius: 8px; font-size: 0.75rem; text-align: left; margin-top: 20px; color: #856404; line-height: 1.6; }
 
         .list-item { background: #fff; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .item-info b { display: block; font-size: 0.95rem; color: #333; margin-bottom: 4px; font-weight: 900; }
@@ -61,12 +72,10 @@
         .empty-state { text-align: center; padding: 80px 20px; color: #d0d5dd; font-weight: bold; }
         #copyToast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; z-index: 5000; display: none; }
         
-        /* 交貨便與複製按鈕樣式 */
         .shipping-info { font-size: 0.75rem; color: #7f8c8d; margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 12px; width: 100%; border: 1px solid #eee; }
         .shipping-no-box { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .shipping-no { color: var(--primary); font-weight: 900; font-size: 0.9rem; }
         .copy-btn { background: #fff; border: 1px solid #ddd; color: #666; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; cursor: pointer; font-weight: bold; }
-        .copy-btn:active { background: #eee; }
         .track-link { display: block; text-align: center; background: #000; color: #fff; padding: 8px; border-radius: 8px; text-decoration: none; font-size: 0.7rem; font-weight: bold; margin-top: 5px; }
     </style>
 </head>
@@ -84,7 +93,10 @@
         <div class="uid-tag" onclick="copyText(localStorage.getItem('myScratchCode'), 'UID')">ID: <span id="displayUid">--------</span> 📋</div>
         
         <div class="balance-card">
-            <div class="balance-label">我的點數</div>
+            <div class="balance-label">
+                <span>我的點數</span>
+                <span class="commission-tag">盟友獎金：<b id="uComm">0</b> P</span>
+            </div>
             <div class="balance-amount"><span>P</span> <span id="uBal">0</span></div>
             <button class="deposit-btn" onclick="location.href='deposit.html'">💳 儲值點數</button>
         </div>
@@ -94,12 +106,31 @@
         <div class="tab-btn active" onclick="switchTab(0)">消費明細</div>
         <div class="tab-btn" onclick="switchTab(1)">儲值紀錄</div>
         <div class="tab-btn" onclick="switchTab(2)">中獎存根</div>
+        <div class="tab-btn" onclick="switchTab(3)">盟友中心</div>
     </div>
 
     <div class="content-area">
         <div id="tab-0" class="page-content active"><div id="billingList"></div></div>
         <div id="tab-1" class="page-content"><div id="depositList"></div></div>
         <div id="tab-2" class="page-content"><div id="winsList"></div></div>
+        <div id="tab-3" class="page-content">
+            <div class="alliance-box">
+                <div style="font-weight: 900; font-size: 1.2rem; color: var(--alliance);">地推盟友計畫</div>
+                <div style="font-size: 0.8rem; color: #999; margin-top: 5px;">邀請好友儲值，最高享 10% 分潤</div>
+                
+                <div class="ref-url-box" id="refLink">載入中...</div>
+                
+                <button class="alliance-btn" onclick="copyRefLink()">📋 複製我的推廣連結</button>
+                
+                <div class="notice-card">
+                    <b>💡 盟友規則：</b><br>
+                    1. 推薦好友「首儲」：您得 10% 獎金，好友也得 10% 贈點。<br>
+                    2. 推薦好友「續儲」：滿千好友得 3% 贈點，您得 5% 獎金。<br>
+                    3. 點數可用於刮刮樂，不可直接提現。
+                </div>
+            </div>
+            <div id="referralLogList" style="margin-top: 20px;"></div>
+        </div>
     </div>
 
     <script type="module">
@@ -119,8 +150,15 @@
 
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
+        
+        // 設定推廣網址 (自動帶入 UID)
+        const myRefUrl = `${window.location.origin}/index.html?ref=${_uid}`;
+        document.getElementById('refLink').innerText = myRefUrl;
 
-        // 通用複製函數
+        window.copyRefLink = () => {
+            copyText(myRefUrl, '推廣連結');
+        };
+
         window.copyText = (text, type) => {
             if(!text) return;
             navigator.clipboard.writeText(text);
@@ -135,9 +173,11 @@
             document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
         };
 
+        // 監聽用戶基礎資料 (包含點數與佣金)
         onValue(ref(_db, `users/${_uid}`), s => {
             const u = s.val(); if(!u) return;
             document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
+            document.getElementById('uComm').innerText = (u.commission || 0).toLocaleString();
             document.getElementById('uNick').innerText = u.nickname || "新玩家";
             document.getElementById('avatarLetter').innerText = (u.nickname || _uid).charAt(0).toUpperCase();
 
@@ -156,6 +196,27 @@
             } else { bList.innerHTML = '<div class="empty-state">尚無消費紀錄</div>'; }
         });
 
+        // 監聽分潤日誌 (盟友中心專用)
+        onValue(ref(_db, `referralLogs/${_uid}`), s => {
+            const list = document.getElementById('referralLogList');
+            if(s.exists()) {
+                const logs = Object.values(s.val()).sort((a,b) => b.time - a.time);
+                list.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem;">分潤明細</div>` + 
+                logs.map(l => `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <b>來自好友儲值回饋</b>
+                            <small>好友ID: ${l.from_uid.substring(0,8)}... | ${new Date(l.time).toLocaleString()}</small>
+                        </div>
+                        <div class="item-val val-plus">+${l.reward} P</div>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<div class="empty-state">目前尚無分潤紀錄，快去邀請好友吧！</div>';
+            }
+        });
+
+        // 儲值紀錄監聽 (保持不變)
         onValue(ref(_db, `depositRequests`), s => {
             const list = document.getElementById('depositList');
             const allReq = s.val() ? Object.values(s.val()) : [];
@@ -175,6 +236,7 @@
             } else { list.innerHTML = '<div class="empty-state">尚無儲值申請紀錄</div>'; }
         });
 
+        // 中獎存根監聽 (保持不變)
         onValue(ref(_db, `winLogs`), s => {
             const list = document.getElementById('winsList');
             const data = s.val() || {};
@@ -187,7 +249,6 @@
                     if(statusText === "已出貨") statusClass = "status-shipping";
                     if(statusText === "已完成") statusClass = "status-completed";
 
-                    // 交貨便區塊邏輯
                     let shippingHtml = "";
                     if(w.shippingNo) {
                         shippingHtml = `
