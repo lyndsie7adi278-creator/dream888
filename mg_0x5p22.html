@@ -321,7 +321,8 @@ window.updateWinStatus = (key, status) => { update(ref(db, `winLogs/${key}`), { 
 window.updateWinShipping = (key, no) => { update(ref(db, `winLogs/${key}`), { shippingNo: no }); };
 
 async function runMasterShuffle(id, g) {
-    showLoading("正在強制刷新 Firebase 池子...");
+    if (!id) { alert("找不到遊戲 ID"); return false; }
+    showLoading("正在物理覆蓋 Firebase 池子...");
     try {
         const winningNums = g.prizes.map(p => Number(p.num)); 
         let allNumbers = [];
@@ -343,31 +344,35 @@ async function runMasterShuffle(id, g) {
         if (safeSize > 0 && losePool.length >= safeSize) {
             const frontSafe = losePool.splice(0, safeSize);
             let restMixed = [...losePool, ...winPool];
-            // 🟢 修正 2：混合後再大洗牌，確保大獎不在第 5 張
+            // 🟢 修正 2：剩下的混合後再次全隨機洗牌，保證大獎不會卡在第 5 張
             for (let i = restMixed.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [restMixed[i], restMixed[j]] = [restMixed[j], restMixed[i]];
             }
             finalNumbers = [...frontSafe, ...restMixed];
         } else {
-            finalNumbers = allNumbers;
+            // 全池洗牌
+            finalNumbers = [...allNumbers];
             for (let i = finalNumbers.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [finalNumbers[i], finalNumbers[j]] = [finalNumbers[j], finalNumbers[i]];
             }
         }
 
-        // 轉換為 Firebase 物件格式
-        const pool = finalNumbers.map(n => ({ grade: Number(n), taken: false, revealed: false }));
+        const poolData = finalNumbers.map(n => ({ grade: Number(n), taken: false, revealed: false }));
 
-        // 🟢 修正 3：使用 set 強制覆蓋寫入該路徑
-        await set(ref(db, `games/${id}/pool`), pool);
+        // 🟢 修正 3：使用物理路徑與強制 set，覆蓋整個 pool 節點
+        // 注意：這裡直接引用 db (確保它是您 initializeApp 下定義的那個)
+        const targetRef = ref(db, `games/${id}/pool`);
         
-        console.log("Firebase 寫入完成:", pool);
+        await set(targetRef, poolData);
+        
+        console.log("🔥 Firebase 寫入成功:", id, poolData[4]); // Index 4 就是第 5 張
         return true;
     } catch(e) {
-        console.error("Firebase 更新失敗:", e);
-        alert("洗牌寫入失敗：" + e.message);
+        console.error("❌ Firebase 寫入失敗:", e);
+        alert("Firebase 寫入失敗：" + e.message);
+        return false;
     } finally { 
         hideLoading(); 
     }
