@@ -94,14 +94,26 @@ const _db=getDatabase(_app);
 const _sk=localStorage.getItem('myScratchCode');
 let _g={},_cc='ALL',_u=null;
 
-// 🟢 [1/2] 自動偵測並緩存推薦碼 (一進網頁就做)
-(function captureRef() {
+// 🟢 [新功能疊加] 強力監控推薦碼系統
+(function autoReferralSystem() {
     const urlParams = new URLSearchParams(window.location.search);
     const refId = urlParams.get('ref');
     if (refId) {
         localStorage.setItem('pending_ref', refId);
-        console.log("捕捉推薦碼成功:", refId);
+        console.log("✅ 偵測到推薦碼並緩存:", refId);
     }
+    // 監控器：只要註冊視窗打開且有緩存，就強行填入
+    setInterval(() => {
+        const savedRef = localStorage.getItem('pending_ref');
+        const refInput = document.getElementById('refIn');
+        const regStep = document.getElementById('stepRegister');
+        if (savedRef && refInput && regStep && regStep.style.display !== "none") {
+            if (refInput.value === "") {
+                refInput.value = savedRef;
+                console.log("🎯 已自動補填推薦碼");
+            }
+        }
+    }, 500);
 })();
 
 const _mt=document.getElementById('menuToggle'),_md=document.getElementById('menuDropdown');
@@ -127,17 +139,10 @@ function init(){
     }
 }
 
-// 🟢 [2/2] 切換到註冊視窗時，自動從緩存填入推薦碼
 window.showReg=()=>{
     document.getElementById('step1').style.display='none';
     document.getElementById('stepRegister').style.display='block';
     document.getElementById('loginStepTitle').innerText="註冊新帳號";
-    
-    // 自動填入
-    const savedRef = localStorage.getItem('pending_ref');
-    if(savedRef) {
-        document.getElementById('refIn').value = savedRef;
-    }
 };
 
 window.backStep1=()=>{document.getElementById('step1').style.display='block';document.getElementById('step2').style.display='none';document.getElementById('stepRegister').style.display='none';document.getElementById('loginStepTitle').innerText="會員登入"};
