@@ -40,9 +40,9 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .win-status-row { display: flex; flex-direction: column; gap: 5px; }
 .win-shipping-input { padding: 5px !important; margin-bottom: 0 !important; font-size: 0.75rem !important; border: 1px solid #444 !important; }
 
-/* ➕ 動態列優化 (修正輸入格跑掉) */
+/* ➕ 修正：動態列輸入格排版 */
 .dynamic-row{display:flex;gap:10px;margin-bottom:12px;align-items:center;background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;border:1px solid #222}
-.dynamic-row input { margin-bottom: 0 !important; flex: 1; }
+.dynamic-row input { margin-bottom: 0 !important; }
 .upload-preview { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid var(--p); flex-shrink: 0; background: #000; }
 
 .safe-box{border:1px solid var(--p);padding:15px;border-radius:12px;background:rgba(255,184,0,0.05);margin-bottom:15px}
@@ -51,7 +51,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .spent-badge { font-size: 0.7rem; color: #aaa; margin-left: 10px; border: 1px solid #333; padding: 2px 6px; border-radius: 4px; }
 .ref-tag { font-size: 0.65rem; padding: 2px 5px; border: 1px solid var(--p); color: var(--p); border-radius: 4px; margin-left: 5px; }
 
-/* 🟢 新增：全域 Loading 樣式 */
+/* 🟢 Loading 動畫 */
 #globalLoading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 30000; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
 .spinner { width: 45px; height: 45px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -286,7 +286,6 @@ function startSync(){
         c.innerHTML='';const u=s.val()||{},r={};
         Object.values(u).forEach(i=>{if(i.invitedBy)r[i.invitedBy]=(r[i.invitedBy]||0)+1});
         Object.entries(u).forEach(([id,d])=>{
-            // 🔴 修正累積消費邏輯：只計算 > 0 的消費，不計算儲值(負數)
             const sp = d.logs ? Object.values(d.logs).reduce((acc, log) => {
                 const cost = Number(log.cost) || 0;
                 return acc + (cost > 0 ? cost : 0);
@@ -332,10 +331,10 @@ async function runMasterShuffle(id, g) {
         }
         let losePool = allNumbers.filter(n => !pN.includes(n));
         let winPool = allNumbers.filter(n => pN.includes(n));
-        const safeZoneSize = Number(g.safeZone) || 0;
-        let finalNumbers = [];
-        if (safeZoneSize > 0 && losePool.length >= safeZoneSize) {
-            const frontSafe = losePool.splice(0, safeZoneSize);
+    const safeZoneSize = Number(g.safeZone) || 0;
+    let finalNumbers = [];
+    if (safeZoneSize > 0 && losePool.length >= safeZoneSize) {
+        const frontSafe = losePool.splice(0, safeZoneSize);
         let restMixed = [...losePool, ...winPool];
         for (let i = restMixed.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -354,7 +353,7 @@ window.approveDeposit = async (key, uid, amount) => {
     amount = Number(amount);
     if(!confirm(`確認收到款項並幫 [${uid}] 增加 ${amount} P 嗎？\n系統將自動判斷「首儲/續儲」並發放分潤。`)) return;
     showLoading("正在核准並分潤...");
-    try {
+    try {
         const uRef = ref(db, `users/${uid}`);
         const snap = await get(uRef);
         if(!snap.exists()) return alert("找不到該會員");
@@ -424,17 +423,15 @@ window.showUserSubTab = async (type) => {
             </div>
         `).join('');
     } else {
-        // 顯示該用戶獲得的分潤紀錄
         const s = await get(ref(db, `referralLogs/${currentViewingUid}`));
         const l = s.val()||{};
         c.innerHTML = Object.values(l).reverse().map(i => {
-            const label = Number(i.reward) < 0 ? "結清提現" : `來自好友: ${i.from_uid}`;
-            return `
-            <div style="padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;">
+            const label = Number(i.reward) < 0 ? "結清提現" : `來自好友: ${i.from_uid}`;
+            return `<div style="padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;">
                 <span>${label}<br><small>${new Date(i.time).toLocaleString()}</small></span>
                 <b style="color:${Number(i.reward)>0?'#2ecc71':'#ff4757'}">${Number(i.reward)>0?'+':''}${i.reward}P</b>
             </div>`;
-        }).join('');
+        }).join('');
     }
     if(!c.innerHTML) c.innerHTML = '<div class="empty-state">尚無紀錄</div>';
 };
@@ -467,23 +464,17 @@ window.addBal=async uid=>{
 
 // 🟢 結清獎金邏輯
 window.clearCommission = async (uid) => {
-    const snap = await get(ref(db, `users/${uid}/commission`));
-    const currentComm = snap.val() || 0;
-    if (currentComm <= 0) return alert("目前無獎金可結清");
-    if (confirm(`確認已線下匯款並結清帳號 [${uid}] 的 ${currentComm} P 獎金？\n此動作將使獎金歸零並留下對帳紀錄。`)) {
-        showLoading("正在結清獎金...");
-        try {
-            await update(ref(db, `users/${uid}`), { commission: 0 });
-            await push(ref(db, `referralLogs/${uid}`), { 
-                time: Date.now(), 
-                from_uid: "SYSTEM_ADMIN", 
-                amount: 0, 
-                reward: -currentComm, 
-                type: "WITHDRAW_SETTLED" 
-            });
-            alert("結清成功！");
-        } finally { hideLoading(); }
-    }
+    const snap = await get(ref(db, `users/${uid}/commission`));
+    const currentComm = snap.val() || 0;
+    if (currentComm <= 0) return alert("目前無獎金可結清");
+    if (confirm(`確認已線下匯款並結清帳號 [${uid}] 的 ${currentComm} P 獎金？\n此動作將使獎金歸零並留下對帳紀錄。`)) {
+        showLoading("正在結清獎金...");
+        try {
+            await update(ref(db, `users/${uid}`), { commission: 0 });
+            await push(ref(db, `referralLogs/${uid}`), { time: Date.now(), from_uid: "SYSTEM_ADMIN", amount: 0, reward: -currentComm, type: "WITHDRAW_SETTLED" });
+            alert("結清成功！");
+        } finally { hideLoading(); }
+    }
 };
 
 window.rejectDeposit = async (key) => { if(confirm("確定要刪除這筆儲值申請嗎？")) await remove(ref(db, `depositRequests/${key}`)); };
@@ -501,12 +492,12 @@ window.publishGame = async () => {
     if (!id || !tot || 0 === prs.length || !cat) return alert("資訊不全(分類必選)");
     const d = { total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: false };
     if(!d.img) return alert("請務必上傳封面圖片");
-    showLoading("正在發布商品...");
-    try {
-        await update(ref(db, `gameSettings/${id}`), d);
-        if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功");
-        resetGameForm();
-    } finally { hideLoading(); }
+    showLoading("正在發布商品...");
+    try {
+        await update(ref(db, `gameSettings/${id}`), d);
+        if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功");
+        resetGameForm();
+    } finally { hideLoading(); }
 };
 
 window.resetShuffle = async id => {
