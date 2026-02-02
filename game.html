@@ -186,13 +186,14 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
 
     onValue(ref(_db, `games/${_gid}/pool`), snap => {
         const p = snap.val() || []; const grid = document.getElementById('poolGrid');
-        const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
-        const _pct = Math.round((_s / _data.total) * 100);
-        document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
+        const _winningSet = new Set((_data.prizes || []).map(x => Number(x.num)));
+        const _sold = p.filter(t => t.taken).length;
+        const _pct = Math.round((_sold / _data.total) * 100);
+        document.getElementById('progText').innerText = `${_sold} / ${_data.total}`;
         document.getElementById('progFill').style.width = `${_pct}%`;
         document.getElementById('progPercent').innerText = `${_pct}%`;
 
-        const pLeft = (_data.promoCount || 0) - _s;
+        const pLeft = (_data.promoCount || 0) - _sold;
         const banner = document.getElementById('promoBanner');
         if(pLeft > 0 && !_isClosed) {
             banner.style.display = 'block'; document.getElementById('promoLeft').innerText = pLeft; 
@@ -207,11 +208,12 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         grid.innerHTML = '';
         p.forEach((t, i) => {
             const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
-            // 🟢 重點修正處：使用 const 定義局部變數鎖死獎號
+            // 🔴 終極物理層修復：強迫在拼接 HTML 時才現場從 t 物件中提取數據
+            // 徹底捨棄中間變數 v 或任何迴圈外的暫存值
             if(t.taken && t.revealed) {
-                const currentTicketGrade = Number(t.grade);
-                div.className = `ticket revealed ${_m.includes(currentTicketGrade) ? 'winner-glow' : ''}`;
-                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${currentTicketGrade.toString().padStart(2, '0')}</span>`;
+                const _thisGrade = Number(t.grade);
+                div.className = `ticket revealed ${_winningSet.has(_thisGrade) ? 'winner-glow' : ''}`;
+                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${_thisGrade.toString().padStart(2, '0')}</span>`;
             } else if(t.taken && !t.revealed) {
                 div.className = `ticket taken`;
                 div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
@@ -233,8 +235,8 @@ async function buyTicket(idx) {
     const poolArr = poolSnap.val() || [];
     if(poolArr[idx].taken) return alert("已被購買");
 
-    const _sold = poolArr.filter(x => x.taken).length;
-    let pr = (_data.promoCount > 0 && _sold < _data.promoCount) ? _data.promoPrice : _data.price;
+    const _soldTotal = poolArr.filter(x => x.taken).length;
+    let pr = (_data.promoCount > 0 && _soldTotal < _data.promoCount) ? _data.promoPrice : _data.price;
     
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
@@ -312,9 +314,9 @@ async function syncStatus(idx, val) {
     if(hit) {
         const pSnap = await get(ref(_db, `games/${_gid}/pool`));
         const pool = pSnap.val() || [];
-        const m = (_data.prizes || []).map(p => Number(p.num));
-        const won = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length;
-        if(won >= m.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
+        const winningNums = (_data.prizes || []).map(p => Number(p.num));
+        const wonCount = pool.filter(t => t.revealed && winningNums.includes(Number(t.grade))).length;
+        if(wonCount >= winningNums.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
         
         document.getElementById('res_msg').innerHTML = `🎊 恭喜獲獎 🎊<br>${hit.name}`;
         document.getElementById('res_img').src = hit.img || _data.img; 
