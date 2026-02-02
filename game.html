@@ -33,7 +33,7 @@
     
     .progress-container { margin-bottom: 20px; }
     .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaa; margin-bottom: 6px; font-weight: bold; }
-   .progress-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
+    .progress-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
     .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s; }
 
     .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
@@ -207,12 +207,10 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         grid.innerHTML = '';
         p.forEach((t, i) => {
             const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
-            // 🟢 核心物理層修復：完全移除外部變數 v 參考，強行原地轉型並渲染
             if(t.taken && t.revealed) {
-                const currentVal = Number(t.grade);
-                div.className = `ticket revealed ${_m.includes(currentVal) ? 'winner-glow' : ''}`;
-                // 這裡 s 永遠是索引編號 (05)，currentVal 永遠是該格位對應資料庫中的內容獎號
-                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${currentVal.toString().padStart(2, '0')}</span>`;
+                // 🟢 這裡採取強制原地取值，不使用外部變數 v，確保每一格資料絕對獨立
+                div.className = `ticket revealed ${_m.includes(Number(t.grade)) ? 'winner-glow' : ''}`;
+                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${Number(t.grade).toString().padStart(2, '0')}</span>`;
             } else if(t.taken && !t.revealed) {
                 div.className = `ticket taken`;
                 div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
