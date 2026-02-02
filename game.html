@@ -204,21 +204,14 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
         }).join('');
 
-grid.innerHTML = '';
+        grid.innerHTML = '';
         p.forEach((t, i) => {
             const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
-            
             if(t.taken && t.revealed) {
-                // 🟢 核心修正：
-                // 使用 const 定義當前格位專屬的獎號，確保每一格的數據被「物理隔絕」
-                const currentTicketGrade = Number(t.grade); 
-                const isWinner = _m.includes(currentTicketGrade);
-                
-                div.className = `ticket revealed ${isWinner ? 'winner-glow' : ''}`;
-                
-                // 直接將 currentTicketGrade 嵌入，確保顯示的數字絕對等於資料庫裡那一格的 grade
+                // 🔴 變數鎖定核心：直接讀取當前物件屬性，不經過外部變數轉手
+                const currentTicketGrade = Number(t.grade);
+                div.className = `ticket revealed ${_m.includes(currentTicketGrade) ? 'winner-glow' : ''}`;
                 div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${currentTicketGrade.toString().padStart(2, '0')}</span>`;
-                
             } else if(t.taken && !t.revealed) {
                 div.className = `ticket taken`;
                 div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
@@ -336,4 +329,3 @@ async function syncStatus(idx, val) {
 </script>
 </body>
 </html>
-
