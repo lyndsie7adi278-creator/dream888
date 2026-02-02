@@ -1,57 +1,57 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>夢工廠 | 刮刮樂商城</title>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<style>
-:root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800}
-* {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
-body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
-.welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
-.welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
-.top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
-.nav-left{display:flex;align-items:center;gap:15px;cursor:pointer;color:#333;font-size:1.4rem;position:relative}
-.logo-txt{font-weight:900;letter-spacing:2px;color:#333;font-size:1rem;position:absolute;left:50%;transform:translateX(-50%)}
-.menu-dropdown{display:none;position:absolute;top:60px;left:15px;background:#fff;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:2000;min-width:150px;overflow:hidden;border:1px solid #eee}
-.menu-dropdown.show{display:block;animation:menuFade .3s ease}@keyframes menuFade{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-.menu-item{padding:15px 20px;font-size:.9rem;color:#2c3e50;font-weight:700;border-bottom:1px solid #f9f9f9;display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
-.menu-item:active{background:#fff1f3;color:var(--primary)}
-.marquee-container{width:100%;background:#1a1c23;color:var(--primary);padding:10px 0;overflow:hidden;white-space:nowrap;font-size:.85rem;font-weight:700;border-bottom:2px solid var(--primary)}
-.marquee-content{display:inline-block;animation:marquee 25s linear infinite}@keyframes marquee{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
-.category-scroll{display:flex;overflow-x:auto;padding:15px 20px;gap:12px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.cat-item{flex-shrink:0;padding:10px 22px;border-radius:50px;background:#fff;border:1px solid #eee;font-size:.85rem;color:#7f8c8d;font-weight:700;transition:.3s;cursor:pointer}
-.cat-item.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(255,143,163,.4)}
-.product-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;width:94%;max-width:500px;padding:15px 0}
-.p-card{background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.06);border:1px solid #f0f0f0;transition:.3s;position:relative;cursor:pointer}
-.p-card:active{transform:scale(.95)}
-.p-card.soldout{filter:grayscale(.8);opacity:.8}
-.p-card.free-gift{border:2px solid var(--free);box-shadow:0 8px 25px rgba(76,209,55,.4)}
-.p-img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#fdfdfd}
-.p-info{padding:18px 10px;text-align:center;min-height:115px;display:flex;flex-direction:column;justify-content:center;align-items:center}
-.p-name{font-weight:900;font-size:.95rem;color:#2c3e50;margin-bottom:5px;line-height:1.3}
-.p-price-value{color:var(--primary);font-weight:900;font-size:1.15rem;display:flex;align-items:center;justify-content:center;gap:5px}
-.soldout-tag{background:#57606f;color:#fff;font-size:.7rem;padding:4px 10px;border-radius:6px;margin-top:5px;display:inline-block;font-weight:900}
-.free-tag{background:var(--free);color:#fff;font-size:.7rem;padding:4px 10px;border-radius:6px;margin-top:5px;display:inline-block;font-weight:900}
-.lock-tag{background:var(--lock);color:#fff;font-size:.7rem;padding:4px 10px;border-radius:6px;margin-top:5px;display:inline-block;font-weight:900}
-.promo-tag{background:#ff4757;color:#fff;font-size:.6rem;padding:2px 6px;border-radius:4px;font-weight:900}
-.promo-info{font-size:.65rem;color:#ff8fa3;margin-top:5px;font-weight:900}
-.line-wrapper{position:fixed;bottom:30px;right:20px;z-index:2000;display:flex;flex-direction:column;align-items:flex-end;animation:float-breath 2s infinite ease-in-out}
-.line-bubble{background:#fff;color:#333;padding:10px 15px;border-radius:15px;font-size:.8rem;font-weight:900;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,.15);position:relative;border:1px solid #eee;white-space:nowrap}
-.line-bubble::after{content:"";position:absolute;bottom:-8px;right:20px;border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid #fff}
-.line-float{width:60px;height:60px;background:var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 25px rgba(6,199,85,.4);cursor:pointer}
-.line-float img{width:35px;height:35px}@keyframes float-breath{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-.status-section{width:92%;max-width:460px;margin:35px 0 15px;background:#fff;border-radius:28px;padding:25px;border:1px solid rgba(0,0,0,.04);box-shadow:0 5px 20px rgba(0,0,0,.03)}
-.status-item{display:flex;align-items:flex-start;background:#f9fafb;padding:18px;border-radius:20px;margin-bottom:15px}.status-icon{font-size:1.6rem;margin-right:18px;margin-top:3px}
-.status-text b{display:block;font-size:.9rem;color:#1a1c23;margin-bottom:5px}.status-text p{margin:0;font-size:.75rem;color:#7f8c8d;line-height:1.6}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:4000;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
-.m-box{background:#fff;padding:35px 25px;border-radius:35px;width:88%;max-width:340px;text-align:center;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-.close-modal{position:absolute;top:15px;right:20px;font-size:1.5rem;color:#ccc;cursor:pointer}
-input{width:100%;padding:14px;margin:8px 0;border:1px solid #eee;border-radius:12px;text-align:center;font-size:1rem;font-weight:700;color:var(--primary);outline:none}
-.btn{background:var(--primary);color:#fff;border:none;padding:16px;border-radius:50px;font-weight:900;width:100%;cursor:pointer;font-size:1rem;box-shadow:0 8px 20px rgba(255,143,163,.3);margin-top:10px}
-.footer{padding:30px 0 50px;font-size:.75rem;color:#95a5a6;text-align:center;line-height:2}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+    <title>夢工廠 | 刮刮樂商城</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800}
+        * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
+        body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
+        .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
+        .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
+        .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
+        .nav-left{display:flex;align-items:center;gap:15px;cursor:pointer;color:#333;font-size:1.4rem;position:relative}
+        .logo-txt{font-weight:900;letter-spacing:2px;color:#333;font-size:1rem;position:absolute;left:50%;transform:translateX(-50%)}
+        .menu-dropdown{display:none;position:absolute;top:60px;left:15px;background:#fff;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:2000;min-width:150px;overflow:hidden;border:1px solid #eee}
+        .menu-dropdown.show{display:block;animation:menuFade .3s ease}@keyframes menuFade{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .menu-item{padding:15px 20px;font-size:.9rem;color:#2c3e50;font-weight:700;border-bottom:1px solid #f9f9f9;display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
+        .menu-item:active{background:#fff1f3;color:var(--primary)}
+        .marquee-container{width:100%;background:#1a1c23;color:var(--primary);padding:10px 0;overflow:hidden;white-space:nowrap;font-size:.85rem;font-weight:700;border-bottom:2px solid var(--primary)}
+        .marquee-content{display:inline-block;animation:marquee 25s linear infinite}@keyframes marquee{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+        .category-scroll{display:flex;overflow-x:auto;padding:15px 20px;gap:12px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+        .cat-item{flex-shrink:0;padding:10px 22px;border-radius:50px;background:#fff;border:1px solid #eee;font-size:.85rem;color:#7f8c8d;font-weight:700;transition:.3s;cursor:pointer}
+        .cat-item.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(255,143,163,.4)}
+        .product-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;width:94%;max-width:500px;padding:15px 0}
+        .p-card{background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.06);border:1px solid #f0f0f0;transition:.3s;position:relative;cursor:pointer}
+        .p-card:active{transform:scale(.95)}
+        .p-card.soldout{filter:grayscale(.8);opacity:.8}
+        .p-card.free-gift{border:2px solid var(--free);box-shadow:0 8px 25px rgba(76,209,55,.4)}
+        .p-img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#fdfdfd}
+        .p-info{padding:18px 10px;text-align:center;min-height:115px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+        .p-name{font-weight:900;font-size:.95rem;color:#2c3e50;margin-bottom:5px;line-height:1.3}
+        .p-price-value{color:var(--primary);font-weight:900;font-size:1.15rem;display:flex;align-items:center;justify-content:center;gap:5px}
+        .soldout-tag{background:#57606f;color:#fff;font-size:.7rem;padding:4px 10px;border-radius:6px;margin-top:5px;display:inline-block;font-weight:900}
+        .free-tag{background:var(--free);color:#fff;font-size:.7rem;padding:4px 10px;border-radius:6px;margin-top:5px;display:inline-block;font-weight:900}
+        .lock-tag{background:var(--lock);color:#fff;font-size:.7rem;padding:4px 10px;border-radius:6px;margin-top:5px;display:inline-block;font-weight:900}
+        .promo-tag{background:#ff4757;color:#fff;font-size:.6rem;padding:2px 6px;border-radius:4px;font-weight:900}
+        .promo-info{font-size:.65rem;color:#ff8fa3;margin-top:5px;font-weight:900}
+        .line-wrapper{position:fixed;bottom:30px;right:20px;z-index:2000;display:flex;flex-direction:column;align-items:flex-end;animation:float-breath 2s infinite ease-in-out}
+        .line-bubble{background:#fff;color:#333;padding:10px 15px;border-radius:15px;font-size:.8rem;font-weight:900;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,.15);position:relative;border:1px solid #eee;white-space:nowrap}
+        .line-bubble::after{content:"";position:absolute;bottom:-8px;right:20px;border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid #fff}
+        .line-float{width:60px;height:60px;background:var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 25px rgba(6,199,85,.4);cursor:pointer}
+        .line-float img{width:35px;height:35px}@keyframes float-breath{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        .status-section{width:92%;max-width:460px;margin:35px 0 15px;background:#fff;border-radius:28px;padding:25px;border:1px solid rgba(0,0,0,.04);box-shadow:0 5px 20px rgba(0,0,0,.03)}
+        .status-item{display:flex;align-items:flex-start;background:#f9fafb;padding:18px;border-radius:20px;margin-bottom:15px}.status-icon{font-size:1.6rem;margin-right:18px;margin-top:3px}
+        .status-text b{display:block;font-size:.9rem;color:#1a1c23;margin-bottom:5px}.status-text p{margin:0;font-size:.75rem;color:#7f8c8d;line-height:1.6}
+        .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:4000;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+        .m-box{background:#fff;padding:35px 25px;border-radius:35px;width:88%;max-width:340px;text-align:center;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+        .close-modal{position:absolute;top:15px;right:20px;font-size:1.5rem;color:#ccc;cursor:pointer}
+        input{width:100%;padding:14px;margin:8px 0;border:1px solid #eee;border-radius:12px;text-align:center;font-size:1rem;font-weight:700;color:var(--primary);outline:none}
+        .btn{background:var(--primary);color:#fff;border:none;padding:16px;border-radius:50px;font-weight:900;width:100%;cursor:pointer;font-size:1rem;box-shadow:0 8px 20px rgba(255,143,163,.3);margin-top:10px}
+        .footer{padding:30px 0 50px;font-size:.75rem;color:#95a5a6;text-align:center;line-height:2}
+    </style>
 </head>
 <body oncontextmenu="return false;">
 <div id="welcomeToast" class="welcome-toast"></div>
@@ -76,13 +76,12 @@ input{width:100%;padding:14px;margin:8px 0;border:1px solid #eee;border-radius:1
 <div class="status-section"><div class="status-item"><div class="status-icon">🛡️</div><div class="status-text"><b>加密安全訪問系統</b><p>數據經 SSL 高級加密，守護資產安全。</p></div></div><div class="status-item"><div class="status-icon">🎰</div><div class="status-text"><b>公平隨機洗牌算法</b><p>籤池發佈即隨機排序，公正透明。</p></div></div></div>
 <div class="footer"> © 2026 | 夢工廠 </div>
 
-<div id="loginModal" class="modal"><div class="m-box"><div class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">✕</div><h2 id="loginStepTitle" style="margin:0 0 10px;letter-spacing:2px;font-size:1.2rem">會員登入</h2><div id="step1"><input type="text" id="cIn" placeholder="請輸入帳號 (ID)"><button class="btn" onclick="checkCode()">下一步 NEXT</button><p style="font-size:.7rem;color:var(--primary);margin-top:15px;cursor:pointer" onclick="showReg()">還沒有帳號？立即註冊</p></div><div id="step2" style="display:none"><input type="password" id="pinIn" placeholder="輸入密碼"><button class="btn" onclick="handlePinLogin()">確認登入 ENTER</button><button class="btn" style="background:#eee;color:#666;margin-top:10px" onclick="backStep1()">回上一步</button></div><div id="stepRegister" style="display:none;text-align:left"><p style="color:var(--primary);font-weight:700;text-align:center;margin-bottom:10px">✨ 建立新帳號</p><input type="text" id="regId" placeholder="設定登入帳號"><input type="text" id="regNick" placeholder="設定顯示暱稱"><input type="password" id="regPass1" placeholder="設定密碼"><input type="password" id="regPass2" placeholder="再次確認密碼"><input type="text" id="refIn" placeholder="推薦人帳號 (必填)"><button class="btn" onclick="handleRegister()">確認註冊 REGISTER</button><p style="font-size:.7rem;color:#aaa;text-align:center;margin-top:10px;cursor:pointer" onclick="backStep1()">已有帳號？返回登入</p></div></div></div>
+<div id="loginModal" class="modal"><div class="m-box"><div class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">✕</div><h2 id="loginStepTitle" style="margin:0 0 10px;letter-spacing:2px;font-size:1.2rem">會員登入</h2><div id="step1"><input type="text" id="cIn" placeholder="請輸入帳號 (ID)"><button class="btn" onclick="checkCode()">下一步 NEXT</button><p style="font-size:.7rem;color:var(--primary);margin-top:15px;cursor:pointer" onclick="showReg()">還沒有帳號？立即註冊</p></div><div id="step2" style="display:none"><input type="password" id="pinIn" placeholder="輸入密碼"><button class="btn" onclick="handlePinLogin()">確認登入 ENTER</button><button class="btn" style="background:#eee;color:#666;margin-top:10px" onclick="backStep1()">回上一步</button></div><div id="stepRegister" style="display:none;text-align:left"><p style="color:var(--primary);font-weight:700;text-align:center;margin-bottom:10px">✨ 建立新帳號</p><input type="text" id="regId" placeholder="設定登入帳號"><input type="text" id="regNick" placeholder="設定顯示暱稱"><input type="password" id="regPass1" placeholder="設定密碼"><input type="password" id="regPass2" placeholder="再次確認密碼"><input type="text" id="refIn" placeholder="推薦人帳號 (非必填)"><button class="btn" onclick="handleRegister()">確認註冊 REGISTER</button><p style="font-size:.7rem;color:#aaa;text-align:center;margin-top:10px;cursor:pointer" onclick="backStep1()">已有帳號？返回登入</p></div></div></div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {getDatabase,ref,onValue,get,update,set} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// 🔴 這裡已經更新為您新家的 Firebase 設定
 const _c = { 
     apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
     databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
@@ -95,6 +94,19 @@ const _db=getDatabase(_app);
 const _sk=localStorage.getItem('myScratchCode');
 let _g={},_cc='ALL',_u=null;
 
+// 🟢 [新功能疊加] 自動偵測推薦人 UID
+(function captureRef() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refId = urlParams.get('ref');
+    if (refId) {
+        localStorage.setItem('pending_ref', refId);
+        // 自動填入註冊欄位 (如果用戶已經開著註冊視窗)
+        const refInput = document.getElementById('refIn');
+        if (refInput) refInput.value = refId;
+        console.log("捕捉到推薦人:", refId);
+    }
+})();
+
 const _mt=document.getElementById('menuToggle'),_md=document.getElementById('menuDropdown');
 _mt.onclick=(e)=>{e.stopPropagation();_md.classList.toggle('show')};
 window.onclick=()=>_md.classList.remove('show');
@@ -104,15 +116,18 @@ window.handleUserClick = () => {
     if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
 };
 
-window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
+window.openLogin=()=>{
+    document.getElementById('loginModal').style.display='flex';
+    backStep1();
+    // 打開登入視窗時，檢查有無暫存的推薦人
+    const savedRef = localStorage.getItem('pending_ref');
+    if(savedRef) document.getElementById('refIn').value = savedRef;
+};
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
 function init(){
-    // 讀取公告
     get(ref(_db,'settings/announcement')).then(s=>{if(s.exists()){document.getElementById('annBody').innerText=s.val();document.getElementById('mq').innerText=s.val();}});
-    // 讀取遊戲設定
     onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{};renderCats();renderGrid()});
-    // 登入歡迎語
     if(_sk){
         onValue(ref(_db,`users/${_sk}`),s=>{
             const u=s.val(); if(!u)return;
@@ -124,7 +139,45 @@ function init(){
 window.showReg=()=>{document.getElementById('step1').style.display='none';document.getElementById('stepRegister').style.display='block';document.getElementById('loginStepTitle').innerText="註冊新帳號"};
 window.backStep1=()=>{document.getElementById('step1').style.display='block';document.getElementById('step2').style.display='none';document.getElementById('stepRegister').style.display='none';document.getElementById('loginStepTitle').innerText="會員登入"};
 window.checkCode=async()=>{const c=document.getElementById('cIn').value.trim();if(!c)return;const s=await get(ref(_db,`users/${c}`));if(!s.exists())return alert("帳號不存在");_u={id:c,data:s.val()};document.getElementById('step1').style.display='none';document.getElementById('step2').style.display='block'};
-window.handleRegister=async()=>{const i=document.getElementById('regId').value.trim(),n=document.getElementById('regNick').value.trim(),p1=document.getElementById('regPass1').value,p2=document.getElementById('regPass2').value,r=document.getElementById('refIn').value.trim();if(!i||!n||!p1||!p2||!r)return alert("請填寫所有欄位");if(p1!==p2)return alert("密碼不一致");if(i===r)return alert("推薦人不能是自己");const ex=await get(ref(_db,`users/${i}`));if(ex.exists())return alert("帳號已存在");const rs=await get(ref(_db,`users/${r}`));if(!rs.exists())return alert("推薦人不存在");await set(ref(_db,`users/${i}`),{balance:0,nickname:n,pin:p1,referrer:r,createTime:Date.now()});localStorage.setItem('myScratchCode',i);alert("註冊成功！");location.reload()};
+
+// 🔵 [新功能疊加] 修改後的註冊邏輯
+window.handleRegister=async()=>{
+    const i=document.getElementById('regId').value.trim(),
+          n=document.getElementById('regNick').value.trim(),
+          p1=document.getElementById('regPass1').value,
+          p2=document.getElementById('regPass2').value,
+          r=document.getElementById('refIn').value.trim();
+
+    if(!i||!n||!p1||!p2) return alert("請填寫所有欄位");
+    if(p1!==p2) return alert("密碼不一致");
+    if(i===r) return alert("推薦人不能是自己");
+
+    const ex=await get(ref(_db,`users/${i}`));
+    if(ex.exists()) return alert("帳號已存在");
+
+    // 如果有填推薦人，檢查是否存在
+    if(r !== "") {
+        const rs=await get(ref(_db,`users/${r}`));
+        if(!rs.exists()) return alert("推薦人帳號不存在，請確認或留空");
+    }
+
+    // 🔴 關鍵點：同時寫入 invitedBy 與 hasToppedUp 欄位供 GAS 判斷
+    await set(ref(_db,`users/${i}`),{
+        balance: 0,
+        commission: 0,         // 新增佣金池
+        nickname: n,
+        pin: p1,
+        invitedBy: r,          // 統一使用此欄位名
+        hasToppedUp: false,    // 標記未首儲
+        createTime: Date.now()
+    });
+
+    localStorage.setItem('myScratchCode',i);
+    localStorage.removeItem('pending_ref'); // 註冊完清除暫存
+    alert("註冊成功！");
+    location.reload();
+};
+
 window.handlePinLogin=async()=>{const p=document.getElementById('pinIn').value;if(_u.data.pin!==p)return alert("密碼錯誤");localStorage.setItem('myScratchCode',_u.id);location.reload()};
 
 function renderCats(){const c=new Set(['ALL']);Object.values(_g).forEach(i=>{if(i.category)c.add(i.category)});document.getElementById('catList').innerHTML=Array.from(c).map(i=>`<div class="cat-item ${_cc===i?'active':''}" onclick="filterCat('${i}')">${i==='ALL'?'全部':i}</div>`).join('')}
@@ -139,8 +192,6 @@ function renderGrid(){
         f.innerHTML=`<img src="https://i.ibb.co/VWVvG9fQ/0.png" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
         grid.appendChild(f);
     }
-    
-    // 依 order 排序
     const keys=Object.keys(_g).sort((a,b)=>(_g[a].order||99)-(_g[b].order||99));
     keys.forEach(id=>{
         const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
@@ -150,8 +201,6 @@ function renderGrid(){
         card.onclick=()=>location.href=`game.html?id=${id}`;
         card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${id}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
         grid.appendChild(card);
-        
-        // 🟢 這裡的監聽路徑也同步更新
         onValue(ref(_db,`games/${id}`),s=>{
             const d=s.val()||{},l=d.lock,p=d.pool||[],sB=document.getElementById(`status-${sId}`),pB=document.getElementById(`promo-${sId}`);
             if(!sB)return;
