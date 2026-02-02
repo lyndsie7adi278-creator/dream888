@@ -94,16 +94,13 @@ const _db=getDatabase(_app);
 const _sk=localStorage.getItem('myScratchCode');
 let _g={},_cc='ALL',_u=null;
 
-// 🟢 [新功能疊加] 自動偵測推薦人 UID
+// 🟢 [1/2] 自動偵測並緩存推薦碼 (一進網頁就做)
 (function captureRef() {
     const urlParams = new URLSearchParams(window.location.search);
     const refId = urlParams.get('ref');
     if (refId) {
         localStorage.setItem('pending_ref', refId);
-        // 自動填入註冊欄位 (如果用戶已經開著註冊視窗)
-        const refInput = document.getElementById('refIn');
-        if (refInput) refInput.value = refId;
-        console.log("捕捉到推薦人:", refId);
+        console.log("捕捉推薦碼成功:", refId);
     }
 })();
 
@@ -116,13 +113,7 @@ window.handleUserClick = () => {
     if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
 };
 
-window.openLogin=()=>{
-    document.getElementById('loginModal').style.display='flex';
-    backStep1();
-    // 打開登入視窗時，檢查有無暫存的推薦人
-    const savedRef = localStorage.getItem('pending_ref');
-    if(savedRef) document.getElementById('refIn').value = savedRef;
-};
+window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
 function init(){
@@ -136,11 +127,22 @@ function init(){
     }
 }
 
-window.showReg=()=>{document.getElementById('step1').style.display='none';document.getElementById('stepRegister').style.display='block';document.getElementById('loginStepTitle').innerText="註冊新帳號"};
+// 🟢 [2/2] 切換到註冊視窗時，自動從緩存填入推薦碼
+window.showReg=()=>{
+    document.getElementById('step1').style.display='none';
+    document.getElementById('stepRegister').style.display='block';
+    document.getElementById('loginStepTitle').innerText="註冊新帳號";
+    
+    // 自動填入
+    const savedRef = localStorage.getItem('pending_ref');
+    if(savedRef) {
+        document.getElementById('refIn').value = savedRef;
+    }
+};
+
 window.backStep1=()=>{document.getElementById('step1').style.display='block';document.getElementById('step2').style.display='none';document.getElementById('stepRegister').style.display='none';document.getElementById('loginStepTitle').innerText="會員登入"};
 window.checkCode=async()=>{const c=document.getElementById('cIn').value.trim();if(!c)return;const s=await get(ref(_db,`users/${c}`));if(!s.exists())return alert("帳號不存在");_u={id:c,data:s.val()};document.getElementById('step1').style.display='none';document.getElementById('step2').style.display='block'};
 
-// 🔵 [新功能疊加] 修改後的註冊邏輯
 window.handleRegister=async()=>{
     const i=document.getElementById('regId').value.trim(),
           n=document.getElementById('regNick').value.trim(),
@@ -155,25 +157,23 @@ window.handleRegister=async()=>{
     const ex=await get(ref(_db,`users/${i}`));
     if(ex.exists()) return alert("帳號已存在");
 
-    // 如果有填推薦人，檢查是否存在
     if(r !== "") {
         const rs=await get(ref(_db,`users/${r}`));
         if(!rs.exists()) return alert("推薦人帳號不存在，請確認或留空");
     }
 
-    // 🔴 關鍵點：同時寫入 invitedBy 與 hasToppedUp 欄位供 GAS 判斷
     await set(ref(_db,`users/${i}`),{
         balance: 0,
-        commission: 0,         // 新增佣金池
+        commission: 0,
         nickname: n,
         pin: p1,
-        invitedBy: r,          // 統一使用此欄位名
-        hasToppedUp: false,    // 標記未首儲
+        invitedBy: r,
+        hasToppedUp: false,
         createTime: Date.now()
     });
 
     localStorage.setItem('myScratchCode',i);
-    localStorage.removeItem('pending_ref'); // 註冊完清除暫存
+    localStorage.removeItem('pending_ref'); 
     alert("註冊成功！");
     location.reload();
 };
