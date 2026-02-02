@@ -206,32 +206,23 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
         }).join('');
 
-grid.innerHTML = '';
-p.forEach((t, i) => {
-    const div = document.createElement('div');
-    // 強制將格位序號與內容獎號「徹底分離」且「局部化」
-    const gridPositionLabel = (i + 1).toString().padStart(2, '0'); // 格位 01, 02...
-    
-    if (t.taken && t.revealed) {
-        // 核心：直接讀取當前物件 t 的屬性，不經過任何外部變數轉手
-        const actualPrizeNumber = Number(t.grade); 
-        const isWinningNumber = _m.includes(actualPrizeNumber);
-        
-        div.className = `ticket revealed ${isWinningNumber ? 'winner-glow' : ''}`;
-        // 左上角顯示格位編號，中間顯示該格位「真實」的獎券號碼
-        div.innerHTML = `
-            <span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${gridPositionLabel}</span>
-            <span style="font-weight:900;">${actualPrizeNumber.toString().padStart(2, '0')}</span>
-        `;
-    } else if (t.taken && !t.revealed) {
-        div.className = `ticket taken`;
-        div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
-    } else {
-        div.className = `ticket`;
-        div.innerText = gridPositionLabel;
-        div.onclick = () => { buyTicket(i); };
-    }
-    grid.appendChild(div);
+        grid.innerHTML = '';
+        p.forEach((t, i) => {
+            const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
+            if(t.taken && t.revealed) {
+                const v = Number(t.grade);
+                div.className = `ticket revealed ${_m.includes(v) ? 'winner-glow' : ''}`;
+                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${v.toString().padStart(2, '0')}</span>`;
+            } else if(t.taken && !t.revealed) {
+                div.className = `ticket taken`;
+                div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
+            } else {
+                div.className = `ticket`; div.innerText = s;
+                div.onclick = () => { buyTicket(i); };
+            }
+            grid.appendChild(div);
+        });
+    });
 });
 
 async function buyTicket(idx) {
@@ -343,4 +334,3 @@ async function syncStatus(idx, val) {
 </script>
 </body>
 </html>
-
