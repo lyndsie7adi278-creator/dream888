@@ -207,12 +207,12 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         grid.innerHTML = '';
         p.forEach((t, i) => {
             const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
+            // 🟢 重點修復處：刮開後的中獎號碼顯示
             if(t.taken && t.revealed) {
-                // 🟢 修正：v 必須取自資料庫儲存的 t.grade (獎號)，而不是迴圈序號
-                const v = Number(t.grade); 
-                div.className = `ticket revealed ${_m.includes(v) ? 'winner-glow' : ''}`;
-                // 這裡 s 是格子編號 (例如第05格)，v 是內容獎號 (例如3號)
-                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${v.toString().padStart(2, '0')}</span>`;
+                const realNum = Number(t.grade); 
+                div.className = `ticket revealed ${_m.includes(realNum) ? 'winner-glow' : ''}`;
+                // 左上角顯示格位序號(s)，中間顯示真實獎券號碼(realNum)
+                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${realNum.toString().padStart(2, '0')}</span>`;
             } else if(t.taken && !t.revealed) {
                 div.className = `ticket taken`;
                 div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
