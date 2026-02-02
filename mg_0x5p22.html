@@ -320,38 +320,43 @@ function startSync(){
 window.updateWinStatus = (key, status) => { update(ref(db, `winLogs/${key}`), { status: status }); };
 window.updateWinShipping = (key, no) => { update(ref(db, `winLogs/${key}`), { shippingNo: no }); };
 
+// 🟢 在 admin.html 找到對應位置替換，嚴禁刪減其他初始化內容
 async function runMasterShuffle(id, g) {
-    showLoading("正在洗牌並寫入格位...");
+    showLoading("正在重新洗牌...");
     try {
         const winningNums = g.prizes.map(p => Number(p.num)); 
         let allNumbers = [];
         for (let i = 1; i <= g.total; i++) { allNumbers.push(i); }
 
+        // 分離池子
         let winPool = allNumbers.filter(n => winningNums.includes(n));
         let losePool = allNumbers.filter(n => !winningNums.includes(n));
 
-        // 🟢 關鍵修正：在提取保護區前，先打亂 losePool，避免號碼順序固定
+        // 1. 先把沒中獎的池子打亂 (避免保護區永遠是固定那幾號)
         for (let i = losePool.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [losePool[i], losePool[j]] = [losePool[j], losePool[i]];
         }
 
-        const safeZoneSize = Number(g.safeZone) || 0;
+        const safeSize = Number(g.safeZone) || 0;
         let finalNumbers = [];
 
-        if (safeZoneSize > 0 && losePool.length >= safeZoneSize) {
-            // 取出前 X 張作為保護區 (此時已是隨機非獎號)
-            const frontSafe = losePool.splice(0, safeZoneSize);
+        if (safeSize > 0 && losePool.length >= safeSize) {
+            // 2. 提取前 X 張保護區
+            const frontSafe = losePool.splice(0, safeSize);
             
-            // 剩下的號碼跟中獎號碼混合再大洗牌一次
+            // 3. 核心修正：將剩下的「所有號碼」跟「中獎號碼」混合
             let restMixed = [...losePool, ...winPool];
+            
+            // 4. 對剩下的混合池進行徹底大洗牌 (這樣大獎才不會固定在第 5 張)
             for (let i = restMixed.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [restMixed[i], restMixed[j]] = [restMixed[j], restMixed[i]];
             }
+            
             finalNumbers = [...frontSafe, ...restMixed];
         } else {
-            // 無保護區，全池大亂鬥
+            // 全洗牌模式
             finalNumbers = [...allNumbers];
             for (let i = finalNumbers.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -359,9 +364,9 @@ async function runMasterShuffle(id, g) {
             }
         }
 
-        // 🟢 確保寫入 grade 時是 1:1 的實體數值
-        const pool = finalNumbers.map(nValue => ({
-            grade: Number(nValue), 
+        // 5. 寫入資料庫
+        const pool = finalNumbers.map(val => ({
+            grade: Number(val),
             taken: false,
             revealed: false
         }));
