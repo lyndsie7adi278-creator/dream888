@@ -224,11 +224,15 @@ window.switchTab=id=>{document.querySelectorAll('.page').forEach(p=>p.classList.
 window.toggleUser=uid=>document.getElementById(`content-${uid}`).classList.toggle('show');
 window.closeLog=()=>document.getElementById('logModal').style.display='none';
 
-window.addPrizeInput=(num='',name='')=>{
-    const d=document.createElement('div');
-    d.className='dynamic-row';
-    d.innerHTML=`<input type="number" placeholder="號碼" value="${num}" style="width:80px; flex:none;"><input type="text" placeholder="名稱" value="${name}" style="flex:1;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()" style="margin-top:0; flex:none;">✕</button>`;
-    document.getElementById('prizeContainer').appendChild(d)
+window.addPrizeInput = (num = '', name = '') => {
+    const d = document.createElement('div');
+    d.className = 'dynamic-row';
+    d.innerHTML = `
+        <input type="number" placeholder="號碼" value="${num}">
+        <input type="text" placeholder="獎項名稱" value="${name}">
+        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+    `;
+    document.getElementById('prizeContainer').appendChild(d);
 };
 
 window.addAlbumInput=(url='')=>{
