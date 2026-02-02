@@ -49,19 +49,27 @@
 
     .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
     .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
-    /* 🔴 修改：幸運數字縮小為 6rem */
     #luckyVal { font-size: 6rem; font-weight: 900; color: #ff4757; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
     #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
 
-    /* 🔴 新增：直接跳轉按鈕樣式 */
     .quick-confirm-btn { margin-top: 25px; background: none; color: #888; border: 1px solid #444; padding: 10px 20px; border-radius: 50px; font-size: 0.8rem; cursor: pointer; }
 
     .modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); }
     .m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
     .m-btn { display: block; width: 100%; padding: 18px; background: var(--p); color: #000; border: none; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; margin-top: 25px; }
+
+    /* 🟢 新增：Loading 動畫樣式 */
+    #globalLoading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 20000; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+    .spinner { width: 45px; height: 45px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body oncontextmenu="return false;">
+
+<div id="globalLoading">
+    <div class="spinner"></div>
+    <div style="font-weight:900; letter-spacing:1px; font-size:0.95rem;" id="loadingText">正在通訊中...</div>
+</div>
 
 <div id="promoBanner" class="promo-banner">🔥 開盤大優惠！剩餘 <b id="promoLeft">0</b> 抽</div>
 <div class="header"><a href="index.html" class="back-btn">← 返回</a><div class="balance-tag">P <span id="uBal">0</span></div></div>
@@ -119,6 +127,16 @@ let _data = null, _isClosed = false, _q = null, _tInterval = null;
 let _album = [];
 
 if(!_gid) location.href = 'index.html';
+
+// 🟢 新增：Loading 控制函數
+window.showLoading = (text = "正在通訊中...") => {
+    document.getElementById('loadingText').innerText = text;
+    document.getElementById('globalLoading').style.display = 'flex';
+};
+window.hideLoading = () => {
+    document.getElementById('globalLoading').style.display = 'none';
+};
+
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
 window.changeSlide = (idx) => {
@@ -222,13 +240,19 @@ async function buyTicket(idx) {
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
+    // 🟢 1. 顯示 Loading 並關閉畫面點擊
+    showLoading("正在驗證餘額並扣點...");
     document.body.style.pointerEvents = "none"; 
+
     const script = document.createElement('script');
     script.src = `${GAS_URL}?gid=${_gid}&uid=${_uid}&idx=${idx}&pr=${pr}&callback=gasCallback`;
     document.body.appendChild(script);
     
     window.gasCallback = (res) => {
+        // 🟢 2. 收到回傳後隱藏 Loading 並解鎖點擊
+        hideLoading();
         document.body.style.pointerEvents = "auto";
+        
         if(res.success) {
             initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
         } else {
@@ -236,6 +260,9 @@ async function buyTicket(idx) {
         }
         script.remove();
     };
+
+    // 🔴 錯誤預防：若 15 秒後沒回應則自動解除鎖定
+    setTimeout(() => { if(document.body.style.pointerEvents === "none") { hideLoading(); document.body.style.pointerEvents = "auto"; } }, 15000);
 }
 
 function initCanvas(no, val, poolIdx) {
@@ -250,7 +277,7 @@ function initCanvas(no, val, poolIdx) {
     const ctx = c.getContext('2d'); ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0, 0, 300, 300);
     
     let draw = false;
-    let isFinished = false; // 避免重複觸發同步
+    let isFinished = false;
 
     const finishScratch = () => {
         if(isFinished) return;
@@ -259,7 +286,6 @@ function initCanvas(no, val, poolIdx) {
         syncStatus(poolIdx, val);
     };
 
-    // 🔴 點擊跳過按鈕
     skipBtn.onclick = () => { finishScratch(); };
 
     const _draw = (e) => {
@@ -270,7 +296,6 @@ function initCanvas(no, val, poolIdx) {
         
         ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
         
-        // 🔴 修改：判定比例改為 0.85 (85%)
         const pix = ctx.getImageData(0, 0, 300, 300).data; 
         let cl = 0; 
         for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) cl++;
@@ -285,6 +310,7 @@ function initCanvas(no, val, poolIdx) {
 }
 
 async function syncStatus(idx, val) {
+    // 🟢 3. 刮完同步狀態時也可以顯示微型 Loading 或直接處理
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
     
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
@@ -308,4 +334,3 @@ async function syncStatus(idx, val) {
 </script>
 </body>
 </html>
-
