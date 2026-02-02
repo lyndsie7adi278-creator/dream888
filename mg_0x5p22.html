@@ -321,59 +321,35 @@ window.updateWinStatus = (key, status) => { update(ref(db, `winLogs/${key}`), { 
 window.updateWinShipping = (key, no) => { update(ref(db, `winLogs/${key}`), { shippingNo: no }); };
 
 async function runMasterShuffle(id, g) {
-    showLoading("正在洗牌並寫入格位...");
-    try {
-        // 1. 取得所有中獎號碼 (轉數字比對)
-        const winningNumbers = g.prizes.map(p => Number(p.num)); 
-        
-        // 2. 生成 1 到 總籤數 的所有號碼
-        let allNumbers = [];
-        for (let i = 1; i <= g.total; i++) { allNumbers.push(i); }
-
-        // 3. 將號碼分類
-        let winPool = allNumbers.filter(n => winningNumbers.includes(n));
-        let losePool = allNumbers.filter(n => !winningNumbers.includes(n));
-
-        // 4. 【核心修正】先徹底打亂「沒中獎池」，否則保護區永遠抓到固定序號
-        for (let i = losePool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [losePool[i], losePool[j]] = [losePool[j], losePool[i]];
-        }
-
-        const safeZoneSize = Number(g.safeZone) || 0;
-        let finalNumbers = [];
-
-        if (safeZoneSize > 0 && losePool.length >= safeZoneSize) {
-            const frontSafe = losePool.splice(0, safeZoneSize);
-            
-            let restMixed = [...losePool, ...winPool];
-            for (let i = restMixed.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [restMixed[i], restMixed[j]] = [restMixed[j], restMixed[i]];
-            }
-            finalNumbers = [...frontSafe, ...restMixed];
-        } else {
-            finalNumbers = [...allNumbers];
-            for (let i = finalNumbers.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [finalNumbers[i], finalNumbers[j]] = [finalNumbers[j], finalNumbers[i]];
-            }
-        }
-        const pool = finalNumbers.map(n => ({
-            grade: Number(n),
-            taken: false,
-            revealed: false
-        }));
-
-        await set(ref(db, `games/${id}/pool`), pool);
-        return true;
-    } catch (e) {
-        alert("洗牌失敗：" + e.message);
-    } finally {
-        hideLoading();
-    }
+    showLoading("正在洗牌並寫入格位...");
+    try {
+        const pN = g.prizes.map(p => Number(p.num)); 
+        let allNumbers = [];
+        for (let i = 1; i <= g.total; i++) allNumbers.push(i);
+        for (let i = allNumbers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allNumbers[i], allNumbers[j]] = [allNumbers[j], allNumbers[i]];
+        }
+        let losePool = allNumbers.filter(n => !pN.includes(n));
+        let winPool = allNumbers.filter(n => pN.includes(n));
+        const safeZoneSize = Number(g.safeZone) || 0;
+        let finalNumbers = [];
+        if (safeZoneSize > 0 && losePool.length >= safeZoneSize) {
+            const frontSafe = losePool.splice(0, safeZoneSize);
+        let restMixed = [...losePool, ...winPool];
+        for (let i = restMixed.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [restMixed[i], restMixed[j]] = [restMixed[j], restMixed[i]];
+        }
+        finalNumbers = [...frontSafe, ...restMixed];
+    } else { finalNumbers = allNumbers; }
+    const pool = finalNumbers.map(n => ({ grade: Number(n), taken: false, revealed: false }));
+    await set(ref(db, `games/${id}/pool`), pool);
+    return true;
+    } finally { hideLoading(); }
 }
 
+// 🟢 核心分潤修改：核准上分並同步分潤
 window.approveDeposit = async (key, uid, amount) => {
     amount = Number(amount);
     if(!confirm(`確認收到款項並幫 [${uid}] 增加 ${amount} P 嗎？\n系統將自動判斷「首儲/續儲」並發放分潤。`)) return;
