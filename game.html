@@ -6,76 +6,76 @@
 <title>夢工廠 | 刮刮樂</title>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
-    :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
-    * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-drag: none !important; }
-    body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow-x: hidden; }
-    
-    .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
-    .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
-    .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
+    :root { --p: #ffb800; --bg: #05070a; --card: #11141b; --win: #ffd700; --danger: #ff4757; --lock: #3498db; }
+    * { -webkit-tap-highlight-color: transparent; user-select: none !important; -webkit-user-drag: none !important; }
+    body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow-x: hidden; }
+    
+    .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
+    .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
+    .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
 
-    .promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
-    .lock-banner { display: none; background: var(--lock); color: white; padding: 12px; font-size: 0.95rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
-    .soldout-banner { display: none; background: #ff4757; color: white; padding: 12px; font-size: 1.1rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
+    .promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
+    .lock-banner { display: none; background: var(--lock); color: white; padding: 12px; font-size: 0.95rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
+    .soldout-banner { display: none; background: #ff4757; color: white; padding: 12px; font-size: 1.1rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
 
-    .gallery-container { background: #000; width: 100%; max-width: 600px; margin: 0 auto; flex-shrink: 0; }
-    .main-img-wrap { width: 100%; height: 40vh; max-height: 400px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
-    #gMainImg { width: 100%; height: 100%; object-fit: contain; pointer-events: none; transition: 0.3s; }
-    
-    .thumb-bar { display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px; background: #000; scroll-behavior: smooth; }
-    .thumb-bar::-webkit-scrollbar { display: none; }
-    .thumb-item { width: 60px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 2px solid transparent; opacity: 0.5; transition: 0.3s; cursor: pointer; }
-    .thumb-item.active { border-color: var(--p); opacity: 1; transform: scale(1.05); }
-    .thumb-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .gallery-container { background: #000; width: 100%; max-width: 600px; margin: 0 auto; flex-shrink: 0; }
+    .main-img-wrap { width: 100%; height: 40vh; max-height: 400px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
+    #gMainImg { width: 100%; height: 100%; object-fit: contain; pointer-events: none; transition: 0.3s; }
+    
+    .thumb-bar { display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px; background: #000; scroll-behavior: smooth; }
+    .thumb-bar::-webkit-scrollbar { display: none; }
+    .thumb-item { width: 60px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 2px solid transparent; opacity: 0.5; transition: 0.3s; cursor: pointer; }
+    .thumb-item.active { border-color: var(--p); opacity: 1; transform: scale(1.05); }
+    .thumb-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
-    .info-box { padding: 15px; background: var(--card); border-bottom: 2px solid #222; display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-    #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 10px 12px 120px; box-sizing: border-box; }
-    
-    .progress-container { margin-bottom: 20px; }
-    .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaa; margin-bottom: 6px; font-weight: bold; }
-    .progress-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s; }
+    .info-box { padding: 15px; background: var(--card); border-bottom: 2px solid #222; display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+    #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 10px 12px 120px; box-sizing: border-box; }
+    
+    .progress-container { margin-bottom: 20px; }
+    .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaa; margin-bottom: 6px; font-weight: bold; }
+    .progress-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s; }
 
-    .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
-    .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
-    .prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
-    .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); }
+    .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
+    .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
+    .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); }
 
-    .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; }
-    .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; cursor: pointer; transition: 0.2s; }
-    .ticket.taken { background: #000; cursor: default; }
-    .ticket.revealed { color: #ff4757 !important; font-weight: 900 !important; font-size: 1.4rem !important; }
-    .ticket.winner-glow { border-color: var(--win); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
+    .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; }
+    .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; cursor: pointer; transition: 0.2s; }
+    .ticket.taken { background: #000; cursor: default; }
+    .ticket.revealed { color: #ff4757 !important; font-weight: 900 !important; font-size: 1.4rem !important; }
+    .ticket.winner-glow { border-color: var(--win); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
 
-    .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
-    .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
-    #luckyVal { font-size: 6rem; font-weight: 900; color: #ff4757; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
-    #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
+    .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
+    .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
+    #luckyVal { font-size: 6rem; font-weight: 900; color: #ff4757; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
+    #scratch-canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
 
-    .quick-confirm-btn { margin-top: 25px; background: none; color: #888; border: 1px solid #444; padding: 10px 20px; border-radius: 50px; font-size: 0.8rem; cursor: pointer; }
+    .quick-confirm-btn { margin-top: 25px; background: none; color: #888; border: 1px solid #444; padding: 10px 20px; border-radius: 50px; font-size: 0.8rem; cursor: pointer; }
 
-    .modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); }
-    .m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
-    .m-btn { display: block; width: 100%; padding: 18px; background: var(--p); color: #000; border: none; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; margin-top: 25px; }
+    .modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); }
+    .m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
+    .m-btn { display: block; width: 100%; padding: 18px; background: var(--p); color: #000; border: none; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; margin-top: 25px; }
 
-    #globalLoading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 20000; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
-    .spinner { width: 45px; height: 45px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    #globalLoading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 20000; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+    .spinner { width: 45px; height: 45px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div id="globalLoading">
-    <div class="spinner"></div>
-    <div style="font-weight:900; letter-spacing:1px; font-size:0.95rem;" id="loadingText">正在通訊中...</div>
+    <div class="spinner"></div>
+    <div style="font-weight:900; letter-spacing:1px; font-size:0.95rem;" id="loadingText">正在通訊中...</div>
 </div>
 
 <div id="promoBanner" class="promo-banner">🔥 開盤大優惠！剩餘 <b id="promoLeft">0</b> 抽</div>
 <div class="header"><a href="index.html" class="back-btn">← 返回</a><div class="balance-tag">P <span id="uBal">0</span></div></div>
 
 <div class="gallery-container">
-    <div class="main-img-wrap"><img id="gMainImg" src=""></div>
-    <div id="thumbBar" class="thumb-bar"></div>
+    <div class="main-img-wrap"><img id="gMainImg" src=""></div>
+    <div id="thumbBar" class="thumb-bar"></div>
 </div>
 
 <div class="info-box"><h2 id="gTitle">載入中...</h2><div id="priceDisplay" style="color:var(--p); font-weight:900; font-size:1.3rem;">-- P</div></div>
@@ -84,25 +84,25 @@
 <div id="lockBanner" class="lock-banner">🔒 玩家 <span id="lockUser">---</span> 正在包台中 (<span id="lockTimer">0</span>s)</div>
 
 <div id="scroll-area">
-    <div class="progress-container">
-        <div class="progress-info"><span>刮取進度：<span id="progText">0 / 0</span></span><span id="progPercent">0%</span></div>
-        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progFill"></div></div>
-    </div>
-    
-    <div class="prize-monitor">
-        <div style="color:var(--p); font-size:0.9rem; margin-bottom:12px; font-weight:900;">🏆 本期中獎號碼 WINNING NUMBERS</div>
-        <div class="prize-tag-list" id="prizeTags"></div>
-    </div>
+    <div class="progress-container">
+        <div class="progress-info"><span>刮取進度：<span id="progText">0 / 0</span></span><span id="progPercent">0%</span></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progFill"></div></div>
+    </div>
+    
+    <div class="prize-monitor">
+        <div style="color:var(--p); font-size:0.9rem; margin-bottom:12px; font-weight:900;">🏆 本期中獎號碼 WINNING NUMBERS</div>
+        <div class="prize-tag-list" id="prizeTags"></div>
+    </div>
 
-    <div class="pool-grid" id="poolGrid"></div>
+    <div class="pool-grid" id="poolGrid"></div>
 </div>
 
 <div id="scratchOverlay" class="scratch-overlay">
-    <div style="text-align:center;">
-        <div style="color:var(--p); font-weight:900; font-size:1.5rem; margin-bottom:15px;">NO. <span id="selNum">--</span></div>
-        <div class="scratch-box" id="scratchBox"><div id="luckyVal">?</div></div>
-        <button class="quick-confirm-btn" id="skipScratchBtn">不想刮了？點此確認結果</button>
-    </div>
+    <div style="text-align:center;">
+        <div style="color:var(--p); font-weight:900; font-size:1.5rem; margin-bottom:15px;">NO. <span id="selNum">--</span></div>
+        <div class="scratch-box" id="scratchBox"><div id="luckyVal">?</div></div>
+        <button class="quick-confirm-btn" id="skipScratchBtn">不想刮了？點此確認結果</button>
+    </div>
 </div>
 
 <div id="resModal" class="modal"><div class="m-card"><img id="res_img" style="width:100%; border-radius:18px; border: 1px solid #333;"><div id="res_msg" style="font-size:1.5rem; margin-top:20px; font-weight:900; color:var(--p);"></div><button class="m-btn" onclick="location.reload()">確認並繼續</button></div></div>
@@ -111,16 +111,16 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const _cc = { 
-    apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
-    databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
-    projectId: "dream8-7b161", 
-    appId: "1:606218522479:web:2737643db3de735af7e29a" 
+const _cc = { 
+    apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+    databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+    projectId: "dream8-7b161", 
+    appId: "1:606218522479:web:2737643db3de735af7e29a" 
 };
 const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec"; 
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
 let _album = [];
@@ -128,202 +128,202 @@ let _album = [];
 if(!_gid) location.href = 'index.html';
 
 window.showLoading = (text = "正在通訊中...") => {
-    document.getElementById('loadingText').innerText = text;
-    document.getElementById('globalLoading').style.display = 'flex';
+    document.getElementById('loadingText').innerText = text;
+    document.getElementById('globalLoading').style.display = 'flex';
 };
 window.hideLoading = () => {
-    document.getElementById('globalLoading').style.display = 'none';
+    document.getElementById('globalLoading').style.display = 'none';
 };
 
 onValue(ref(_db, `users/${_uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
 window.changeSlide = (idx) => {
-    const mainImg = document.getElementById('gMainImg');
-    mainImg.style.opacity = 0;
-    setTimeout(() => {
-        mainImg.src = _album[idx];
-        mainImg.style.opacity = 1;
-        document.querySelectorAll('.thumb-item').forEach((it, i) => it.classList.toggle('active', i === idx));
-    }, 150);
+    const mainImg = document.getElementById('gMainImg');
+    mainImg.style.opacity = 0;
+    setTimeout(() => {
+        mainImg.src = _album[idx];
+        mainImg.style.opacity = 1;
+        document.querySelectorAll('.thumb-item').forEach((it, i) => it.classList.toggle('active', i === idx));
+    }, 150);
 }
 
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
-    const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
-    if(_tInterval) clearInterval(_tInterval);
-    if(l && l.expire > n) {
-        _q = l; b.style.display = 'block'; 
-        document.getElementById('lockUser').innerText = l.user === _uid ? "您" : l.user;
-        const _run = () => {
-            const r = Math.round((l.expire - Date.now()) / 1000);
-            if(r <= 0) { clearInterval(_tInterval); b.style.display = 'none'; _q = null; }
-            else document.getElementById('lockTimer').innerText = r;
-        }; _run(); _tInterval = setInterval(_run, 1000);
-    } else { b.style.display = 'none'; _q = null; }
+    const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
+    if(_tInterval) clearInterval(_tInterval);
+    if(l && l.expire > n) {
+        _q = l; b.style.display = 'block'; 
+        document.getElementById('lockUser').innerText = l.user === _uid ? "您" : l.user;
+        const _run = () => {
+            const r = Math.round((l.expire - Date.now()) / 1000);
+            if(r <= 0) { clearInterval(_tInterval); b.style.display = 'none'; _q = null; }
+            else document.getElementById('lockTimer').innerText = r;
+        }; _run(); _tInterval = setInterval(_run, 1000);
+    } else { b.style.display = 'none'; _q = null; }
 });
 
 onValue(ref(_db, `gameSettings/${_gid}`), s => {
-    _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
-    document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
-    document.getElementById('gTitle').innerText = _gid;
-    
-    const mainImg = _data.img || "";
-    const albumList = _data.album || [];
-    _album = [mainImg, ...albumList.filter(url => url !== mainImg)].filter(url => url !== "");
-    
-    document.getElementById('gMainImg').src = _album[0];
-    
-    const bar = document.getElementById('thumbBar');
-    if(_album.length > 1) {
-        bar.style.display = 'flex';
-        bar.innerHTML = _album.map((url, i) => `
-            <div class="thumb-item ${i===0?'active':''}" onclick="changeSlide(${i})">
-                <img src="${url}">
-            </div>
-        `).join('');
-    } else {
-        bar.style.display = 'none';
-    }
+    _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
+    document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
+    document.getElementById('gTitle').innerText = _gid;
+    
+    const mainImg = _data.img || "";
+    const albumList = _data.album || [];
+    _album = [mainImg, ...albumList.filter(url => url !== mainImg)].filter(url => url !== "");
+    
+    document.getElementById('gMainImg').src = _album[0];
+    
+    const bar = document.getElementById('thumbBar');
+    if(_album.length > 1) {
+        bar.style.display = 'flex';
+        bar.innerHTML = _album.map((url, i) => `
+            <div class="thumb-item ${i===0?'active':''}" onclick="changeSlide(${i})">
+                <img src="${url}">
+            </div>
+        `).join('');
+    } else {
+        bar.style.display = 'none';
+    }
 
-    onValue(ref(_db, `games/${_gid}/pool`), snap => {
-        const p = snap.val() || []; const grid = document.getElementById('poolGrid');
-        const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
-        const _pct = Math.round((_s / _data.total) * 100);
-        document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
-        document.getElementById('progFill').style.width = `${_pct}%`;
-        document.getElementById('progPercent').innerText = `${_pct}%`;
+    onValue(ref(_db, `games/${_gid}/pool`), snap => {
+        const p = snap.val() || []; const grid = document.getElementById('poolGrid');
+        const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
+        const _pct = Math.round((_s / _data.total) * 100);
+        document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
+        document.getElementById('progFill').style.width = `${_pct}%`;
+        document.getElementById('progPercent').innerText = `${_pct}%`;
 
-        const pLeft = (_data.promoCount || 0) - _s;
-        const banner = document.getElementById('promoBanner');
-        if(pLeft > 0 && !_isClosed) {
-            banner.style.display = 'block'; document.getElementById('promoLeft').innerText = pLeft; 
-            document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P`;
-        } else { banner.style.display = 'none'; document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`; }
-        
-        document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
-            const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
-            return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
-        }).join('');
+        const pLeft = (_data.promoCount || 0) - _s;
+        const banner = document.getElementById('promoBanner');
+        if(pLeft > 0 && !_isClosed) {
+            banner.style.display = 'block'; document.getElementById('promoLeft').innerText = pLeft; 
+            document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P`;
+        } else { banner.style.display = 'none'; document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`; }
+        
+        document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
+            const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
+            return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
+        }).join('');
 
-        grid.innerHTML = '';
-        p.forEach((t, i) => {
-            const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
-            if(t.taken && t.revealed) {
-                // 🟢 這裡採取強制原地取值，不使用外部變數 v，確保每一格資料絕對獨立
-                div.className = `ticket revealed ${_m.includes(Number(t.grade)) ? 'winner-glow' : ''}`;
-                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${Number(t.grade).toString().padStart(2, '0')}</span>`;
-            } else if(t.taken && !t.revealed) {
-                div.className = `ticket taken`;
-                div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
-            } else {
-                div.className = `ticket`; div.innerText = s;
-                div.onclick = () => { buyTicket(i); };
-            }
-            grid.appendChild(div);
-        });
-    });
+        grid.innerHTML = '';
+        p.forEach((t, i) => {
+            const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
+            if(t.taken && t.revealed) {
+                // 🟢 徹底修復：不定義中間變數 v，直接強制從當前對象 t 讀取 grade
+                div.className = `ticket revealed ${_m.includes(Number(t.grade)) ? 'winner-glow' : ''}`;
+                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${Number(t.grade).toString().padStart(2, '0')}</span>`;
+            } else if(t.taken && !t.revealed) {
+                div.className = `ticket taken`;
+                div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
+            } else {
+                div.className = `ticket`; div.innerText = s;
+                div.onclick = () => { buyTicket(i); };
+            }
+            grid.appendChild(div);
+        });
+    });
 });
 
 async function buyTicket(idx) {
-    if(_isClosed) return; const n = Date.now();
-    if(_q && _q.user !== _uid && _q.expire > n) return alert(`玩家 ${_q.user} 正在包台中`);
-    
-    const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
-    const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
-    const poolArr = poolSnap.val() || [];
-    if(poolArr[idx].taken) return alert("已被購買");
+    if(_isClosed) return; const n = Date.now();
+    if(_q && _q.user !== _uid && _q.expire > n) return alert(`玩家 ${_q.user} 正在包台中`);
+    
+    const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
+    const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
+    const poolArr = poolSnap.val() || [];
+    if(poolArr[idx].taken) return alert("已被購買");
 
-    const _sold = poolArr.filter(x => x.taken).length;
-    let pr = (_data.promoCount > 0 && _sold < _data.promoCount) ? _data.promoPrice : _data.price;
-    
-    if(cur < pr) return alert("點數不足");
-    if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
+    const _sold = poolArr.filter(x => x.taken).length;
+    let pr = (_data.promoCount > 0 && _sold < _data.promoCount) ? _data.promoPrice : _data.price;
+    
+    if(cur < pr) return alert("點數不足");
+    if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
-    showLoading("正在驗證餘額並扣點...");
-    document.body.style.pointerEvents = "none"; 
+    showLoading("正在驗證餘額並扣點...");
+    document.body.style.pointerEvents = "none"; 
 
-    const script = document.createElement('script');
-    script.src = `${GAS_URL}?gid=${_gid}&uid=${_uid}&idx=${idx}&pr=${pr}&callback=gasCallback`;
-    document.body.appendChild(script);
-    
-    window.gasCallback = (res) => {
-        hideLoading();
-        document.body.style.pointerEvents = "auto";
-        
-        if(res.success) {
-            initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
-        } else {
-            alert(res.msg || "系統繁忙，請稍後再試");
-        }
-        script.remove();
-    };
+    const script = document.createElement('script');
+    script.src = `${GAS_URL}?gid=${_gid}&uid=${_uid}&idx=${idx}&pr=${pr}&callback=gasCallback`;
+    document.body.appendChild(script);
+    
+    window.gasCallback = (res) => {
+        hideLoading();
+        document.body.style.pointerEvents = "auto";
+        
+        if(res.success) {
+            initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
+        } else {
+            alert(res.msg || "系統繁忙，請稍後再試");
+        }
+        script.remove();
+    };
 
-    setTimeout(() => { if(document.body.style.pointerEvents === "none") { hideLoading(); document.body.style.pointerEvents = "auto"; } }, 15000);
+    setTimeout(() => { if(document.body.style.pointerEvents === "none") { hideLoading(); document.body.style.pointerEvents = "auto"; } }, 15000);
 }
 
 function initCanvas(no, val, poolIdx) {
-    const o = document.getElementById('scratchOverlay'), b = document.getElementById('scratchBox');
-    const skipBtn = document.getElementById('skipScratchBtn');
-    document.getElementById('selNum').innerText = no; 
-    document.getElementById('luckyVal').innerText = val; 
-    o.style.display = 'flex';
-    
-    const old = document.getElementById('scratch-canvas'); if(old) old.remove();
-    const c = document.createElement('canvas'); c.id = 'scratch-canvas'; c.width = 300; c.height = 300; b.appendChild(c);
-    const ctx = c.getContext('2d'); ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0, 0, 300, 300);
-    
-    let draw = false;
-    let isFinished = false;
+    const o = document.getElementById('scratchOverlay'), b = document.getElementById('scratchBox');
+    const skipBtn = document.getElementById('skipScratchBtn');
+    document.getElementById('selNum').innerText = no; 
+    document.getElementById('luckyVal').innerText = val; 
+    o.style.display = 'flex';
+    
+    const old = document.getElementById('scratch-canvas'); if(old) old.remove();
+    const c = document.createElement('canvas'); c.id = 'scratch-canvas'; c.width = 300; c.height = 300; b.appendChild(c);
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0, 0, 300, 300);
+    
+    let draw = false;
+    let isFinished = false;
 
-    const finishScratch = () => {
-        if(isFinished) return;
-        isFinished = true;
-        draw = false;
-        syncStatus(poolIdx, val);
-    };
+    const finishScratch = () => {
+        if(isFinished) return;
+        isFinished = true;
+        draw = false;
+        syncStatus(poolIdx, val);
+    };
 
-    skipBtn.onclick = () => { finishScratch(); };
+    skipBtn.onclick = () => { finishScratch(); };
 
-    const _draw = (e) => {
-        if(!draw || isFinished) return; 
-        const r = c.getBoundingClientRect();
-        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - r.left, 
-              y = (e.clientY || (e.touches && e.touches[0].clientY)) - r.top;
-        
-        ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
-        
-        const pix = ctx.getImageData(0, 0, 300, 300).data; 
-        let cl = 0; 
-        for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) cl++;
-        if(cl > (300*300*0.85)) { finishScratch(); }
-    };
+    const _draw = (e) => {
+        if(!draw || isFinished) return; 
+        const r = c.getBoundingClientRect();
+        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - r.left, 
+              y = (e.clientY || (e.touches && e.touches[0].clientY)) - r.top;
+        
+        ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
+        
+        const pix = ctx.getImageData(0, 0, 300, 300).data; 
+        let cl = 0; 
+        for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) cl++;
+        if(cl > (300*300*0.85)) { finishScratch(); }
+    };
 
-    c.addEventListener('touchstart', (e) => { draw = true; e.preventDefault(); }, {passive: false});
-    c.addEventListener('touchmove', _draw, {passive: false}); 
-    c.addEventListener('mousedown', () => draw = true);
-    window.addEventListener('mouseup', () => draw = false); 
-    c.addEventListener('mousemove', _draw);
+    c.addEventListener('touchstart', (e) => { draw = true; e.preventDefault(); }, {passive: false});
+    c.addEventListener('touchmove', _draw, {passive: false}); 
+    c.addEventListener('mousedown', () => draw = true);
+    window.addEventListener('mouseup', () => draw = false); 
+    c.addEventListener('mousemove', _draw);
 }
 
 async function syncStatus(idx, val) {
-    await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
-    
-    const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
-    if(hit) {
-        const pSnap = await get(ref(_db, `games/${_gid}/pool`));
-        const pool = pSnap.val() || [];
-        const m = (_data.prizes || []).map(p => Number(p.num));
-        const won = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length;
-        if(won >= m.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
-        
-        document.getElementById('res_msg').innerHTML = `🎊 恭喜獲獎 🎊<br>${hit.name}`;
-        document.getElementById('res_img').src = hit.img || _data.img; 
-        confetti({ particleCount: 150, spread: 70 });
-        push(ref(_db, `winLogs`), { user: _uid, game: _gid, prize: hit.name, time: serverTimestamp() });
-    } else { 
-        document.getElementById('res_msg').innerText = "銘謝惠顧"; 
-        document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png"; 
-    }
-    setTimeout(() => { document.getElementById('resModal').style.display = 'flex'; }, 400);
+    await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
+    
+    const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
+    if(hit) {
+        const pSnap = await get(ref(_db, `games/${_gid}/pool`));
+        const pool = pSnap.val() || [];
+        const m = (_data.prizes || []).map(p => Number(p.num));
+        const won = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length;
+        if(won >= m.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
+        
+        document.getElementById('res_msg').innerHTML = `🎊 恭喜獲獎 🎊<br>${hit.name}`;
+        document.getElementById('res_img').src = hit.img || _data.img; 
+        confetti({ particleCount: 150, spread: 70 });
+        push(ref(_db, `winLogs`), { user: _uid, game: _gid, prize: hit.name, time: serverTimestamp() });
+    } else { 
+        document.getElementById('res_msg').innerText = "銘謝惠顧"; 
+        document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png"; 
+    }
+    setTimeout(() => { document.getElementById('resModal').style.display = 'flex'; }, 400);
 }
 </script>
 </body>
