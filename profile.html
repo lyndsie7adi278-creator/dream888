@@ -34,7 +34,6 @@
         .balance-amount { font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 15px; text-align: left; }
         .balance-amount span { color: var(--gold); }
         
-        /* 盟友佣金專屬樣式 */
         .commission-tag { font-size: 0.7rem; background: #eee; color: #666; padding: 2px 8px; border-radius: 5px; }
         .commission-tag b { color: var(--alliance); }
 
@@ -50,7 +49,6 @@
         .page-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 地推中心樣式 */
         .alliance-box { background: #fff; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .ref-url-box { background: #f0f2f5; padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 0.75rem; color: #666; word-break: break-all; border: 1px dashed var(--alliance); }
         .alliance-btn { background: var(--alliance); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; }
@@ -69,7 +67,7 @@
         .val-minus { color: var(--primary); }
         .val-plus { color: var(--success); }
 
-        .empty-state { text-align: center; padding: 80px 20px; color: #d0d5dd; font-weight: bold; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #d0d5dd; font-weight: bold; font-size: 0.8rem;}
         #copyToast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; z-index: 5000; display: none; }
         
         .shipping-info { font-size: 0.75rem; color: #7f8c8d; margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 12px; width: 100%; border: 1px solid #eee; }
@@ -77,6 +75,11 @@
         .shipping-no { color: var(--primary); font-weight: 900; font-size: 0.9rem; }
         .copy-btn { background: #fff; border: 1px solid #ddd; color: #666; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; cursor: pointer; font-weight: bold; }
         .track-link { display: block; text-align: center; background: #000; color: #fff; padding: 8px; border-radius: 8px; text-decoration: none; font-size: 0.7rem; font-weight: bold; margin-top: 5px; }
+
+        /* 好友名單專用標籤 */
+        .friend-status { font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 5px;}
+        .is-topped { color: var(--success); background: #eefdf4; }
+        .not-topped { color: #999; background: #f0f0f0; }
     </style>
 </head>
 <body>
@@ -117,11 +120,8 @@
             <div class="alliance-box">
                 <div style="font-weight: 900; font-size: 1.2rem; color: var(--alliance);">地推盟友計畫</div>
                 <div style="font-size: 0.8rem; color: #999; margin-top: 5px;">邀請好友儲值，最高享 10% 分潤</div>
-                
                 <div class="ref-url-box" id="refLink">載入中...</div>
-                
                 <button class="alliance-btn" onclick="copyRefLink()">📋 複製我的推廣連結</button>
-                
                 <div class="notice-card">
                     <b>💡 盟友規則：</b><br>
                     1. 推薦好友「首儲」：您得 10% 獎金，好友也得 10% 贈點。<br>
@@ -129,6 +129,9 @@
                     3. 點數可用於刮刮樂，不可直接提現。
                 </div>
             </div>
+            
+            <div id="referralFriendsList"></div>
+            
             <div id="referralLogList" style="margin-top: 20px;"></div>
         </div>
     </div>
@@ -151,13 +154,10 @@
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
         
-        // 設定推廣網址 (自動帶入 UID)
-        const myRefUrl = `${window.location.origin}/index.html?ref=${_uid}`;
+        const myRefUrl = `${window.location.origin}${window.location.pathname.replace('member.html', 'index.html')}?ref=${_uid}`;
         document.getElementById('refLink').innerText = myRefUrl;
 
-        window.copyRefLink = () => {
-            copyText(myRefUrl, '推廣連結');
-        };
+        window.copyRefLink = () => copyText(myRefUrl, '推廣連結');
 
         window.copyText = (text, type) => {
             if(!text) return;
@@ -173,7 +173,7 @@
             document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
         };
 
-        // 監聽用戶基礎資料 (包含點數與佣金)
+        // 核心資料監聽
         onValue(ref(_db, `users/${_uid}`), s => {
             const u = s.val(); if(!u) return;
             document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
@@ -196,7 +196,33 @@
             } else { bList.innerHTML = '<div class="empty-state">尚無消費紀錄</div>'; }
         });
 
-        // 監聽分潤日誌 (盟友中心專用)
+        // 監聽邀請好友名單 (不論是否儲值)
+        onValue(ref(_db, `users`), s => {
+            const list = document.getElementById('referralFriendsList');
+            const allUsers = s.val() || {};
+            const myFriends = Object.values(allUsers)
+                .filter(u => u.invitedBy === _uid)
+                .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            if(myFriends.length) {
+                list.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem; margin-top:15px;">已綁定好友 (${myFriends.length}人)</div>` + 
+                myFriends.map(f => `
+                    <div class="list-item" style="padding: 12px 18px; margin-bottom: 8px;">
+                        <div class="item-info">
+                            <b>${f.nickname || '匿名盟友'}</b>
+                            <small>ID: ${f.uid.substring(0,8)}... <span class="friend-status ${f.hasToppedUp ? 'is-topped' : 'not-topped'}">${f.hasToppedUp ? '已首儲' : '未儲值'}</span></small>
+                        </div>
+                        <div style="font-size: 0.7rem; color: #bbb; font-weight: bold;">
+                            ${f.hasToppedUp ? '<span style="color:var(--success)">已貢獻</span>' : '待儲值'}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<div class="empty-state">尚未有好友綁定</div>';
+            }
+        });
+
+        // 監聽分潤日誌
         onValue(ref(_db, `referralLogs/${_uid}`), s => {
             const list = document.getElementById('referralLogList');
             if(s.exists()) {
@@ -206,17 +232,17 @@
                     <div class="list-item">
                         <div class="item-info">
                             <b>來自好友儲值回饋</b>
-                            <small>好友ID: ${l.from_uid.substring(0,8)}... | ${new Date(l.time).toLocaleString()}</small>
+                            <small>好友: ${l.from_uid ? l.from_uid.substring(0,8) : '---'}... | ${new Date(l.time).toLocaleString()}</small>
                         </div>
                         <div class="item-val val-plus">+${l.reward} P</div>
                     </div>
                 `).join('');
             } else {
-                list.innerHTML = '<div class="empty-state">目前尚無分潤紀錄，快去邀請好友吧！</div>';
+                list.innerHTML = '<div class="empty-state">目前尚無分潤紀錄</div>';
             }
         });
 
-        // 儲值紀錄監聽 (保持不變)
+        // 原有監聽 (保持不變)
         onValue(ref(_db, `depositRequests`), s => {
             const list = document.getElementById('depositList');
             const allReq = s.val() ? Object.values(s.val()) : [];
@@ -224,56 +250,27 @@
             if(myReq.length) {
                 list.innerHTML = myReq.map(r => `
                     <div class="list-item">
-                        <div class="item-info">
-                            <b>儲值 ${r.amount} NTD</b>
-                            <small>${new Date(r.time).toLocaleString()}</small>
-                        </div>
-                        <div class="status-tag ${r.status === 'pending' ? 'status-pending' : 'status-completed'}">
-                            ${r.status === 'pending' ? '⏳ 審核中' : '✅ 已入點'}
-                        </div>
-                    </div>
-                `).join('');
-            } else { list.innerHTML = '<div class="empty-state">尚無儲值申請紀錄</div>'; }
+                        <div class="item-info"><b>儲值 ${r.amount} NTD</b><small>${new Date(r.time).toLocaleString()}</small></div>
+                        <div class="status-tag ${r.status === 'pending' ? 'status-pending' : 'status-completed'}">${r.status === 'pending' ? '⏳ 審核中' : '✅ 已入點'}</div>
+                    </div>`).join('');
+            } else { list.innerHTML = '<div class="empty-state">尚無紀錄</div>'; }
         });
 
-        // 中獎存根監聽 (保持不變)
         onValue(ref(_db, `winLogs`), s => {
             const list = document.getElementById('winsList');
             const data = s.val() || {};
             const myWins = Object.values(data).filter(w => w.user === _uid).sort((a,b) => b.time - a.time);
-            
             if(myWins.length) {
                 list.innerHTML = myWins.map(w => {
-                    let statusClass = "status-pending"; 
-                    let statusText = w.status || "待出貨";
-                    if(statusText === "已出貨") statusClass = "status-shipping";
-                    if(statusText === "已完成") statusClass = "status-completed";
-
-                    let shippingHtml = "";
-                    if(w.shippingNo) {
-                        shippingHtml = `
-                            <div class="shipping-info">
-                                <div class="shipping-no-box">
-                                    <span>交貨便編號：<b class="shipping-no">${w.shippingNo}</b></span>
-                                    <button class="copy-btn" onclick="copyText('${w.shippingNo}', '編號')">📋 複製</button>
-                                </div>
-                                <a href="https://tracking.shopmore.com.tw/" target="_blank" class="track-link">📦 點我前往 7-11 物流查詢</a>
-                            </div>
-                        `;
-                    }
-
-                    return `
-                        <div class="list-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-                            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                                <div class="item-info">
-                                    <b>${w.prize}</b>
-                                    <small>${w.game} | ${new Date(w.time).toLocaleString()}</small>
-                                </div>
-                                <div class="status-tag ${statusClass}">${statusText}</div>
-                            </div>
-                            ${shippingHtml}
+                    let sc = "status-pending", st = w.status || "待出貨";
+                    if(st === "已出貨") sc = "status-shipping"; if(st === "已完成") sc = "status-completed";
+                    return `<div class="list-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                            <div class="item-info"><b>${w.prize}</b><small>${w.game} | ${new Date(w.time).toLocaleString()}</small></div>
+                            <div class="status-tag ${sc}">${st}</div>
                         </div>
-                    `;
+                        ${w.shippingNo ? `<div class="shipping-info"><div class="shipping-no-box"><span>交貨便：<b class="shipping-no">${w.shippingNo}</b></span><button class="copy-btn" onclick="copyText('${w.shippingNo}', '編號')">📋</button></div><a href="https://tracking.shopmore.com.tw/" target="_blank" class="track-link">📦 物流查詢</a></div>` : ''}
+                    </div>`;
                 }).join('');
             } else { list.innerHTML = '<div class="empty-state">尚未中獎</div>'; }
         });
