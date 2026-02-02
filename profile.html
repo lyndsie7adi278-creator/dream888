@@ -51,7 +51,12 @@
 
         .alliance-box { background: #fff; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .ref-url-box { background: #f0f2f5; padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 0.75rem; color: #666; word-break: break-all; border: 1px dashed var(--alliance); }
-        .alliance-btn { background: var(--alliance); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; }
+        .alliance-btn { background: var(--alliance); color: #fff; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; }
+        
+        /* 🔴 提現按鈕樣式 */
+        .withdraw-btn { background: #fff; color: var(--alliance); border: 1.5px solid var(--alliance); padding: 10px 20px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 8px; transition: 0.3s; }
+        .withdraw-btn:active { background: var(--alliance); color: #fff; }
+
         .notice-card { background: #fff9e6; border-left: 4px solid var(--wait); padding: 15px; border-radius: 8px; font-size: 0.75rem; text-align: left; margin-top: 20px; color: #856404; line-height: 1.6; }
 
         .list-item { background: #fff; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
@@ -119,13 +124,19 @@
             <div class="alliance-box">
                 <div style="font-weight: 900; font-size: 1.2rem; color: var(--alliance);">地推盟友計畫</div>
                 <div style="font-size: 0.8rem; color: #999; margin-top: 5px;">邀請好友儲值，最高享 10% 分潤</div>
+                
                 <div class="ref-url-box" id="refLink">載入中...</div>
+                
                 <button class="alliance-btn" onclick="copyRefLink()">📋 複製我的推廣連結</button>
+                
+                <button class="withdraw-btn" onclick="requestWithdraw()">💰 申請獎金提現 (人工審核)</button>
+                
                 <div class="notice-card">
-                    <b>💡 盟友規則：</b><br>
+                    <b>💡 盟友規則與提現說明：</b><br>
                     1. 推薦好友「首儲」：您得 10% 獎金，好友也得 10% 贈點。<br>
                     2. 推薦好友「續儲」：滿千好友得 3% 贈點，您得 5% 獎金。<br>
-                    3. 點數可用於刮刮樂，不可直接提現。
+                    3. <b>提現說明</b>：獎金累積滿 <b>1,000P</b> 即可聯繫客服提現至銀行帳戶。<br>
+                    4. <b>獎金轉點數</b>：若將獎金轉為遊戲點數，可享 <b>10% 額外加碼</b>。
                 </div>
             </div>
             
@@ -137,7 +148,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const _cc = { 
             apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
@@ -157,6 +168,19 @@
         document.getElementById('refLink').innerText = myRefUrl;
 
         window.copyRefLink = () => copyText(myRefUrl, '推廣連結');
+
+        // 🔴 新增：提現引導邏輯
+        window.requestWithdraw = async () => {
+            const snap = await get(ref(_db, `users/${_uid}/commission`));
+            const currentComm = snap.val() || 0;
+            
+            if (currentComm < 1000) {
+                alert(`⚠️ 提現失敗\n\n目前獎金為 ${currentComm}P，需累積滿 1,000P 方可申請。`);
+            } else {
+                alert(`✅ 資格確認\n\n您的獎金已達提現門檻！\n請截圖此頁面並聯繫官方客服 LINE，我們將為您辦理匯款。`);
+                window.open('https://line.me/ti/p/@dream8','_blank');
+            }
+        };
 
         window.copyText = (text, type) => {
             if(!text) return;
@@ -199,12 +223,8 @@
         onValue(ref(_db, `users`), s => {
             const list = document.getElementById('referralFriendsList');
             const allUsers = s.val() || {};
-            
-            // 🔴 關鍵對接修正：
-            // 1. 過濾 invitedBy 等於目前登入者的 UID
-            // 2. 使用 createTime 進行排序 (對接 index.html 的註冊欄位)
             const myFriends = Object.entries(allUsers)
-                .map(([id, data]) => ({ ...data, uid: id })) // 確保有 UID
+                .map(([id, data]) => ({ ...data, uid: id }))
                 .filter(u => u.invitedBy === _uid)
                 .sort((a,b) => (b.createTime || 0) - (a.createTime || 0));
 
