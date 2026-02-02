@@ -323,15 +323,14 @@ window.updateWinShipping = (key, no) => { update(ref(db, `winLogs/${key}`), { sh
 async function runMasterShuffle(id, g) {
     showLoading("正在洗牌並寫入格位...");
     try {
-        const winningNumbers = g.prizes.map(p => Number(p.num)); 
+        const winningNums = g.prizes.map(p => Number(p.num)); 
         let allNumbers = [];
         for (let i = 1; i <= g.total; i++) { allNumbers.push(i); }
 
-        // 1. 將號碼分類
-        let winPool = allNumbers.filter(n => winningNumbers.includes(n));
-        let losePool = allNumbers.filter(n => !winningNumbers.includes(n));
+        let winPool = allNumbers.filter(n => winningNums.includes(n));
+        let losePool = allNumbers.filter(n => !winningNums.includes(n));
 
-        // 🟢 關鍵修正 1：在拿去給保護區用之前，先徹底打亂沒中獎池
+        // 🟢 關鍵修正：在提取保護區前，先打亂 losePool，避免號碼順序固定
         for (let i = losePool.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [losePool[i], losePool[j]] = [losePool[j], losePool[i]];
@@ -341,19 +340,18 @@ async function runMasterShuffle(id, g) {
         let finalNumbers = [];
 
         if (safeZoneSize > 0 && losePool.length >= safeZoneSize) {
-            // 從打亂後的池子裡「剪切」出保護區數量
+            // 取出前 X 張作為保護區 (此時已是隨機非獎號)
             const frontSafe = losePool.splice(0, safeZoneSize);
             
-            // 剩下的號碼跟中獎號碼混在一起，再次進行大洗牌
+            // 剩下的號碼跟中獎號碼混合再大洗牌一次
             let restMixed = [...losePool, ...winPool];
             for (let i = restMixed.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [restMixed[i], restMixed[j]] = [restMixed[j], restMixed[i]];
             }
-            // 組合結果：[隨機沒中獎前綴] + [全隨機混合後綴]
             finalNumbers = [...frontSafe, ...restMixed];
         } else {
-            // 無保護區，全池打亂
+            // 無保護區，全池大亂鬥
             finalNumbers = [...allNumbers];
             for (let i = finalNumbers.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -361,7 +359,7 @@ async function runMasterShuffle(id, g) {
             }
         }
 
-        // 🟢 關鍵修正 2：物理映射，確保 grade 只取陣列裡當下的值
+        // 🟢 確保寫入 grade 時是 1:1 的實體數值
         const pool = finalNumbers.map(nValue => ({
             grade: Number(nValue), 
             taken: false,
@@ -371,7 +369,6 @@ async function runMasterShuffle(id, g) {
         await set(ref(db, `games/${id}/pool`), pool);
         return true;
     } catch (e) {
-        console.error("Shuffle Error:", e);
         alert("洗牌失敗：" + e.message);
     } finally {
         hideLoading();
