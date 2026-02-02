@@ -177,25 +177,20 @@ window.onload=()=>{
     }
 };
 
-// 🔴 優化後的上傳邏輯 (修正版位問題)
 window.handleFileUpload = async (input, targetId, statusId) => {
     const file = input.files[0];
     if(!file) return;
     const status = document.getElementById(statusId);
     status.innerText = "⏳ 上傳中...";
     status.style.color = "#ffb800";
-    
     try {
         const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
         const storageRef = sRef(storage, `images/${fileName}`);
         const snapshot = await uploadBytes(storageRef, file);
         const url = await getDownloadURL(snapshot.ref);
-        
         document.getElementById(targetId).value = url;
         status.innerText = "✅ 上傳成功";
         status.style.color = "#2ecc71";
-        
-        // 找出對應的預覽圖並更新
         const parentRow = input.closest('.dynamic-row');
         if(parentRow) {
             const previewImg = parentRow.querySelector('.upload-preview');
@@ -217,32 +212,18 @@ window.switchTab=id=>{document.querySelectorAll('.page').forEach(p=>p.classList.
 window.toggleUser=uid=>document.getElementById(`content-${uid}`).classList.toggle('show');
 window.closeLog=()=>document.getElementById('logModal').style.display='none';
 
-// 🔴 獎項輸入行 (結構優化)
 window.addPrizeInput=(num='',name='')=>{
     const d=document.createElement('div');
     d.className='dynamic-row';
-    d.innerHTML=`
-        <input type="number" placeholder="號碼" value="${num}" style="flex:1">
-        <input type="text" placeholder="名稱" value="${name}" style="flex:2">
-        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()" style="margin-top:0">✕</button>
-    `;
+    d.innerHTML=`<input type="number" placeholder="號碼" value="${num}" style="flex:1"><input type="text" placeholder="名稱" value="${name}" style="flex:2"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()" style="margin-top:0">✕</button>`;
     document.getElementById('prizeContainer').appendChild(d)
 };
 
-// 🔴 相簿輸入行 (佈局穩定版)
 window.addAlbumInput=(url='')=>{
     const id = "alb_" + Math.random().toString(36).substr(2, 9);
     const d=document.createElement('div');
     d.className='dynamic-row';
-    d.innerHTML=`
-        <div class="file-input-wrapper" style="flex:1; margin-bottom:0; padding:8px; border-style:solid;">
-            <span id="st-${id}">${url ? '✅ 已上傳' : '點擊上傳'}</span>
-            <input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')">
-        </div>
-        <input type="hidden" id="in-${id}" value="${url}">
-        <img src="${url || ''}" class="upload-preview" style="${url?'':'display:none'}">
-        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()" style="margin-top:0">✕</button>
-    `;
+    d.innerHTML=`<div class="file-input-wrapper" style="flex:1; margin-bottom:0; padding:8px; border-style:solid;"><span id="st-${id}">${url ? '✅ 已上傳' : '點擊上傳'}</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')"></div><input type="hidden" id="in-${id}" value="${url}"><img src="${url || ''}" class="upload-preview" style="${url?'':'display:none'}"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()" style="margin-top:0">✕</button>`;
     document.getElementById('albumContainer').appendChild(d)
 };
 
@@ -284,20 +265,7 @@ function startSync(){
         entries.forEach(key => {
             const i = data[key];
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b></td>
-                <td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td>
-                <td>
-                    <div class="win-status-row">
-                        <select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input">
-                            <option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option>
-                            <option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option>
-                            <option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option>
-                        </select>
-                        <input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input">
-                    </div>
-                </td>
-            `;
+            tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b></td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`;
             l.appendChild(tr);
         });
     });
@@ -305,11 +273,13 @@ function startSync(){
     onValue(ref(db,'users'),s=>{
         const c=document.getElementById('userListContainer');
         c.innerHTML='';const u=s.val()||{},r={};
-        Object.values(u).forEach(i=>{if(i.referrer)r[i.referrer]=(r[i.referrer]||0)+1});
+        Object.values(u).forEach(i=>{if(i.invitedBy)r[i.invitedBy]=(r[i.invitedBy]||0)+1});
         Object.entries(u).forEach(([id,d])=>{
             const sp=d.logs?Object.values(d.logs).reduce((a,b)=>a+(Number(b.cost)||0),0):0,ic=r[id]||0,i=document.createElement('div');
+            const comm = (d.commission || 0).toLocaleString();
+            const firstTag = d.hasToppedUp ? `<span class="ref-tag" style="color:#aaa; border-color:#aaa">已首儲</span>` : `<span class="ref-tag" style="color:var(--p); border-color:var(--p)">新用戶</span>`;
             i.className='user-item';
-            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計:${sp.toLocaleString()}P</span>${d.referrer?`<span class="ref-tag">源:${d.referrer}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>${d.referrer?`推薦人: ${d.referrer}<br>`:'自行註冊<br>'}邀請: ${ic}人<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳</button><button class="btn btn-sm" onclick="addBal('${id}')">點數</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`;
+            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b><br>${d.invitedBy?`推薦人: ${d.invitedBy}<br>`:'自行註冊<br>'}邀請: ${ic}人<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳</button><button class="btn btn-sm" onclick="addBal('${id}')">手動點數</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`;
             c.appendChild(i)
     })});
 
@@ -337,7 +307,6 @@ async function runMasterShuffle(id, g) {
     const pN = g.prizes.map(p => Number(p.num)); 
     let allNumbers = [];
     for (let i = 1; i <= g.total; i++) allNumbers.push(i);
-    // Fisher-Yates Shuffle
     for (let i = allNumbers.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [allNumbers[i], allNumbers[j]] = [allNumbers[j], allNumbers[i]];
@@ -354,25 +323,61 @@ async function runMasterShuffle(id, g) {
             [restMixed[i], restMixed[j]] = [restMixed[j], restMixed[i]];
         }
         finalNumbers = [...frontSafe, ...restMixed];
-    } else {
-        finalNumbers = allNumbers;
-    }
+    } else { finalNumbers = allNumbers; }
     const pool = finalNumbers.map(n => ({ grade: Number(n), taken: false, revealed: false }));
     await set(ref(db, `games/${id}/pool`), pool);
     return true;
 }
 
+// 🔴 核心分潤修改：核准上分
 window.approveDeposit = async (key, uid, amount) => {
-    if(!confirm(`確認收到款項並幫 [${uid}] 增加 ${amount} P 嗎？`)) return;
+    amount = Number(amount);
+    if(!confirm(`確認收到款項並幫 [${uid}] 增加 ${amount} P 嗎？\n系統將自動判斷「首儲/續儲」並發放分潤。`)) return;
     try {
         const uRef = ref(db, `users/${uid}`);
         const snap = await get(uRef);
         if(!snap.exists()) return alert("找不到該會員");
         const uData = snap.val();
-        await update(uRef, { balance: (uData.balance || 0) + amount });
-        await push(ref(db, `users/${uid}/logs`), { game: "系統儲值入點", cost: -amount, time: serverTimestamp() });
+
+        // 1. 判定是否為首儲
+        const isFirstTime = (uData.hasToppedUp === false || uData.hasToppedUp === undefined);
+        
+        // 2. 計算比例
+        let userBonusRate = isFirstTime ? 0.10 : (amount >= 1000 ? 0.03 : 0);
+        let refRate = isFirstTime ? 0.10 : 0.05;
+        
+        const userBonus = amount * userBonusRate;
+        const refBonus = amount * refRate;
+        const now = Date.now();
+
+        // 3. 更新客人資料 (本金+贈點)
+        await update(uRef, { 
+            balance: (Number(uData.balance) || 0) + amount + userBonus,
+            hasToppedUp: true 
+        });
+
+        // 4. 寫入客人紀錄
+        await push(ref(db, `users/${uid}/logs`), { 
+            game: isFirstTime ? "首儲入點(含10%贈點)" : (userBonus > 0 ? "續儲入點(含3%贈點)" : "續儲入點"), 
+            cost: -(amount + userBonus), 
+            time: now 
+        });
+
+        // 5. 處理推薦人獎金
+        let refMsg = "無推薦人";
+        if (uData.invitedBy && uData.invitedBy !== uid) {
+            const referrerUid = uData.invitedBy;
+            const refSnap = await get(ref(db, `users/${referrerUid}`));
+            if (refSnap.exists()) {
+                const rData = refSnap.val();
+                await update(ref(db, `users/${referrerUid}`), { commission: (Number(rData.commission) || 0) + refBonus });
+                await push(ref(db, `referralLogs/${referrerUid}`), { time: now, from_uid: uid, amount: amount, reward: refBonus, type: isFirstTime ? "FIRST" : "RECURRING" });
+                refMsg = `推薦人 ${referrerUid} 得 ${refBonus}P`;
+            }
+        }
+
         await update(ref(db, `depositRequests/${key}`), { status: 'completed' });
-        alert("上分成功！");
+        alert(`✅ 上分成功！\n客人得：${amount+userBonus} P\n${refMsg}`);
     } catch(e) { alert("操作失敗：" + e.message); }
 };
 
@@ -388,11 +393,9 @@ window.publishGame = async () => {
     const prs = prRows.map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value }));
     const albRows = Array.from(document.querySelectorAll('#albumContainer .dynamic-row'));
     const alb = albRows.map(r => r.querySelector('input[type="hidden"]').value).filter(v => v.trim());
-    
     if (!id || !tot || 0 === prs.length || !cat) return alert("資訊不全(分類必選)");
     const d = { total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: false };
     if(!d.img) return alert("請務必上傳封面圖片");
-    
     await update(ref(db, `gameSettings/${id}`), d);
     if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功");
     resetGameForm();
@@ -426,13 +429,10 @@ window.loadGameToEdit=async id=>{
     document.getElementById('gImg').value=g.img;
     document.getElementById('mainImgStatus').innerText = "✅ 已有圖片 (可點擊更換)";
     document.getElementById('gOrder').value=g.order||99;
-    
     const aC=document.getElementById('albumContainer'); aC.innerHTML='';
     if(g.album) g.album.forEach(u=>addAlbumInput(u));
-    
     const pC=document.getElementById('prizeContainer'); pC.innerHTML='';
     g.prizes.forEach(p=>addPrizeInput(p.num,p.name));
-    
     document.getElementById('gameActionTitle').innerText="正在編輯：" + id;
     document.getElementById('publishBtn').innerText="儲存更新資訊";
     document.getElementById('cancelEditBtn').style.display="block";
