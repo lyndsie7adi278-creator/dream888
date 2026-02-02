@@ -94,26 +94,14 @@ const _db=getDatabase(_app);
 const _sk=localStorage.getItem('myScratchCode');
 let _g={},_cc='ALL',_u=null;
 
-// 🟢 [新功能疊加] 強力監控推薦碼系統
-(function autoReferralSystem() {
+// 🟢 [保險 1] 捕捉網址推薦碼
+(function captureRef() {
     const urlParams = new URLSearchParams(window.location.search);
     const refId = urlParams.get('ref');
     if (refId) {
         localStorage.setItem('pending_ref', refId);
-        console.log("✅ 偵測到推薦碼並緩存:", refId);
+        console.log("偵測到推薦碼:", refId);
     }
-    // 監控器：只要註冊視窗打開且有緩存，就強行填入
-    setInterval(() => {
-        const savedRef = localStorage.getItem('pending_ref');
-        const refInput = document.getElementById('refIn');
-        const regStep = document.getElementById('stepRegister');
-        if (savedRef && refInput && regStep && regStep.style.display !== "none") {
-            if (refInput.value === "") {
-                refInput.value = savedRef;
-                console.log("🎯 已自動補填推薦碼");
-            }
-        }
-    }, 500);
 })();
 
 const _mt=document.getElementById('menuToggle'),_md=document.getElementById('menuDropdown');
@@ -139,10 +127,20 @@ function init(){
     }
 }
 
+// 🟢 [保險 2] 開啟註冊頁面時強制填入
 window.showReg=()=>{
     document.getElementById('step1').style.display='none';
     document.getElementById('stepRegister').style.display='block';
     document.getElementById('loginStepTitle').innerText="註冊新帳號";
+    
+    // 強制延遲 50 毫秒確保 DOM 已渲染
+    setTimeout(() => {
+        const savedRef = localStorage.getItem('pending_ref');
+        if (savedRef) {
+            document.getElementById('refIn').value = savedRef;
+            console.log("已自動補填推薦碼:", savedRef);
+        }
+    }, 50);
 };
 
 window.backStep1=()=>{document.getElementById('step1').style.display='block';document.getElementById('step2').style.display='none';document.getElementById('stepRegister').style.display='none';document.getElementById('loginStepTitle').innerText="會員登入"};
@@ -152,8 +150,13 @@ window.handleRegister=async()=>{
     const i=document.getElementById('regId').value.trim(),
           n=document.getElementById('regNick').value.trim(),
           p1=document.getElementById('regPass1').value,
-          p2=document.getElementById('regPass2').value,
-          r=document.getElementById('refIn').value.trim();
+          p2=document.getElementById('regPass2').value;
+    
+    // 🟢 [保險 3] 註冊提交前再次確認欄位值
+    let r = document.getElementById('refIn').value.trim();
+    if (!r) {
+        r = localStorage.getItem('pending_ref') || "";
+    }
 
     if(!i||!n||!p1||!p2) return alert("請填寫所有欄位");
     if(p1!==p2) return alert("密碼不一致");
