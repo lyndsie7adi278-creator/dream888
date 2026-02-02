@@ -320,75 +320,32 @@ function startSync(){
 window.updateWinStatus = (key, status) => { update(ref(db, `winLogs/${key}`), { status: status }); };
 window.updateWinShipping = (key, no) => { update(ref(db, `winLogs/${key}`), { shippingNo: no }); };
 
-// 🟢 請在 admin.html 中找到 runMasterShuffle 完整替換
 async function runMasterShuffle(id, g) {
-    if (!id) { alert("錯誤：找不到遊戲 ID"); return false; }
-    
-    // 顯示 Loading 以確保進程不中斷
-    showLoading(`正在強制洗牌 [${id}]...`);
-    console.log("開始執行洗牌程序，目標 ID:", id);
-
-    try {
-        // 1. 取得中獎號碼並轉為數字
-        const winningNums = g.prizes.map(p => Number(p.num)); 
-        let allNumbers = [];
-        for (let i = 1; i <= g.total; i++) { allNumbers.push(i); }
-
-        // 2. 分離池子：中獎 vs 沒中獎
-        let winPool = allNumbers.filter(n => winningNums.includes(n));
-        let losePool = allNumbers.filter(n => !winningNums.includes(n));
-
-        // 🟢 修正 1：先徹底打亂「沒中獎池」 (確保保護區隨機)
-        for (let i = losePool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [losePool[i], losePool[j]] = [losePool[j], losePool[i]];
-        }
-
-        const safeSize = Number(g.safeZone) || 0;
-        let finalNumbers = [];
-
-        if (safeSize > 0 && losePool.length >= safeSize) {
-            // 3. 提取前 X 張作為保護區 (此時已是隨機不中獎號)
-            const frontSafe = losePool.splice(0, safeSize);
-            
-            // 🟢 修正 2：剩下的混合池進行「二次大洗牌」
-            // 這樣大獎 (01號) 才會隨機混入，不會卡在第 5 張
-            let restMixed = [...losePool, ...winPool];
-            for (let i = restMixed.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [restMixed[i], restMixed[j]] = [restMixed[j], restMixed[i]];
-            }
-            finalNumbers = [...frontSafe, ...restMixed];
-        } else {
-            // 無保護區：全池大混戰
-            finalNumbers = [...allNumbers];
-            for (let i = finalNumbers.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [finalNumbers[i], finalNumbers[j]] = [finalNumbers[j], finalNumbers[i]];
-            }
-        }
-
-        // 4. 物理映射：確保 grade 是純數字且數據乾淨
-        const poolData = finalNumbers.map(val => ({
-            grade: Number(val),
-            taken: false,
-            revealed: false
-        }));
-
-        // 🟢 核心修正 3：使用 set 強制覆蓋寫入絕對路徑
-        // 這裡會強迫 Firebase 更新數據，您應該會看到後台變色
-        const targetPoolRef = ref(db, `games/${id}/pool`);
-        await set(targetPoolRef, poolData);
-
-        console.log("✅ Firebase 物理寫入成功！第 5 張號碼為:", poolData[4].grade);
-        return true;
-    } catch (e) {
-        console.error("❌ 洗牌寫入失敗:", e);
-        alert("Firebase 寫入失敗，請確認 Rules 權限！\n錯誤訊號: " + e.message);
-        return false;
-    } finally {
-        hideLoading();
-    }
+    const pN = g.prizes.map(p => Number(p.num)); 
+    let allNumbers = [];
+    for (let i = 1; i <= g.total; i++) allNumbers.push(i);
+    for (let i = allNumbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allNumbers[i], allNumbers[j]] = [allNumbers[j], allNumbers[i]];
+    }
+    let losePool = allNumbers.filter(n => !pN.includes(n));
+    let winPool = allNumbers.filter(n => pN.includes(n));
+    const safeZoneSize = Number(g.safeZone) || 0;
+    let finalNumbers = [];
+    if (safeZoneSize > 0 && losePool.length >= safeZoneSize) {
+        const frontSafe = losePool.splice(0, safeZoneSize);
+        let restMixed = [...losePool, ...winPool];
+        for (let i = restMixed.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [restMixed[i], restMixed[j]] = [restMixed[j], restMixed[i]];
+        }
+        finalNumbers = [...frontSafe, ...restMixed];
+    } else {
+        finalNumbers = allNumbers;
+    }
+    const pool = finalNumbers.map(n => ({ grade: Number(n), taken: false, revealed: false }));
+    await set(ref(db, `games/${id}/pool`), pool);
+    return true;
 }
 
 // 🟢 核心分潤修改：核准上分並同步分潤
