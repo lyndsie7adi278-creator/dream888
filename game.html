@@ -207,11 +207,13 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         grid.innerHTML = '';
         p.forEach((t, i) => {
             const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
+            // 🔴 終極物理鎖定：直接從當前迴圈物件 t 提取 grade 並強制局部化
             if(t.taken && t.revealed) {
-                // 🔴 變數鎖定核心：直接讀取當前物件屬性，不經過外部變數轉手
-                const currentTicketGrade = Number(t.grade);
-                div.className = `ticket revealed ${_m.includes(currentTicketGrade) ? 'winner-glow' : ''}`;
-                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${currentTicketGrade.toString().padStart(2, '0')}</span>`;
+                const _realGrade = Number(t.grade);
+                const _isWinner = _m.includes(_realGrade);
+                div.className = `ticket revealed ${_isWinner ? 'winner-glow' : ''}`;
+                // 物理嵌入 _realGrade，切斷所有外部參考
+                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${_realGrade.toString().padStart(2, '0')}</span>`;
             } else if(t.taken && !t.revealed) {
                 div.className = `ticket taken`;
                 div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
@@ -249,9 +251,8 @@ async function buyTicket(idx) {
     window.gasCallback = (res) => {
         hideLoading();
         document.body.style.pointerEvents = "auto";
-        
         if(res.success) {
-            initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
+            initCanvas((idx+1).toString().padStart(2,'0'), String(res.val).padStart(2, '0'), idx);
         } else {
             alert(res.msg || "系統繁忙，請稍後再試");
         }
