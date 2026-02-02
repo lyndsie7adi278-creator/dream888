@@ -180,7 +180,9 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
                 <img src="${url}">
             </div>
         `).join('');
-    } else { bar.style.display = 'none'; }
+    } else {
+        bar.style.display = 'none';
+    }
 
     onValue(ref(_db, `games/${_gid}/pool`), snap => {
         const p = snap.val() || []; const grid = document.getElementById('poolGrid');
@@ -205,11 +207,12 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         grid.innerHTML = '';
         p.forEach((t, i) => {
             const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
-            // 🟢 修正位置：當卡片被刮開時，主文字顯示內容，左上角顯示編號
+            // 🟢 核心修正處：刮開後(revealed)的卡片渲染邏輯
             if(t.taken && t.revealed) {
-                const v = Number(t.grade);
-                div.className = `ticket revealed ${_m.includes(v) ? 'winner-glow' : ''}`;
-                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${v.toString().padStart(2, '0')}</span>`;
+                const realValue = Number(t.grade); // 這裡才是真正要顯示的號碼
+                div.className = `ticket revealed ${_m.includes(realValue) ? 'winner-glow' : ''}`;
+                // 左上角顯示格位序號 s，中央大字顯示真實號碼 realValue
+                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span style="font-weight:900;">${realValue.toString().padStart(2, '0')}</span>`;
             } else if(t.taken && !t.revealed) {
                 div.className = `ticket taken`;
                 div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
@@ -247,9 +250,12 @@ async function buyTicket(idx) {
     window.gasCallback = (res) => {
         hideLoading();
         document.body.style.pointerEvents = "auto";
+        
         if(res.success) {
             initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
-        } else { alert(res.msg || "系統繁忙，請稍後再試"); }
+        } else {
+            alert(res.msg || "系統繁忙，請稍後再試");
+        }
         script.remove();
     };
 
