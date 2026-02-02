@@ -275,11 +275,17 @@ function startSync(){
         c.innerHTML='';const u=s.val()||{},r={};
         Object.values(u).forEach(i=>{if(i.invitedBy)r[i.invitedBy]=(r[i.invitedBy]||0)+1});
         Object.entries(u).forEach(([id,d])=>{
-            const sp=d.logs?Object.values(d.logs).reduce((a,b)=>a+(Number(b.cost)||0),0):0,ic=r[id]||0,i=document.createElement('div');
+            // 🔴 修正累積消費邏輯：只計算 > 0 的消費，不計算儲值(負數)
+            const sp = d.logs ? Object.values(d.logs).reduce((acc, log) => {
+                const cost = Number(log.cost) || 0;
+                return acc + (cost > 0 ? cost : 0);
+            }, 0) : 0;
+
+            const ic=r[id]||0,i=document.createElement('div');
             const comm = (d.commission || 0).toLocaleString();
             const firstTag = d.hasToppedUp ? `<span class="ref-tag" style="color:#aaa; border-color:#aaa">已首儲</span>` : `<span class="ref-tag" style="color:var(--p); border-color:var(--p)">新用戶</span>`;
             i.className='user-item';
-            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b><br>${d.invitedBy?`推薦人: ${d.invitedBy}<br>`:'自行註冊<br>'}邀請: ${ic}人<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳</button><button class="btn btn-sm" onclick="addBal('${id}')">手動點數</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`;
+            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b><br>${d.invitedBy?`推薦人: ${d.invitedBy}<br>`:'自行註冊<br>'}邀請: ${ic}人<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳</button><button class="btn btn-sm" onclick="addBal('${id}')">手動點數</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`;
             c.appendChild(i)
     })});
 
@@ -329,7 +335,6 @@ async function runMasterShuffle(id, g) {
     return true;
 }
 
-// 🔴 核心分潤修改：核准上分
 window.approveDeposit = async (key, uid, amount) => {
     amount = Number(amount);
     if(!confirm(`確認收到款項並幫 [${uid}] 增加 ${amount} P 嗎？\n系統將自動判斷「首儲/續儲」並發放分潤。`)) return;
@@ -338,32 +343,21 @@ window.approveDeposit = async (key, uid, amount) => {
         const snap = await get(uRef);
         if(!snap.exists()) return alert("找不到該會員");
         const uData = snap.val();
-
-        // 1. 判定是否為首儲
         const isFirstTime = (uData.hasToppedUp === false || uData.hasToppedUp === undefined);
-        
-        // 2. 計算比例
         let userBonusRate = isFirstTime ? 0.10 : (amount >= 1000 ? 0.03 : 0);
         let refRate = isFirstTime ? 0.10 : 0.05;
-        
         const userBonus = amount * userBonusRate;
         const refBonus = amount * refRate;
         const now = Date.now();
-
-        // 3. 更新客人資料 (本金+贈點)
         await update(uRef, { 
             balance: (Number(uData.balance) || 0) + amount + userBonus,
             hasToppedUp: true 
         });
-
-        // 4. 寫入客人紀錄
         await push(ref(db, `users/${uid}/logs`), { 
             game: isFirstTime ? "首儲入點(含10%贈點)" : (userBonus > 0 ? "續儲入點(含3%贈點)" : "續儲入點"), 
             cost: -(amount + userBonus), 
             time: now 
         });
-
-        // 5. 處理推薦人獎金
         let refMsg = "無推薦人";
         if (uData.invitedBy && uData.invitedBy !== uid) {
             const referrerUid = uData.invitedBy;
@@ -375,7 +369,6 @@ window.approveDeposit = async (key, uid, amount) => {
                 refMsg = `推薦人 ${referrerUid} 得 ${refBonus}P`;
             }
         }
-
         await update(ref(db, `depositRequests/${key}`), { status: 'completed' });
         alert(`✅ 上分成功！\n客人得：${amount+userBonus} P\n${refMsg}`);
     } catch(e) { alert("操作失敗：" + e.message); }
