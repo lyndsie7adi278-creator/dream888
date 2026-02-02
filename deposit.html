@@ -22,6 +22,8 @@
         .input-group label { display: block; font-size: 0.85rem; font-weight: bold; color: #999; margin-bottom: 8px; }
         input { width: 100%; padding: 15px; border: 2px solid #f0f2f5; border-radius: 15px; font-size: 1.2rem; font-weight: 900; color: var(--primary); outline: none; transition: 0.3s; }
         input:focus { border-color: var(--primary); background: #fff9fa; }
+        /* 末五碼輸入框樣式微調 */
+        #accountEnd { font-size: 1rem; letter-spacing: 2px; }
 
         .bank-info { background: #fdfdfd; border: 1px dashed #ddd; border-radius: 15px; padding: 15px; margin-top: 10px; }
         .bank-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; }
@@ -58,10 +60,14 @@
 
     <div class="container">
         <div class="card">
-            <div class="section-title">填寫儲值金額</div>
+            <div class="section-title">填寫儲值資訊</div>
             <div class="input-group">
                 <label>儲值台幣 (NTD)</label>
                 <input type="number" id="amountIn" placeholder="最小金額 100" min="100">
+            </div>
+            <div class="input-group">
+                <label>您的匯款帳號後五碼 (查帳用)</label>
+                <input type="text" id="accountEnd" placeholder="請填寫 5 位數字" maxlength="5" pattern="\d*">
             </div>
             <div style="text-align: center; color: #999; font-size: 0.9rem;">
                 預計獲得：<b id="pOut" style="color:var(--gold); font-size: 1.2rem;">0</b> P
@@ -108,7 +114,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 🔴 已更新為新專案 dream8-7b161
         const _cc = { 
             apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
             databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
@@ -120,7 +125,6 @@
         const _db = getDatabase(_app);
         const _uid = localStorage.getItem('myScratchCode');
 
-        // 通知的 GAS 網址保持不變
         const GAS_URL = "https://script.google.com/macros/s/AKfycbz07UGZEQrF2A9IRlYkqnFQv4ZbquNaIb4PDsEKXxnd7DrzUrL_9oBsHl2oB3ThEItf/exec"; 
 
         if(!_uid) location.href = 'index.html';
@@ -141,31 +145,37 @@
         };
         amountInput.addEventListener('input', calcP);
 
+        // 🟢 修改提交邏輯
         window.submitRequest = async () => {
             const amt = amountInput.value;
+            const accEnd = document.getElementById('accountEnd').value.trim();
+
             if(!amt || amt < 100) return alert("請輸入正確的儲值金額 (最小 100)");
+            if(accEnd.length !== 5 || isNaN(accEnd)) return alert("請輸入正確的匯款帳號後五碼 (5位數字)");
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.innerText = "提交申請中...";
 
             try {
-                // 寫入新資料庫
+                // 🟢 寫入資料庫 (新增 accEnd 欄位)
                 await push(ref(_db, `depositRequests`), {
                     uid: _uid,
                     amount: Number(amt),
+                    accountEnd: accEnd, // 紀錄後五碼
                     status: "pending",
                     time: serverTimestamp()
                 });
 
-                // 通知客服
+                // 🟢 通知客服 (增加後五碼參數)
                 fetch(GAS_URL, {
                     method: "POST",
                     mode: "no-cors", 
                     headers: { "Content-Type": "text/plain" },
                     body: JSON.stringify({
                         uid: _uid,
-                        amount: amt
+                        amount: amt,
+                        accountEnd: accEnd
                     })
                 });
                 
