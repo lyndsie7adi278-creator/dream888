@@ -165,7 +165,7 @@ function init(){
             mq.innerText = finalContent;
             
             // 💡 動態調整秒數：每 10 個字給 5 秒，確保長短文字速度一致
-            const duration = Math.max(25, Math.floor(finalContent.length * 0.5));
+            const duration = Math.max(25, Math.floor(finalContent.length * 0.8));
             mq.style.animationDuration = duration + 's';
         });
     });
@@ -278,3 +278,4 @@ init();
 </script>
 </body>
 </html>
+
