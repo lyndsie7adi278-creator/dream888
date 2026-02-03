@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
     <title>夢工廠 | 刮刮樂商城</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
         :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800}
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
@@ -19,33 +20,11 @@
         .menu-item{padding:15px 20px;font-size:.9rem;color:#2c3e50;font-weight:700;border-bottom:1px solid #f9f9f9;display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
         .menu-item:active{background:#fff1f3;color:var(--primary)}
         
-        /* 🚀 優化後的跑馬燈 CSS */
-        .marquee-container{
-            width:100%;
-            background:#1a1c23;
-            color:var(--primary);
-            padding:12px 0;
-            overflow:hidden;
-            white-space:nowrap;
-            font-size:.85rem;
-            font-weight:700;
-            border-bottom:2px solid var(--primary);
-            position: relative;
-        }
-        .marquee-content{
-            display:inline-block;
-            padding-left: 100%; /* 初始位置從最右方開始 */
-            animation: marquee-linear 40s linear infinite; /* 增加到 40 秒，速度更平穩 */
-            will-change: transform; /* 開啟手機硬體加速 */
-        }
-        @keyframes marquee-linear {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
-        }
-        /* 手機版微調秒數，讓速度感與電腦版接近 */
-        @media screen and (max-width: 768px) {
-            .marquee-content { animation-duration: 30s; }
-        }
+        /* 跑馬燈優化 */
+        .marquee-container{width:100%;background:#1a1c23;color:var(--primary);padding:12px 0;overflow:hidden;white-space:nowrap;font-size:.85rem;font-weight:700;border-bottom:2px solid var(--primary);position: relative;}
+        .marquee-content{display:inline-block;padding-left: 100%;animation: marquee-linear 40s linear infinite;will-change: transform;}
+        @keyframes marquee-linear { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+        @media screen and (max-width: 768px) { .marquee-content { animation-duration: 30s; } }
 
         .category-scroll{display:flex;overflow-x:auto;padding:15px 20px;gap:12px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
         .cat-item{flex-shrink:0;padding:10px 22px;border-radius:50px;background:#fff;border:1px solid #eee;font-size:.85rem;color:#7f8c8d;font-weight:700;transition:.3s;cursor:pointer}
@@ -72,9 +51,18 @@
         .status-section{width:92%;max-width:460px;margin:35px 0 15px;background:#fff;border-radius:28px;padding:25px;border:1px solid rgba(0,0,0,.04);box-shadow:0 5px 20px rgba(0,0,0,.03)}
         .status-item{display:flex;align-items:flex-start;background:#f9fafb;padding:18px;border-radius:20px;margin-bottom:15px}.status-icon{font-size:1.6rem;margin-right:18px;margin-top:3px}
         .status-text b{display:block;font-size:.9rem;color:#1a1c23;margin-bottom:5px}.status-text p{margin:0;font-size:.75rem;color:#7f8c8d;line-height:1.6}
+        
+        /* 🚀 彈窗與滑動組件樣式 */
         .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:4000;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
-        .m-box{background:#fff;padding:35px 25px;border-radius:35px;width:88%;max-width:340px;text-align:center;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-        .close-modal{position:absolute;top:15px;right:20px;font-size:1.5rem;color:#ccc;cursor:pointer}
+        .m-box{background:#fff;padding:25px 15px;border-radius:35px;width:90%;max-width:360px;text-align:center;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.3);overflow:hidden}
+        .close-modal{position:absolute;top:15px;right:20px;font-size:1.5rem;color:#ccc;cursor:pointer;z-index:10}
+        .swiper { width: 100%; height: auto; padding-bottom: 30px; }
+        .pop-img-box { width: 100%; border-radius: 15px; overflow: hidden; margin-bottom: 15px; background: #f0f0f0; }
+        .pop-img-box img { width: 100%; height: auto; display: block; object-fit: cover; }
+        .pop-title { font-weight: 900; font-size: 1.1rem; color: #333; margin-bottom: 10px; }
+        .pop-text { font-size: 0.9rem; color: #666; text-align: left; line-height: 1.6; white-space: pre-wrap; padding: 0 10px; }
+        .swiper-pagination-bullet-active { background: var(--primary) !important; }
+        
         input{width:100%;padding:14px;margin:8px 0;border:1px solid #eee;border-radius:12px;text-align:center;font-size:1rem;font-weight:700;color:var(--primary);outline:none}
         .btn{background:var(--primary);color:#fff;border:none;padding:16px;border-radius:50px;font-weight:900;width:100%;cursor:pointer;font-size:1rem;box-shadow:0 8px 20px rgba(255,143,163,.3);margin-top:10px}
         .footer{padding:30px 0 50px;font-size:.75rem;color:#95a5a6;text-align:center;line-height:2}
@@ -84,7 +72,17 @@
 <div id="welcomeToast" class="welcome-toast"></div>
 <div class="line-wrapper" onclick="window.open('https://line.me/ti/p/@dream8','_blank')"><div class="line-bubble">儲值/問題請點我 💬</div><div class="line-float"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE"></div></div>
 
-<div id="annModal" class="modal"><div class="m-box"><div class="close-modal" onclick="document.getElementById('annModal').style.display='none'">✕</div><h3 style="margin-top:0" id="annTitle">最新公告 NOTICE</h3><div id="annBody" style="font-size:.95rem;color:#4a4a4a;text-align:left;margin:25px 0;line-height:1.7;white-space:pre-wrap">載入中...</div><button class="btn" onclick="document.getElementById('annModal').style.display='none'">我知道了</button></div></div>
+<div id="annModal" class="modal">
+    <div class="m-box">
+        <div class="close-modal" onclick="closeModal()">✕</div>
+        <div class="swiper mySwiper">
+            <div class="swiper-wrapper" id="annSwiperWrapper">
+                </div>
+            <div class="swiper-pagination"></div>
+        </div>
+        <button class="btn" onclick="closeModal()">我知道了</button>
+    </div>
+</div>
 
 <div class="top-nav">
     <div class="nav-left" id="menuToggle">
@@ -105,6 +103,8 @@
 <div class="footer"> © 2026 | 夢工廠 </div>
 
 <div id="loginModal" class="modal"><div class="m-box"><div class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">✕</div><h2 id="loginStepTitle" style="margin:0 0 10px;letter-spacing:2px;font-size:1.2rem">會員登入</h2><div id="step1"><input type="text" id="cIn" placeholder="請輸入帳號 (ID)"><button class="btn" onclick="checkCode()">下一步 NEXT</button><p style="font-size:.7rem;color:var(--primary);margin-top:15px;cursor:pointer" onclick="showReg()">還沒有帳號？立即註冊</p></div><div id="step2" style="display:none"><input type="password" id="pinIn" placeholder="輸入密碼"><button class="btn" onclick="handlePinLogin()">確認登入 ENTER</button><button class="btn" style="background:#eee;color:#666;margin-top:10px" onclick="backStep1()">回上一步</button></div><div id="stepRegister" style="display:none;text-align:left"><p style="color:var(--primary);font-weight:700;text-align:center;margin-bottom:10px">✨ 建立新帳號</p><input type="text" id="regId" placeholder="設定登入帳號"><input type="text" id="regNick" placeholder="設定顯示暱稱"><input type="password" id="regPass1" placeholder="設定密碼"><input type="password" id="regPass2" placeholder="再次確認密碼"><input type="text" id="refIn" placeholder="推薦人帳號 (非必填)"><button class="btn" onclick="handleRegister()">確認註冊 REGISTER</button><p style="font-size:.7rem;color:#aaa;text-align:center;margin-top:10px;cursor:pointer" onclick="backStep1()">已有帳號？返回登入</p></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -133,7 +133,12 @@ let _g={},_cc='ALL',_u=null;
 const _mt=document.getElementById('menuToggle'),_md=document.getElementById('menuDropdown');
 _mt.onclick=(e)=>{e.stopPropagation();_md.classList.toggle('show')};
 window.onclick=()=>_md.classList.remove('show');
-window.openAnn=()=>{document.getElementById('annModal').style.display='flex';_md.classList.remove('show')};
+
+// 修改開啟公告邏輯
+window.openAnn=()=>{
+    document.getElementById('annModal').style.display='flex';
+    _md.classList.remove('show');
+};
 
 window.handleUserClick = () => {
     if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
@@ -142,44 +147,58 @@ window.handleUserClick = () => {
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
+// 🚀 核心邏輯修改
 function init(){
-    // 🟢 跑馬燈：動態監聽 winLogs 並合併公告
+    // 1. 跑馬燈同步
     onValue(ref(_db, 'winLogs'), (snapshot) => {
         const winData = snapshot.val();
         let winText = "";
-        
         if (winData) {
-            // 只顯示最新的 5 筆中獎紀錄
-            const sortedWins = Object.values(winData)
-                .sort((a, b) => (b.time || 0) - (a.time || 0))
-                .slice(0, 5);
-
+            const sortedWins = Object.values(winData).sort((a, b) => (b.time || 0) - (a.time || 0)).slice(0, 5);
             winText = sortedWins.map(w => `🎊 恭喜玩家 【${w.user}】 在《${w.game}》刮中 【${w.prize}】！！`).join(' 　 | 　 ');
         }
-
         get(ref(_db, 'settings/announcement')).then(annSnap => {
             const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
             const finalContent = winText ? `${winText} 　 | 　 📢 公告：${staticAnn}` : staticAnn;
-            
             const mq = document.getElementById('mq');
             mq.innerText = finalContent;
-            
-            // 💡 動態調整秒數：每 10 個字給 5 秒，確保長短文字速度一致
             const duration = Math.max(25, Math.floor(finalContent.length * 0.3));
             mq.style.animationDuration = duration + 's';
         });
     });
 
+    // 2. 多重公告彈窗監控
     onValue(ref(_db,'settings/announcement_config'), s => {
         if(s.exists()){
             const config = s.val();
-            document.getElementById('annBody').innerText = config.content || "";
-            document.getElementById('annTitle').innerText = config.title || "最新公告 NOTICE";
-            if(config.active) {
+            const wrapper = document.getElementById('annSwiperWrapper');
+            wrapper.innerHTML = ""; // 清空舊內容
+            
+            if(config.active && config.items && config.items.length > 0) {
+                // 生成公告滑塊
+                config.items.forEach(item => {
+                    const slide = document.createElement('div');
+                    slide.className = 'swiper-slide';
+                    slide.innerHTML = `
+                        ${item.img ? `<div class="pop-img-box"><img src="${item.img}"></div>` : ''}
+                        <div class="pop-title">${item.title}</div>
+                        <div class="pop-text">${item.content}</div>
+                    `;
+                    wrapper.appendChild(slide);
+                });
+
+                // 初始化或更新 Swiper
+                new Swiper(".mySwiper", {
+                    pagination: { el: ".swiper-pagination", clickable: true },
+                    autoHeight: true,
+                    observer: true,
+                    observeParents: true
+                });
+
+                // 檢查是否需要跳出彈窗 (基於 ID)
                 const lastId = localStorage.getItem('last_ann_id');
                 if(lastId !== config.id) {
                     document.getElementById('annModal').style.display = 'flex';
-                    localStorage.setItem('last_ann_id', config.id);
                 }
             }
         }
@@ -193,6 +212,14 @@ function init(){
         });
     }
 }
+
+// 關閉彈窗並標記已讀
+window.closeModal = () => {
+    document.getElementById('annModal').style.display = 'none';
+    get(ref(_db,'settings/announcement_config')).then(s => {
+        if(s.exists()) localStorage.setItem('last_ann_id', s.val().id);
+    });
+};
 
 window.showReg=()=>{
     document.getElementById('step1').style.display='none';
@@ -278,5 +305,3 @@ init();
 </script>
 </body>
 </html>
-
-
