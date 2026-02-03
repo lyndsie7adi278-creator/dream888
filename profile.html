@@ -49,11 +49,16 @@
         .page-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* 📦 收件資訊樣式 */
+        .shipping-card { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1.5px solid var(--primary); }
+        .ship-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; border-radius: 12px; font-size: 0.9rem; font-weight: bold; outline: none; background: #fdfdfd; }
+        .ship-input:focus { border-color: var(--primary); }
+        .ship-btn { background: var(--primary); color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; font-size: 0.9rem; }
+
         .alliance-box { background: #fff; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .ref-url-box { background: #f0f2f5; padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 0.75rem; color: #666; word-break: break-all; border: 1px dashed var(--alliance); }
         .alliance-btn { background: var(--alliance); color: #fff; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; }
         
-        /* 🔴 提現按鈕樣式 */
         .withdraw-btn { background: #fff; color: var(--alliance); border: 1.5px solid var(--alliance); padding: 10px 20px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 8px; transition: 0.3s; }
         .withdraw-btn:active { background: var(--alliance); color: #fff; }
 
@@ -110,14 +115,30 @@
     </div>
 
     <div class="tabs">
-        <div class="tab-btn active" onclick="switchTab(0)">消費明細</div>
+        <div class="tab-btn active" onclick="switchTab(0)">預設寄件</div>
         <div class="tab-btn" onclick="switchTab(1)">儲值紀錄</div>
         <div class="tab-btn" onclick="switchTab(2)">中獎存根</div>
         <div class="tab-btn" onclick="switchTab(3)">盟友中心</div>
     </div>
 
     <div class="content-area">
-        <div id="tab-0" class="page-content active"><div id="billingList"></div></div>
+        <div id="tab-0" class="page-content active">
+            <div class="shipping-card">
+                <div style="font-weight: 900; font-size: 1rem; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                    📦 7-11 預設收件資訊
+                </div>
+                <input type="text" id="shipName" class="ship-input" placeholder="收件人真實姓名">
+                <input type="tel" id="shipPhone" class="ship-input" placeholder="收件人手機號碼">
+                <input type="text" id="shipStore" class="ship-input" placeholder="7-11 店名或店號 (例: 夢想門市)">
+                <button class="ship-btn" onclick="saveShippingInfo()">儲存收件資訊</button>
+                <div style="font-size: 0.65rem; color: #aaa; margin-top: 10px; line-height: 1.4;">
+                    * 填寫後中獎將自動以此資訊出貨，無需重複詢問。<br>
+                    * 若需更改資訊，直接修改並再次點擊儲存即可。
+                </div>
+            </div>
+            <div id="billingList"></div>
+        </div>
+
         <div id="tab-1" class="page-content"><div id="depositList"></div></div>
         <div id="tab-2" class="page-content"><div id="winsList"></div></div>
         <div id="tab-3" class="page-content">
@@ -131,28 +152,25 @@
                 
                 <button class="withdraw-btn" onclick="requestWithdraw()">💰 申請獎金提現 (人工審核)</button>
                 
-<div class="notice-card">
-    <b>🏆 盟友分潤與營運規範：</b><br>
-    1. <b>首儲限定優惠</b>：好友綁定後「第一筆」儲值為首儲，您得 <b>10%</b> 獎金，好友亦得 10% 贈點。<b>首儲加碼機會僅此一次</b>，建議引導好友首儲較大金額以獲得最大收益。<br>
-    2. <b>續儲回饋</b>：好友後續單筆儲值滿千，好友得 3% 贈點，您固定得 <b>5%</b> 獎金。<br>
-    3. <b>提現門檻</b>：獎金累積滿 <b>1,000P</b> 即可申請，每筆提現將扣除 <b>30P</b> 行政跨行手續費。<br>
-    4. <b>獎金轉點優惠</b>：獎金轉為遊戲點數，享 <b>10% 額外加碼</b> (例如 100P 獎金可換 110 點，且免手續費)。<br><br>
-    
-    <b style="color:#c0392b;">⚠️ 嚴禁異常套利聲明：</b><br>
-    5. <b>禁止自我推薦</b>：嚴禁使用相同設備、相同 IP 或相同收款帳戶建立多重帳號相互推薦，系統將自動偵測異常行為。<br>
-    6. <b>惡意行為沒收</b>：若經查獲利用系統漏洞、虛假交易或任何不正當手段騙取分潤，本平台有權<b>永久封鎖相關帳號</b>，並直接<b>沒收帳戶內所有獎金</b>且不另行通知。<br>
-    7. <b>審核權利</b>：提領申請須經人工審核，須提供與註冊資訊儲值相符之個人收款帳戶，禁止代領。
-</div>
+                <div class="notice-card">
+                    <b>🏆 盟友分潤與營運規範：</b><br>
+                    1. <b>首儲限定優惠</b>：好友綁定後「第一筆」儲值為首儲，您得 <b>10%</b> 獎金，好友亦得 10% 贈點。<br>
+                    2. <b>續儲回饋</b>：好友後續單筆儲值滿千，好友得 3% 贈點，您固定得 <b>5%</b> 獎金。<br>
+                    3. <b>提現門檻</b>：獎金累積滿 <b>1,000P</b> 即可申請。<br>
+                    4. <b>獎金轉點優惠</b>：獎金轉為遊戲點數，享 <b>10% 額外加碼</b>。<br>
+                    <b style="color:#c0392b;">⚠️ 嚴禁異常套利聲明：</b><br>
+                    5. <b>禁止自我推薦</b>：嚴禁使用相同設備或 IP 建立多帳號相互推薦，經查獲將沒收所有獎金。
+                </div>
             
-            <div id="referralFriendsList"></div>
-            
-            <div id="referralLogList" style="margin-top: 20px;"></div>
+                <div id="referralFriendsList"></div>
+                <div id="referralLogList" style="margin-top: 20px;"></div>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const _cc = { 
             apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
@@ -173,11 +191,30 @@
 
         window.copyRefLink = () => copyText(myRefUrl, '推廣連結');
 
-        // 🔴 新增：提現引導邏輯
+        // 🟢 收件資訊儲存邏輯
+        window.saveShippingInfo = async () => {
+            const name = document.getElementById('shipName').value.trim();
+            const phone = document.getElementById('shipPhone').value.trim();
+            const store = document.getElementById('shipStore').value.trim();
+
+            if(!name || !phone || !store) return alert("請完整填寫收件資訊");
+
+            try {
+                await update(ref(_db, `users/${_uid}/shipping`), {
+                    name: name,
+                    phone: phone,
+                    store: store,
+                    time: Date.now()
+                });
+                alert("✅ 儲存成功！之後中獎會自動以此資料出貨。");
+            } catch (e) {
+                alert("儲存失敗：" + e.message);
+            }
+        };
+
         window.requestWithdraw = async () => {
             const snap = await get(ref(_db, `users/${_uid}/commission`));
             const currentComm = snap.val() || 0;
-            
             if (currentComm < 1000) {
                 alert(`⚠️ 提現失敗\n\n目前獎金為 ${currentComm}P，需累積滿 1,000P 方可申請。`);
             } else {
@@ -208,10 +245,17 @@
             document.getElementById('uNick').innerText = u.nickname || "新玩家";
             document.getElementById('avatarLetter').innerText = (u.nickname || _uid).charAt(0).toUpperCase();
 
+            // 🟢 自動填入已存的收件資訊
+            if (u.shipping) {
+                document.getElementById('shipName').value = u.shipping.name || '';
+                document.getElementById('shipPhone').value = u.shipping.phone || '';
+                document.getElementById('shipStore').value = u.shipping.store || '';
+            }
+
             const bList = document.getElementById('billingList');
             if(u.logs) {
                 const logs = Object.values(u.logs).sort((a,b) => b.time - a.time);
-                bList.innerHTML = logs.map(l => `
+                bList.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem; margin-top:15px;">近期消費明細</div>` + logs.map(l => `
                     <div class="list-item">
                         <div class="item-info">
                             <b>${l.game || '點數調整'}</b>
@@ -223,7 +267,7 @@
             } else { bList.innerHTML = '<div class="empty-state">尚無消費紀錄</div>'; }
         });
 
-        // 監聽邀請好友名單 (不論是否儲值)
+        // 監聽邀請好友名單
         onValue(ref(_db, `users`), s => {
             const list = document.getElementById('referralFriendsList');
             const allUsers = s.val() || {};
@@ -240,13 +284,8 @@
                             <b>${f.nickname || '匿名盟友'}</b>
                             <small>ID: ${f.uid.substring(0,8)}... <span class="friend-status ${f.hasToppedUp ? 'is-topped' : 'not-topped'}">${f.hasToppedUp ? '已首儲' : '未儲值'}</span></small>
                         </div>
-                        <div style="font-size: 0.7rem; color: #bbb; font-weight: bold;">
-                            ${f.hasToppedUp ? '<span style="color:var(--success)">已貢獻獎金</span>' : '待儲值'}
-                        </div>
                     </div>
                 `).join('');
-            } else {
-                list.innerHTML = '<div class="empty-state">目前尚未有好友綁定<br><small style="font-weight:normal;color:#ccc">好友註冊時填寫您的 ID 即可顯示</small></div>';
             }
         });
 
@@ -265,8 +304,6 @@
                         <div class="item-val val-plus">+${l.reward} P</div>
                     </div>
                 `).join('');
-            } else {
-                list.innerHTML = '<div class="empty-state">目前尚無分潤紀錄</div>';
             }
         });
 
