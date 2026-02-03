@@ -56,7 +56,8 @@
 <body oncontextmenu="return false;">
 <div id="welcomeToast" class="welcome-toast"></div>
 <div class="line-wrapper" onclick="window.open('https://line.me/ti/p/@dream8','_blank')"><div class="line-bubble">儲值/問題請點我 💬</div><div class="line-float"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE"></div></div>
-<div id="annModal" class="modal"><div class="m-box"><div class="close-modal" onclick="document.getElementById('annModal').style.display='none'">✕</div><h3 style="margin-top:0">最新公告 NOTICE</h3><div id="annBody" style="font-size:.95rem;color:#4a4a4a;text-align:left;margin:25px 0;line-height:1.7;white-space:pre-wrap">載入中...</div><button class="btn" onclick="document.getElementById('annModal').style.display='none'">我知道了</button></div></div>
+
+<div id="annModal" class="modal"><div class="m-box"><div class="close-modal" onclick="document.getElementById('annModal').style.display='none'">✕</div><h3 style="margin-top:0" id="annTitle">最新公告 NOTICE</h3><div id="annBody" style="font-size:.95rem;color:#4a4a4a;text-align:left;margin:25px 0;line-height:1.7;white-space:pre-wrap">載入中...</div><button class="btn" onclick="document.getElementById('annModal').style.display='none'">我知道了</button></div></div>
 
 <div class="top-nav">
     <div class="nav-left" id="menuToggle">
@@ -70,7 +71,7 @@
     <div id="userEntryPoint" onclick="handleUserClick()" style="cursor:pointer;font-size:1.4rem;color:#444">👤</div>
 </div>
 
-<div class="marquee-container"><div class="marquee-content" id="mq">祝各位玩家都能刮中！好運連連！</div></div>
+<div class="marquee-container"><div class="marquee-content" id="mq">載入最新中獎資訊中...</div></div>
 <div class="category-scroll" id="catList"><div class="cat-item active" onclick="filterCat('ALL')">全部商品 ALL</div></div>
 <div class="product-grid" id="pGrid"></div>
 <div class="status-section"><div class="status-item"><div class="status-icon">🛡️</div><div class="status-text"><b>加密安全訪問系統</b><p>數據經 SSL 高級加密，守護資產安全。</p></div></div><div class="status-item"><div class="status-icon">🎰</div><div class="status-text"><b>公平隨機洗牌算法</b><p>籤池發佈即隨機排序，公正透明。</p></div></div></div>
@@ -114,8 +115,38 @@ window.handleUserClick = () => {
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
+// --- 核心邏輯修改區 ---
 function init(){
-    get(ref(_db,'settings/announcement')).then(s=>{if(s.exists()){document.getElementById('annBody').innerText=s.val();document.getElementById('mq').innerText=s.val();}});
+    // 1. 監聽後台跑馬燈中獎資訊 (路徑: settings/winners)
+    onValue(ref(_db,'settings/winners'), s => {
+        if(s.exists()){
+            const list = s.val();
+            // 如果是陣列，組成長字串；如果是單一字串就直接顯示
+            const text = Array.isArray(list) ? list.join(' | ') : list;
+            document.getElementById('mq').innerText = text;
+        } else {
+            document.getElementById('mq').innerText = "祝各位玩家都能刮中！好運連連！";
+        }
+    });
+
+    // 2. 監聽後台彈窗公告 (路徑: settings/announcement_config)
+    onValue(ref(_db,'settings/announcement_config'), s => {
+        if(s.exists()){
+            const config = s.val();
+            document.getElementById('annBody').innerText = config.content || "";
+            document.getElementById('annTitle').innerText = config.title || "最新公告 NOTICE";
+            
+            // 判斷是否需要跳出彈窗
+            if(config.active) {
+                const lastId = localStorage.getItem('last_ann_id');
+                if(lastId !== config.id) {
+                    document.getElementById('annModal').style.display = 'flex';
+                    localStorage.setItem('last_ann_id', config.id);
+                }
+            }
+        }
+    });
+
     onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{};renderCats();renderGrid()});
     if(_sk){
         onValue(ref(_db,`users/${_sk}`),s=>{
@@ -124,6 +155,7 @@ function init(){
         });
     }
 }
+// --- 修改結束 ---
 
 window.showReg=()=>{
     document.getElementById('step1').style.display='none';
@@ -184,7 +216,6 @@ function renderGrid(){
         const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
         const sId=id.replace(/\s+/g,'-');
         
-        // 🟢 核心修正：優先顯示 it.name 欄位
         const displayTitle = it.name || id;
         
         const card=document.createElement('div');
