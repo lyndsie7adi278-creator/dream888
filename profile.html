@@ -131,7 +131,7 @@
                 <input type="tel" id="shipPhone" class="ship-input" placeholder="收件人手機號碼">
                 <input type="text" id="shipStore" class="ship-input" placeholder="7-11 店名或店號 (例: 夢想門市)">
                 <button class="ship-btn" onclick="saveShippingInfo()">儲存收件資訊</button>
-                <div style="font-size: 0.65rem; color: #aaa; margin-top: 10px; line-height: 1.4;">
+                <div style="font-size: 1rem; color: #aaa; margin-top: 10px; line-height: 1.4;">
                     * 填寫後中獎將自動以此資訊出貨，無需重複詢問。<br>
                     * 若需更改資訊，直接修改並再次點擊儲存即可。
                 </div>
@@ -335,7 +335,7 @@
                             <div class="item-info"><b>${w.prize}</b><small>${w.game} | ${new Date(w.time).toLocaleString()}</small></div>
                             <div class="status-tag ${sc}">${st}</div>
                         </div>
-                        ${w.shippingNo ? `<div class="shipping-info"><div class="shipping-no-box"><span>交貨便：<b class="shipping-no">${w.shippingNo}</b></span><button class="copy-btn" onclick="copyText('${w.shippingNo}', '編號')">📋</button></div><a href="https://tracking.shopmore.com.tw/" target="_blank" class="track-link">📦 物流查詢</a></div>` : ''}
+                        ${w.shippingNo ? `<div class="shipping-info"><div class="shipping-no-box"><span>物流編號：<b class="shipping-no">${w.shippingNo}</b></span><button class="copy-btn" onclick="copyText('${w.shippingNo}', '編號')">📋</button></div><a href="https://tracking.shopmore.com.tw/" target="_blank" class="track-link">📦 物流查詢</a></div>` : ''}
                     </div>`;
                 }).join('');
             } else { list.innerHTML = '<div class="empty-state">尚未中獎</div>'; }
