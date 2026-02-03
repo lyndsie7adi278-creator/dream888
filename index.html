@@ -14,13 +14,16 @@
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
         .nav-left{display:flex;align-items:center;gap:15px;cursor:pointer;color:#333;font-size:1.4rem;position:relative}
-        .logo-txt{font-weight:900;letter-spacing:2px;color:#333;font-size:1rem;position:absolute;left:50%;transform:translateX(-50%)}
+        
+        /* 🟢 修改：確保 Logo 容器絕對置中 */
+        .logo-txt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
+        .logo-img{height:35px;width:auto;display:block;object-fit:contain}
+
         .menu-dropdown{display:none;position:absolute;top:60px;left:15px;background:#fff;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:2000;min-width:150px;overflow:hidden;border:1px solid #eee}
         .menu-dropdown.show{display:block;animation:menuFade .3s ease}@keyframes menuFade{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
         .menu-item{padding:15px 20px;font-size:.9rem;color:#2c3e50;font-weight:700;border-bottom:1px solid #f9f9f9;display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
         .menu-item:active{background:#fff1f3;color:var(--primary)}
         
-        /* 跑馬燈優化 */
         .marquee-container{width:100%;background:#1a1c23;color:var(--primary);padding:12px 0;overflow:hidden;white-space:nowrap;font-size:.85rem;font-weight:700;border-bottom:2px solid var(--primary);position: relative;}
         .marquee-content{display:inline-block;padding-left: 100%;animation: marquee-linear 40s linear infinite;will-change: transform;}
         @keyframes marquee-linear { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
@@ -52,7 +55,6 @@
         .status-item{display:flex;align-items:flex-start;background:#f9fafb;padding:18px;border-radius:20px;margin-bottom:15px}.status-icon{font-size:1.6rem;margin-right:18px;margin-top:3px}
         .status-text b{display:block;font-size:.9rem;color:#1a1c23;margin-bottom:5px}.status-text p{margin:0;font-size:.75rem;color:#7f8c8d;line-height:1.6}
         
-        /* 🚀 彈窗與滑動組件樣式 */
         .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:4000;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
         .m-box{background:#fff;padding:25px 15px;border-radius:35px;width:90%;max-width:360px;text-align:center;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.3);overflow:hidden}
         .close-modal{position:absolute;top:15px;right:20px;font-size:1.5rem;color:#ccc;cursor:pointer;z-index:10}
@@ -67,7 +69,6 @@
         .btn{background:var(--primary);color:#fff;border:none;padding:16px;border-radius:50px;font-weight:900;width:100%;cursor:pointer;font-size:1rem;box-shadow:0 8px 20px rgba(255,143,163,.3);margin-top:10px}
         .footer{padding:30px 0 50px;font-size:.75rem;color:#95a5a6;text-align:center;line-height:2}
 
-        /* 💡 新增：不再顯示勾選區 */
         .modal-footer { margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 15px; }
         .no-show-label { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; color: #999; cursor: pointer; margin-bottom: 12px; }
         .no-show-label input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
@@ -104,7 +105,11 @@
             <a href="faq.html" class="menu-item">❓ 常見問題</a>
         </div>
     </div>
-    <div class="logo-txt">夢工廠商城</div>
+    
+    <div class="logo-txt">
+        <img src="您的圖片網址" alt="Logo" class="logo-img">
+    </div>
+    
     <div id="userEntryPoint" onclick="handleUserClick()" style="cursor:pointer;font-size:1.4rem;color:#444">👤</div>
 </div>
 
@@ -201,12 +206,10 @@ function init(){
                     observeParents: true
                 });
 
-                // 🚀 核心判斷：是否自動彈出
                 const lastHideDate = localStorage.getItem('hide_ann_date');
                 const lastAnnId = localStorage.getItem('last_ann_id');
                 const today = new Date().toDateString();
 
-                // 若 ID 變動 (發新公告) 或 今日未勾選不再顯示，則彈出
                 if(lastAnnId !== config.id || lastHideDate !== today) {
                     document.getElementById('annModal').style.display = 'flex';
                 }
@@ -223,7 +226,6 @@ function init(){
     }
 }
 
-// 關閉並處理「不再顯示」邏輯
 window.closeModal = () => {
     const isChecked = document.getElementById('noMoreToday').checked;
     const today = new Date().toDateString();
@@ -234,7 +236,6 @@ window.closeModal = () => {
         localStorage.removeItem('hide_ann_date');
     }
 
-    // 每次關閉都記錄 ID，確保後台 ID 變更時能再次彈出
     get(ref(_db,'settings/announcement_config')).then(s => {
         if(s.exists()) localStorage.setItem('last_ann_id', s.val().id);
     });
