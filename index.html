@@ -30,7 +30,7 @@
         .p-card.free-gift{border:2px solid var(--free);box-shadow:0 8px 25px rgba(76,209,55,.4)}
         .p-img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#fdfdfd}
         .p-info{padding:18px 10px;text-align:center;min-height:115px;display:flex;flex-direction:column;justify-content:center;align-items:center}
-        .p-name{font-weight:900;font-size:.95rem;color:#2c3e50;margin-bottom:5px;line-height:1.3}
+        .p-name{font-weight:900;font-size:.95rem;color:#2c3e50;margin-bottom:5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
         .p-price-value{color:var(--primary);font-weight:900;font-size:1.15rem;display:flex;align-items:center;justify-content:center;gap:5px}
         .soldout-tag{background:#57606f;color:#fff;font-size:.7rem;padding:4px 10px;border-radius:6px;margin-top:5px;display:inline-block;font-weight:900}
         .free-tag{background:var(--free);color:#fff;font-size:.7rem;padding:4px 10px;border-radius:6px;margin-top:5px;display:inline-block;font-weight:900}
@@ -94,13 +94,11 @@ const _db=getDatabase(_app);
 const _sk=localStorage.getItem('myScratchCode');
 let _g={},_cc='ALL',_u=null;
 
-// 🟢 [保險 1] 捕捉網址推薦碼
 (function captureRef() {
     const urlParams = new URLSearchParams(window.location.search);
     const refId = urlParams.get('ref');
     if (refId) {
         localStorage.setItem('pending_ref', refId);
-        console.log("偵測到推薦碼:", refId);
     }
 })();
 
@@ -127,18 +125,14 @@ function init(){
     }
 }
 
-// 🟢 [保險 2] 開啟註冊頁面時強制填入
 window.showReg=()=>{
     document.getElementById('step1').style.display='none';
     document.getElementById('stepRegister').style.display='block';
     document.getElementById('loginStepTitle').innerText="註冊新帳號";
-    
-    // 強制延遲 50 毫秒確保 DOM 已渲染
     setTimeout(() => {
         const savedRef = localStorage.getItem('pending_ref');
         if (savedRef) {
             document.getElementById('refIn').value = savedRef;
-            console.log("已自動補填推薦碼:", savedRef);
         }
     }, 50);
 };
@@ -151,35 +145,20 @@ window.handleRegister=async()=>{
           n=document.getElementById('regNick').value.trim(),
           p1=document.getElementById('regPass1').value,
           p2=document.getElementById('regPass2').value;
-    
-    // 🟢 [保險 3] 註冊提交前再次確認欄位值
     let r = document.getElementById('refIn').value.trim();
-    if (!r) {
-        r = localStorage.getItem('pending_ref') || "";
-    }
-
+    if (!r) { r = localStorage.getItem('pending_ref') || ""; }
     if(!i||!n||!p1||!p2) return alert("請填寫所有欄位");
     if(p1!==p2) return alert("密碼不一致");
     if(i===r) return alert("推薦人不能是自己");
-
     const ex=await get(ref(_db,`users/${i}`));
     if(ex.exists()) return alert("帳號已存在");
-
     if(r !== "") {
         const rs=await get(ref(_db,`users/${r}`));
         if(!rs.exists()) return alert("推薦人帳號不存在，請確認或留空");
     }
-
     await set(ref(_db,`users/${i}`),{
-        balance: 0,
-        commission: 0,
-        nickname: n,
-        pin: p1,
-        invitedBy: r,
-        hasToppedUp: false,
-        createTime: Date.now()
+        balance: 0, commission: 0, nickname: n, pin: p1, invitedBy: r, hasToppedUp: false, createTime: Date.now()
     });
-
     localStorage.setItem('myScratchCode',i);
     localStorage.removeItem('pending_ref'); 
     alert("註冊成功！");
@@ -204,11 +183,16 @@ function renderGrid(){
     keys.forEach(id=>{
         const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
         const sId=id.replace(/\s+/g,'-');
+        
+        // 🟢 核心修正：優先顯示 it.name 欄位
+        const displayTitle = it.name || id;
+        
         const card=document.createElement('div');
         card.className=`p-card ${it.isSoldOut?'soldout':''}`;
         card.onclick=()=>location.href=`game.html?id=${id}`;
-        card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${id}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
+        card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
         grid.appendChild(card);
+        
         onValue(ref(_db,`games/${id}`),s=>{
             const d=s.val()||{},l=d.lock,p=d.pool||[],sB=document.getElementById(`status-${sId}`),pB=document.getElementById(`promo-${sId}`);
             if(!sB)return;
