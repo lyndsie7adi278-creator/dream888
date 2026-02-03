@@ -18,8 +18,35 @@
         .menu-dropdown.show{display:block;animation:menuFade .3s ease}@keyframes menuFade{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
         .menu-item{padding:15px 20px;font-size:.9rem;color:#2c3e50;font-weight:700;border-bottom:1px solid #f9f9f9;display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
         .menu-item:active{background:#fff1f3;color:var(--primary)}
-        .marquee-container{width:100%;background:#1a1c23;color:var(--primary);padding:10px 0;overflow:hidden;white-space:nowrap;font-size:.85rem;font-weight:700;border-bottom:2px solid var(--primary)}
-        .marquee-content{display:inline-block;animation:marquee 25s linear infinite}@keyframes marquee{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+        
+        /* 🚀 優化後的跑馬燈 CSS */
+        .marquee-container{
+            width:100%;
+            background:#1a1c23;
+            color:var(--primary);
+            padding:12px 0;
+            overflow:hidden;
+            white-space:nowrap;
+            font-size:.85rem;
+            font-weight:700;
+            border-bottom:2px solid var(--primary);
+            position: relative;
+        }
+        .marquee-content{
+            display:inline-block;
+            padding-left: 100%; /* 初始位置從最右方開始 */
+            animation: marquee-linear 40s linear infinite; /* 增加到 40 秒，速度更平穩 */
+            will-change: transform; /* 開啟手機硬體加速 */
+        }
+        @keyframes marquee-linear {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+        /* 手機版微調秒數，讓速度感與電腦版接近 */
+        @media screen and (max-width: 768px) {
+            .marquee-content { animation-duration: 30s; }
+        }
+
         .category-scroll{display:flex;overflow-x:auto;padding:15px 20px;gap:12px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
         .cat-item{flex-shrink:0;padding:10px 22px;border-radius:50px;background:#fff;border:1px solid #eee;font-size:.85rem;color:#7f8c8d;font-weight:700;transition:.3s;cursor:pointer}
         .cat-item.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(255,143,163,.4)}
@@ -71,7 +98,7 @@
     <div id="userEntryPoint" onclick="handleUserClick()" style="cursor:pointer;font-size:1.4rem;color:#444">👤</div>
 </div>
 
-<div class="marquee-container"><div class="marquee-content" id="mq">載入中...</div></div>
+<div class="marquee-container"><div class="marquee-content" id="mq">正在同步最新中獎喜報...</div></div>
 <div class="category-scroll" id="catList"><div class="cat-item active" onclick="filterCat('ALL')">全部商品 ALL</div></div>
 <div class="product-grid" id="pGrid"></div>
 <div class="status-section"><div class="status-item"><div class="status-icon">🛡️</div><div class="status-text"><b>加密安全訪問系統</b><p>數據經 SSL 高級加密，守護資產安全。</p></div></div><div class="status-item"><div class="status-icon">🎰</div><div class="status-text"><b>公平隨機洗牌算法</b><p>籤池發佈即隨機排序，公正透明。</p></div></div></div>
@@ -115,41 +142,39 @@ window.handleUserClick = () => {
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
-// --- 核心邏輯修改區 ---
 function init(){
-    // 🟢 跑馬燈「自動化」：監聽中獎紀錄 (winLogs) + 靜態公告
+    // 🟢 跑馬燈：動態監聽 winLogs 並合併公告
     onValue(ref(_db, 'winLogs'), (snapshot) => {
         const winData = snapshot.val();
-        let winMessages = "";
+        let winText = "";
         
         if (winData) {
-            // 抓取最新 3 筆中獎紀錄
+            // 只顯示最新的 5 筆中獎紀錄
             const sortedWins = Object.values(winData)
                 .sort((a, b) => (b.time || 0) - (a.time || 0))
-                .slice(0, 3);
+                .slice(0, 5);
 
-            winMessages = sortedWins.map(w => {
-                return `🎊 恭喜玩家 【${w.user}】 在《${w.game}》刮中 【${w.prize}】！！`;
-            }).join(' 　 | 　 ');
+            winText = sortedWins.map(w => `🎊 恭喜玩家 【${w.user}】 在《${w.game}》刮中 【${w.prize}】！！`).join(' 　 | 　 ');
         }
 
-        // 讀取後台靜態公告並合併顯示
         get(ref(_db, 'settings/announcement')).then(annSnap => {
             const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
-            const finalMarquee = winMessages 
-                ? `${winMessages} 　 | 　 📢 公告：${staticAnn}` 
-                : staticAnn;
-            document.getElementById('mq').innerText = finalMarquee;
+            const finalContent = winText ? `${winText} 　 | 　 📢 公告：${staticAnn}` : staticAnn;
+            
+            const mq = document.getElementById('mq');
+            mq.innerText = finalContent;
+            
+            // 💡 動態調整秒數：每 10 個字給 5 秒，確保長短文字速度一致
+            const duration = Math.max(25, Math.floor(finalContent.length * 0.5));
+            mq.style.animationDuration = duration + 's';
         });
     });
 
-    // 2. 監聽後台彈窗公告 (路徑: settings/announcement_config)
     onValue(ref(_db,'settings/announcement_config'), s => {
         if(s.exists()){
             const config = s.val();
             document.getElementById('annBody').innerText = config.content || "";
             document.getElementById('annTitle').innerText = config.title || "最新公告 NOTICE";
-            
             if(config.active) {
                 const lastId = localStorage.getItem('last_ann_id');
                 if(lastId !== config.id) {
@@ -168,7 +193,6 @@ function init(){
         });
     }
 }
-// --- 修改結束 ---
 
 window.showReg=()=>{
     document.getElementById('step1').style.display='none';
@@ -228,15 +252,12 @@ function renderGrid(){
     keys.forEach(id=>{
         const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
         const sId=id.replace(/\s+/g,'-');
-        
         const displayTitle = it.name || id;
-        
         const card=document.createElement('div');
         card.className=`p-card ${it.isSoldOut?'soldout':''}`;
         card.onclick=()=>location.href=`game.html?id=${id}`;
         card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
         grid.appendChild(card);
-        
         onValue(ref(_db,`games/${id}`),s=>{
             const d=s.val()||{},l=d.lock,p=d.pool||[],sB=document.getElementById(`status-${sId}`),pB=document.getElementById(`promo-${sId}`);
             if(!sB)return;
