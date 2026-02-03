@@ -33,7 +33,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .win-status-row { display: flex; flex-direction: column; gap: 5px; }
 .win-shipping-input { padding: 5px !important; margin-bottom: 0 !important; font-size: 0.75rem !important; border: 1px solid #444 !important; }
 
-/* 🟢 動態列格式鎖定 */
+/* 🟢 動態列格式強制鎖定 */
 .dynamic-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid #222; box-sizing: border-box; }
 .dynamic-row input[type="number"] { width: 85px !important; flex: none !important; margin-bottom: 0 !important; }
 .dynamic-row input[type="text"] { flex: 1 !important; margin-bottom: 0 !important; }
@@ -64,7 +64,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div id="game" class="page"><span class="title" id="gameActionTitle">新增商品</span>
 <div class="card" style="max-width:600px;margin:0 auto">
 <input type="text" id="gId" placeholder="遊戲 ID (如：A01)">
-<input type="text" id="gName" placeholder="商品名稱 (可隨時修改的標題)">
+<input type="text" id="gName" placeholder="商品顯示名稱 (可隨時修改的標題)">
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><select id="gCat"><option value="">載入分類中...</option></select><input type="number" id="gOrder" placeholder="排序" value="99"></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input type="number" id="gTotal" placeholder="總籤數"><input type="number" id="gPrice" placeholder="單抽原價"></div>
 <div class="safe-box"><label style="font-size:0.7rem; color:var(--p); margin-left:5px;">前幾抽不中大獎 (保護區)：</label><input type="number" id="gSafeZone" placeholder="大獎保護區數量" value="0">
@@ -96,7 +96,7 @@ window.toggleSidebar=()=>document.getElementById('sidebar').classList.toggle('op
 window.switchTab=id=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));document.getElementById(id).classList.add('active');if(window.innerWidth<=768)toggleSidebar()};
 window.toggleUser=uid=>document.getElementById(`content-${uid}`).classList.toggle('show');
 window.closeLog=()=>document.getElementById('logModal').style.display='none';
-window.addPrizeInput = (num = '', name = '') => { const d = document.createElement('div'); d.className = 'dynamic-row'; d.innerHTML = `<input type="number" placeholder="號碼" value="${num}"><input type="text" placeholder="名稱" value="${name}"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`; document.getElementById('prizeContainer').appendChild(d); };
+window.addPrizeInput = (num = '', name = '') => { const d = document.createElement('div'); d.className = 'dynamic-row'; d.innerHTML = `<input type="number" placeholder="號碼" value="${num}"><input type="text" placeholder="獎項名稱" value="${name}"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`; document.getElementById('prizeContainer').appendChild(d); };
 window.addAlbumInput=(url='')=>{ const id = "alb_" + Math.random().toString(36).substr(2, 9); const d=document.createElement('div'); d.className='dynamic-row'; d.innerHTML=`<div class="file-input-wrapper" style="flex:1; margin-bottom:0; padding:8px; border-style:solid; min-height:auto;"><span id="st-${id}" style="font-size:0.7rem">${url ? '✅ 已有圖' : '點擊上傳'}</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')"></div><input type="hidden" id="in-${id}" value="${url}"><img src="${url || ''}" class="upload-preview" style="${url?'':'display:none'}"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()" style="margin-top:0; flex:none;">✕</button>`; document.getElementById('albumContainer').appendChild(d)};
 function startSync(){
 onValue(ref(db,'settings/categories'),s=>{ const list=document.getElementById('catManageList'),select=document.getElementById('gCat'),data=s.val()||[]; list.innerHTML='';select.innerHTML='<option value="">請選擇分類</option>';
@@ -144,11 +144,11 @@ window.editCat=async(idx,v)=>{const s=await get(ref(db,'settings/categories')),d
 window.delCat=async(idx)=>{if(confirm("刪除分類？")){const s=await get(ref(db,'settings/categories')),data=s.val()||[];data.splice(idx,1);await set(ref(db,'settings/categories'),data)}};
 window.forceUnlock=async id=>{if(confirm(`解除 [${id}] 包台？`)){await remove(ref(db,`games/${id}/lock`));alert("已解鎖")}};
 window.publishGame = async () => {
-const id = document.getElementById('gId').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value;
+const id = document.getElementById('gId').value.trim(), gName = document.getElementById('gName').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value;
 const prRows = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')); const prs = prRows.map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value }));
 const albRows = Array.from(document.querySelectorAll('#albumContainer .dynamic-row')); const alb = albRows.map(r => r.querySelector('input[type="hidden"]').value).filter(v => v.trim());
 if (!id || !tot || 0 === prs.length || !cat) return alert("資訊不全(分類必選)");
-const d = { name: document.getElementById('gName').value.trim() || id, total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: false };
+const d = { name: gName || id, total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: false };
 if(!d.img) return alert("請務必上傳封面圖片"); showLoading("正在發布商品..."); try { await update(ref(db, `gameSettings/${id}`), d); if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功"); resetGameForm(); } finally { hideLoading(); }};
 window.resetShuffle = async id => { if (confirm(`【警告】確定重新洗牌 [${id}]？`)) { try { const s = await get(ref(db, `gameSettings/${id}`)), g = s.val(); if (!g) return alert("找不到設定"); await runMasterShuffle(id, g); await update(ref(db, `gameSettings/${id}`), { isSoldOut: false }); await remove(ref(db, `games/${id}/lock`)); alert(`[${id}] 洗牌成功！`); } catch (e) { alert("洗牌失敗：" + e.message); }}};
 window.loadGameToEdit=async id=>{ const s=await get(ref(db,`gameSettings/${id}`)),g=s.val(); if(!g)return; isEditing=true; document.getElementById('gId').value=id; document.getElementById('gId').disabled=true; document.getElementById('gName').value = g.name || id; document.getElementById('gCat').value=g.category; document.getElementById('gTotal').value=g.total; document.getElementById('gPrice').value=g.price; document.getElementById('gSafeZone').value=g.safeZone||0; document.getElementById('pCount').value=g.promoCount||0; document.getElementById('pPrice').value=g.promoPrice||0; document.getElementById('gImg').value=g.img; document.getElementById('mainImgStatus').innerText = "✅ 已有圖片"; document.getElementById('gOrder').value=g.order||99;
