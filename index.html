@@ -71,7 +71,7 @@
     <div id="userEntryPoint" onclick="handleUserClick()" style="cursor:pointer;font-size:1.4rem;color:#444">👤</div>
 </div>
 
-<div class="marquee-container"><div class="marquee-content" id="mq">載入最新中獎資訊中...</div></div>
+<div class="marquee-container"><div class="marquee-content" id="mq">載入中...</div></div>
 <div class="category-scroll" id="catList"><div class="cat-item active" onclick="filterCat('ALL')">全部商品 ALL</div></div>
 <div class="product-grid" id="pGrid"></div>
 <div class="status-section"><div class="status-item"><div class="status-icon">🛡️</div><div class="status-text"><b>加密安全訪問系統</b><p>數據經 SSL 高級加密，守護資產安全。</p></div></div><div class="status-item"><div class="status-icon">🎰</div><div class="status-text"><b>公平隨機洗牌算法</b><p>籤池發佈即隨機排序，公正透明。</p></div></div></div>
@@ -117,16 +117,30 @@ window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.
 
 // --- 核心邏輯修改區 ---
 function init(){
-    // 1. 監聽後台跑馬燈中獎資訊 (路徑: settings/winners)
-    onValue(ref(_db,'settings/winners'), s => {
-        if(s.exists()){
-            const list = s.val();
-            // 如果是陣列，組成長字串；如果是單一字串就直接顯示
-            const text = Array.isArray(list) ? list.join(' | ') : list;
-            document.getElementById('mq').innerText = text;
-        } else {
-            document.getElementById('mq').innerText = "祝各位玩家都能刮中！好運連連！";
+    // 🟢 跑馬燈「自動化」：監聽中獎紀錄 (winLogs) + 靜態公告
+    onValue(ref(_db, 'winLogs'), (snapshot) => {
+        const winData = snapshot.val();
+        let winMessages = "";
+        
+        if (winData) {
+            // 抓取最新 3 筆中獎紀錄
+            const sortedWins = Object.values(winData)
+                .sort((a, b) => (b.time || 0) - (a.time || 0))
+                .slice(0, 3);
+
+            winMessages = sortedWins.map(w => {
+                return `🎊 恭喜玩家 【${w.user}】 在《${w.game}》刮中 【${w.prize}】！！`;
+            }).join(' 　 | 　 ');
         }
+
+        // 讀取後台靜態公告並合併顯示
+        get(ref(_db, 'settings/announcement')).then(annSnap => {
+            const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
+            const finalMarquee = winMessages 
+                ? `${winMessages} 　 | 　 📢 公告：${staticAnn}` 
+                : staticAnn;
+            document.getElementById('mq').innerText = finalMarquee;
+        });
     });
 
     // 2. 監聽後台彈窗公告 (路徑: settings/announcement_config)
@@ -136,7 +150,6 @@ function init(){
             document.getElementById('annBody').innerText = config.content || "";
             document.getElementById('annTitle').innerText = config.title || "最新公告 NOTICE";
             
-            // 判斷是否需要跳出彈窗
             if(config.active) {
                 const lastId = localStorage.getItem('last_ann_id');
                 if(lastId !== config.id) {
