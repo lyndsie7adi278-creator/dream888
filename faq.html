@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>夢工廠 | 常見問題 FAQ</title>
     <style>
-        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --text: #2c3e50; --line: #06c755; --lock: #3498db; --gold: #ffb800; }
+        :root { --primary: #ff8fa3; --dark: #1a1c23; --bg: #f0f2f5; --text: #2c3e50; --line: #06c755; --lock: #3498db; --gold: #ffb800; --alliance: #6c5ce7; }
         
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         body { 
@@ -63,6 +63,7 @@
         .rule-list li { margin-bottom: 8px; }
         .highlight { color: var(--primary); font-weight: bold; }
         .lock-text { color: var(--lock); font-weight: bold; }
+        .alliance-highlight { color: var(--alliance); font-weight: 900; }
 
         /* 儲值規範專用美化樣式 */
         .rate-card {
@@ -152,14 +153,37 @@
         </div>
     </div>
 
+    <div class="section-label">🤝 盟友（推薦）計畫</div>
+
     <div class="faq-item">
         <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">忘記 帳號 或 密碼 怎麼辦？</div>
+            <div class="faq-question">什麼是盟友計畫？獎金如何計算？</div>
             <div class="faq-icon">+</div>
         </div>
         <div class="faq-content">
             <div class="faq-text">
-                帳號密碼為您的唯一身份識別。若遺失忘記，請聯繫 LINE 客服並提供歷史紀錄，核對身份後將由管理員為您重置或找回。
+                您可以透過「會員中心」獲取專屬推廣連結。邀請朋友註冊並儲值，您將獲得優渥獎金：
+                <ul class="rule-list" style="margin-top:10px;">
+                    <li><span class="alliance-highlight">好友首儲：</span>您可獲得該筆金額的 <span class="highlight">10%</span> 獎金。</li>
+                    <li><span class="alliance-highlight">好友續儲：</span>單筆滿千，您固定獲得 <span class="highlight">5%</span> 獎金。</li>
+                </ul>
+                <p style="margin-top:10px; font-size:0.8rem; background:#f0effa; color:var(--alliance); padding:10px; border-radius:10px;">※ 推薦關係一經註冊綁定即永久有效，好友往後的所有儲值您皆能分潤。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">盟友獎金可以領現或轉點嗎？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                盟友計畫獲得的獎金非常靈活，提供以下兩種使用方式：
+                <ul class="rule-list" style="margin-top:10px;">
+                    <li><span class="alliance-highlight">提領成現金：</span>獎金累積滿 <span class="highlight">1,000P</span> 即可申請提現。請聯繫 LINE 客服，查核後將於 24 小時內匯款至您的指定帳戶。</li>
+                    <li><span class="alliance-highlight">轉成遊戲點數：</span>您也可以選擇將獎金轉入遊戲餘額。轉點享有 <span class="highlight">額外 10% 加碼回饋</span>（例如：1000 獎金可換得 1100 P幣）。</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -180,24 +204,12 @@
 
     <div class="faq-item">
         <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">刮到一半當機或自動關閉怎麼辦？</div>
+            <div class="faq-question">忘記 帳號 或 密碼 怎麼辦？</div>
             <div class="faq-icon">+</div>
         </div>
         <div class="faq-content">
             <div class="faq-text">
-                只要點數扣除成功，結果就已經寫入資料庫。您可以從「會員中心」查看「消費紀錄」或「中獎存根」，您的權益不會受到影響。
-            </div>
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">什麼是「開盤優惠」？</div>
-            <div class="faq-icon">+</div>
-        </div>
-        <div class="faq-content">
-            <div class="faq-text">
-                部分熱門商品設有「前 X 抽」特惠。只要該盤累計張數尚未達到門檻，系統會自動以優惠價結帳。超過門檻後將恢復原價。
+                帳號密碼為您的唯一身份識別。若遺失忘記，請聯繫 LINE 客服並提供歷史紀錄，核對身份後將由管理員為您重置或找回。
             </div>
         </div>
     </div>
@@ -250,18 +262,6 @@
                     </p>
                 </div>
                 若無開箱影片，我方將無法向廠商或物流公司申請補償。因此，<span class="highlight">凡無提供完整開箱影片者，恕無法提供任何售後服務</span>，敬請見諒。
-            </div>
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-header" onclick="toggleFaq(this)">
-            <div class="faq-question">非法程式與作弊行為警告</div>
-            <div class="faq-icon">+</div>
-        </div>
-        <div class="faq-content">
-            <div class="faq-text">
-                本商城嚴禁任何非法程式、腳本或利用系統漏洞進行作弊。系統設有<span class="highlight">全時段自動監測</span>，一旦偵測到異常行為，將立即<span class="highlight">永久封禁該帳號</span>且不予退還任何剩餘點數，並保留追究法律責任之權利。
             </div>
         </div>
     </div>
