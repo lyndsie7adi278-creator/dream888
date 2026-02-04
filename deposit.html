@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
     <title>夢工廠 | 儲值申請</title>
     <style>
-        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --danger: #ff4757; }
+        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --danger: #ff4757; --success: #2ecc71; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; padding-bottom: 50px; }
        
@@ -22,8 +22,18 @@
         .input-group label { display: block; font-size: 0.85rem; font-weight: bold; color: #999; margin-bottom: 8px; }
         input { width: 100%; padding: 15px; border: 2px solid #f0f2f5; border-radius: 15px; font-size: 1.2rem; font-weight: 900; color: var(--primary); outline: none; transition: 0.3s; }
         input:focus { border-color: var(--primary); background: #fff9fa; }
-        /* 末五碼輸入框樣式微調 */
-        #accountEnd { font-size: 1rem; letter-spacing: 2px; }
+        
+        /* 試算區域樣式 */
+        .calc-box { background: #fff9fa; border-radius: 15px; padding: 15px; margin-top: 15px; border: 1px solid #ffe8eb; }
+        .calc-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; color: #666; }
+        .calc-total { border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .calc-total b { font-size: 1.4rem; color: var(--gold); }
+
+        /* 規則說明卡片 */
+        .rule-card { background: #fff; border-radius: 20px; padding: 20px; border: 1px solid #f0f0f0; margin-bottom: 20px; }
+        .rule-item { margin-bottom: 15px; }
+        .rule-item b { display: block; color: var(--primary); font-size: 0.9rem; margin-bottom: 5px; }
+        .rule-item p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.6; }
 
         .bank-info { background: #fdfdfd; border: 1px dashed #ddd; border-radius: 15px; padding: 15px; margin-top: 10px; }
         .bank-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; }
@@ -31,10 +41,9 @@
         .bank-row b { color: #333; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
         
         .copy-btn { background: var(--primary); color: #fff; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .copy-btn:active { transform: scale(0.9); opacity: 0.8; }
 
         .warning-box { background: #fff5f5; border-radius: 15px; padding: 15px; margin: 20px 0; border: 1px solid #ffebeb; }
-        .warning-box h4 { margin: 0 0 8px; color: var(--danger); font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+        .warning-box h4 { margin: 0 0 8px; color: var(--danger); font-size: 0.9rem; }
         .warning-box p { margin: 0; font-size: 0.75rem; color: #cc6666; line-height: 1.6; font-weight: bold; }
 
         .submit-btn { 
@@ -59,43 +68,51 @@
     </div>
 
     <div class="container">
+        <div class="rule-card">
+            <div class="section-title">儲值優惠說明</div>
+            <div class="rule-item">
+                <b>✨ 首儲限定 (10% 贈點)</b>
+                <p>帳號「第一次」儲值即為首儲。例如：儲值 1000 元，可額外獲贈 100 P，共得 1100 P。首儲加碼僅限一次。</p>
+            </div>
+            <div class="rule-item">
+                <b>🔥 續儲加碼 (3% 贈點)</b>
+                <p>非首儲用戶，單筆儲值滿 1000 元，獲贈 3% 點數。例如：儲值 1000 元，額外獲贈 30 P，共得 1030 P。</p>
+            </div>
+        </div>
+
         <div class="card">
             <div class="section-title">填寫儲值資訊</div>
             <div class="input-group">
                 <label>儲值台幣 (NTD)</label>
-                <input type="number" id="amountIn" placeholder="最小金額 100" min="100">
+                <input type="number" id="amountIn" placeholder="輸入金額 (最小 100)" min="100">
             </div>
             <div class="input-group">
                 <label>您的匯款帳號後五碼</label>
-                <input type="text" id="accountEnd" placeholder="請填寫 5 位數字" maxlength="5" pattern="\d*">
+                <input type="text" id="accountEnd" placeholder="請填寫 5 位數字" maxlength="5">
             </div>
-            <div style="text-align: center; color: #999; font-size: 0.9rem;">
-                預計獲得：<b id="pOut" style="color:var(--gold); font-size: 1.2rem;">0</b> P
+            
+            <div class="calc-box">
+                <div class="calc-row"><span>儲值本金</span><span id="calcBase">0 P</span></div>
+                <div class="calc-row"><span id="bonusLabel">首儲/續儲贈點</span><span id="calcBonus" style="color:var(--success)">+0 P</span></div>
+                <div class="calc-total">
+                    <span>預計共得：</span>
+                    <b id="pOut">0</b>
+                </div>
             </div>
         </div>
 
         <div class="card">
             <div class="section-title">指定匯款帳戶</div>
             <div class="bank-info">
-                <div class="bank-row">
-                    <span>銀行代碼</span>
-                    <b>396 街口 </b>
-                </div>
-                <div class="bank-row">
-                    <span>帳戶號碼</span>
-                    <b>903515547 <button class="copy-btn" onclick="copyText('903515547')">複製</button></b>
-                </div>
+                <div class="bank-row"><span>銀行代碼</span><b>396 街口支付</b></div>
+                <div class="bank-row"><span>帳戶號碼</span><b>903515547 <button class="copy-btn" onclick="copyText('903515547')">複製</button></b></div>
             </div>
-            <p style="font-size: 0.7rem; color: #aaa; margin-top: 10px;">※ 匯款完成後請點擊下方按鈕，系統將會通知客服查帳。</p>
+            <p style="font-size: 0.7rem; color: #aaa; margin-top: 10px;">※ 匯款完成後請點擊下方按鈕，客服將於 5 分鐘內查帳。</p>
         </div>
 
         <div class="warning-box">
-            <h4>⚠️ 儲值須知與提醒</h4>
-            <p>
-                1. 點數匯率為 1 台幣 : 1 P幣，儲值後僅供商城內消費使用。<br>
-                2. <b>絕對禁止：</b>本商城不提供點數換回現金之服務。<br>
-                3. 點擊送出申請即代表已完成匯款並同意上述規範。
-            </p>
+            <h4>⚠️ 儲值須知</h4>
+            <p>1. 點數匯率為 1 台幣 : 1 P幣。<br>2. 絕對禁止點數換回現金服務。<br>3. 送出申請即代表已完成匯款。</p>
         </div>
 
         <button class="submit-btn" id="submitBtn" onclick="submitRequest()">我已匯款，送出申請</button>
@@ -104,15 +121,15 @@
     <div id="resModal" class="modal">
         <div class="m-box">
             <div style="font-size: 3rem; margin-bottom: 15px;">✅</div>
-            <h3 style="margin: 0 0 10px;">申請已送出</h3>
-            <p style="color: #666; font-size: 0.9rem; line-height: 1.6;">已發送通知給客服。<br>5分鐘內查帳完成後會立刻幫您入點！</p>
+            <h3>申請已送出</h3>
+            <p style="color: #666; font-size: 0.9rem;">已發送通知，查帳完成後會立刻入點！</p>
             <button class="submit-btn" style="margin-top: 20px;" onclick="location.href='profile.html'">確認並返回</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, get, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const _cc = { 
             apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
@@ -124,10 +141,35 @@
         const _app = initializeApp(_cc); 
         const _db = getDatabase(_app);
         const _uid = localStorage.getItem('myScratchCode');
-
         const GAS_URL = "https://script.google.com/macros/s/AKfycbz07UGZEQrF2A9IRlYkqnFQv4ZbquNaIb4PDsEKXxnd7DrzUrL_9oBsHl2oB3ThEItf/exec"; 
 
         if(!_uid) location.href = 'index.html';
+
+        // 🟢 檢查是否為首儲並計算點數
+        const amountInput = document.getElementById('amountIn');
+        const calcP = async () => {
+            const amt = Number(amountInput.value) || 0;
+            const snap = await get(ref(_db, `users/${_uid}`));
+            const userData = snap.val() || {};
+            const isFirst = (userData.hasToppedUp === false || userData.hasToppedUp === undefined);
+            
+            let bonus = 0;
+            if (isFirst) {
+                bonus = amt * 0.1; // 首儲 10%
+                document.getElementById('bonusLabel').innerText = "✨ 首儲加碼 (10%)";
+            } else if (amt >= 1000) {
+                bonus = amt * 0.03; // 續儲 3% (滿千)
+                document.getElementById('bonusLabel').innerText = "🔥 續儲加碼 (3%)";
+            } else {
+                bonus = 0;
+                document.getElementById('bonusLabel').innerText = "一般儲值 (無加碼)";
+            }
+
+            document.getElementById('calcBase').innerText = amt + " P";
+            document.getElementById('calcBonus').innerText = "+" + Math.floor(bonus) + " P";
+            document.getElementById('pOut').innerText = Math.floor(amt + bonus) + " P";
+        };
+        amountInput.addEventListener('input', calcP);
 
         window.copyText = (text) => {
             navigator.clipboard.writeText(text).then(() => {
@@ -137,54 +179,36 @@
             });
         };
 
-        const amountInput = document.getElementById('amountIn');
-        const displayOutput = document.getElementById('pOut');
-        const calcP = () => {
-            const val = amountInput.value;
-            displayOutput.innerText = val && val > 0 ? val : 0;
-        };
-        amountInput.addEventListener('input', calcP);
-
-        // 🟢 修改提交邏輯
         window.submitRequest = async () => {
             const amt = amountInput.value;
             const accEnd = document.getElementById('accountEnd').value.trim();
 
-            if(!amt || amt < 100) return alert("請輸入正確的儲值金額 (最小 100)");
-            if(accEnd.length !== 5 || isNaN(accEnd)) return alert("請輸入正確的匯款帳號後五碼 (5位數字)");
+            if(!amt || amt < 100) return alert("最小儲值金額為 100");
+            if(accEnd.length !== 5 || isNaN(accEnd)) return alert("請輸入 5 位數字的後五碼");
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.innerText = "提交申請中...";
+            btn.innerText = "提交中...";
 
             try {
-                // 🟢 寫入資料庫 (新增 accEnd 欄位)
                 await push(ref(_db, `depositRequests`), {
                     uid: _uid,
                     amount: Number(amt),
-                    accountEnd: accEnd, // 紀錄後五碼
+                    accountEnd: accEnd,
                     status: "pending",
                     time: serverTimestamp()
                 });
 
-                // 🟢 通知客服 (增加後五碼參數)
                 fetch(GAS_URL, {
                     method: "POST",
                     mode: "no-cors", 
-                    headers: { "Content-Type": "text/plain" },
-                    body: JSON.stringify({
-                        uid: _uid,
-                        amount: amt,
-                        accountEnd: accEnd
-                    })
+                    body: JSON.stringify({ uid: _uid, amount: amt, accountEnd: accEnd })
                 });
                 
                 document.getElementById('resModal').style.display = 'flex';
             } catch (e) {
-                console.error(e);
-                alert("申請出錯，請聯繫客服");
+                alert("申請出錯");
                 btn.disabled = false;
-                btn.innerText = "我已匯款，送出申請";
             }
         };
     </script>
