@@ -76,7 +76,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input type="number" id="gTotal" placeholder="總籤數"><input type="number" id="gPrice" placeholder="單抽原價"></div>
 <div class="safe-box"><label style="font-size:0.7rem; color:var(--p); margin-left:5px;">前幾抽不中大獎 (保護區)：</label><input type="number" id="gSafeZone" placeholder="大獎保護區數量" value="0">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><input type="number" id="pCount" placeholder="優惠張數"><input type="number" id="pPrice" placeholder="優惠價格"></div></div>
-<div style="margin:10px 0; color:var(--p); font-weight:700">商品主圖(封面)：</div><div class="file-input-wrapper"><span id="mainImgStatus">點擊或拖曳圖片上傳</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'gImg', 'mainImgStatus')"></div><input type="hidden" id="gImg"> 
+<div style="margin:10px 0; color:var(--p); font-weight:700">商品主圖(封面)：</div><div class="file-input-wrapper"><span id="mainImgStatus">點擊或拖曳圖片上傳</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'gImg', 'mainImgStatus')"></div><input type="hidden" id="gImg"> 
 <div style="margin:20px 0 10px; color:var(--p); font-weight:700">展示圖片(相簿)：</div><div id="albumContainer"></div><button class="btn btn-sm" onclick="addAlbumInput()" style="width:100%; margin-bottom:20px; background:rgba(255,184,0,0.2); color:var(--p); border:1px solid var(--p)">＋ 新增一張展示圖</button>
 <div style="margin:20px 0 10px; color:var(--p); font-weight:700">獎項設定 (獎號必須在總籤數內)：</div><div id="prizeContainer"></div><button class="btn btn-sm" onclick="addPrizeInput()" style="width:100%; background:rgba(255,184,0,0.2); color:var(--p); border:1px solid var(--p)">＋ 新增一個獎項</button>
 <div style="display:flex;gap:10px;margin-top:30px"><button class="btn" style="flex:2" id="publishBtn" onclick="publishGame()">發布並自動洗牌</button><button class="btn btn-danger" style="flex:1;display:none" id="cancelEditBtn" onclick="resetGameForm()">取消編輯</button></div></div>
@@ -168,17 +168,21 @@ keys.forEach(id=>{
     onValue(ref(db,`games/${id}/pool`),ps=>{ const p=ps.val()||[]; if(document.getElementById(`rem-${id}`))document.getElementById(`rem-${id}`).innerText=`剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`});
     const aC=document.createElement('div'); aC.className='card'; aC.innerHTML=`<b>${g.name || id} 調控</b><div class="adj-grid" style="margin-top:10px"><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="價格"><input type="number" value="${g.order||99}" onchange="updNum('${id}','order',this.value)" title="排序"></div>`; adj.appendChild(aC)})});
 
-onValue(ref(db,'winLogs'),s=>{ const l=document.getElementById('globalWinItems'); l.innerHTML=''; const data = s.val() || {}; const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)).slice(0,50);
-entries.forEach(async key => { 
-    const i = data[key]; 
-    // 🟢 加強版：中獎紀錄也顯示收件資料
-    const uSnap = await get(ref(db, `users/${i.uid}/shipping`));
-    const ship = uSnap.val() || {};
-    const shipText = ship.name ? `<br><small style="color:var(--success)">📍 ${ship.name} ${ship.phone} (${ship.store})</small>` : '';
-    
-    const tr = document.createElement('tr'); 
-    tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b>${shipText}</td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`; l.appendChild(tr); 
-})});
+onValue(ref(db,'winLogs'),s=>{ 
+    const l=document.getElementById('globalWinItems'); l.innerHTML=''; const data = s.val() || {}; 
+    const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)).slice(0,50);
+    entries.forEach(async key => { 
+        const i = data[key]; 
+        // 🟢 修復點：異步獲取該筆中獎記錄所屬玩家的收件資訊
+        const uSnap = await get(ref(db, `users/${i.uid}/shipping`));
+        const ship = uSnap.val() || {};
+        const shipText = ship.name ? `<br><small style="color:var(--success); font-size:0.7rem; font-weight:900;">📍 ${ship.name} / ${ship.phone}<br>🏪 ${ship.store}</small>` : '';
+        
+        const tr = document.createElement('tr'); 
+        tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b>${shipText}</td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`; 
+        l.appendChild(tr); 
+    })
+});
 
 onValue(ref(db,'users'),s=>{ 
     const c=document.getElementById('userListContainer'); c.innerHTML='';const u=s.val()||{},r={}; 
@@ -188,7 +192,6 @@ onValue(ref(db,'users'),s=>{
         const ic=r[id]||0; const comm = (d.commission || 0).toLocaleString(); 
         const firstTag = d.hasToppedUp ? `<span class="ref-tag" style="color:#aaa; border-color:#aaa">已首儲</span>` : `<span class="ref-tag" style="color:var(--p); border-color:var(--p)">新用戶</span>`;
         
-        // 🟢 核心：會員資料內顯示收件資訊
         const ship = d.shipping || {};
         const shipHtml = ship.name ? 
             `<div class="ship-info-card">
