@@ -177,25 +177,21 @@ function startSync(){
         const mon=document.createElement('div'); mon.className='card'; 
         onValue(ref(db,`games/${id}/lock`),ls=>{ 
             const l=ls.val(),isL=l&&l.expire>Date.now(),lT=isL?`<br><small style="color:var(--lock)">🔒 包台中: ${l.user}</small>`:'',uB=isL?`<button class="btn btn-sm btn-unlock" onclick="forceUnlock('${id}')">🔓 解鎖</button>`:''; 
-            // 🔴 核心修復：按鈕的 id 必須傳遞原始變數 id，而不是 g.name
+            // 🟢 這裡修正：使用原始 id 作為按鈕參數
             mon.innerHTML=`<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><b>${g.name || id}</b><br><small style="color:#666">${id} | ${g.category}</small></div> ${g.isSoldOut?'<span style="color:#ff4757">[已停盤]</span>':'<span style="color:#2ecc71">[銷售中]</span>'}</div>${lT}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0">--</div><div style="display:flex; flex-wrap:wrap; gap:5px;"><button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯</button><button class="btn btn-sm" onclick="resetShuffle('${id}')">洗牌</button>${uB}<button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button></div>`
         }); list.appendChild(mon);
         onValue(ref(db,`games/${id}/pool`),ps=>{ const p=ps.val()||[]; if(document.getElementById(`rem-${id}`))document.getElementById(`rem-${id}`).innerText=`剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`});
         const aC=document.createElement('div'); aC.className='card'; aC.innerHTML=`<b>${g.name || id} 調控</b><div class="adj-grid" style="margin-top:10px"><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="價格"><input type="number" value="${g.order||99}" onchange="updNum('${id}','order',this.value)" title="排序"></div>`; adj.appendChild(aC)})});
 
-    onValue(ref(db,'winLogs'), async s=>{ 
-        const l=document.getElementById('globalWinItems'); l.innerHTML=''; const data = s.val() || {}; 
-        const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)).slice(0,30);
-        const rowPromises = entries.map(async key => {
-            const i = data[key];
-            const uSnap = await get(ref(db, `users/${i.uid}/shipping`));
-            const ship = uSnap.val() || {};
-            const shipText = ship.name ? `<br><small style="color:var(--success)">📍 ${ship.name} ${ship.phone} (${ship.store})</small>` : '';
-            return `<tr><td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b>${shipText}</td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td></tr>`;
-        });
-        const rows = await Promise.all(rowPromises);
-        l.innerHTML = rows.join('');
-    });
+    onValue(ref(db,'winLogs'),s=>{ const l=document.getElementById('globalWinItems'); l.innerHTML=''; const data = s.val() || {}; const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)).slice(0,50);
+    entries.forEach(async key => { 
+        const i = data[key]; 
+        const uSnap = await get(ref(db, `users/${i.uid}/shipping`));
+        const ship = uSnap.val() || {};
+        const shipText = ship.name ? `<br><small style="color:var(--success)">📍 ${ship.name} ${ship.phone} (${ship.store})</small>` : '';
+        const tr = document.createElement('tr'); 
+        tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b>${shipText}</td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`; l.appendChild(tr); 
+    })});
 
     onValue(ref(db,'users'),s=>{ 
         const c=document.getElementById('userListContainer'); c.innerHTML='';const u=s.val()||{},r={}; 
@@ -265,6 +261,7 @@ window.updNum=(id,f,v)=>update(ref(db,`gameSettings/${id}`),{[f]:Number(v)});
 window.editPin=async uid=>{const p=prompt("新 PIN:");if(p)update(ref(db,`users/${uid}`),{pin:p})};
 window.deleteGame=async id=>{if(confirm("確定刪除商品？")){remove(ref(db,`gameSettings/${id}`));remove(ref(db,`games/${id}`))}};
 window.deleteUser=async uid=>{if(confirm("確定刪除會員？"))remove(ref(db,`users/${uid}`))};
+window.saveAnnouncement=async()=>{await set(ref(db,'settings/announcement'),document.getElementById('annContent').value);alert("完成")};
 window.createUser=async()=>{const u=prompt("新帳號 ID:");if(u)set(ref(db,`users/${u}`),{balance:0,nickname:"新玩家",pin:"123456"})};
 </script>
 </body>
