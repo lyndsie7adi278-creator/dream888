@@ -15,7 +15,6 @@
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
         .nav-left{display:flex;align-items:center;gap:15px;cursor:pointer;color:#333;font-size:1.4rem;position:relative}
         
-        /* 🟢 修改：確保 Logo 容器絕對置中 */
         .logo-txt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
         .logo-img{height:35px;width:auto;display:block;object-fit:contain}
 
@@ -139,11 +138,13 @@ const _db=getDatabase(_app);
 const _sk=localStorage.getItem('myScratchCode');
 let _g={},_cc='ALL',_u=null;
 
+// 🟢 捕捉並儲存推薦碼
 (function captureRef() {
     const urlParams = new URLSearchParams(window.location.search);
     const refId = urlParams.get('ref');
     if (refId) {
         localStorage.setItem('pending_ref', refId);
+        console.log("成功暫存推薦碼:", refId);
     }
 })();
 
@@ -247,10 +248,13 @@ window.showReg=()=>{
     document.getElementById('step1').style.display='none';
     document.getElementById('stepRegister').style.display='block';
     document.getElementById('loginStepTitle').innerText="註冊新帳號";
+    
+    // 🟢 核心修正：當顯示註冊表單時，強制填入推薦碼
     setTimeout(() => {
         const savedRef = localStorage.getItem('pending_ref');
         if (savedRef) {
             document.getElementById('refIn').value = savedRef;
+            console.log("已自動填入推薦碼:", savedRef);
         }
     }, 50);
 };
@@ -263,22 +267,31 @@ window.handleRegister=async()=>{
           n=document.getElementById('regNick').value.trim(),
           p1=document.getElementById('regPass1').value,
           p2=document.getElementById('regPass2').value;
+    
+    // 🟢 二次防護：如果輸入框是空的，則嘗試從暫存中補抓
     let r = document.getElementById('refIn').value.trim();
-    if (!r) { r = localStorage.getItem('pending_ref') || ""; }
+    if (!r) {
+        r = localStorage.getItem('pending_ref') || "";
+    }
+
     if(!i||!n||!p1||!p2) return alert("請填寫所有欄位");
     if(p1!==p2) return alert("密碼不一致");
     if(i===r) return alert("推薦人不能是自己");
+    
     const ex=await get(ref(_db,`users/${i}`));
     if(ex.exists()) return alert("帳號已存在");
+    
     if(r !== "") {
         const rs=await get(ref(_db,`users/${r}`));
         if(!rs.exists()) return alert("推薦人帳號不存在，請確認或留空");
     }
+
     await set(ref(_db,`users/${i}`),{
         balance: 0, commission: 0, nickname: n, pin: p1, invitedBy: r, hasToppedUp: false, createTime: Date.now()
     });
+    
     localStorage.setItem('myScratchCode',i);
-    localStorage.removeItem('pending_ref'); 
+    localStorage.removeItem('pending_ref'); // 成功後清除
     alert("註冊成功！");
     location.reload();
 };
@@ -327,6 +340,3 @@ init();
 </script>
 </body>
 </html>
-
-
-
