@@ -15,6 +15,7 @@
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
         .nav-left{display:flex;align-items:center;gap:15px;cursor:pointer;color:#333;font-size:1.4rem;position:relative}
         
+        /* 🟢 修改：確保 Logo 容器絕對置中 */
         .logo-txt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
         .logo-img{height:35px;width:auto;display:block;object-fit:contain}
 
@@ -126,11 +127,11 @@
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {getDatabase,ref,onValue,get,update,set} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const _c = { 
-    apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
-    databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
-    projectId: "dream8-7b161", 
-    appId: "1:606218522479:web:2737643db3de735af7e29a" 
+const _c = { 
+    apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+    databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+    projectId: "dream8-7b161", 
+    appId: "1:606218522479:web:2737643db3de735af7e29a" 
 };
 
 const _app=initializeApp(_c);
@@ -138,167 +139,161 @@ const _db=getDatabase(_app);
 const _sk=localStorage.getItem('myScratchCode');
 let _g={},_cc='ALL',_u=null;
 
-// 🟢 強化 1: 網址解析並永久存儲
-function captureReferral() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const refId = urlParams.get('ref');
-    if (refId && refId.trim() !== "") {
-        localStorage.setItem('pending_ref', refId);
-        console.log("偵測到推薦人，已記錄:", refId);
-    }
-}
-captureReferral();
+// 🔴 強化：捕捉網址參數並存入 localStorage
+(function captureRef() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refId = urlParams.get('ref');
+    if (refId && refId.trim() !== "") {
+        localStorage.setItem('pending_ref', refId.trim());
+    }
+})();
 
 const _mt=document.getElementById('menuToggle'),_md=document.getElementById('menuDropdown');
 _mt.onclick=(e)=>{e.stopPropagation();_md.classList.toggle('show')};
 window.onclick=()=>_md.classList.remove('show');
 
 window.openAnn=()=>{
-    document.getElementById('annModal').style.display='flex';
-    _md.classList.remove('show');
+    document.getElementById('annModal').style.display='flex';
+    _md.classList.remove('show');
 };
 
 window.handleUserClick = () => {
-    if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
+    if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
 };
 
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
 function init(){
-    onValue(ref(_db, 'winLogs'), (snapshot) => {
-        const winData = snapshot.val();
-        let winText = "";
-        if (winData) {
-            const sortedWins = Object.values(winData).sort((a, b) => (b.time || 0) - (a.time || 0)).slice(0, 5);
-            winText = sortedWins.map(w => `🎊 恭喜玩家 【${w.user}】 在《${w.game}》刮中 【${w.prize}】！！`).join(' 　 | 　 ');
-        }
-        get(ref(_db, 'settings/announcement')).then(annSnap => {
-            const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
-            const finalContent = winText ? `${winText} 　 | 　 📢 公告：${staticAnn}` : staticAnn;
-            const mq = document.getElementById('mq');
-            mq.innerText = finalContent;
-            const duration = Math.max(25, Math.floor(finalContent.length * 0.3));
-            mq.style.animationDuration = duration + 's';
-        });
-    });
+    onValue(ref(_db, 'winLogs'), (snapshot) => {
+        const winData = snapshot.val();
+        let winText = "";
+        if (winData) {
+            const sortedWins = Object.values(winData).sort((a, b) => (b.time || 0) - (a.time || 0)).slice(0, 5);
+            winText = sortedWins.map(w => `🎊 恭喜玩家 【${w.user}】 在《${w.game}》刮中 【${w.prize}】！！`).join(' 　 | 　 ');
+        }
+        get(ref(_db, 'settings/announcement')).then(annSnap => {
+            const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
+            const finalContent = winText ? `${winText} 　 | 　 📢 公告：${staticAnn}` : staticAnn;
+            const mq = document.getElementById('mq');
+            mq.innerText = finalContent;
+            const duration = Math.max(25, Math.floor(finalContent.length * 0.3));
+            mq.style.animationDuration = duration + 's';
+        });
+    });
 
-    onValue(ref(_db,'settings/announcement_config'), s => {
-        if(s.exists()){
-            const config = s.val();
-            const wrapper = document.getElementById('annSwiperWrapper');
-            wrapper.innerHTML = ""; 
-            
-            if(config.active && config.items && config.items.length > 0) {
-                config.items.forEach(item => {
-                    const slide = document.createElement('div');
-                    slide.className = 'swiper-slide';
-                    slide.innerHTML = `
-                        ${item.img ? `<div class="pop-img-box"><img src="${item.img}"></div>` : ''}
-                        <div class="pop-title">${item.title}</div>
-                        <div class="pop-text">${item.content}</div>
-                    `;
-                    wrapper.appendChild(slide);
-                });
+    onValue(ref(_db,'settings/announcement_config'), s => {
+        if(s.exists()){
+            const config = s.val();
+            const wrapper = document.getElementById('annSwiperWrapper');
+            wrapper.innerHTML = ""; 
+            
+            if(config.active && config.items && config.items.length > 0) {
+                config.items.forEach(item => {
+                    const slide = document.createElement('div');
+                    slide.className = 'swiper-slide';
+                    slide.innerHTML = `
+                        ${item.img ? `<div class="pop-img-box"><img src="${item.img}"></div>` : ''}
+                        <div class="pop-title">${item.title}</div>
+                        <div class="pop-text">${item.content}</div>
+                    `;
+                    wrapper.appendChild(slide);
+                });
 
-                new Swiper(".mySwiper", {
-                    pagination: { el: ".swiper-pagination", clickable: true },
-                    autoHeight: true,
-                    observer: true,
-                    observeParents: true
-                });
+                new Swiper(".mySwiper", {
+                    pagination: { el: ".swiper-pagination", clickable: true },
+                    autoHeight: true,
+                    observer: true,
+                    observeParents: true
+                });
 
-                const lastHideDate = localStorage.getItem('hide_ann_date');
-                const lastAnnId = localStorage.getItem('last_ann_id');
-                const today = new Date().toDateString();
+                const lastHideDate = localStorage.getItem('hide_ann_date');
+                const lastAnnId = localStorage.getItem('last_ann_id');
+                const today = new Date().toDateString();
 
-                if(lastAnnId !== config.id || lastHideDate !== today) {
-                    document.getElementById('annModal').style.display = 'flex';
-                }
-            }
-        }
-    });
+                if(lastAnnId !== config.id || lastHideDate !== today) {
+                    document.getElementById('annModal').style.display = 'flex';
+                }
+            }
+        }
+    });
 
-    onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{};renderCats();renderGrid()});
-    if(_sk){
-        onValue(ref(_db,`users/${_sk}`),s=>{
-            const u=s.val(); if(!u)return;
-            if(!sessionStorage.getItem('welcomed')){showWelcomeToast(u.nickname||'玩家');sessionStorage.setItem('welcomed','1')}
-        });
-    }
+    onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{};renderCats();renderGrid()});
+    if(_sk){
+        onValue(ref(_db,`users/${_sk}`),s=>{
+            const u=s.val(); if(!u)return;
+            if(!sessionStorage.getItem('welcomed')){showWelcomeToast(u.nickname||'玩家');sessionStorage.setItem('welcomed','1')}
+        });
+    }
 }
 
 window.closeModal = () => {
-    const isChecked = document.getElementById('noMoreToday').checked;
-    const today = new Date().toDateString();
-    
-    if (isChecked) {
-        localStorage.setItem('hide_ann_date', today);
-    } else {
-        localStorage.removeItem('hide_ann_date');
-    }
+    const isChecked = document.getElementById('noMoreToday').checked;
+    const today = new Date().toDateString();
+    
+    if (isChecked) {
+        localStorage.setItem('hide_ann_date', today);
+    } else {
+        localStorage.removeItem('hide_ann_date');
+    }
 
-    get(ref(_db,'settings/announcement_config')).then(s => {
-        if(s.exists()) localStorage.setItem('last_ann_id', s.val().id);
-    });
+    get(ref(_db,'settings/announcement_config')).then(s => {
+        if(s.exists()) localStorage.setItem('last_ann_id', s.val().id);
+    });
 
-    document.getElementById('annModal').style.display = 'none';
+    document.getElementById('annModal').style.display = 'none';
 };
 
-// 🟢 強化 2: 切換註冊表單時「強制」賦值
 window.showReg=()=>{
-    document.getElementById('step1').style.display='none';
-    document.getElementById('stepRegister').style.display='block';
-    document.getElementById('loginStepTitle').innerText="註冊新帳號";
-    
-    // 多次嘗試確保賦值成功
-    const applyRef = () => {
-        const savedRef = localStorage.getItem('pending_ref');
-        const refInput = document.getElementById('refIn');
-        if (savedRef && refInput) {
-            refInput.value = savedRef;
-            console.log("註冊表單已強制填入推薦碼:", savedRef);
-        }
-    };
-    applyRef();
-    setTimeout(applyRef, 100); // 延遲再試一次防隱藏元素失效
+    document.getElementById('step1').style.display='none';
+    document.getElementById('stepRegister').style.display='block';
+    document.getElementById('loginStepTitle').innerText="註冊新帳號";
+    
+    // 🔴 關鍵點：在顯示註冊介面後，確保 refIn 輸入框被賦值
+    setTimeout(() => {
+        const savedRef = localStorage.getItem('pending_ref');
+        const refEl = document.getElementById('refIn');
+        if (savedRef && refEl) {
+            refEl.value = savedRef;
+            // 觸發一個 input 事件讓瀏覽器感知
+            refEl.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }, 100);
 };
 
 window.backStep1=()=>{document.getElementById('step1').style.display='block';document.getElementById('step2').style.display='none';document.getElementById('stepRegister').style.display='none';document.getElementById('loginStepTitle').innerText="會員登入"};
 window.checkCode=async()=>{const c=document.getElementById('cIn').value.trim();if(!c)return;const s=await get(ref(_db,`users/${c}`));if(!s.exists())return alert("帳號不存在");_u={id:c,data:s.val()};document.getElementById('step1').style.display='none';document.getElementById('step2').style.display='block'};
 
 window.handleRegister=async()=>{
-    const i=document.getElementById('regId').value.trim(),
-          n=document.getElementById('regNick').value.trim(),
-          p1=document.getElementById('regPass1').value,
-          p2=document.getElementById('regPass2').value;
-    
-    // 🟢 強化 3: 送出前最後確認，空值自動補抓
-    let r = document.getElementById('refIn').value.trim();
-    if (!r) {
-        r = localStorage.getItem('pending_ref') || "";
+    // 🔴 終極保險：點擊註冊按鈕時，如果推薦欄是空的，立刻從 localStorage 補抓
+    const refInput = document.getElementById('refIn');
+    if(refInput && !refInput.value.trim()){
+        const cached = localStorage.getItem('pending_ref');
+        if(cached) refInput.value = cached;
     }
 
-    if(!i||!n||!p1||!p2) return alert("請填寫所有欄位");
-    if(p1!==p2) return alert("密碼不一致");
-    if(i===r) return alert("推薦人不能是自己");
-    
-    const ex=await get(ref(_db,`users/${i}`));
-    if(ex.exists()) return alert("帳號已存在");
-    
-    if(r !== "") {
-        const rs=await get(ref(_db,`users/${r}`));
-        if(!rs.exists()) return alert("推薦人帳號不存在，請確認或留空");
-    }
+    const i=document.getElementById('regId').value.trim(),
+          n=document.getElementById('regNick').value.trim(),
+          p1=document.getElementById('regPass1').value,
+          p2=document.getElementById('regPass2').value,
+          r=document.getElementById('refIn').value.trim();
 
-    await set(ref(_db,`users/${i}`),{
-        balance: 0, commission: 0, nickname: n, pin: p1, invitedBy: r, hasToppedUp: false, createTime: Date.now()
-    });
-    
-    localStorage.setItem('myScratchCode',i);
-    localStorage.removeItem('pending_ref'); 
-    alert("註冊成功！");
-    location.reload();
+    if(!i||!n||!p1||!p2) return alert("請填寫所有欄位");
+    if(p1!==p2) return alert("密碼不一致");
+    if(i===r) return alert("推薦人不能是自己");
+    const ex=await get(ref(_db,`users/${i}`));
+    if(ex.exists()) return alert("帳號已存在");
+    if(r !== "") {
+        const rs=await get(ref(_db,`users/${r}`));
+        if(!rs.exists()) return alert("推薦人帳號不存在，請確認或留空");
+    }
+    await set(ref(_db,`users/${i}`),{
+        balance: 0, commission: 0, nickname: n, pin: p1, invitedBy: r, hasToppedUp: false, createTime: Date.now()
+    });
+    localStorage.setItem('myScratchCode',i);
+    localStorage.removeItem('pending_ref'); 
+    alert("註冊成功！");
+    location.reload();
 };
 
 window.handlePinLogin=async()=>{const p=document.getElementById('pinIn').value;if(_u.data.pin!==p)return alert("密碼錯誤");localStorage.setItem('myScratchCode',_u.id);location.reload()};
@@ -307,39 +302,39 @@ function renderCats(){const c=new Set(['ALL']);Object.values(_g).forEach(i=>{if(
 window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
 
 function renderGrid(){
-    const grid=document.getElementById('pGrid');grid.innerHTML='';
-    if(_cc==='ALL'){
-        const f=document.createElement('div');
-        f.className='p-card free-gift';
-        f.onclick=()=>window.open('https://www.dream888.fun/live/','_blank');
-        f.innerHTML=`<img src="https://i.ibb.co/VWVvG9fQ/0.png" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
-        grid.appendChild(f);
-    }
-    const keys=Object.keys(_g).sort((a,b)=>(_g[a].order||99)-(_g[b].order||99));
-    keys.forEach(id=>{
-        const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
-        const sId=id.replace(/\s+/g,'-');
-        const displayTitle = it.name || id;
-        const card=document.createElement('div');
-        card.className=`p-card ${it.isSoldOut?'soldout':''}`;
-        card.onclick=()=>location.href=`game.html?id=${id}`;
-        card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
-        grid.appendChild(card);
-        onValue(ref(_db,`games/${id}`),s=>{
-            const d=s.val()||{},l=d.lock,p=d.pool||[],sB=document.getElementById(`status-${sId}`),pB=document.getElementById(`promo-${sId}`);
-            if(!sB)return;
-            if(it.isSoldOut){sB.innerHTML=`<div class="soldout-tag">SOLD OUT / 已停盤</div>`;pB.innerHTML="";}
-            else if(l&&l.expire>Date.now()){sB.innerHTML=`<div class="lock-tag">🔒 玩家包台中</div>`;pB.innerHTML="";}
-            else{
-                const sold=p.filter(x=>x.taken).length;
-                if(it.promoCount>0&&sold<it.promoCount){
-                    sB.innerHTML=`<div class="p-price-value">P${it.promoPrice} <span class="promo-tag">開盤優惠</span></div>`;
-                    pB.innerHTML=`<div class="promo-info">前${it.promoCount}刮 P${it.promoPrice} / 後 P${it.price}</div>`;
-                }
-                else{sB.innerHTML=`<div class="p-price-value">一刮 / P${it.price||0}</div>`;pB.innerHTML="";}
-            }
-        });
-    });
+    const grid=document.getElementById('pGrid');grid.innerHTML='';
+    if(_cc==='ALL'){
+        const f=document.createElement('div');
+        f.className='p-card free-gift';
+        f.onclick=()=>window.open('https://www.dream888.fun/live/','_blank');
+        f.innerHTML=`<img src="https://i.ibb.co/VWVvG9fQ/0.png" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
+        grid.appendChild(f);
+    }
+    const keys=Object.keys(_g).sort((a,b)=>(_g[a].order||99)-(_g[b].order||99));
+    keys.forEach(id=>{
+        const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
+        const sId=id.replace(/\s+/g,'-');
+        const displayTitle = it.name || id;
+        const card=document.createElement('div');
+        card.className=`p-card ${it.isSoldOut?'soldout':''}`;
+        card.onclick=()=>location.href=`game.html?id=${id}`;
+        card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
+        grid.appendChild(card);
+        onValue(ref(_db,`games/${id}`),s=>{
+            const d=s.val()||{},l=d.lock,p=d.pool||[],sB=document.getElementById(`status-${sId}`),pB=document.getElementById(`promo-${sId}`);
+            if(!sB)return;
+            if(it.isSoldOut){sB.innerHTML=`<div class="soldout-tag">SOLD OUT / 已停盤</div>`;pB.innerHTML="";}
+            else if(l&&l.expire>Date.now()){sB.innerHTML=`<div class="lock-tag">🔒 玩家包台中</div>`;pB.innerHTML="";}
+            else{
+                const sold=p.filter(x=>x.taken).length;
+                if(it.promoCount>0&&sold<it.promoCount){
+                    sB.innerHTML=`<div class="p-price-value">P${it.promoPrice} <span class="promo-tag">開盤優惠</span></div>`;
+                    pB.innerHTML=`<div class="promo-info">前${it.promoCount}刮 P${it.promoPrice} / 後 P${it.price}</div>`;
+                }
+                else{sB.innerHTML=`<div class="p-price-value">一刮 / P${it.price||0}</div>`;pB.innerHTML="";}
+            }
+        });
+    });
 }
 init();
 </script>
