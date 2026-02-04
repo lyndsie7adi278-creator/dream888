@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
     <title>夢工廠 | 會員中心</title>
+<script>
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const refId = urlParams.get('ref');
+        if (refId && refId.trim() !== "") {
+            localStorage.setItem('pending_ref', refId.trim());
+        }
+    })();
+    // 全域賦值函數
+    window.forceApplyRef = function() {
+        const savedRef = localStorage.getItem('pending_ref');
+        const refEl = document.getElementById('refIn');
+        if (savedRef && refEl) { refEl.value = savedRef; }
+    };
+</script>
+    
     <style>
         :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --success: #2ecc71; --wait: #f1c40f; --alliance: #6c5ce7; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
@@ -242,8 +258,8 @@
             }
         };
 
-        const myRefUrl = `${window.location.origin}${window.location.pathname.replace('member.html', 'index.html')}?ref=${_uid}`;
-        document.getElementById('refLink').innerText = myRefUrl;
+const myRefUrl = `${window.location.origin}${window.location.pathname.replace('member.html', 'index.html').replace('profile.html', 'index.html')}?ref=${_uid}`;
+document.getElementById('refLink').innerText = myRefUrl;
 
         window.copyRefLink = () => copyText(myRefUrl, '推廣連結');
 
