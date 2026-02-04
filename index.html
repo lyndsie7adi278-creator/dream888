@@ -138,15 +138,16 @@ const _db=getDatabase(_app);
 const _sk=localStorage.getItem('myScratchCode');
 let _g={},_cc='ALL',_u=null;
 
-// 🟢 捕捉並儲存推薦碼
-(function captureRef() {
+// 🟢 強化 1: 網址解析並永久存儲
+function captureReferral() {
     const urlParams = new URLSearchParams(window.location.search);
     const refId = urlParams.get('ref');
-    if (refId) {
+    if (refId && refId.trim() !== "") {
         localStorage.setItem('pending_ref', refId);
-        console.log("成功暫存推薦碼:", refId);
+        console.log("偵測到推薦人，已記錄:", refId);
     }
-})();
+}
+captureReferral();
 
 const _mt=document.getElementById('menuToggle'),_md=document.getElementById('menuDropdown');
 _mt.onclick=(e)=>{e.stopPropagation();_md.classList.toggle('show')};
@@ -244,19 +245,23 @@ window.closeModal = () => {
     document.getElementById('annModal').style.display = 'none';
 };
 
+// 🟢 強化 2: 切換註冊表單時「強制」賦值
 window.showReg=()=>{
     document.getElementById('step1').style.display='none';
     document.getElementById('stepRegister').style.display='block';
     document.getElementById('loginStepTitle').innerText="註冊新帳號";
     
-    // 🟢 核心修正：當顯示註冊表單時，強制填入推薦碼
-    setTimeout(() => {
+    // 多次嘗試確保賦值成功
+    const applyRef = () => {
         const savedRef = localStorage.getItem('pending_ref');
-        if (savedRef) {
-            document.getElementById('refIn').value = savedRef;
-            console.log("已自動填入推薦碼:", savedRef);
+        const refInput = document.getElementById('refIn');
+        if (savedRef && refInput) {
+            refInput.value = savedRef;
+            console.log("註冊表單已強制填入推薦碼:", savedRef);
         }
-    }, 50);
+    };
+    applyRef();
+    setTimeout(applyRef, 100); // 延遲再試一次防隱藏元素失效
 };
 
 window.backStep1=()=>{document.getElementById('step1').style.display='block';document.getElementById('step2').style.display='none';document.getElementById('stepRegister').style.display='none';document.getElementById('loginStepTitle').innerText="會員登入"};
@@ -268,7 +273,7 @@ window.handleRegister=async()=>{
           p1=document.getElementById('regPass1').value,
           p2=document.getElementById('regPass2').value;
     
-    // 🟢 二次防護：如果輸入框是空的，則嘗試從暫存中補抓
+    // 🟢 強化 3: 送出前最後確認，空值自動補抓
     let r = document.getElementById('refIn').value.trim();
     if (!r) {
         r = localStorage.getItem('pending_ref') || "";
@@ -291,7 +296,7 @@ window.handleRegister=async()=>{
     });
     
     localStorage.setItem('myScratchCode',i);
-    localStorage.removeItem('pending_ref'); // 成功後清除
+    localStorage.removeItem('pending_ref'); 
     alert("註冊成功！");
     location.reload();
 };
