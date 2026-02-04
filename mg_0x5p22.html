@@ -52,7 +52,6 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .ship-info-card { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); padding: 12px; border-radius: 10px; margin: 10px 0; font-size: 0.8rem; line-height: 1.6; }
 .ship-label { color: var(--success); font-weight: bold; margin-right: 5px; }
 
-/* 🟢 新增：報表網格樣式 */
 .rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
 .rep-item { background: #0a0c10; padding: 15px; border-radius: 12px; border: 1px solid #222; border-left: 4px solid var(--p); }
 </style>
@@ -78,11 +77,13 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 
 <div class="main">
     <div id="report_page" class="page active">
-        <span class="title">歷史數據統計報表</span>
+        <span class="title">營運數據統計報表</span>
         <div class="card">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="date" id="repDate" style="margin: 0; flex: 1;">
-                <button class="btn btn-sm" onclick="fetchDailyReport()" style="margin: 0; width: 100px;">查詢</button>
+            <div id="repTitle" style="font-size: 1rem; color: var(--p); margin-bottom: 15px; font-weight: bold;">📅 數據查詢</div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="date" id="repDate" style="margin: 0; flex: 1; min-width: 150px;">
+                <button class="btn btn-sm" onclick="fetchDailyReport()" style="margin: 0; width: 100px;">單日查詢</button>
+                <button class="btn btn-sm btn-success" onclick="fetchMonthlyReport()" style="margin: 0; width: 100px;">當月總計</button>
             </div>
         </div>
         <div class="rep-grid">
@@ -91,11 +92,11 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
             <div class="rep-item"><small style="color:#888">總刮取次數</small><div id="rCnt" style="font-size:1.5rem; font-weight:900; color:#fff; margin-top:5px;">0</div></div>
         </div>
         <div class="card">
-            <span class="title" style="font-size: 0.9rem;">當日商品銷售明細</span>
-            <div id="rList" style="font-size: 0.85rem; line-height: 1.8;">選擇日期並點擊查詢...</div>
+            <span class="title" style="font-size: 0.9rem;">商品銷售明細 / 分佈</span>
+            <div id="rList" style="font-size: 0.85rem; line-height: 1.8;">選擇日期或月份點擊查詢...</div>
         </div>
         <div class="card">
-            <span class="title" style="font-size: 0.9rem;">當日中獎紀錄</span>
+            <span class="title" style="font-size: 0.9rem;">中獎紀錄</span>
             <table class="win-table">
                 <thead><tr><th>玩家</th><th>獎項</th><th>時間</th></tr></thead>
                 <tbody id="rWins"></tbody>
@@ -135,7 +136,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
         <hr style="border:0; border-top:1px solid #333; margin:25px 0">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
             <div><label style="font-size:0.75rem; color:var(--p)">公告 ID：</label><input type="text" id="popId" placeholder="例如: 20260204"></div>
-            <div><label style="font-size:0.75rem; color:var(--p)">是否啟用：</label><select id="popActive"><option value="true">啟用</option><option value="false">停用</option></select></div>
+          <div><label style="font-size:0.75rem; color:var(--p)">是否啟用：</label><select id="popActive"><option value="true">啟用</option><option value="false">停用</option></select></div>
         </div>
         <button class="btn btn-success" style="width:100%; margin-top:10px" onclick="savePopConfigs()">同步發佈所有彈窗</button>
     </div>
@@ -184,41 +185,49 @@ window.addNewPopItem = (data = {title:'', content:'', img:''}) => {
 
 window.setMonFilter = (cat) => { monFilter = cat; startSync(); };
 
-// 🟢 新增：報表查詢邏輯
-window.fetchDailyReport = async () => {
-    showLoading("正在統計...");
-    const date = document.getElementById('repDate').value;
-    const start = new Date(date + "T00:00:00").getTime();
-    const end = new Date(date + "T23:59:59").getTime();
-    
+// 🟢 數據計算邏輯
+async function runReport(start, end) {
     const [uSnap, wSnap] = await Promise.all([get(ref(db, 'users')), get(ref(db, 'winLogs'))]);
     const users = uSnap.val() || {}, wins = wSnap.val() || {};
-    
     let rev = 0, dep = 0, cnt = 0;
     let games = {};
     let winItems = [];
-
     Object.values(users).forEach(u => {
         if(u.logs) {
             Object.values(u.logs).forEach(log => {
                 if(log.time >= start && log.time <= end) {
-                    if(log.cost > 0) {
-                        rev += log.cost; cnt++;
-                        games[log.game] = (games[log.game] || 0) + log.cost;
-                    } else if(log.cost < 0) { dep += Math.abs(log.cost); }
+                    if(log.cost > 0) { rev += log.cost; cnt++; games[log.game] = (games[log.game] || 0) + log.cost; }
+                    else if(log.cost < 0) { dep += Math.abs(log.cost); }
                 }
             });
         }
     });
-
     Object.values(wins).forEach(w => { if(w.time >= start && w.time <= end) winItems.push(w); });
     winItems.sort((a,b) => b.time - a.time);
-
     document.getElementById('rRev').innerText = rev.toLocaleString();
     document.getElementById('rDep').innerText = dep.toLocaleString();
     document.getElementById('rCnt').innerText = cnt.toLocaleString();
-    document.getElementById('rList').innerHTML = Object.entries(games).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<div>• <b>${n}</b>: ${s} P</div>`).join('') || "當日無消費";
-    document.getElementById('rWins').innerHTML = winItems.map(w=>`<tr><td>${w.user}</td><td>${w.game}<br><small style="color:var(--p)">${w.prize}</small></td><td>${new Date(w.time).toLocaleTimeString()}</td></tr>`).join('') || "<tr><td colspan='3' style='text-align:center'>無中獎紀錄</td></tr>";
+    document.getElementById('rList').innerHTML = Object.entries(games).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<div>• <b>${n}</b>: ${s} P</div>`).join('') || "無數據";
+    document.getElementById('rWins').innerHTML = winItems.map(w=>`<tr><td>${w.user}</td><td>${w.game}<br><small style="color:var(--p)">${w.prize}</small></td><td>${new Date(w.time).toLocaleString()}</td></tr>`).join('') || "<tr><td colspan='3' style='text-align:center'>無紀錄</td></tr>";
+}
+
+window.fetchDailyReport = async () => {
+    const date = document.getElementById('repDate').value; if(!date) return alert("請選擇日期");
+    showLoading(`統計 ${date} 中...`);
+    await runReport(new Date(date + "T00:00:00").getTime(), new Date(date + "T23:59:59").getTime());
+    document.getElementById('repTitle').innerText = `📅 日報表：${date}`;
+    hideLoading();
+};
+
+window.fetchMonthlyReport = async () => {
+    const date = document.getElementById('repDate').value; if(!date) return alert("請選擇日期以確定月份");
+    const d = new Date(date);
+    const month = d.getMonth(), year = d.getFullYear();
+    const start = new Date(year, month, 1).getTime();
+    const end = new Date(year, month + 1, 0, 23, 59, 59).getTime();
+    showLoading(`統計 ${year}/${month+1} 月報中...`);
+    await runReport(start, end);
+    document.getElementById('repTitle').innerText = `📅 月報表：${year}年 ${month+1}月`;
     hideLoading();
 };
 
