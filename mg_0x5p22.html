@@ -145,7 +145,6 @@ window.addNewPopItem = (data = {title:'', content:'', img:''}) => {
 window.setMonFilter = (cat) => { monFilter = cat; startSync(); };
 
 function startSync(){
-    // 🟢 將儲值監聽移到最前面，防止被後面的 await get 阻塞
     onValue(ref(db, 'depositRequests'), s => {
         const container = document.getElementById('depositListContainer');
         const badge = document.getElementById('depositBadge');
