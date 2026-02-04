@@ -58,7 +58,6 @@
     .m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
     .m-btn { display: block; width: 100%; padding: 18px; background: var(--p); color: #000; border: none; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; margin-top: 25px; }
 
-    /* 🟢 新增：Loading 動畫樣式 */
     #globalLoading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 20000; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
     .spinner { width: 45px; height: 45px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -128,7 +127,6 @@ let _album = [];
 
 if(!_gid) location.href = 'index.html';
 
-// 🟢 新增：Loading 控制函數
 window.showLoading = (text = "正在通訊中...") => {
     document.getElementById('loadingText').innerText = text;
     document.getElementById('globalLoading').style.display = 'flex';
@@ -166,7 +164,9 @@ onValue(ref(_db, `games/${_gid}/lock`), snap => {
 onValue(ref(_db, `gameSettings/${_gid}`), s => {
     _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
-    document.getElementById('gTitle').innerText = _gid;
+    
+    // 🟢 修正：顯示改過的名字
+    document.getElementById('gTitle').innerText = _data.name || _gid;
     
     const mainImg = _data.img || "";
     const albumList = _data.album || [];
@@ -240,19 +240,17 @@ async function buyTicket(idx) {
     if(cur < pr) return alert("點數不足");
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
-    // 🟢 1. 顯示 Loading 並關閉畫面點擊
     showLoading("正在驗證餘額並扣點...");
     document.body.style.pointerEvents = "none"; 
 
     const script = document.createElement('script');
-    script.src = `${GAS_URL}?gid=${_gid}&uid=${_uid}&idx=${idx}&pr=${pr}&callback=gasCallback`;
+    // 🟢 核心修正：對 _gid 進行編碼，防止中文名稱造成網址斷裂
+    script.src = `${GAS_URL}?gid=${encodeURIComponent(_gid)}&uid=${encodeURIComponent(_uid)}&idx=${idx}&pr=${pr}&callback=gasCallback`;
     document.body.appendChild(script);
     
     window.gasCallback = (res) => {
-        // 🟢 2. 收到回傳後隱藏 Loading 並解鎖點擊
         hideLoading();
         document.body.style.pointerEvents = "auto";
-        
         if(res.success) {
             initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
         } else {
@@ -261,7 +259,6 @@ async function buyTicket(idx) {
         script.remove();
     };
 
-    // 🔴 錯誤預防：若 15 秒後沒回應則自動解除鎖定
     setTimeout(() => { if(document.body.style.pointerEvents === "none") { hideLoading(); document.body.style.pointerEvents = "auto"; } }, 15000);
 }
 
@@ -310,7 +307,6 @@ function initCanvas(no, val, poolIdx) {
 }
 
 async function syncStatus(idx, val) {
-    // 🟢 3. 刮完同步狀態時也可以顯示微型 Loading 或直接處理
     await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
     
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
@@ -324,7 +320,7 @@ async function syncStatus(idx, val) {
         document.getElementById('res_msg').innerHTML = `🎊 恭喜獲獎 🎊<br>${hit.name}`;
         document.getElementById('res_img').src = hit.img || _data.img; 
         confetti({ particleCount: 150, spread: 70 });
-        push(ref(_db, `winLogs`), { user: _uid, game: _gid, prize: hit.name, time: serverTimestamp() });
+        push(ref(_db, `winLogs`), { uid: _uid, user: _uid, game: _data.name || _gid, prize: hit.name, time: serverTimestamp() });
     } else { 
         document.getElementById('res_msg').innerText = "銘謝惠顧"; 
         document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png"; 
