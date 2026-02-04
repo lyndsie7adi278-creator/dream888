@@ -9,9 +9,11 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
         
-        .header { padding: 15px 20px; display: flex; align-items: center; background: #fff; box-shadow: 0 1px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
+        .header { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; background: #fff; box-shadow: 0 1px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
         .back-btn { background: none; border: 1.5px solid var(--primary); color: var(--primary); padding: 5px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; font-weight: 900; }
-        
+        /* 🟢 新增：登出按鈕樣式 */
+        .logout-btn { background: #f0f2f5; color: #999; padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; cursor: pointer; border: none; }
+
         .user-panel { 
             padding: 50px 20px 60px; 
             background: linear-gradient(135deg, #ff8fa3 0%, #ffb1bf 100%); 
@@ -55,6 +57,14 @@
         .ship-input:focus { border-color: var(--primary); }
         .ship-btn { background: var(--primary); color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; font-size: 0.9rem; }
 
+        /* 🟢 新增：摺疊面板樣式 */
+        .collapse-box { background: #fff; border-radius: 18px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .collapse-head { padding: 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 900; font-size: 0.9rem; color: #333; }
+        .collapse-head .arrow { transition: 0.3s; color: #ccc; font-size: 0.7rem; }
+        .collapse-body { display: none; padding: 0 18px 10px; border-top: 1px solid #f9f9f9; }
+        .collapse-body.show { display: block; }
+        .collapse-box.open .arrow { transform: rotate(180deg); }
+
         .alliance-box { background: #fff; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .ref-url-box { background: #f0f2f5; padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 0.75rem; color: #666; word-break: break-all; border: 1px dashed var(--alliance); }
         .alliance-btn { background: var(--alliance); color: #fff; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; }
@@ -65,6 +75,9 @@
         .notice-card { background: #fff9e6; border-left: 4px solid var(--wait); padding: 15px; border-radius: 8px; font-size: 0.75rem; text-align: left; margin-top: 20px; color: #856404; line-height: 1.6; }
 
         .list-item { background: #fff; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .list-item-inner { border-bottom: 1px solid #f9f9f9; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .list-item-inner:last-child { border: none; }
+        
         .item-info b { display: block; font-size: 0.95rem; color: #333; margin-bottom: 4px; font-weight: 900; }
         .item-info small { color: #ccc; font-size: 0.7rem; font-weight: bold; }
         
@@ -77,7 +90,7 @@
         .val-minus { color: var(--primary); }
         .val-plus { color: var(--success); }
 
-        .empty-state { text-align: center; padding: 60px 20px; color: #d0d5dd; font-weight: bold; font-size: 0.8rem;}
+        .empty-state { text-align: center; padding: 30px 20px; color: #d0d5dd; font-weight: bold; font-size: 0.8rem;}
         #copyToast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; z-index: 5000; display: none; }
         
         .shipping-info { font-size: 0.75rem; color: #7f8c8d; margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 12px; width: 100%; border: 1px solid #eee; }
@@ -97,6 +110,7 @@
 
     <div class="header">
         <a href="index.html" class="back-btn">← 回商城</a>
+        <button class="logout-btn" onclick="handleLogout()">登出帳號</button>
     </div>
 
     <div class="user-panel">
@@ -136,7 +150,24 @@
                     * 若需更改資訊，直接修改並再次點擊儲存即可。
                 </div>
             </div>
-            <div id="billingList"></div>
+
+            <div class="collapse-box" id="boxDep">
+                <div class="collapse-head" onclick="toggleCollapse('boxDep', 'depListBody')">
+                    <span>💰 儲值入點紀錄 (點擊展開)</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="collapse-body" id="depListBody"></div>
+            </div>
+
+            <div class="collapse-box" id="boxGame">
+                <div class="collapse-head" onclick="toggleCollapse('boxGame', 'gameListBody')">
+                    <span>🎰 遊戲消費紀錄 (點擊展開)</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="collapse-body" id="gameListBody"></div>
+            </div>
+            
+            <div id="billingList" style="display:none;"></div>
         </div>
 
         <div id="tab-1" class="page-content"><div id="depositList"></div></div>
@@ -185,26 +216,45 @@
 
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
-        
+
+        // 🟢 登出功能邏輯
+        window.handleLogout = () => {
+            if(confirm("確定要登出帳號嗎？")) {
+                localStorage.removeItem('myScratchCode');
+                location.href = 'index.html';
+            }
+        };
+
+        // 🟢 摺疊功能邏輯
+        window.toggleCollapse = (boxId, bodyId) => {
+            const box = document.getElementById(boxId);
+            const body = document.getElementById(bodyId);
+            const isOpen = box.classList.contains('open');
+            
+            // 先關閉所有
+            document.querySelectorAll('.collapse-box').forEach(el => el.classList.remove('open'));
+            document.querySelectorAll('.collapse-body').forEach(el => el.style.display = 'none');
+            
+            // 如果原本是關的，就打開這一個
+            if(!isOpen) {
+                box.classList.add('open');
+                body.style.display = 'block';
+            }
+        };
+
         const myRefUrl = `${window.location.origin}${window.location.pathname.replace('member.html', 'index.html')}?ref=${_uid}`;
         document.getElementById('refLink').innerText = myRefUrl;
 
         window.copyRefLink = () => copyText(myRefUrl, '推廣連結');
 
-        // 🟢 收件資訊儲存邏輯
         window.saveShippingInfo = async () => {
             const name = document.getElementById('shipName').value.trim();
             const phone = document.getElementById('shipPhone').value.trim();
             const store = document.getElementById('shipStore').value.trim();
-
             if(!name || !phone || !store) return alert("請完整填寫收件資訊");
-
             try {
                 await update(ref(_db, `users/${_uid}/shipping`), {
-                    name: name,
-                    phone: phone,
-                    store: store,
-                    time: Date.now()
+                    name: name, phone: phone, store: store, time: Date.now()
                 });
                 alert("✅ 儲存成功！之後中獎會自動以此資料出貨。");
             } catch (e) {
@@ -245,26 +295,44 @@
             document.getElementById('uNick').innerText = u.nickname || "新玩家";
             document.getElementById('avatarLetter').innerText = (u.nickname || _uid).charAt(0).toUpperCase();
 
-            // 🟢 自動填入已存的收件資訊
             if (u.shipping) {
                 document.getElementById('shipName').value = u.shipping.name || '';
                 document.getElementById('shipPhone').value = u.shipping.phone || '';
                 document.getElementById('shipStore').value = u.shipping.store || '';
             }
 
-            const bList = document.getElementById('billingList');
+            const depBody = document.getElementById('depListBody');
+            const gameBody = document.getElementById('gameListBody');
+            
             if(u.logs) {
                 const logs = Object.values(u.logs).sort((a,b) => b.time - a.time);
-                bList.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem; margin-top:15px;">近期消費明細</div>` + logs.map(l => `
-                    <div class="list-item">
+                
+                // 分類：儲值紀錄 (cost 為負數)
+                const dLogs = logs.filter(l => Number(l.cost) < 0);
+                depBody.innerHTML = dLogs.length ? dLogs.map(l => `
+                    <div class="list-item-inner">
                         <div class="item-info">
-                            <b>${l.game || '點數調整'}</b>
+                            <b>${l.game || '點數入帳'}</b>
+                            <small>${new Date(l.time).toLocaleString()}</small>
+                        </div>
+                        <div class="item-val val-plus">+${Math.abs(l.cost)} P</div>
+                    </div>
+                `).join('') : '<div class="empty-state">尚無入點紀錄</div>';
+
+                // 分類：消費紀錄 (cost 為正數)
+                const gLogs = logs.filter(l => Number(l.cost) > 0);
+                gameBody.innerHTML = gLogs.length ? gLogs.map(l => `
+                    <div class="list-item-inner">
+                        <div class="item-info">
+                            <b>${l.game}</b>
                             <small>${new Date(l.time).toLocaleString()}</small>
                         </div>
                         <div class="item-val val-minus">-${l.cost} P</div>
                     </div>
-                `).join('');
-            } else { bList.innerHTML = '<div class="empty-state">尚無消費紀錄</div>'; }
+                `).join('') : '<div class="empty-state">尚無消費紀錄</div>';
+            } else {
+                depBody.innerHTML = gameBody.innerHTML = '<div class="empty-state">尚無明細資料</div>';
+            }
         });
 
         // 監聽邀請好友名單
