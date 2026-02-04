@@ -49,7 +49,6 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .filter-btn { flex-shrink: 0; padding: 8px 15px; background: #1a1d24; border: 1px solid #333; border-radius: 30px; color: #888; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
 .filter-btn.active { background: var(--p); color: #000; border-color: var(--p); }
 
-/* 🟢 新增：後台收件資訊小卡樣式 */
 .ship-info-card { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); padding: 12px; border-radius: 10px; margin: 10px 0; font-size: 0.8rem; line-height: 1.6; }
 .ship-label { color: var(--success); font-weight: bold; margin-right: 5px; }
 </style>
@@ -76,7 +75,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input type="number" id="gTotal" placeholder="總籤數"><input type="number" id="gPrice" placeholder="單抽原價"></div>
 <div class="safe-box"><label style="font-size:0.7rem; color:var(--p); margin-left:5px;">前幾抽不中大獎 (保護區)：</label><input type="number" id="gSafeZone" placeholder="大獎保護區數量" value="0">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><input type="number" id="pCount" placeholder="優惠張數"><input type="number" id="pPrice" placeholder="優惠價格"></div></div>
-<div style="margin:10px 0; color:var(--p); font-weight:700">商品主圖(封面)：</div><div class="file-input-wrapper"><span id="mainImgStatus">點擊或拖曳圖片上傳</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'gImg', 'mainImgStatus')"></div><input type="hidden" id="gImg"> 
+<div style="margin:10px 0; color:var(--p); font-weight:700">商品主圖(封面)：</div><div class="file-input-wrapper"><span id="mainImgStatus">點擊或拖曳圖片上傳</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'gImg', 'mainImgStatus')"></div><input type="hidden" id="gImg"> 
 <div style="margin:20px 0 10px; color:var(--p); font-weight:700">展示圖片(相簿)：</div><div id="albumContainer"></div><button class="btn btn-sm" onclick="addAlbumInput()" style="width:100%; margin-bottom:20px; background:rgba(255,184,0,0.2); color:var(--p); border:1px solid var(--p)">＋ 新增一張展示圖</button>
 <div style="margin:20px 0 10px; color:var(--p); font-weight:700">獎項設定 (獎號必須在總籤數內)：</div><div id="prizeContainer"></div><button class="btn btn-sm" onclick="addPrizeInput()" style="width:100%; background:rgba(255,184,0,0.2); color:var(--p); border:1px solid var(--p)">＋ 新增一個獎項</button>
 <div style="display:flex;gap:10px;margin-top:30px"><button class="btn" style="flex:2" id="publishBtn" onclick="publishGame()">發布並自動洗牌</button><button class="btn btn-danger" style="flex:1;display:none" id="cancelEditBtn" onclick="resetGameForm()">取消編輯</button></div></div>
@@ -146,72 +145,67 @@ window.addNewPopItem = (data = {title:'', content:'', img:''}) => {
 window.setMonFilter = (cat) => { monFilter = cat; startSync(); };
 
 function startSync(){
-onValue(ref(db,'settings/categories'),s=>{ const list=document.getElementById('catManageList'),select=document.getElementById('gCat'),data=s.val()||[]; list.innerHTML='';select.innerHTML='<option value="">請選擇分類</option>';
-const filterBar = document.getElementById('monFilters'); filterBar.innerHTML = `<button class="filter-btn ${monFilter==='ALL'?'active':''}" onclick="setMonFilter('ALL')">全部</button>`;
-data.forEach((c,idx)=>{ 
-    list.innerHTML+=`<div class="dynamic-row" style="border:none; padding:0; background:none;"><input type="text" value="${c}" onchange="editCat(${idx},this.value)" style="flex:1"><button class="btn btn-sm btn-danger" onclick="delCat(${idx})" style="margin-top:0">刪除</button></div>`; 
-    select.innerHTML+=`<option value="${c}">${c}</option>`;
-    filterBar.innerHTML+=`<button class="filter-btn ${monFilter===c?'active':''}" onclick="setMonFilter('${c}')">${c}</button>`;
-})});
+    // 🟢 將儲值監聽移到最前面，防止被後面的 await get 阻塞
+    onValue(ref(db, 'depositRequests'), s => {
+        const container = document.getElementById('depositListContainer');
+        const badge = document.getElementById('depositBadge');
+        container.innerHTML = ''; const data = s.val() || {};
+        const pendingRequests = Object.entries(data).filter(([k, v]) => v.status === 'pending');
+        if (pendingRequests.length > 0) { badge.innerText = pendingRequests.length; badge.style.display = 'inline-block'; } 
+        else { badge.style.display = 'none'; container.innerHTML = '<div class="card" style="text-align:center;color:#666;">目前沒有待處理的申請</div>'; }
+        pendingRequests.sort((a, b) => b[1].time - a[1].time).forEach(([key, req]) => {
+            const item = document.createElement('div'); item.className = 'request-item';
+            item.innerHTML = `<div class="request-header"><div><b style="color:var(--p)">${req.amount} NTD</b><br><small style="color:#888">UID: ${req.uid} | ${new Date(req.time).toLocaleString()}</small></div><div><button class="btn btn-sm btn-success" onclick="approveDeposit('${key}', '${req.uid}', ${req.amount})">核准上分</button><button class="btn btn-sm btn-danger" onclick="rejectDeposit('${key}')">拒絕/刪除</button></div></div>`;
+            container.appendChild(item);
+        });
+    });
 
-get(ref(db,'settings/announcement')).then(s=>{if(s.exists())document.getElementById('annContent').value=s.val()});
-get(ref(db,'settings/announcement_config')).then(s=>{ if(s.exists()){ const d = s.val(); document.getElementById('popId').value = d.id || ""; document.getElementById('popActive').value = (d.active !== false).toString(); document.getElementById('popListContainer').innerHTML = ""; if(d.items) d.items.forEach(item => addNewPopItem(item)); }});
+    onValue(ref(db,'settings/categories'),s=>{ const list=document.getElementById('catManageList'),select=document.getElementById('gCat'),data=s.val()||[]; list.innerHTML='';select.innerHTML='<option value="">請選擇分類</option>';
+    const filterBar = document.getElementById('monFilters'); filterBar.innerHTML = `<button class="filter-btn ${monFilter==='ALL'?'active':''}" onclick="setMonFilter('ALL')">全部</button>`;
+    data.forEach((c,idx)=>{ 
+        list.innerHTML+=`<div class="dynamic-row" style="border:none; padding:0; background:none;"><input type="text" value="${c}" onchange="editCat(${idx},this.value)" style="flex:1"><button class="btn btn-sm btn-danger" onclick="delCat(${idx})" style="margin-top:0">刪除</button></div>`; 
+        select.innerHTML+=`<option value="${c}">${c}</option>`;
+        filterBar.innerHTML+=`<button class="filter-btn ${monFilter===c?'active':''}" onclick="setMonFilter('${c}')">${c}</button>`;
+    })});
 
-onValue(ref(db,'gameSettings'),s=>{ const list=document.getElementById('monList'),adj=document.getElementById('quickAdjustList'),data=s.val()||{}; list.innerHTML='',adj.innerHTML=''; const keys=Object.keys(data).sort((a,b)=>(data[a].order||99)-(data[b].order||99));
-keys.forEach(id=>{ 
-    const g=data[id]; if(monFilter !== 'ALL' && g.category !== monFilter) return;
-    const mon=document.createElement('div'); mon.className='card'; 
-    onValue(ref(db,`games/${id}/lock`),ls=>{ 
-        const l=ls.val(),isL=l&&l.expire>Date.now(),lT=isL?`<br><small style="color:var(--lock)">🔒 包台中: ${l.user}</small>`:'',uB=isL?`<button class="btn btn-sm btn-unlock" onclick="forceUnlock('${id}')">🔓 解鎖</button>`:''; 
-        mon.innerHTML=`<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><b>${g.name || id}</b><br><small style="color:#666">${id} | ${g.category}</small></div> ${g.isSoldOut?'<span style="color:#ff4757">[已停盤]</span>':'<span style="color:#2ecc71">[銷售中]</span>'}</div>${lT}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0">--</div><div style="display:flex; flex-wrap:wrap; gap:5px;"><button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯</button><button class="btn btn-sm" onclick="resetShuffle('${id}')">洗牌</button>${uB}<button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button></div>`
-    }); list.appendChild(mon);
-    onValue(ref(db,`games/${id}/pool`),ps=>{ const p=ps.val()||[]; if(document.getElementById(`rem-${id}`))document.getElementById(`rem-${id}`).innerText=`剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`});
-    const aC=document.createElement('div'); aC.className='card'; aC.innerHTML=`<b>${g.name || id} 調控</b><div class="adj-grid" style="margin-top:10px"><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="價格"><input type="number" value="${g.order||99}" onchange="updNum('${id}','order',this.value)" title="排序"></div>`; adj.appendChild(aC)})});
+    get(ref(db,'settings/announcement')).then(s=>{if(s.exists())document.getElementById('annContent').value=s.val()});
+    get(ref(db,'settings/announcement_config')).then(s=>{ if(s.exists()){ const d = s.val(); document.getElementById('popId').value = d.id || ""; document.getElementById('popActive').value = (d.active !== false).toString(); document.getElementById('popListContainer').innerHTML = ""; if(d.items) d.items.forEach(item => addNewPopItem(item)); }});
 
-onValue(ref(db,'winLogs'),s=>{ 
-    const l=document.getElementById('globalWinItems'); l.innerHTML=''; const data = s.val() || {}; 
-    const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)).slice(0,50);
+    onValue(ref(db,'gameSettings'),s=>{ const list=document.getElementById('monList'),adj=document.getElementById('quickAdjustList'),data=s.val()||{}; list.innerHTML='',adj.innerHTML=''; const keys=Object.keys(data).sort((a,b)=>(data[a].order||99)-(data[b].order||99));
+    keys.forEach(id=>{ 
+        const g=data[id]; if(monFilter !== 'ALL' && g.category !== monFilter) return;
+        const mon=document.createElement('div'); mon.className='card'; 
+        onValue(ref(db,`games/${id}/lock`),ls=>{ 
+            const l=ls.val(),isL=l&&l.expire>Date.now(),lT=isL?`<br><small style="color:var(--lock)">🔒 包台中: ${l.user}</small>`:'',uB=isL?`<button class="btn btn-sm btn-unlock" onclick="forceUnlock('${id}')">🔓 解鎖</button>`:''; 
+            mon.innerHTML=`<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><b>${g.name || id}</b><br><small style="color:#666">${id} | ${g.category}</small></div> ${g.isSoldOut?'<span style="color:#ff4757">[已停盤]</span>':'<span style="color:#2ecc71">[銷售中]</span>'}</div>${lT}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0">--</div><div style="display:flex; flex-wrap:wrap; gap:5px;"><button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯</button><button class="btn btn-sm" onclick="resetShuffle('${id}')">洗牌</button>${uB}<button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button></div>`
+        }); list.appendChild(mon);
+        onValue(ref(db,`games/${id}/pool`),ps=>{ const p=ps.val()||[]; if(document.getElementById(`rem-${id}`))document.getElementById(`rem-${id}`).innerText=`剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`});
+        const aC=document.createElement('div'); aC.className='card'; aC.innerHTML=`<b>${g.name || id} 調控</b><div class="adj-grid" style="margin-top:10px"><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="價格"><input type="number" value="${g.order||99}" onchange="updNum('${id}','order',this.value)" title="排序"></div>`; adj.appendChild(aC)})});
+
+    onValue(ref(db,'winLogs'),s=>{ const l=document.getElementById('globalWinItems'); l.innerHTML=''; const data = s.val() || {}; const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)).slice(0,50);
     entries.forEach(async key => { 
         const i = data[key]; 
-        // 🟢 修復點：異步獲取該筆中獎記錄所屬玩家的收件資訊
         const uSnap = await get(ref(db, `users/${i.uid}/shipping`));
         const ship = uSnap.val() || {};
-        const shipText = ship.name ? `<br><small style="color:var(--success); font-size:0.7rem; font-weight:900;">📍 ${ship.name} / ${ship.phone}<br>🏪 ${ship.store}</small>` : '';
-        
+        const shipText = ship.name ? `<br><small style="color:var(--success)">📍 ${ship.name} ${ship.phone} (${ship.store})</small>` : '';
         const tr = document.createElement('tr'); 
-        tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b>${shipText}</td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`; 
-        l.appendChild(tr); 
-    })
-});
+        tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b>${shipText}</td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`; l.appendChild(tr); 
+    })});
 
-onValue(ref(db,'users'),s=>{ 
-    const c=document.getElementById('userListContainer'); c.innerHTML='';const u=s.val()||{},r={}; 
-    Object.values(u).forEach(i=>{if(i.invitedBy)r[i.invitedBy]=(r[i.invitedBy]||0)+1});
-    Object.entries(u).forEach(([id,d])=>{ 
-        const sp = d.logs ? Object.values(d.logs).reduce((acc, log) => { const cost = Number(log.cost) || 0; return acc + (cost > 0 ? cost : 0); }, 0) : 0; 
-        const ic=r[id]||0; const comm = (d.commission || 0).toLocaleString(); 
-        const firstTag = d.hasToppedUp ? `<span class="ref-tag" style="color:#aaa; border-color:#aaa">已首儲</span>` : `<span class="ref-tag" style="color:var(--p); border-color:var(--p)">新用戶</span>`;
-        
-        const ship = d.shipping || {};
-        const shipHtml = ship.name ? 
-            `<div class="ship-info-card">
-                <span class="ship-label">📦 收件人:</span> ${ship.name}<br>
-                <span class="ship-label">📱 電話:</span> ${ship.phone}<br>
-                <span class="ship-label">🏪 門市:</span> ${ship.store}
-            </div>` : 
-            `<div class="ship-info-card" style="background:rgba(255,255,255,0.05); border:1px solid #333; color:#666;">尚未填寫收件資訊</div>`;
-
-        const i=document.createElement('div'); i.className='user-item'; 
-        i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div>
-        <div class="user-content" id="content-${id}">
-            UID: ${id} | PIN: ${d.pin||'無'}<br>
-            盟友獎金: <b style="color:var(--success)">${comm} P</b><br>
-            ${shipHtml}
-            <div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳/明細</button><button class="btn btn-sm" onclick="addBal('${id}')">手動加點</button><button class="btn btn-sm btn-unlock" onclick="clearCommission('${id}')">💰 結清獎金</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div>
-        </div>`; 
-        c.appendChild(i)
-    })
-});
+    onValue(ref(db,'users'),s=>{ 
+        const c=document.getElementById('userListContainer'); c.innerHTML='';const u=s.val()||{},r={}; 
+        Object.values(u).forEach(i=>{if(i.invitedBy)r[i.invitedBy]=(r[i.invitedBy]||0)+1});
+        Object.entries(u).forEach(([id,d])=>{ 
+            const sp = d.logs ? Object.values(d.logs).reduce((acc, log) => { const cost = Number(log.cost) || 0; return acc + (cost > 0 ? cost : 0); }, 0) : 0; 
+            const ic=r[id]||0; const comm = (d.commission || 0).toLocaleString(); 
+            const firstTag = d.hasToppedUp ? `<span class="ref-tag" style="color:#aaa; border-color:#aaa">已首儲</span>` : `<span class="ref-tag" style="color:var(--p); border-color:var(--p)">新用戶</span>`;
+            const ship = d.shipping || {};
+            const shipHtml = ship.name ? `<div class="ship-info-card"><span class="ship-label">📦 收件人:</span> ${ship.name}<br><span class="ship-label">📱 電話:</span> ${ship.phone}<br><span class="ship-label">🏪 門市:</span> ${ship.store}</div>` : `<div class="ship-info-card" style="background:rgba(255,255,255,0.05); border:1px solid #333; color:#666;">尚未填寫收件資訊</div>`;
+            const i=document.createElement('div'); i.className='user-item'; 
+            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b><br>${shipHtml}<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳/明細</button><button class="btn btn-sm" onclick="addBal('${id}')">手動加點</button><button class="btn btn-sm btn-unlock" onclick="clearCommission('${id}')">💰 結清獎金</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`; 
+            c.appendChild(i)
+        })
+    });
 }
 
 window.saveAnnouncement=async()=>{ const content = document.getElementById('annContent').value; showLoading("同步跑馬燈中..."); try { await set(ref(db,'settings/announcement'), content); alert("跑馬燈內容已同步！"); } finally { hideLoading(); }};
