@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
     <title>夢工廠 | 儲值申請</title>
     <style>
-        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --danger: #ff4757; --success: #2ecc71; }
+        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --danger: #ff4757; --success: #2ecc71; --line: #06c755; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; padding-bottom: 50px; }
-       
+        
         .header { padding: 15px 20px; display: flex; align-items: center; background: #fff; box-shadow: 0 1px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
         .back-btn { background: none; border: 1.5px solid var(--primary); color: var(--primary); padding: 5px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; font-weight: 900; }
 
@@ -34,6 +34,11 @@
         .rule-item { margin-bottom: 15px; }
         .rule-item b { display: block; color: var(--primary); font-size: 0.9rem; margin-bottom: 5px; }
         .rule-item p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.6; }
+
+        /* 🟢 新增：Line 活動專用樣式 */
+        .line-promo-box { background: #f0fff4; border: 1px solid #c3e6cb; border-radius: 15px; padding: 15px; margin-bottom: 15px; }
+        .line-promo-title { color: var(--line); font-weight: 900; font-size: 0.95rem; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .line-link { color: var(--line); text-decoration: underline; font-weight: bold; cursor: pointer; }
 
         .bank-info { background: #fdfdfd; border: 1px dashed #ddd; border-radius: 15px; padding: 15px; margin-top: 10px; }
         .bank-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; }
@@ -68,8 +73,19 @@
     </div>
 
     <div class="container">
+        
         <div class="rule-card">
             <div class="section-title">儲值優惠說明</div>
+            
+            <div class="line-promo-box">
+                <div class="line-promo-title">🧩 Line 積分換盲盒 (500元 = 1點)</div>
+                <p style="font-size:0.8rem; color:#555; margin:0; line-height:1.5;">
+                    單筆儲值每滿 <b>500</b> 元，額外獲得 <b>1</b> 點 Line 積分！<br>
+                    (例如: 儲值 1000 元 +2 點，以此類推)<br>
+                    累積點數可至 <span class="line-link" onclick="window.open('https://line.me/R/ti/p/@dream8','_blank')">官方 Line</span> 兌換熱門盲盒、公仔模型！
+                </p>
+            </div>
+
             <div class="rule-item">
                 <b>✨ 首儲限定 (10% 贈點)</b>
                 <p>帳號「第一次」儲值即為首儲。例如：儲值 1000 元，可額外獲贈 100 P，共得 1100 P。首儲加碼僅限一次。</p>
@@ -94,6 +110,12 @@
             <div class="calc-box">
                 <div class="calc-row"><span>儲值本金</span><span id="calcBase">0 P</span></div>
                 <div class="calc-row"><span id="bonusLabel">首儲/續儲贈點</span><span id="calcBonus" style="color:var(--success)">+0 P</span></div>
+                
+                <div class="calc-row" style="margin-top:5px; border-top:1px dashed #eee; padding-top:5px;">
+                    <span style="color:var(--line); font-weight:bold;">🧩 Line 盲盒積分</span>
+                    <span id="calcLinePoints" style="color:var(--line); font-weight:900;">+0 點</span>
+                </div>
+
                 <div class="calc-total">
                     <span>預計共得：</span>
                     <b id="pOut">0</b>
@@ -145,7 +167,7 @@
 
         if(!_uid) location.href = 'index.html';
 
-        // 🟢 檢查是否為首儲並計算點數
+        // 🟢 檢查是否為首儲並計算點數 (含 Line 積分)
         const amountInput = document.getElementById('amountIn');
         const calcP = async () => {
             const amt = Number(amountInput.value) || 0;
@@ -165,8 +187,12 @@
                 document.getElementById('bonusLabel').innerText = "一般儲值 (無加碼)";
             }
 
+            // 🟢 計算 Line 積分：每 500 元 = 1 點
+            const linePoints = Math.floor(amt / 500);
+
             document.getElementById('calcBase').innerText = amt + " P";
             document.getElementById('calcBonus').innerText = "+" + Math.floor(bonus) + " P";
+            document.getElementById('calcLinePoints').innerText = "+" + linePoints + " 點"; // 顯示積分
             document.getElementById('pOut').innerText = Math.floor(amt + bonus) + " P";
         };
         amountInput.addEventListener('input', calcP);
