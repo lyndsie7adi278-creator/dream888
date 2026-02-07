@@ -6,11 +6,12 @@
     <title>夢工廠 | 刮刮樂商城</title>
     
     <script>
-        // 🟢 1. 優先執行：推薦碼捕捉 (Ref Code)
+        // 🟢 1. 優先執行：捕捉推薦碼 (Ref Code)
         (function() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const refId = urlParams.get('ref');
+                // 只要網址有 ref，就強制更新暫存
                 if (refId && refId.trim() !== "") {
                     localStorage.setItem('pending_ref', refId.trim());
                     console.log("✅ 推薦碼已捕捉:", refId);
@@ -18,42 +19,53 @@
             } catch (e) { console.error("Ref Error:", e); }
         })();
 
-        // 定義全域填寫函數
+        // 定義全域填寫函數 (註冊時自動呼叫)
         window.forceApplyRef = function() {
             const savedRef = localStorage.getItem('pending_ref');
             const refEl = document.getElementById('refIn');
+            // 只有當欄位存在且為空時才填入
             if (savedRef && refEl && refEl.value.trim() === "") {
                 refEl.value = savedRef;
             }
         };
 
-        // 🟢 2. 核心裝置偵測 (嚴格版)
-        // 預設將網頁內容隱藏，直到確認是手機才顯示
-        document.documentElement.className = 'loading'; 
-
-        window.addEventListener('DOMContentLoaded', () => {
-            // 偵測 User Agent 是否包含手機關鍵字
+        // 🟢 2. 裝置偵測：電腦版顯示質感封鎖畫面
+        (function() {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
-            const blocker = document.getElementById('pc-blocker');
-            const content = document.body;
+            // 如果是電腦 (非行動裝置)
+            if (!isMobile) {
+                document.documentElement.style.overflow = 'hidden'; // 禁止捲動
+                
+                window.onload = function() {
+                    const logoUrl = "https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8";
+                    const currentUrl = window.location.href; // 包含 ref 參數
 
-            if (isMobile) {
-                // ✅ 是手機：移除封鎖畫面，顯示內容
-                if(blocker) blocker.style.display = 'none';
-                document.documentElement.classList.remove('loading');
-                document.body.style.overflow = 'auto'; // 允許捲動
-            } else {
-                // ❌ 是電腦：保持封鎖畫面，並生成 QR Code
-                if(blocker) {
-                    blocker.style.display = 'flex';
-                    // 生成 QR Code (包含當前參數)
-                    const qrImg = document.getElementById('qr-img');
-                    if(qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
-                }
-                document.documentElement.classList.remove('loading');
+                    // 覆蓋畫面 (質感升級版)
+                    document.body.innerHTML = `
+                        <div id="pc-blocker">
+                            <div class="glass-card">
+                                <div class="glow-bg"></div>
+                                <img src="${logoUrl}" class="b-logo">
+                                <h2 class="b-title">夢工廠 刮刮樂商城</h2>
+                                <p class="b-subtitle">Dream Factory Online</p>
+                                
+                                <div class="qr-container">
+                                    <div class="scan-line"></div>
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}&margin=10" alt="Scan QR">
+                                </div>
+                                
+                                <div class="b-msg">
+                                    <span class="icon">📱</span>
+                                    <span>為確保遊戲公平性，本站僅支援手機訪問</span>
+                                </div>
+                                <div class="b-footer">請拿起手機掃描上方 QR Code 進入</div>
+                            </div>
+                        </div>
+                    `;
+                };
             }
-        });
+        })();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -61,33 +73,92 @@
     <style>
         :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800;--card-bg:#222;}
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
-        
-        /* 預設隱藏內容，避免閃爍 */
-        html.loading body > *:not(#pc-blocker) { display: none; }
-        
         body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
         
-        /* 🔴 電腦版封鎖畫面 (預設開啟，JS 判斷是手機才會關掉) */
-        #pc-blocker {
-            position: fixed; inset: 0; background: #2c3e50; z-index: 999999;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'PingFang TC', sans-serif;
-            /* 預設為 flex，確保電腦版一打開就看到 */
-            display: flex; 
-        }
-        .blocker-card {
-            background: #fff; padding: 40px; border-radius: 30px; text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5); width: 90%; max-width: 400px;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .blocker-logo { width: 90px; height: 90px; object-fit: contain; margin-bottom: 15px; border-radius: 20px; background: #f9f9f9; padding: 10px; border:1px solid #eee; }
-        .blocker-title { font-size: 1.5rem; font-weight: 900; color: #333; margin-bottom: 5px; }
-        .blocker-subtitle { font-size: 0.9rem; color: var(--primary); font-weight: bold; margin-bottom: 20px; letter-spacing: 1px; }
-        .qr-wrap { background: #f8f9fa; padding: 15px; border-radius: 20px; display: inline-block; border: 2px dashed #ddd; }
-        .qr-wrap img { display: block; width: 180px; height: 180px; }
-        .blocker-tip { margin-top: 15px; font-size: 0.85rem; color: #999; font-weight: bold; }
+        /* 🔴 電腦版封鎖畫面樣式 (質感升級) */
+        #pc-blocker { display: none; }
 
-        /* ... 以下原有樣式保持不變 ... */
+        @media screen and (min-width: 768px) {
+            body > *:not(#pc-blocker) { filter: blur(20px); pointer-events: none; opacity: 0; }
+            
+            #pc-blocker {
+                display: flex !important;
+                position: fixed; inset: 0; z-index: 999999;
+                background: radial-gradient(circle at center, #2b3245 0%, #1a1c23 100%);
+                align-items: center; justify-content: center;
+                flex-direction: column; font-family: 'PingFang TC', sans-serif;
+                overflow: hidden;
+            }
+
+            /* 毛玻璃卡片 */
+            .glass-card {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 40px;
+                padding: 60px 40px;
+                text-align: center;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                width: 90%; max-width: 450px;
+                position: relative;
+                animation: cardEntry 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            }
+
+            /* 呼吸光暈背景 */
+            .glow-bg {
+                position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+                background: radial-gradient(circle, rgba(255,143,163,0.15) 0%, transparent 60%);
+                animation: rotate 10s linear infinite;
+                z-index: -1; pointer-events: none;
+            }
+
+            .b-logo { 
+                width: 100px; height: 100px; object-fit: contain; 
+                margin-bottom: 20px; border-radius: 22px; 
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            }
+            
+            .b-title { 
+                font-size: 1.8rem; font-weight: 900; color: #fff; margin: 0 0 5px; 
+                text-shadow: 0 2px 10px rgba(0,0,0,0.3); letter-spacing: 2px;
+            }
+            .b-subtitle { 
+                font-size: 0.9rem; color: var(--primary); font-weight: 700; 
+                margin: 0 0 30px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.9;
+            }
+
+            /* QR Code 容器 */
+            .qr-container {
+                background: #fff; padding: 15px; border-radius: 20px; 
+                display: inline-block; position: relative; overflow: hidden;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                transition: transform 0.3s;
+            }
+            .qr-container:hover { transform: scale(1.05); }
+            .qr-container img { display: block; width: 180px; height: 180px; }
+            
+            /* 掃描線動畫 */
+            .scan-line {
+                position: absolute; width: 100%; height: 3px; background: var(--primary);
+                top: 0; left: 0; box-shadow: 0 0 10px var(--primary);
+                animation: scan 2s ease-in-out infinite; opacity: 0.7;
+            }
+
+            .b-msg { 
+                margin-top: 35px; font-size: 0.95rem; color: #ccc; 
+                display: flex; align-items: center; justify-content: center; gap: 8px;
+                background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 50px;
+            }
+            .b-msg .icon { font-size: 1.2rem; }
+            .b-footer { margin-top: 15px; font-size: 0.8rem; color: #666; font-weight: bold; }
+
+            @keyframes cardEntry { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        }
+
+        /* ... 以下是您原本的樣式，完全保留 ... */
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
@@ -167,20 +238,6 @@
     </style>
 </head>
 <body oncontextmenu="return false;">
-
-<div id="pc-blocker">
-        <div class="blocker-card">
-        <img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8" class="blocker-logo">
-        
-        <div class="blocker-title">夢工廠 刮刮樂商城</div>
-        
-        <div class="qr-wrap">
-            <img id="qr-img" src="" alt="Scan Me">
-        </div>
-        
-        <div class="blocker-tip">為了確保最佳體驗與公平性<br>本站僅開放手機訪問<br>請拿起手機掃描上方 QR Code</div>
-    </div>
-</div>
 
 <div id="welcomeToast" class="welcome-toast"></div>
 <div class="line-wrapper" onclick="window.open('https://line.me/ti/p/@dream8','_blank')"><div class="line-bubble">儲值/問題請點我 💬</div><div class="line-float"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE"></div></div>
@@ -382,7 +439,7 @@ window.showReg=()=>{
     document.getElementById('stepRegister').style.display='block';
     document.getElementById('loginStepTitle').innerText="註冊新帳號";
     
-    // 🟢 核心修正：呼叫全域函數進行強制帶入
+    // 🟢 核心修正 3：呼叫全域函數進行強制帶入
     if(typeof window.forceApplyRef === 'function') window.forceApplyRef();
 };
 
@@ -390,9 +447,13 @@ window.backStep1=()=>{document.getElementById('step1').style.display='block';doc
 window.checkCode=async()=>{const c=document.getElementById('cIn').value.trim();if(!c)return;const s=await get(ref(_db,`users/${c}`));if(!s.exists())return alert("帳號不存在");_u={id:c,data:s.val()};document.getElementById('step1').style.display='none';document.getElementById('step2').style.display='block'};
 
 window.handleRegister=async()=>{
-    // 🟢 核心修正：送出前再次檢查並帶入
-    if(typeof window.forceApplyRef === 'function') window.forceApplyRef();
-    
+    // 🟢 核心修正 4：送出註冊前最後一刻再次強制讀取暫存
+    const savedRef = localStorage.getItem('pending_ref');
+    const refInput = document.getElementById('refIn');
+    if (savedRef && refInput && refInput.value.trim() === "") {
+        refInput.value = savedRef;
+    }
+
     const i=document.getElementById('regId').value.trim(),
           n=document.getElementById('regNick').value.trim(),
           p1=document.getElementById('regPass1').value,
