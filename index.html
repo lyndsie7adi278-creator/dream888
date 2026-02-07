@@ -11,6 +11,7 @@
             const refId = urlParams.get('ref');
             if (refId && refId.trim() !== "") {
                 localStorage.setItem('pending_ref', refId.trim());
+                console.log("已捕捉到推薦碼並暫存:", refId);
             }
         })();
 
@@ -19,6 +20,7 @@
             const refEl = document.getElementById('refIn');
             if (savedRef && refEl) {
                 refEl.value = savedRef;
+                console.log("註冊表單已強制填入:", savedRef);
             }
         };
     </script>
@@ -39,7 +41,7 @@
             overflow-x: hidden;
         }
 
-        /* 🔴 電腦版強力適配 (模擬手機) */
+        /* 🔴 電腦版強力適配 (手機模擬器模式) */
         @media screen and (min-width: 600px) {
             html {
                 background-color: #202020; /* 電腦背景深灰 */
@@ -48,22 +50,25 @@
             }
             body {
                 width: 100%;
-                max-width: 480px; /* 鎖定手機寬度 */
+                max-width: 480px; /* 🔒 鎖定手機寬度 */
                 background: var(--bg);
                 box-shadow: 0 0 30px rgba(0,0,0,0.5); /* 手機陰影 */
                 min-height: 100vh;
                 margin: 0 auto;
                 position: relative; /* 重要：讓 absolute 參考這裡 */
+                border-left: 1px solid #333;
+                border-right: 1px solid #333;
             }
             /* 隱藏捲軸但可捲動 */
             ::-webkit-scrollbar { width: 0px; background: transparent; }
             
-            /* 修正 Fixed 元素位置 */
+            /* 修正 Fixed 元素位置，限制在手機寬度內 */
             .top-nav {
                 max-width: 480px; /* 限制寬度 */
                 left: 50% !important; 
                 transform: translateX(-50%); /* 強制置中 */
             }
+            /* Line 按鈕定位 */
             .line-wrapper {
                 position: fixed;
                 left: 50% !important;
@@ -85,11 +90,14 @@
                 top: 80px;
                 width: auto;
             }
+            .footer {
+                max-width: 480px;
+                width: 100%;
+            }
         }
 
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
-        
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
         .nav-left{display:flex;align-items:center;gap:15px;cursor:pointer;color:#333;font-size:1.4rem;position:relative}
         
@@ -106,6 +114,7 @@
         @keyframes marquee-linear { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
         @media screen and (max-width: 768px) { .marquee-content { animation-duration: 30s; } }
 
+        /* Top 5 推薦區塊樣式 */
         .hot-section-wrapper { width: 100%; max-width: 600px; margin-top: 20px; padding: 0 15px; }
         .hot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
         .hot-title-text { font-size: 1.1rem; font-weight: 900; color: #2c3e50; display: flex; align-items: center; gap: 6px; }
@@ -142,13 +151,11 @@
         .lock-tag{background:var(--lock);color:#fff;font-size:.7rem;padding:4px 10px;border-radius:6px;margin-top:5px;display:inline-block;font-weight:900}
         .promo-tag{background:#ff4757;color:#fff;font-size:.6rem;padding:2px 6px;border-radius:4px;font-weight:900}
         .promo-info{font-size:.65rem;color:#ff8fa3;margin-top:5px;font-weight:900}
-        
         .line-wrapper{position:fixed;bottom:30px;right:20px;z-index:2000;display:flex;flex-direction:column;align-items:flex-end;animation:float-breath 2s infinite ease-in-out}
         .line-bubble{background:#fff;color:#333;padding:10px 15px;border-radius:15px;font-size:.8rem;font-weight:900;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,.15);position:relative;border:1px solid #eee;white-space:nowrap}
         .line-bubble::after{content:"";position:absolute;bottom:-8px;right:20px;border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid #fff}
         .line-float{width:60px;height:60px;background:var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 25px rgba(6,199,85,.4);cursor:pointer}
         .line-float img{width:35px;height:35px}@keyframes float-breath{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-        
         .status-section{width:92%;max-width:460px;margin:35px 0 15px;background:#fff;border-radius:28px;padding:25px;border:1px solid rgba(0,0,0,.04);box-shadow:0 5px 20px rgba(0,0,0,.03)}
         .status-item{display:flex;align-items:flex-start;background:#f9fafb;padding:18px;border-radius:20px;margin-bottom:15px}.status-icon{font-size:1.6rem;margin-right:18px;margin-top:3px}
         .status-text b{display:block;font-size:.9rem;color:#1a1c23;margin-bottom:5px}.status-text p{margin:0;font-size:.75rem;color:#7f8c8d;line-height:1.6}
@@ -341,6 +348,7 @@ function init(){
         }
     });
 
+    // 🟢 這裡加入了 renderHotList() 的呼叫
     onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{}; renderCats(); renderGrid(); renderHotList();});
     
     if(_sk){
@@ -381,6 +389,7 @@ window.backStep1=()=>{document.getElementById('step1').style.display='block';doc
 window.checkCode=async()=>{const c=document.getElementById('cIn').value.trim();if(!c)return;const s=await get(ref(_db,`users/${c}`));if(!s.exists())return alert("帳號不存在");_u={id:c,data:s.val()};document.getElementById('step1').style.display='none';document.getElementById('step2').style.display='block'};
 
 window.handleRegister=async()=>{
+    // 🟢 核心修正 4：送出註冊前最後一刻再次強制讀取暫存
     const savedRef = localStorage.getItem('pending_ref');
     const refInput = document.getElementById('refIn');
     if (savedRef && refInput && refInput.value.trim() === "") {
@@ -416,20 +425,22 @@ window.handlePinLogin=async()=>{const p=document.getElementById('pinIn').value;i
 function renderCats(){const c=new Set(['ALL']);Object.values(_g).forEach(i=>{if(i.category)c.add(i.category)});document.getElementById('catList').innerHTML=Array.from(c).map(i=>`<div class="cat-item ${_cc===i?'active':''}" onclick="filterCat('${i}')">${i==='ALL'?'全部':i}</div>`).join('')}
 window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
 
-// 🔴 渲染熱門 Top 5 卡片區塊
+// 🔴 渲染熱門 Top 5 卡片區塊 (已修復價格邏輯)
 function renderHotList() {
     const hotList = document.getElementById('hotList');
     hotList.innerHTML = '';
     
+    // 計算剩餘張數並排序
     const sortedGames = Object.keys(_g).map(key => {
         const item = _g[key];
         return { 
             id: key, 
             ...item, 
-            remaining: 0 
+            remaining: 0 // 初始值，稍後更新
         };
     });
 
+    // 篩選未售完商品，並依照後台設定的 order 進行排序
     const top5 = sortedGames.filter(g => !g.isSoldOut).sort((a,b) => (a.order||99) - (b.order||99)).slice(0, 5);
 
     top5.forEach((item, index) => {
@@ -457,10 +468,11 @@ function renderHotList() {
         
         hotList.appendChild(slide);
 
+        // 異步獲取剩餘數量並判斷價格顯示
         onValue(ref(_db, `games/${item.id}/pool`), snap => {
             const p = snap.val() || [];
             const left = p.filter(x => !x.taken).length;
-            const sold = p.filter(x => x.taken).length; 
+            const sold = p.filter(x => x.taken).length; // 🔴 修正：增加已賣出數量計算
             const total = item.total || 1;
             const percent = Math.round((left / total) * 100);
             
@@ -471,18 +483,20 @@ function renderHotList() {
             if(remEl) remEl.innerText = `剩餘 ${left} 張`;
             if(barEl) barEl.style.width = `${percent}%`;
 
+            // 🔴 核心邏輯修正：判斷「已賣出數量」是否小於「優惠數量」
             if (item.promoCount > 0 && sold < item.promoCount) {
                 priceEl.innerHTML = `<s>${item.price}</s> ${item.promoPrice} G`;
-                priceEl.style.color = "#ff4757"; 
+                priceEl.style.color = "#ff4757"; // 優惠時變紅色
             } else {
                 priceEl.innerHTML = `${item.price} G`;
-                priceEl.style.color = "#ffb800"; 
+                priceEl.style.color = "#ffb800"; // 原價時變金色
             }
         });
     });
 
+    // 初始化 Swiper
     new Swiper(".hotSwiper", {
-        slidesPerView: 2.2, 
+        slidesPerView: 2.2, // 一次顯示 2.2 張卡片
         spaceBetween: 15,
         freeMode: true,
         observer: true,
