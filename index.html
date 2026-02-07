@@ -6,23 +6,69 @@
     <title>夢工廠 | 刮刮樂商城</title>
     
     <script>
+        // 🟢 1. 優先執行：捕捉推薦碼 (Ref Code)
+        // 放在最前面，確保無論裝置為何都能先抓到參數
         (function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const refId = urlParams.get('ref');
-            if (refId && refId.trim() !== "") {
-                localStorage.setItem('pending_ref', refId.trim());
-                console.log("已捕捉到推薦碼並暫存:", refId);
-            }
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const refId = urlParams.get('ref');
+                if (refId && refId.trim() !== "") {
+                    localStorage.setItem('pending_ref', refId.trim());
+                    console.log("已捕捉到推薦碼並暫存:", refId);
+                }
+            } catch (e) { console.error("推薦碼捕捉失敗", e); }
         })();
 
+        // 定義全域填寫函數 (註冊時呼叫)
         window.forceApplyRef = function() {
             const savedRef = localStorage.getItem('pending_ref');
             const refEl = document.getElementById('refIn');
-            if (savedRef && refEl) {
+            // 只有當欄位是空的才填入，避免覆蓋用戶手動輸入
+            if (savedRef && refEl && refEl.value.trim() === "") {
                 refEl.value = savedRef;
                 console.log("註冊表單已強制填入:", savedRef);
             }
         };
+
+        // 🟢 2. 裝置偵測：電腦版顯示封鎖畫面
+        (function() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            // 如果是電腦 (非行動裝置)，顯示封鎖遮罩
+            if (!isMobile) {
+                document.documentElement.style.overflow = 'hidden'; // 禁止捲動
+                
+                window.onload = function() {
+                    // Logo 網址 (與您主頁左上角的一致)
+                    const logoUrl = "https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8";
+                    
+                    // 當前網址 (包含 ref 參數，確保掃描後推薦碼有效)
+                    const currentUrl = window.location.href;
+
+                    document.body.innerHTML = `
+                        <div id="pc-blocker" style="position:fixed; inset:0; background:#2c3e50; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:'Microsoft JhengHei', sans-serif;">
+                            <div style="background:#fff; color:#333; padding:40px; border-radius:30px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5); width:90%; max-width:380px;">
+                                
+                                <img src="${logoUrl}" style="width:80px; height:80px; object-fit:contain; margin-bottom:15px;">
+                                
+                                <h2 style="margin:0 0 5px; font-weight:900; color:#2c3e50;">夢工廠 刮刮樂商城</h2>
+                                <p style="margin:0 0 25px; color:#ff8fa3; font-weight:bold; font-size:0.9rem;">Dream Factory Online</p>
+                                
+                                <div style="background:#f8f9fa; padding:15px; border-radius:15px; display:inline-block; border:1px solid #eee;">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(currentUrl)}" alt="Scan QR" style="display:block; width:160px; height:160px;">
+                                </div>
+                                
+                                <div style="margin-top:20px; font-size:0.9rem; color:#666; line-height:1.6;">
+                                    為了確保最佳遊戲體驗<br>
+                                    <b style="color:#2c3e50;">本站僅開放手機瀏覽</b>
+                                </div>
+                                <div style="margin-top:10px; font-size:0.8rem; color:#999;">請拿起手機掃描上方 QR Code 進入</div>
+                            </div>
+                        </div>
+                    `;
+                };
+            }
+        })();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -31,47 +77,6 @@
         :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800;--card-bg:#222;}
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
         body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
-        
-        /* 🔴 新增：電腦版封鎖遮罩 (預設隱藏) */
-        #pc-blocker { display: none; }
-
-        /* 🔴 核心：只有在非手機裝置 (螢幕大於 768px 或非觸控) 時顯示遮罩 */
-        @media screen and (min-width: 768px) {
-            /* 讓原本網頁內容模糊並無法點擊 */
-            body > *:not(#pc-blocker) { 
-                filter: blur(15px); 
-                pointer-events: none; 
-                opacity: 0.3;
-            }
-            
-            /* 顯示封鎖畫面 */
-            #pc-blocker {
-                display: flex !important;
-                position: fixed; inset: 0; z-index: 999999;
-                background: rgba(20, 20, 20, 0.95); /* 深色半透明背景 */
-                align-items: center; justify-content: center;
-                flex-direction: column; color: #fff; font-family: sans-serif;
-            }
-            .blocker-card {
-                background: #fff; color: #333;
-                padding: 40px; border-radius: 30px; text-align: center;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-                width: 90%; max-width: 420px;
-                border: 5px solid var(--primary);
-            }
-            .blocker-logo { 
-                width: 120px; height: 120px; object-fit: contain; 
-                margin-bottom: 20px; border-radius: 20px; 
-                background: #f8f9fa; padding: 10px; border: 1px solid #eee;
-            }
-            .blocker-title { font-size: 1.6rem; font-weight: 900; margin-bottom: 5px; letter-spacing: 1px; color: #333; }
-            .blocker-subtitle { font-size: 1rem; color: var(--primary); font-weight: bold; margin-bottom: 25px; }
-            .qr-wrap { background: #f0f2f5; padding: 15px; border-radius: 20px; display: inline-block; border: 2px dashed #ddd; }
-            .qr-wrap img { display: block; width: 180px; height: 180px; }
-            .blocker-tip { margin-top: 20px; font-size: 0.95rem; color: #888; font-weight: bold; line-height: 1.5; }
-        }
-
-        /* ... 以下是您原本的樣式，完全保留 ... */
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
@@ -90,6 +95,7 @@
         @keyframes marquee-linear { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
         @media screen and (max-width: 768px) { .marquee-content { animation-duration: 30s; } }
 
+        /* Top 5 推薦區塊樣式 */
         .hot-section-wrapper { width: 100%; max-width: 600px; margin-top: 20px; padding: 0 15px; }
         .hot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
         .hot-title-text { font-size: 1.1rem; font-weight: 900; color: #2c3e50; display: flex; align-items: center; gap: 6px; }
@@ -156,24 +162,6 @@
     </style>
 </head>
 <body oncontextmenu="return false;">
-
-<div id="pc-blocker">
-    <div class="blocker-card">
-        <img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8" class="blocker-logo">
-        
-        <div class="blocker-title">夢工廠 刮刮樂商城</div>
-        <div class="blocker-subtitle">Dream Factory Online</div>
-        
-        <div class="qr-wrap">
-            <script>
-                document.write(`<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}" alt="Scan Me">`);
-            </script>
-        </div>
-        
-        <div class="blocker-tip">為了確保最佳體驗與公平性<br>本站僅開放行動裝置訪問<br>請拿起手機掃描上方 QR Code</div>
-    </div>
-</div>
-
 <div id="welcomeToast" class="welcome-toast"></div>
 <div class="line-wrapper" onclick="window.open('https://line.me/ti/p/@dream8','_blank')"><div class="line-bubble">儲值/問題請點我 💬</div><div class="line-float"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE"></div></div>
 
@@ -418,7 +406,7 @@ window.handlePinLogin=async()=>{const p=document.getElementById('pinIn').value;i
 function renderCats(){const c=new Set(['ALL']);Object.values(_g).forEach(i=>{if(i.category)c.add(i.category)});document.getElementById('catList').innerHTML=Array.from(c).map(i=>`<div class="cat-item ${_cc===i?'active':''}" onclick="filterCat('${i}')">${i==='ALL'?'全部':i}</div>`).join('')}
 window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
 
-// 🔴 渲染熱門 Top 5 卡片區塊 (修正價格顯示邏輯)
+// 🔴 渲染熱門 Top 5 卡片區塊 (已修復價格邏輯)
 function renderHotList() {
     const hotList = document.getElementById('hotList');
     hotList.innerHTML = '';
