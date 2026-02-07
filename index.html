@@ -28,7 +28,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800;--card-bg:#222;}
+        :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800}
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
         body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
@@ -49,34 +49,25 @@
         @keyframes marquee-linear { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
         @media screen and (max-width: 768px) { .marquee-content { animation-duration: 30s; } }
 
-        /* 🔴 新增：熱門推薦區塊樣式 (參考圖片) */
-        .hot-section { width: 100%; background: #111; padding: 20px 0 30px; border-bottom: 5px solid #222; }
-        .hot-title { 
-            color: #fff; font-size: 1.1rem; font-weight: 900; margin: 0 20px 15px; 
-            display: flex; align-items: center; gap: 8px;
-        }
-        .hot-title span { color: var(--gold); }
-        
-        .hot-swiper { width: 100%; padding: 0 20px !important; box-sizing: border-box; }
-        .hot-card { 
-            background: #222; border-radius: 15px; overflow: hidden; position: relative; 
-            border: 1px solid #333; height: auto; display: flex; flex-direction: column;
-        }
-        .hot-rank-tag { 
-            position: absolute; top: 0; left: 0; background: #e74c3c; color: #fff; 
-            padding: 5px 12px; font-size: 0.85rem; font-weight: 900; 
-            border-bottom-right-radius: 10px; z-index: 10; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-        }
-        .hot-img-box { width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #000; position: relative; }
+        /* 🔴 新增：Top 5 推薦區塊樣式 */
+        .hot-section-wrapper { width: 100%; max-width: 600px; margin-top: 20px; padding: 0 15px; }
+        .hot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
+        .hot-title-text { font-size: 1.1rem; font-weight: 900; color: #2c3e50; display: flex; align-items: center; gap: 6px; }
+        .hot-title-text span { color: #e74c3c; }
+        .hot-swiper { width: 100%; padding-bottom: 10px !important; overflow: visible !important; }
+        .hot-card { background: #fff; border-radius: 18px; overflow: hidden; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.2s; border: 1px solid #f0f0f0; display: flex; flex-direction: column; }
+        .hot-card:active { transform: scale(0.97); }
+        .hot-rank-badge { position: absolute; top: 0; left: 0; background: linear-gradient(135deg, #ff4757, #ff6b81); color: #fff; font-size: 0.75rem; font-weight: 900; padding: 4px 10px; border-bottom-right-radius: 12px; z-index: 10; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); }
+        .hot-img-box { width: 100%; aspect-ratio: 1/1; background: #f9f9f9; position: relative; }
         .hot-img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .hot-info { padding: 12px; }
-        .hot-name { color: #fff; font-size: 0.95rem; font-weight: bold; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .hot-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #aaa; margin-bottom: 8px; }
-        .hot-price { color: var(--primary); font-weight: 900; font-size: 1rem; }
-        
-        .progress-bar-bg { width: 100%; height: 6px; background: #444; border-radius: 10px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background: var(--gold); border-radius: 10px; transition: width 0.5s; }
+        .hot-info { padding: 10px; }
+        .hot-name { font-size: 0.9rem; font-weight: bold; color: #333; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hot-meta { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 6px; }
+        .hot-rem { font-size: 0.65rem; color: #888; font-weight: bold; }
+        .hot-price { font-size: 1rem; color: var(--primary); font-weight: 900; }
+        .hot-price s { font-size: 0.7rem; color: #ccc; font-weight: normal; margin-right: 2px; }
+        .hot-progress-bg { width: 100%; height: 4px; background: #eee; border-radius: 10px; overflow: hidden; }
+        .hot-progress-fill { height: 100%; background: linear-gradient(90deg, #ff9ff3, #feca57); border-radius: 10px; width: 0%; transition: width 0.5s; }
 
         .category-scroll{display:flex;overflow-x:auto;padding:15px 20px;gap:12px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
         .cat-item{flex-shrink:0;padding:10px 22px;border-radius:50px;background:#fff;border:1px solid #eee;font-size:.85rem;color:#7f8c8d;font-weight:700;transition:.3s;cursor:pointer}
@@ -164,8 +155,10 @@
 
 <div class="marquee-container"><div class="marquee-content" id="mq">正在同步最新中獎喜報...</div></div>
 
-<div class="hot-section">
-    <div class="hot-title">🔥 真心不騙大家超愛 Top 5</div>
+<div class="hot-section-wrapper">
+    <div class="hot-header">
+        <div class="hot-title-text"><span>🔥</span> 大家都在刮 Top 5</div>
+    </div>
     <div class="swiper hotSwiper">
         <div class="swiper-wrapper" id="hotList"></div>
     </div>
@@ -251,7 +244,7 @@ function init(){
                 }
             });
         });
-    }); // 🟢 這裡正確閉合了 onValue
+    });
 
     onValue(ref(_db,'settings/announcement_config'), s => {
         if(s.exists()){
@@ -290,7 +283,9 @@ function init(){
         }
     });
 
-    onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{}; renderCats(); renderGrid(); renderHotList();}); // 🟢 新增 renderHotList
+    // 🟢 這裡加入了 renderHotList() 的呼叫
+    onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{}; renderCats(); renderGrid(); renderHotList();});
+    
     if(_sk){
         onValue(ref(_db,`users/${_sk}`),s=>{
             const u=s.val(); if(!u)return;
@@ -365,7 +360,7 @@ window.handlePinLogin=async()=>{const p=document.getElementById('pinIn').value;i
 function renderCats(){const c=new Set(['ALL']);Object.values(_g).forEach(i=>{if(i.category)c.add(i.category)});document.getElementById('catList').innerHTML=Array.from(c).map(i=>`<div class="cat-item ${_cc===i?'active':''}" onclick="filterCat('${i}')">${i==='ALL'?'全部':i}</div>`).join('')}
 window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
 
-// 🔴 渲染熱門 Top 5
+// 🔴 渲染熱門 Top 5 卡片區塊
 function renderHotList() {
     const hotList = document.getElementById('hotList');
     hotList.innerHTML = '';
@@ -380,34 +375,35 @@ function renderHotList() {
         };
     });
 
-    // 這裡我們直接取前 5 個 (實際應根據剩餘數量排序，但因數據需異步獲取，此處簡化為顯示前5個未停盤商品)
-    // 若要精確排序，需等待所有 pool 數據加載完畢，這會拖慢首頁速度。
-    // 建議：後台「商品管理」中的排序 (order) 直接決定 Top 5。
+    // 篩選未售完商品，並依照後台設定的 order 進行排序
     const top5 = sortedGames.filter(g => !g.isSoldOut).sort((a,b) => (a.order||99) - (b.order||99)).slice(0, 5);
 
     top5.forEach((item, index) => {
         const sId = item.id.replace(/\s+/g,'-');
+        const displayTitle = item.name || item.id;
         const slide = document.createElement('div');
         slide.className = 'swiper-slide';
         
         slide.innerHTML = `
             <div class="hot-card" onclick="location.href='game.html?id=${item.id}'">
-                <div class="hot-rank-tag">Top ${index + 1}</div>
+                <div class="hot-rank-badge">Top ${index + 1}</div>
                 <div class="hot-img-box"><img src="${item.img}" class="hot-img"></div>
                 <div class="hot-info">
-                    <div class="hot-name">${item.name || item.id}</div>
+                    <div class="hot-name">${displayTitle}</div>
                     <div class="hot-meta">
-                        <span id="hot-rem-${sId}">剩餘 -- 張</span>
-                        <span class="hot-price">${item.promoPrice || item.price} G</span>
+                        <span class="hot-rem" id="hot-rem-${sId}">剩餘 -- 張</span>
+                        <div class="hot-price">
+                            ${(item.promoCount > 0) ? `<s>${item.price}</s> ${item.promoPrice}` : item.price} G
+                        </div>
                     </div>
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="hot-bar-${sId}" style="width:0%"></div></div>
+                    <div class="hot-progress-bg"><div class="hot-progress-fill" id="hot-bar-${sId}" style="width:0%"></div></div>
                 </div>
             </div>
         `;
         
         hotList.appendChild(slide);
 
-        // 異步獲取剩餘數量
+        // 異步獲取剩餘數量 (實時更新)
         onValue(ref(_db, `games/${item.id}/pool`), snap => {
             const p = snap.val() || [];
             const left = p.filter(x => !x.taken).length;
@@ -422,7 +418,7 @@ function renderHotList() {
         });
     });
 
-    // 初始化 Swiper
+    // 初始化 Swiper (每頁顯示 2.2 張卡片，增加滑動手感)
     new Swiper(".hotSwiper", {
         slidesPerView: 2.2, // 一次顯示 2.2 張卡片
         spaceBetween: 15,
