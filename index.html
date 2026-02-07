@@ -177,39 +177,57 @@ window.openLogin=()=>{document.getElementById('loginModal').style.display='flex'
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
 function init(){
-    // 跑馬燈：監聽中獎紀錄
-    onValue(ref(_db, 'winLogs'), (snapshot) => {
-        const winData = snapshot.val();
-        let winText = "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊"; // 預設文字
-        
-        if (winData) {
-            const sortedWins = Object.values(winData)
-                .sort((a, b) => (b.time || 0) - (a.time || 0))
-                .slice(0, 5);
-            winText = sortedWins.map(w => 
-                `🎊 恭喜玩家【${w.nickname || '神秘客'}】在《${w.game}》刮中【${w.prize}】！！`
-            ).join(' 　 | 　 ');
-        }
-        
-        // 更新跑馬燈文字與公告
-        get(ref(_db, 'settings/announcement')).then(annSnap => {
-            const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
-            const finalContent = winText ? `${winText} 　 | 　 📢 公告：${staticAnn}` : staticAnn;
-            const mq = document.getElementById('mq');
-            mq.innerText = finalContent;
-            // 動態調整動畫速度
-            const duration = Math.max(25, Math.floor(finalContent.length * 0.3));
-            mq.style.animationDuration = duration + 's';
+    // 🟢 修正 1：先監聽會員資料，建立「ID -> 暱稱」對照表
+    onValue(ref(_db, 'users'), (userSnap) => {
+        const allUsers = userSnap.val() || {};
+
+        // 🟢 修正 2：接著監聽中獎紀錄，並即時查表
+        onValue(ref(_db, 'winLogs'), (snapshot) => {
+            const winData = snapshot.val();
+            let winText = "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊"; 
+            
+            if (winData) {
+                const sortedWins = Object.values(winData)
+                    .sort((a, b) => (b.time || 0) - (a.time || 0))
+                    .slice(0, 5);
+                
+                winText = sortedWins.map(w => {
+                    // 🔍 暱稱查找邏輯：
+                    // 1. 如果 w.nickname 有值就用它
+                    // 2. 如果沒有，拿 w.user 去 allUsers 查
+                    // 3. 還是沒有，就顯示 '神秘客'
+                    let finalName = w.nickname;
+                    if (!finalName && w.user && allUsers[w.user]) {
+                        finalName = allUsers[w.user].nickname;
+                    }
+                    return `🎊 恭喜玩家【${finalName || '神秘客'}】在《${w.game}》刮中【${w.prize}】！！`;
+                }).join(' 　 | 　 ');
+            }
+            
+            // 更新跑馬燈文字與公告
+            get(ref(_db, 'settings/announcement')).then(annSnap => {
+                const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
+                const finalContent = winText !== "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊" 
+                    ? `${winText} 　 | 　 📢 公告：${staticAnn}` 
+                    : staticAnn;
+                
+                const mq = document.getElementById('mq');
+                if(mq) {
+                    mq.innerText = finalContent;
+                    const duration = Math.max(25, Math.floor(finalContent.length * 0.3));
+                    mq.style.animationDuration = duration + 's';
+                }
+            });
         });
-    });
+    }); // 🟢 這裡正確閉合了 onValue
 
     onValue(ref(_db,'settings/announcement_config'), s => {
         if(s.exists()){
             const config = s.val();
             const wrapper = document.getElementById('annSwiperWrapper');
-            wrapper.innerHTML = ""; 
+            if(wrapper) wrapper.innerHTML = ""; 
             
-            if(config.active && config.items && config.items.length > 0) {
+            if(config.active && config.items && config.items.length > 0 && wrapper) {
                 config.items.forEach(item => {
                     const slide = document.createElement('div');
                     slide.className = 'swiper-slide';
@@ -233,7 +251,8 @@ function init(){
                 const today = new Date().toDateString();
 
                 if(lastAnnId !== config.id || lastHideDate !== today) {
-                    document.getElementById('annModal').style.display = 'flex';
+                    const annModal = document.getElementById('annModal');
+                    if(annModal) annModal.style.display = 'flex';
                 }
             }
         }
