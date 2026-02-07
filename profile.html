@@ -55,7 +55,21 @@
         .commission-tag { font-size: 0.7rem; background: #eee; color: #666; padding: 2px 8px; border-radius: 5px; }
         .commission-tag b { color: var(--alliance); }
 
-        .deposit-btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,143,163,0.3); transition: 0.3s; }
+        .deposit-btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,143,163,0.3); transition: 0.3s; margin-bottom: 10px; }
+
+        /* 🟢 新增：打卡按鈕與日曆樣式 */
+        .checkin-btn { background: linear-gradient(135deg, #ffb800 0%, #ff9d00 100%); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 15px; font-size: 0.95rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,184,0,0.3); transition: 0.3s; }
+        .checkin-btn:active { transform: scale(0.98); }
+        .checkin-btn.disabled { background: #ddd; box-shadow: none; cursor: default; }
+
+        .calendar-wrap { margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 15px; }
+        .calendar-title { font-size: 0.8rem; font-weight: 900; color: #333; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .cal-day-label { font-size: 0.6rem; color: #ccc; font-weight: bold; padding-bottom: 5px; }
+        .cal-date { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; border-radius: 8px; background: #f8f9fb; color: #bbb; font-weight: bold; position: relative; }
+        .cal-date.today { border: 1.5px solid var(--primary); color: var(--primary); }
+        .cal-date.checked { background: #eefdf4; color: var(--success); }
+        .cal-date.checked::after { content: '✔'; font-size: 0.5rem; position: absolute; bottom: 1px; right: 2px; }
 
         .tabs { display: flex; background: transparent; margin-top: 90px; padding: 5px 10px; position: sticky; top: 58px; z-index: 4; gap: 5px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .tab-btn { flex: 0 0 auto; padding: 12px 15px; text-align: center; font-size: 0.85rem; font-weight: 900; color: #bbb; cursor: pointer; position: relative; white-space: nowrap; }
@@ -141,6 +155,15 @@
             </div>
             <div class="balance-amount"><span>P</span> <span id="uBal">0</span></div>
             <button class="deposit-btn" onclick="location.href='deposit.html'">💳 儲值點數</button>
+
+            <button class="checkin-btn" id="checkBtn" onclick="handleCheckIn()">📅 每日簽到領 3P 獎勵</button>
+            <div class="calendar-wrap">
+                <div class="calendar-title">
+                    <span id="calMonth">2026年 2月</span>
+                    <span style="color:var(--gold)">領取紀錄</span>
+                </div>
+                <div class="calendar-grid" id="calGrid"></div>
+            </div>
         </div>
     </div>
 
@@ -217,7 +240,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const _cc = { 
             apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
@@ -233,7 +256,6 @@
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
 
-        // 🟢 登出功能邏輯
         window.handleLogout = () => {
             if(confirm("確定要登出帳號嗎？")) {
                 localStorage.removeItem('myScratchCode');
@@ -241,27 +263,82 @@
             }
         };
 
-        // 🟢 摺疊功能邏輯
         window.toggleCollapse = (boxId, bodyId) => {
             const box = document.getElementById(boxId);
             const body = document.getElementById(bodyId);
             const isOpen = box.classList.contains('open');
-            
-            // 先關閉所有
             document.querySelectorAll('.collapse-box').forEach(el => el.classList.remove('open'));
             document.querySelectorAll('.collapse-body').forEach(el => el.style.display = 'none');
-            
-            // 如果原本是關的，就打開這一個
-            if(!isOpen) {
-                box.classList.add('open');
-                body.style.display = 'block';
-            }
+            if(!isOpen) { box.classList.add('open'); body.style.display = 'block'; }
         };
 
-const myRefUrl = `${window.location.origin}${window.location.pathname.replace('member.html', 'index.html').replace('profile.html', 'index.html')}?ref=${_uid}`;
-document.getElementById('refLink').innerText = myRefUrl;
+        const myRefUrl = `${window.location.origin}${window.location.pathname.replace('member.html', 'index.html').replace('profile.html', 'index.html')}?ref=${_uid}`;
+        document.getElementById('refLink').innerText = myRefUrl;
 
         window.copyRefLink = () => copyText(myRefUrl, '推廣連結');
+
+        // 📅 簽到核心邏輯
+        window.handleCheckIn = async () => {
+            const btn = document.getElementById('checkBtn');
+            if(btn.classList.contains('disabled')) return;
+
+            try {
+                const userRef = ref(_db, `users/${_uid}`);
+                const snap = await get(userRef);
+                const u = snap.val();
+                const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
+
+                if(u.lastCheckIn === today) return alert("今天已經簽到過了唷！");
+
+                const newCheckInDates = u.checkInDates || [];
+                newCheckInDates.push(today);
+
+                await update(userRef, {
+                    balance: (u.balance || 0) + 3,
+                    lastCheckIn: today,
+                    checkInDates: newCheckInDates
+                });
+
+                // 寫入日誌
+                await set(ref(_db, `users/${_uid}/logs/${Date.now()}`), {
+                    game: "📅 每日簽到獎勵",
+                    cost: -3,
+                    time: Date.now()
+                });
+
+                alert("✅ 簽到成功！獲得 3P 獎勵");
+                renderCalendar(newCheckInDates);
+            } catch (e) { alert("簽到失敗，請聯繫客服"); }
+        };
+
+        function renderCalendar(checkedDates = []) {
+            const grid = document.getElementById('calGrid');
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const todayStr = now.toLocaleDateString('sv-SE');
+            
+            document.getElementById('calMonth').innerText = `${year}年 ${month + 1}月`;
+            grid.innerHTML = ['日','一','二','三','四','五','六'].map(d => `<div class="cal-day-label">${d}</div>`).join('');
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for(let i=0; i<firstDay; i++) grid.innerHTML += '<div></div>';
+
+            for(let d=1; d<=daysInMonth; d++) {
+                const curStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const isToday = curStr === todayStr ? 'today' : '';
+                const isChecked = checkedDates.includes(curStr) ? 'checked' : '';
+                grid.innerHTML += `<div class="cal-date ${isToday} ${isChecked}">${d}</div>`;
+            }
+
+            if(checkedDates.includes(todayStr)) {
+                const btn = document.getElementById('checkBtn');
+                btn.innerText = "✨ 今日已完成簽到";
+                btn.classList.add('disabled');
+            }
+        }
 
         window.saveShippingInfo = async () => {
             const name = document.getElementById('shipName').value.trim();
@@ -269,22 +346,18 @@ document.getElementById('refLink').innerText = myRefUrl;
             const store = document.getElementById('shipStore').value.trim();
             if(!name || !phone || !store) return alert("請完整填寫收件資訊");
             try {
-                await update(ref(_db, `users/${_uid}/shipping`), {
-                    name: name, phone: phone, store: store, time: Date.now()
-                });
+                await update(ref(_db, `users/${_uid}/shipping`), { name, phone, store, time: Date.now() });
                 alert("✅ 儲存成功！之後中獎會自動以此資料出貨。");
-            } catch (e) {
-                alert("儲存失敗：" + e.message);
-            }
+            } catch (e) { alert("儲存失敗"); }
         };
 
         window.requestWithdraw = async () => {
             const snap = await get(ref(_db, `users/${_uid}/commission`));
             const currentComm = snap.val() || 0;
             if (currentComm < 1000) {
-                alert(`⚠️ 提現失敗\n\n目前獎金為 ${currentComm}P，需累積滿 1,000P 方可申請。`);
+                alert(`⚠️ 提現失敗\n\n需累積滿 1,000P 方可申請。`);
             } else {
-                alert(`✅ 資格確認\n\n您的獎金已達提現門檻！\n請截圖此頁面並聯繫官方客服 LINE，我們將為您辦理匯款。`);
+                alert(`✅ 資格確認\n\n您的獎金已達提現門檻！\n請聯繫客服 LINE 辦理匯款。`);
                 window.open('https://line.me/ti/p/@dream8','_blank');
             }
         };
@@ -303,7 +376,6 @@ document.getElementById('refLink').innerText = myRefUrl;
             document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
         };
 
-        // 核心資料監聽
         onValue(ref(_db, `users/${_uid}`), s => {
             const u = s.val(); if(!u) return;
             document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
@@ -317,112 +389,51 @@ document.getElementById('refLink').innerText = myRefUrl;
                 document.getElementById('shipStore').value = u.shipping.store || '';
             }
 
+            renderCalendar(u.checkInDates || []);
+
             const depBody = document.getElementById('depListBody');
             const gameBody = document.getElementById('gameListBody');
-            
             if(u.logs) {
                 const logs = Object.values(u.logs).sort((a,b) => b.time - a.time);
-                
-                // 分類：儲值紀錄 (cost 為負數)
                 const dLogs = logs.filter(l => Number(l.cost) < 0);
-                depBody.innerHTML = dLogs.length ? dLogs.map(l => `
-                    <div class="list-item-inner">
-                        <div class="item-info">
-                            <b>${l.game || '點數入帳'}</b>
-                            <small>${new Date(l.time).toLocaleString()}</small>
-                        </div>
-                        <div class="item-val val-plus">+${Math.abs(l.cost)} P</div>
-                    </div>
-                `).join('') : '<div class="empty-state">尚無入點紀錄</div>';
-
-                // 分類：消費紀錄 (cost 為正數)
+                depBody.innerHTML = dLogs.length ? dLogs.map(l => `<div class="list-item-inner"><div class="item-info"><b>${l.game || '點數入帳'}</b><small>${new Date(l.time).toLocaleString()}</small></div><div class="item-val val-plus">+${Math.abs(l.cost)} P</div></div>`).join('') : '<div class="empty-state">尚無入點紀錄</div>';
                 const gLogs = logs.filter(l => Number(l.cost) > 0);
-                gameBody.innerHTML = gLogs.length ? gLogs.map(l => `
-                    <div class="list-item-inner">
-                        <div class="item-info">
-                            <b>${l.game}</b>
-                            <small>${new Date(l.time).toLocaleString()}</small>
-                        </div>
-                        <div class="item-val val-minus">-${l.cost} P</div>
-                    </div>
-                `).join('') : '<div class="empty-state">尚無消費紀錄</div>';
-            } else {
-                depBody.innerHTML = gameBody.innerHTML = '<div class="empty-state">尚無明細資料</div>';
-            }
+                gameBody.innerHTML = gLogs.length ? gLogs.map(l => `<div class="list-item-inner"><div class="item-info"><b>${l.game}</b><small>${new Date(l.time).toLocaleString()}</small></div><div class="item-val val-minus">-${l.cost} P</div></div>`).join('') : '<div class="empty-state">尚無消費紀錄</div>';
+            } else { depBody.innerHTML = gameBody.innerHTML = '<div class="empty-state">尚無資料</div>'; }
         });
 
-        // 監聽邀請好友名單
         onValue(ref(_db, `users`), s => {
-            const list = document.getElementById('referralFriendsList');
-            const allUsers = s.val() || {};
-            const myFriends = Object.entries(allUsers)
-                .map(([id, data]) => ({ ...data, uid: id }))
-                .filter(u => u.invitedBy === _uid)
-                .sort((a,b) => (b.createTime || 0) - (a.createTime || 0));
-
+            const list = document.getElementById('referralFriendsList'), allUsers = s.val() || {};
+            const myFriends = Object.entries(allUsers).map(([id, data]) => ({ ...data, uid: id })).filter(u => u.invitedBy === _uid);
             if(myFriends.length) {
                 list.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem; margin-top:15px;">已綁定好友 (${myFriends.length}人)</div>` + 
-                myFriends.map(f => `
-                    <div class="list-item" style="padding: 12px 18px; margin-bottom: 8px;">
-                        <div class="item-info">
-                            <b>${f.nickname || '匿名盟友'}</b>
-                            <small>ID: ${f.uid.substring(0,8)}... <span class="friend-status ${f.hasToppedUp ? 'is-topped' : 'not-topped'}">${f.hasToppedUp ? '已首儲' : '未儲值'}</span></small>
-                        </div>
-                    </div>
-                `).join('');
+                myFriends.map(f => `<div class="list-item"><div class="item-info"><b>${f.nickname || '匿名'}</b><small>${f.hasToppedUp ? '已首儲' : '未儲值'}</small></div></div>`).join('');
             }
         });
 
-        // 監聽分潤日誌
         onValue(ref(_db, `referralLogs/${_uid}`), s => {
             const list = document.getElementById('referralLogList');
             if(s.exists()) {
                 const logs = Object.values(s.val()).sort((a,b) => b.time - a.time);
                 list.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem;">分潤明細</div>` + 
-                logs.map(l => `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <b>來自好友儲值回饋</b>
-                            <small>好友: ${l.from_uid ? l.from_uid.substring(0,8) : '---'}... | ${new Date(l.time).toLocaleString()}</small>
-                        </div>
-                        <div class="item-val val-plus">+${l.reward} P</div>
-                    </div>
-                `).join('');
+                logs.map(l => `<div class="list-item"><div class="item-info"><b>來自好友儲值回饋</b><small>${new Date(l.time).toLocaleString()}</small></div><div class="item-val val-plus">+${l.reward} P</div></div>`).join('');
             }
         });
 
-        // 原有儲值監聽
         onValue(ref(_db, `depositRequests`), s => {
-            const list = document.getElementById('depositList');
-            const allReq = s.val() ? Object.values(s.val()) : [];
+            const list = document.getElementById('depositList'), allReq = s.val() ? Object.values(s.val()) : [];
             const myReq = allReq.filter(r => r.uid === _uid).sort((a,b) => b.time - a.time);
-            if(myReq.length) {
-                list.innerHTML = myReq.map(r => `
-                    <div class="list-item">
-                        <div class="item-info"><b>儲值 ${r.amount} NTD</b><small>${new Date(r.time).toLocaleString()}</small></div>
-                        <div class="status-tag ${r.status === 'pending' ? 'status-pending' : 'status-completed'}">${r.status === 'pending' ? '⏳ 審核中' : '✅ 已入點'}</div>
-                    </div>`).join('');
-            } else { list.innerHTML = '<div class="empty-state">尚無紀錄</div>'; }
+            list.innerHTML = myReq.length ? myReq.map(r => `<div class="list-item"><div class="item-info"><b>儲值 ${r.amount} NTD</b><small>${new Date(r.time).toLocaleString()}</small></div><div class="status-tag ${r.status === 'pending' ? 'status-pending' : 'status-completed'}">${r.status === 'pending' ? '⏳ 審核中' : '✅ 已入點'}</div></div>`).join('') : '<div class="empty-state">尚無紀錄</div>';
         });
 
-        // 原有中獎監聽
         onValue(ref(_db, `winLogs`), s => {
-            const list = document.getElementById('winsList');
-            const data = s.val() || {};
+            const list = document.getElementById('winsList'), data = s.val() || {};
             const myWins = Object.values(data).filter(w => w.user === _uid).sort((a,b) => b.time - a.time);
-            if(myWins.length) {
-                list.innerHTML = myWins.map(w => {
-                    let sc = "status-pending", st = w.status || "待出貨";
-                    if(st === "已出貨") sc = "status-shipping"; if(st === "已完成") sc = "status-completed";
-                    return `<div class="list-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                            <div class="item-info"><b>${w.prize}</b><small>${w.game} | ${new Date(w.time).toLocaleString()}</small></div>
-                            <div class="status-tag ${sc}">${st}</div>
-                        </div>
-                        ${w.shippingNo ? `<div class="shipping-info"><div class="shipping-no-box"><span>物流編號：<b class="shipping-no">${w.shippingNo}</b></span><button class="copy-btn" onclick="copyText('${w.shippingNo}', '編號')">📋</button></div><a href="https://tracking.shopmore.com.tw/" target="_blank" class="track-link">📦 物流查詢</a></div>` : ''}
-                    </div>`;
-                }).join('');
-            } else { list.innerHTML = '<div class="empty-state">尚未中獎</div>'; }
+            list.innerHTML = myWins.length ? myWins.map(w => {
+                let sc = "status-pending", st = w.status || "待出貨";
+                if(st === "已出貨") sc = "status-shipping"; if(st === "已完成") sc = "status-completed";
+                return `<div class="list-item" style="flex-direction: column; align-items: flex-start; gap: 10px;"><div style="display: flex; justify-content: space-between; width: 100%; align-items: center;"><div class="item-info"><b>${w.prize}</b><small>${w.game} | ${new Date(w.time).toLocaleString()}</small></div><div class="status-tag ${sc}">${st}</div></div>${w.shippingNo ? `<div class="shipping-info"><div class="shipping-no-box"><span>物流編號：<b class="shipping-no">${w.shippingNo}</b></span><button class="copy-btn" onclick="copyText('${w.shippingNo}', '編號')">📋</button></div><a href="https://tracking.shopmore.com.tw/" target="_blank" class="track-link">📦 物流查詢</a></div>` : ''}</div>`;
+            }).join('') : '<div class="empty-state">尚未中獎</div>';
         });
     </script>
 </body>
