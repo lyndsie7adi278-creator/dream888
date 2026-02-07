@@ -28,25 +28,12 @@
     .thumb-item.active { border-color: var(--p); opacity: 1; transform: scale(1.05); }
     .thumb-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
-    /* 🔴 修改：價格區塊樣式，支援並排顯示 */
     .info-box { padding: 15px; background: var(--card); border-bottom: 2px solid #222; display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     
     .price-group { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-    
-    /* 原價樣式 (被劃掉) */
-    .old-price { 
-        font-size: 0.8rem; color: #888; text-decoration: line-through; margin-right: 5px; 
-    }
-    
-    /* 現價樣式 */
-    .current-price { 
-        color: var(--p); font-weight: 900; font-size: 1.4rem; line-height: 1;
-    }
-    
-    /* 優惠提示標籤 */
-    .promo-tag {
-        font-size: 0.7rem; background: #ff4757; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold; vertical-align: middle;
-    }
+    .old-price { font-size: 0.8rem; color: #888; text-decoration: line-through; margin-right: 5px; }
+    .current-price { color: var(--p); font-weight: 900; font-size: 1.4rem; line-height: 1; }
+    .promo-tag { font-size: 0.7rem; background: #ff4757; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold; vertical-align: middle; }
 
     #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 10px 12px 120px; box-sizing: border-box; }
     
@@ -57,31 +44,12 @@
 
     .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
     .prize-tag-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-    .prize-tag { 
-        background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 10px 15px;
-        display: flex; align-items: center; justify-content: flex-start; gap: 15px;
-        position: relative; transition: 0.3s;
-    }
-    .p-num {
-        font-size: 1.4rem; font-weight: 900; color: var(--p);
-        background: rgba(255,184,0,0.1); padding: 2px 10px; border-radius: 6px;
-        min-width: 40px; text-align: center; font-family: monospace;
-    }
-    .p-name {
-        font-size: 1rem; color: #fff; font-weight: bold; flex: 1;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .prize-tag.won {
-        background: linear-gradient(90deg, #1f252e, #000);
-        border-color: var(--p);
-        opacity: 0.6;
-    }
+    .prize-tag { background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; justify-content: flex-start; gap: 15px; position: relative; transition: 0.3s; }
+    .p-num { font-size: 1.4rem; font-weight: 900; color: var(--p); background: rgba(255,184,0,0.1); padding: 2px 10px; border-radius: 6px; min-width: 40px; text-align: center; font-family: monospace; }
+    .p-name { font-size: 1rem; color: #fff; font-weight: bold; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .prize-tag.won { background: linear-gradient(90deg, #1f252e, #000); border-color: var(--p); opacity: 0.6; }
     .prize-tag.won .p-name { color: #888; text-decoration: line-through; }
-    .prize-tag.won::after { 
-        content: "✅ 已刮出"; 
-        position: absolute; right: 15px; 
-        color: var(--success); font-size: 0.8rem; font-weight: bold; 
-    }
+    .prize-tag.won::after { content: "✅ 已開出"; position: absolute; right: 15px; color: var(--success); font-size: 0.8rem; font-weight: bold; }
 
     .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; }
     .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; cursor: pointer; transition: 0.2s; }
@@ -103,6 +71,15 @@
     #globalLoading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 20000; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
     .spinner { width: 45px; height: 45px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* 🔴 新增：點數不足專用彈窗樣式 */
+    .nomoney-icon { font-size: 3rem; margin-bottom: 10px; animation: bounce 1s infinite; }
+    .nomoney-title { color: #fff; font-size: 1.4rem; font-weight: 900; margin-bottom: 10px; }
+    .nomoney-text { color: #888; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+    .nomoney-btn-group { display: flex; gap: 10px; }
+    .btn-deposit { background: linear-gradient(135deg, #ff9f43, #ff6b6b); color: white; flex: 2; border: none; border-radius: 50px; padding: 15px; font-weight: 900; font-size: 1rem; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4); }
+    .btn-cancel { background: #333; color: #aaa; flex: 1; border: none; border-radius: 50px; padding: 15px; font-weight: bold; cursor: pointer; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -110,6 +87,21 @@
 <div id="globalLoading">
     <div class="spinner"></div>
     <div style="font-weight:900; letter-spacing:1px; font-size:0.95rem;" id="loadingText">正在通訊中...</div>
+</div>
+
+<div id="noMoneyModal" class="modal">
+    <div class="m-card" style="border-color: #ff6b6b;">
+        <div class="nomoney-icon">💸</div>
+        <div class="nomoney-title">點數不足</div>
+        <div class="nomoney-text">
+            您的餘額還差 <span id="diffAmount" style="color:#ff6b6b; font-weight:bold;">0</span> P<br>
+            儲值後即可繼續挑戰大獎！
+        </div>
+        <div class="nomoney-btn-group">
+            <button class="btn-cancel" onclick="document.getElementById('noMoneyModal').style.display='none'">稍後</button>
+            <button class="btn-deposit" onclick="location.href='deposit.html'">💰 立即儲值</button>
+        </div>
+    </div>
 </div>
 
 <div id="promoBanner" class="promo-banner">🔥 開盤大優惠！剩餘 <b id="promoLeft">0</b> 抽</div>
@@ -250,7 +242,6 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         } else if (pLeft > 0) {
             banner.style.display = 'block'; 
             document.getElementById('promoLeft').innerText = pLeft; 
-            // 🔴 核心修正：顯示原價劃掉 + 優惠價
             priceContainer.innerHTML = `
                 <div><span class="old-price">${_data.price} P</span> </div>
                 <div><span class="promo-tag">優惠剩 ${pLeft} 抽</span></div>
@@ -300,7 +291,13 @@ async function buyTicket(idx) {
     const _sold = poolArr.filter(x => x.taken).length;
     let pr = (_data.promoCount > 0 && _sold < _data.promoCount) ? _data.promoPrice : _data.price;
     
-    if(cur < pr) return alert("點數不足");
+    // 🔴 核心修正：點數不足時呼叫質感彈窗
+    if(cur < pr) {
+        document.getElementById('diffAmount').innerText = (pr - cur).toLocaleString();
+        document.getElementById('noMoneyModal').style.display = 'flex';
+        return;
+    }
+
     if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
 
     showLoading("正在驗證餘額並扣點...");
