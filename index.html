@@ -15,7 +15,6 @@
             }
         })();
 
-        // 🟢 核心修正 2：全域強制賦值函數，處理隱藏元素填值問題
         window.forceApplyRef = function() {
             const savedRef = localStorage.getItem('pending_ref');
             const refEl = document.getElementById('refIn');
@@ -29,7 +28,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800}
+        :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800;--card-bg:#222;}
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
         body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
@@ -49,6 +48,35 @@
         .marquee-content{display:inline-block;padding-left: 100%;animation: marquee-linear 40s linear infinite;will-change: transform;}
         @keyframes marquee-linear { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
         @media screen and (max-width: 768px) { .marquee-content { animation-duration: 30s; } }
+
+        /* 🔴 新增：熱門推薦區塊樣式 (參考圖片) */
+        .hot-section { width: 100%; background: #111; padding: 20px 0 30px; border-bottom: 5px solid #222; }
+        .hot-title { 
+            color: #fff; font-size: 1.1rem; font-weight: 900; margin: 0 20px 15px; 
+            display: flex; align-items: center; gap: 8px;
+        }
+        .hot-title span { color: var(--gold); }
+        
+        .hot-swiper { width: 100%; padding: 0 20px !important; box-sizing: border-box; }
+        .hot-card { 
+            background: #222; border-radius: 15px; overflow: hidden; position: relative; 
+            border: 1px solid #333; height: auto; display: flex; flex-direction: column;
+        }
+        .hot-rank-tag { 
+            position: absolute; top: 0; left: 0; background: #e74c3c; color: #fff; 
+            padding: 5px 12px; font-size: 0.85rem; font-weight: 900; 
+            border-bottom-right-radius: 10px; z-index: 10; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        .hot-img-box { width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #000; position: relative; }
+        .hot-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .hot-info { padding: 12px; }
+        .hot-name { color: #fff; font-size: 0.95rem; font-weight: bold; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hot-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #aaa; margin-bottom: 8px; }
+        .hot-price { color: var(--primary); font-weight: 900; font-size: 1rem; }
+        
+        .progress-bar-bg { width: 100%; height: 6px; background: #444; border-radius: 10px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--gold); border-radius: 10px; transition: width 0.5s; }
 
         .category-scroll{display:flex;overflow-x:auto;padding:15px 20px;gap:12px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
         .cat-item{flex-shrink:0;padding:10px 22px;border-radius:50px;background:#fff;border:1px solid #eee;font-size:.85rem;color:#7f8c8d;font-weight:700;transition:.3s;cursor:pointer}
@@ -135,6 +163,14 @@
 </div>
 
 <div class="marquee-container"><div class="marquee-content" id="mq">正在同步最新中獎喜報...</div></div>
+
+<div class="hot-section">
+    <div class="hot-title">🔥 真心不騙大家超愛 Top 5</div>
+    <div class="swiper hotSwiper">
+        <div class="swiper-wrapper" id="hotList"></div>
+    </div>
+</div>
+
 <div class="category-scroll" id="catList"><div class="cat-item active" onclick="filterCat('ALL')">全部商品 ALL</div></div>
 <div class="product-grid" id="pGrid"></div>
 <div class="status-section"><div class="status-item"><div class="status-icon">🛡️</div><div class="status-text"><b>加密安全訪問系統</b><p>數據經 SSL 高級加密，守護資產安全。</p></div></div><div class="status-item"><div class="status-icon">🎰</div><div class="status-text"><b>公平隨機洗牌算法</b><p>籤池發佈即隨機排序，公正透明。</p></div></div></div>
@@ -170,7 +206,7 @@ window.openAnn=()=>{
 };
 
 window.handleUserClick = () => {
-    if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
+    if(_sk) { location.href = 'member.html'; } else { openLogin(); }
 };
 
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
@@ -192,10 +228,6 @@ function init(){
                     .slice(0, 5);
                 
                 winText = sortedWins.map(w => {
-                    // 🔍 暱稱查找邏輯：
-                    // 1. 如果 w.nickname 有值就用它
-                    // 2. 如果沒有，拿 w.user 去 allUsers 查
-                    // 3. 還是沒有，就顯示 '神秘客'
                     let finalName = w.nickname;
                     if (!finalName && w.user && allUsers[w.user]) {
                         finalName = allUsers[w.user].nickname;
@@ -258,7 +290,7 @@ function init(){
         }
     });
 
-    onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{};renderCats();renderGrid()});
+    onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{}; renderCats(); renderGrid(); renderHotList();}); // 🟢 新增 renderHotList
     if(_sk){
         onValue(ref(_db,`users/${_sk}`),s=>{
             const u=s.val(); if(!u)return;
@@ -332,6 +364,73 @@ window.handlePinLogin=async()=>{const p=document.getElementById('pinIn').value;i
 
 function renderCats(){const c=new Set(['ALL']);Object.values(_g).forEach(i=>{if(i.category)c.add(i.category)});document.getElementById('catList').innerHTML=Array.from(c).map(i=>`<div class="cat-item ${_cc===i?'active':''}" onclick="filterCat('${i}')">${i==='ALL'?'全部':i}</div>`).join('')}
 window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
+
+// 🔴 渲染熱門 Top 5
+function renderHotList() {
+    const hotList = document.getElementById('hotList');
+    hotList.innerHTML = '';
+    
+    // 計算剩餘張數並排序
+    const sortedGames = Object.keys(_g).map(key => {
+        const item = _g[key];
+        return { 
+            id: key, 
+            ...item, 
+            remaining: 0 // 初始值，稍後更新
+        };
+    });
+
+    // 這裡我們直接取前 5 個 (實際應根據剩餘數量排序，但因數據需異步獲取，此處簡化為顯示前5個未停盤商品)
+    // 若要精確排序，需等待所有 pool 數據加載完畢，這會拖慢首頁速度。
+    // 建議：後台「商品管理」中的排序 (order) 直接決定 Top 5。
+    const top5 = sortedGames.filter(g => !g.isSoldOut).sort((a,b) => (a.order||99) - (b.order||99)).slice(0, 5);
+
+    top5.forEach((item, index) => {
+        const sId = item.id.replace(/\s+/g,'-');
+        const slide = document.createElement('div');
+        slide.className = 'swiper-slide';
+        
+        slide.innerHTML = `
+            <div class="hot-card" onclick="location.href='game.html?id=${item.id}'">
+                <div class="hot-rank-tag">Top ${index + 1}</div>
+                <div class="hot-img-box"><img src="${item.img}" class="hot-img"></div>
+                <div class="hot-info">
+                    <div class="hot-name">${item.name || item.id}</div>
+                    <div class="hot-meta">
+                        <span id="hot-rem-${sId}">剩餘 -- 張</span>
+                        <span class="hot-price">${item.promoPrice || item.price} G</span>
+                    </div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="hot-bar-${sId}" style="width:0%"></div></div>
+                </div>
+            </div>
+        `;
+        
+        hotList.appendChild(slide);
+
+        // 異步獲取剩餘數量
+        onValue(ref(_db, `games/${item.id}/pool`), snap => {
+            const p = snap.val() || [];
+            const left = p.filter(x => !x.taken).length;
+            const total = item.total || 1;
+            const percent = Math.round((left / total) * 100);
+            
+            const remEl = document.getElementById(`hot-rem-${sId}`);
+            const barEl = document.getElementById(`hot-bar-${sId}`);
+            
+            if(remEl) remEl.innerText = `剩餘 ${left} 張`;
+            if(barEl) barEl.style.width = `${percent}%`;
+        });
+    });
+
+    // 初始化 Swiper
+    new Swiper(".hotSwiper", {
+        slidesPerView: 2.2, // 一次顯示 2.2 張卡片
+        spaceBetween: 15,
+        freeMode: true,
+        observer: true,
+        observeParents: true
+    });
+}
 
 function renderGrid(){
     const grid=document.getElementById('pGrid');grid.innerHTML='';
