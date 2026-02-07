@@ -252,7 +252,8 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             document.getElementById('promoLeft').innerText = pLeft; 
             // 🔴 核心修正：顯示原價劃掉 + 優惠價
             priceContainer.innerHTML = `
-                <div><span class="old-price">${_data.price} P</span> <span class="promo-tag">剩 ${pLeft} 抽</span></div>
+                <div><span class="old-price">${_data.price} P</span> </div>
+                <div><span class="promo-tag">剩 ${pLeft} 抽</span></div>
                 <div class="current-price">${_data.promoPrice} P</div>
             `;
         } else {
