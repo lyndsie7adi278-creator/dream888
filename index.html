@@ -170,7 +170,7 @@ window.openAnn=()=>{
 };
 
 window.handleUserClick = () => {
-    if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
+    if(_sk) { location.href = 'member.html'; } else { openLogin(); }
 };
 
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
@@ -190,16 +190,14 @@ function init(){
                 `🎊 恭喜玩家【${w.nickname || '神秘客'}】在《${w.game}》刮中【${w.prize}】！！`
             ).join(' 　 | 　 ');
         }
-    
-        const marqueeEl = document.getElementById('marqueeText');
-        if(marqueeEl) marqueeEl.innerText = winText;
-    });
-}
+        
+        // 更新跑馬燈文字與公告
         get(ref(_db, 'settings/announcement')).then(annSnap => {
             const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
             const finalContent = winText ? `${winText} 　 | 　 📢 公告：${staticAnn}` : staticAnn;
             const mq = document.getElementById('mq');
             mq.innerText = finalContent;
+            // 動態調整動畫速度
             const duration = Math.max(25, Math.floor(finalContent.length * 0.3));
             mq.style.animationDuration = duration + 's';
         });
@@ -355,7 +353,3 @@ init();
 </script>
 </body>
 </html>
-
-
-
-
