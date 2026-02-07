@@ -182,7 +182,7 @@ function init(){
         let winText = "";
         if (winData) {
             const sortedWins = Object.values(winData).sort((a, b) => (b.time || 0) - (a.time || 0)).slice(0, 5);
-            winText = sortedWins.map(w => `🎊 恭喜玩家 【${w.user}】 在《${w.game}》刮中 【${w.prize}】！！`).join(' 　 | 　 ');
+            winText = sortedWins.map(w => `🎊 恭喜玩家 【${w.user}】 在《${w.game}》刮中 【${w.nickname}】！！`).join(' 　 | 　 ');
         }
         get(ref(_db, 'settings/announcement')).then(annSnap => {
             const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
@@ -344,5 +344,6 @@ init();
 </script>
 </body>
 </html>
+
 
 
