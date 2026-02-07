@@ -7,6 +7,33 @@
     
     <script>
         (function() {
+            // 1. 偵測是否為行動裝置
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            // 2. 如果「不是」行動裝置 (即電腦)，載入後顯示封鎖畫面
+            if (!isMobile) {
+                // 禁止捲動
+                document.documentElement.style.overflow = 'hidden';
+                
+                window.onload = function() {
+                    // 覆蓋整個 body 內容
+                    document.body.innerHTML = `
+                        <div id="pc-blocker">
+                            <div class="blocker-card">
+                                <div class="b-icon">📱</div>
+                                <h2>僅支援手機瀏覽</h2>
+                                <p>為了確保最佳體驗與公平性，<br>本站僅開放行動裝置訪問。</p>
+                                <div class="qr-wrap">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(window.location.href)}" alt="Scan QR">
+                                </div>
+                                <div class="b-tip">請使用手機掃描上方 QR Code 進入</div>
+                            </div>
+                        </div>
+                    `;
+                };
+            }
+
+            // 3. 原有的推薦碼邏輯
             const urlParams = new URLSearchParams(window.location.search);
             const refId = urlParams.get('ref');
             if (refId && refId.trim() !== "") {
@@ -31,6 +58,26 @@
         :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800;--card-bg:#222;}
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
         body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
+        
+        /* 🔴 電腦封鎖畫面樣式 */
+        #pc-blocker {
+            position: fixed; inset: 0; background: #2c3e50; z-index: 999999;
+            display: flex; align-items: center; justify-content: center;
+            font-family: sans-serif;
+        }
+        .blocker-card {
+            background: #fff; padding: 40px; border-radius: 30px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5); width: 90%; max-width: 380px;
+        }
+        .b-icon { font-size: 4rem; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        .blocker-card h2 { margin: 0 0 10px; color: #333; font-weight: 900; }
+        .blocker-card p { color: #666; font-size: 0.95rem; margin-bottom: 25px; line-height: 1.6; }
+        .qr-wrap { background: #f8f9fa; padding: 15px; border-radius: 15px; display: inline-block; border: 1px solid #eee; }
+        .qr-wrap img { display: block; width: 160px; height: 160px; }
+        .b-tip { margin-top: 15px; font-size: 0.85rem; color: #999; font-weight: bold; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* ... 以下原有樣式保持不變 ... */
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
@@ -199,7 +246,7 @@ window.openAnn=()=>{
 };
 
 window.handleUserClick = () => {
-    if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
+    if(_sk) { location.href = 'member.html'; } else { openLogin(); }
 };
 
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
@@ -438,38 +485,54 @@ function renderHotList() {
         observeParents: true
     });
 }
+
 function renderGrid(){
-    const grid=document.getElementById('pGrid');grid.innerHTML='';
-    if(_cc==='ALL'){
-        const f=document.createElement('div');
-        f.className='p-card free-gift';
-        f.onclick=()=>window.open('https://www.dream888.fun/live/','_blank');
-        f.innerHTML=`<img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2FChatGPT%20Image%202025%E5%B9%B48%E6%9C%883%E6%97%A5%20%E4%B8%8B%E5%8D%8803_05_35.png?alt=media&token=084fa287-7f52-407d-a785-a4e3ef8ad4d2" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
-        grid.appendChild(f);
-    }
-    const keys=Object.keys(_g).sort((a,b)=>(_g[a].order||99)-(_g[b].order||99));
-    keys.forEach(id=>{
-        const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
-        const sId=id.replace(/\s+/g,'-');
-        const displayTitle = it.name || id;
-        const card=document.createElement('div');
-        card.className=`p-card ${it.isSoldOut?'soldout':''}`;
-        card.onclick=()=>location.href=`game.html?id=${id}`;
-        card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
-        grid.appendChild(card);
-        onValue(ref(_db,`games/${id}`),s=>{
-            const d=s.val()||{},l=d.lock,p=d.pool||[],sB=document.getElementById(`status-${sId}`),pB=document.getElementById(`promo-${sId}`);
-            if(!sB)return;
-            if(it.isSoldOut){sB.innerHTML=`<div class="soldout-tag">SOLD OUT / 已停盤</div>`;pB.innerHTML="";}
-            else if(l&&l.expire>Date.now()){sB.innerHTML=`<div class="lock-tag">🔒 玩家包台中</div>`;pB.innerHTML="";}
-            else{
-                const sold=p.filter(x=>x.taken).length;
-                if(it.promoCount>0&&sold<it.promoCount){
-                    sB.innerHTML=`<div class="p-price-value">P${it.promoPrice} <span class="promo-tag">開盤優惠</span></div>`;
-                    pB.innerHTML=`<div class="promo-info">前${it.promoCount}刮 P${it.promoPrice} / 後 P${it.price}</div>`;
+    const grid = document.getElementById('pGrid');
+    
+    // 1. 先監聽直播開關狀態
+    onValue(ref(_db, 'settings/live_entry_active'), (snap) => {
+        const isLiveActive = snap.val() || false; 
+        
+        // 2. 清空並重新渲染
+        grid.innerHTML = ''; 
+
+        // 3. 如果開關是開的，且分類是 ALL，才顯示直播卡片
+        if (_cc === 'ALL' && isLiveActive) {
+            const f = document.createElement('div');
+            f.className = 'p-card free-gift';
+            f.onclick = () => window.open('https://www.dream888.fun/live/', '_blank');
+            f.innerHTML = `<img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2FChatGPT%20Image%202025%E5%B9%B48%E6%9C%883%E6%97%A5%20%E4%B8%8B%E5%8D%8803_05_35.png?alt=media&token=084fa287-7f52-407d-a785-a4e3ef8ad4d2" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
+            grid.appendChild(f);
+        }
+
+        // 4. 接著渲染一般商品
+        const keys = Object.keys(_g).sort((a,b) => (_g[a].order || 99) - (_g[b].order || 99));
+        keys.forEach(id => {
+            const it = _g[id]; 
+            if (_cc !== 'ALL' && it.category !== _cc) return;
+            
+            const sId = id.replace(/\s+/g, '-');
+            const displayTitle = it.name || id;
+            const card = document.createElement('div');
+            card.className = `p-card ${it.isSoldOut ? 'soldout' : ''}`;
+            card.onclick = () => location.href = `game.html?id=${id}`;
+            card.innerHTML = `<img src="${it.img || ''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
+            grid.appendChild(card);
+            
+            // 監聽個別商品狀態
+            onValue(ref(_db, `games/${id}`), s => {
+                const d = s.val() || {}, l = d.lock, p = d.pool || [], sB = document.getElementById(`status-${sId}`), pB = document.getElementById(`promo-${sId}`);
+                if (!sB) return;
+                if (it.isSoldOut) { sB.innerHTML = `<div class="soldout-tag">SOLD OUT / 已停盤</div>`; pB.innerHTML = ""; }
+                else if (l && l.expire > Date.now()) { sB.innerHTML = `<div class="lock-tag">🔒 玩家包台中</div>`; pB.innerHTML = ""; }
+                else {
+                    const sold = p.filter(x => x.taken).length;
+                    if (it.promoCount > 0 && sold < it.promoCount) {
+                        sB.innerHTML = `<div class="p-price-value">P${it.promoPrice} <span class="promo-tag">開盤優惠</span></div>`;
+                        pB.innerHTML = `<div class="promo-info">前${it.promoCount}刮 P${it.promoPrice} / 後 P${it.price}</div>`;
+                    } else { sB.innerHTML = `<div class="p-price-value">一刮 / P${it.price || 0}</div>`; pB.innerHTML = ""; }
                 }
-                else{sB.innerHTML=`<div class="p-price-value">一刮 / P${it.price||0}</div>`;pB.innerHTML="";}
-            }
+            });
         });
     });
 }
