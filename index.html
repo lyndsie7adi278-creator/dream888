@@ -11,7 +11,6 @@
             const refId = urlParams.get('ref');
             if (refId && refId.trim() !== "") {
                 localStorage.setItem('pending_ref', refId.trim());
-                console.log("已捕捉到推薦碼並暫存:", refId);
             }
         })();
 
@@ -20,7 +19,6 @@
             const refEl = document.getElementById('refIn');
             if (savedRef && refEl) {
                 refEl.value = savedRef;
-                console.log("註冊表單已強制填入:", savedRef);
             }
         };
     </script>
@@ -30,9 +28,68 @@
     <style>
         :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800;--card-bg:#222;}
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
-        body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
+        
+        /* 基礎設定 */
+        html { width: 100%; height: 100%; }
+        body { 
+            font-family:'PingFang TC','Microsoft JhengHei',sans-serif;
+            background:var(--bg); margin:0; padding:0; 
+            display:flex; flex-direction:column; align-items:center; 
+            min-height:100vh; padding-bottom:100px;
+            overflow-x: hidden;
+        }
+
+        /* 🔴 電腦版強力適配 (模擬手機) */
+        @media screen and (min-width: 600px) {
+            html {
+                background-color: #202020; /* 電腦背景深灰 */
+                display: flex; justify-content: center;
+                overflow-y: scroll; /* 保持捲動 */
+            }
+            body {
+                width: 100%;
+                max-width: 480px; /* 鎖定手機寬度 */
+                background: var(--bg);
+                box-shadow: 0 0 30px rgba(0,0,0,0.5); /* 手機陰影 */
+                min-height: 100vh;
+                margin: 0 auto;
+                position: relative; /* 重要：讓 absolute 參考這裡 */
+            }
+            /* 隱藏捲軸但可捲動 */
+            ::-webkit-scrollbar { width: 0px; background: transparent; }
+            
+            /* 修正 Fixed 元素位置 */
+            .top-nav {
+                max-width: 480px; /* 限制寬度 */
+                left: 50% !important; 
+                transform: translateX(-50%); /* 強制置中 */
+            }
+            .line-wrapper {
+                position: fixed;
+                left: 50% !important;
+                bottom: 30px !important;
+                margin-left: 160px; /* 從中心點往右推 (480/2 - 按鈕寬度) */
+                right: auto !important;
+            }
+            /* 讓 Modal 只蓋住手機範圍 */
+            .modal {
+                position: absolute !important; /* 改成 absolute 跟隨 body */
+                width: 100%; height: 100%;
+                max-width: 480px;
+            }
+            /* 修正 toast 位置 */
+            .welcome-toast {
+                position: fixed;
+                left: 50% !important;
+                transform: translateX(-50%) translateY(0) !important;
+                top: 80px;
+                width: auto;
+            }
+        }
+
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
+        
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
         .nav-left{display:flex;align-items:center;gap:15px;cursor:pointer;color:#333;font-size:1.4rem;position:relative}
         
@@ -49,7 +106,6 @@
         @keyframes marquee-linear { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
         @media screen and (max-width: 768px) { .marquee-content { animation-duration: 30s; } }
 
-        /* Top 5 推薦區塊樣式 */
         .hot-section-wrapper { width: 100%; max-width: 600px; margin-top: 20px; padding: 0 15px; }
         .hot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
         .hot-title-text { font-size: 1.1rem; font-weight: 900; color: #2c3e50; display: flex; align-items: center; gap: 6px; }
@@ -115,43 +171,6 @@
         .no-show-label { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; color: #999; cursor: pointer; margin-bottom: 12px; }
         .no-show-label input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
         .tip-text { font-size: 0.7rem; color: #ccc; margin-top: 8px; }
-
-        /* 🖥️ 電腦版適配 (模擬手機介面) */
-        @media screen and (min-width: 600px) {
-            html {
-                background: #2c3e50; /* 電腦版背景深灰 */
-                height: 100%;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-            body {
-                width: 100%;
-                max-width: 480px; /* 限制最大寬度為 480px */
-                height: 100vh;
-                margin: 0 auto;
-                background: var(--bg); /* 手機畫面背景 */
-                box-shadow: 0 0 50px rgba(0,0,0,0.5); /* 陰影 */
-                overflow-y: auto; /* 允許卷軸 */
-                position: relative; /* 讓 fixed 元素參考這裡 */
-            }
-            /* 修正 Floating Line 按鈕的位置 */
-            .line-wrapper {
-                position: fixed; /* 仍然固定 */
-                right: calc(50% - 240px + 20px); /* 貼緊手機畫面右側 */
-                bottom: 30px;
-            }
-            /* 修正 modal 位置 */
-            .modal {
-                position: fixed;
-                inset: 0;
-                display: none; /* JS會控制 */
-                justify-content: center;
-                align-items: center;
-            }
-            /* 修正跑馬燈動畫，避免在大螢幕穿幫 */
-            .marquee-container { max-width: 480px; margin: 0 auto; }
-        }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -283,7 +302,7 @@ function init(){
                 }
             });
         });
-    }); 
+    }); // 🟢 這裡正確閉合了 onValue
 
     onValue(ref(_db,'settings/announcement_config'), s => {
         if(s.exists()){
