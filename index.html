@@ -20,40 +20,10 @@
             const refEl = document.getElementById('refIn');
             if (savedRef && refEl) {
                 refEl.value = savedRef;
+                console.log("註冊表單已強制填入:", savedRef);
             }
         };
     </script>
-
-    <style>
-        /* 電腦版封鎖遮罩 (預設隱藏) */
-        #pc-blocker { display: none; }
-
-        /* 只有在非行動裝置時顯示遮罩 */
-        @media screen and (min-width: 768px) {
-            /* 讓原本內容隱藏或模糊 */
-            body > *:not(#pc-blocker) { filter: blur(10px); pointer-events: none; }
-            
-            #pc-blocker {
-                display: flex !important;
-                position: fixed; inset: 0; z-index: 999999;
-                background: linear-gradient(135deg, #2c3e50 0%, #000 100%);
-                align-items: center; justify-content: center;
-                flex-direction: column; color: #fff; font-family: sans-serif;
-            }
-            .blocker-card {
-                background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px);
-                padding: 50px; border-radius: 30px; text-align: center;
-                border: 1px solid rgba(255,255,255,0.2);
-                box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            }
-            .blocker-logo { width: 100px; height: 100px; object-fit: contain; margin-bottom: 20px; border-radius: 20px; background: #fff; padding: 10px; }
-            .blocker-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; letter-spacing: 2px; }
-            .blocker-subtitle { font-size: 1rem; color: #ccc; margin-bottom: 30px; }
-            .qr-wrap { background: #fff; padding: 15px; border-radius: 15px; display: inline-block; }
-            .qr-wrap img { display: block; width: 180px; height: 180px; }
-            .blocker-tip { margin-top: 20px; font-size: 0.9rem; color: #aaa; font-weight: bold; }
-        }
-    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -62,20 +32,64 @@
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
         body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
         
-        /* ... 其他手機版樣式保持不變 ... */
+        /* 🔴 新增：電腦版封鎖遮罩 (預設隱藏) */
+        #pc-blocker { display: none; }
+
+        /* 🔴 核心：只有在非手機裝置 (螢幕大於 768px 或非觸控) 時顯示遮罩 */
+        @media screen and (min-width: 768px) {
+            /* 讓原本網頁內容模糊並無法點擊 */
+            body > *:not(#pc-blocker) { 
+                filter: blur(15px); 
+                pointer-events: none; 
+                opacity: 0.3;
+            }
+            
+            /* 顯示封鎖畫面 */
+            #pc-blocker {
+                display: flex !important;
+                position: fixed; inset: 0; z-index: 999999;
+                background: rgba(20, 20, 20, 0.95); /* 深色半透明背景 */
+                align-items: center; justify-content: center;
+                flex-direction: column; color: #fff; font-family: sans-serif;
+            }
+            .blocker-card {
+                background: #fff; color: #333;
+                padding: 40px; border-radius: 30px; text-align: center;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+                width: 90%; max-width: 420px;
+                border: 5px solid var(--primary);
+            }
+            .blocker-logo { 
+                width: 120px; height: 120px; object-fit: contain; 
+                margin-bottom: 20px; border-radius: 20px; 
+                background: #f8f9fa; padding: 10px; border: 1px solid #eee;
+            }
+            .blocker-title { font-size: 1.6rem; font-weight: 900; margin-bottom: 5px; letter-spacing: 1px; color: #333; }
+            .blocker-subtitle { font-size: 1rem; color: var(--primary); font-weight: bold; margin-bottom: 25px; }
+            .qr-wrap { background: #f0f2f5; padding: 15px; border-radius: 20px; display: inline-block; border: 2px dashed #ddd; }
+            .qr-wrap img { display: block; width: 180px; height: 180px; }
+            .blocker-tip { margin-top: 20px; font-size: 0.95rem; color: #888; font-weight: bold; line-height: 1.5; }
+        }
+
+        /* ... 以下是您原本的樣式，完全保留 ... */
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
         .nav-left{display:flex;align-items:center;gap:15px;cursor:pointer;color:#333;font-size:1.4rem;position:relative}
+        
         .logo-txt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
         .logo-img{height:35px;width:auto;display:block;object-fit:contain}
+
         .menu-dropdown{display:none;position:absolute;top:60px;left:15px;background:#fff;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:2000;min-width:150px;overflow:hidden;border:1px solid #eee}
         .menu-dropdown.show{display:block;animation:menuFade .3s ease}@keyframes menuFade{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
         .menu-item{padding:15px 20px;font-size:.9rem;color:#2c3e50;font-weight:700;border-bottom:1px solid #f9f9f9;display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
         .menu-item:active{background:#fff1f3;color:var(--primary)}
+        
         .marquee-container{width:100%;background:#1a1c23;color:var(--primary);padding:12px 0;overflow:hidden;white-space:nowrap;font-size:.85rem;font-weight:700;border-bottom:2px solid var(--primary);position: relative;}
         .marquee-content{display:inline-block;padding-left: 100%;animation: marquee-linear 40s linear infinite;will-change: transform;}
         @keyframes marquee-linear { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+        @media screen and (max-width: 768px) { .marquee-content { animation-duration: 30s; } }
+
         .hot-section-wrapper { width: 100%; max-width: 600px; margin-top: 20px; padding: 0 15px; }
         .hot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
         .hot-title-text { font-size: 1.1rem; font-weight: 900; color: #2c3e50; display: flex; align-items: center; gap: 6px; }
@@ -94,6 +108,7 @@
         .hot-price s { font-size: 0.7rem; color: #ccc; font-weight: normal; margin-right: 2px; }
         .hot-progress-bg { width: 100%; height: 4px; background: #eee; border-radius: 10px; overflow: hidden; }
         .hot-progress-fill { height: 100%; background: linear-gradient(90deg, #ff9ff3, #feca57); border-radius: 10px; width: 0%; transition: width 0.5s; }
+
         .category-scroll{display:flex;overflow-x:auto;padding:15px 20px;gap:12px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
         .cat-item{flex-shrink:0;padding:10px 22px;border-radius:50px;background:#fff;border:1px solid #eee;font-size:.85rem;color:#7f8c8d;font-weight:700;transition:.3s;cursor:pointer}
         .cat-item.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(255,143,163,.4)}
@@ -119,6 +134,7 @@
         .status-section{width:92%;max-width:460px;margin:35px 0 15px;background:#fff;border-radius:28px;padding:25px;border:1px solid rgba(0,0,0,.04);box-shadow:0 5px 20px rgba(0,0,0,.03)}
         .status-item{display:flex;align-items:flex-start;background:#f9fafb;padding:18px;border-radius:20px;margin-bottom:15px}.status-icon{font-size:1.6rem;margin-right:18px;margin-top:3px}
         .status-text b{display:block;font-size:.9rem;color:#1a1c23;margin-bottom:5px}.status-text p{margin:0;font-size:.75rem;color:#7f8c8d;line-height:1.6}
+        
         .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:4000;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
         .m-box{background:#fff;padding:25px 15px;border-radius:35px;width:90%;max-width:360px;text-align:center;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.3);overflow:hidden}
         .close-modal{position:absolute;top:15px;right:20px;font-size:1.5rem;color:#ccc;cursor:pointer;z-index:10}
@@ -128,9 +144,11 @@
         .pop-title { font-weight: 900; font-size: 1.1rem; color: #333; margin-bottom: 10px; }
         .pop-text { font-size: 0.9rem; color: #666; text-align: left; line-height: 1.6; white-space: pre-wrap; padding: 0 10px; }
         .swiper-pagination-bullet-active { background: var(--primary) !important; }
+        
         input{width:100%;padding:14px;margin:8px 0;border:1px solid #eee;border-radius:12px;text-align:center;font-size:1rem;font-weight:700;color:var(--primary);outline:none}
         .btn{background:var(--primary);color:#fff;border:none;padding:16px;border-radius:50px;font-weight:900;width:100%;cursor:pointer;font-size:1rem;box-shadow:0 8px 20px rgba(255,143,163,.3);margin-top:10px}
         .footer{padding:30px 0 50px;font-size:.75rem;color:#95a5a6;text-align:center;line-height:2}
+
         .modal-footer { margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 15px; }
         .no-show-label { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; color: #999; cursor: pointer; margin-bottom: 12px; }
         .no-show-label input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
@@ -152,7 +170,7 @@
             </script>
         </div>
         
-        <div class="blocker-tip">請拿起手機掃描上方 QR Code 進入遊玩 📱</div>
+        <div class="blocker-tip">為了確保最佳體驗與公平性<br>本站僅開放行動裝置訪問<br>請拿起手機掃描上方 QR Code</div>
     </div>
 </div>
 
@@ -400,7 +418,7 @@ window.handlePinLogin=async()=>{const p=document.getElementById('pinIn').value;i
 function renderCats(){const c=new Set(['ALL']);Object.values(_g).forEach(i=>{if(i.category)c.add(i.category)});document.getElementById('catList').innerHTML=Array.from(c).map(i=>`<div class="cat-item ${_cc===i?'active':''}" onclick="filterCat('${i}')">${i==='ALL'?'全部':i}</div>`).join('')}
 window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
 
-// 🔴 渲染熱門 Top 5 卡片區塊 (已修復價格邏輯)
+// 🔴 渲染熱門 Top 5 卡片區塊 (修正價格顯示邏輯)
 function renderHotList() {
     const hotList = document.getElementById('hotList');
     hotList.innerHTML = '';
