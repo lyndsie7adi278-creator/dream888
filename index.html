@@ -6,11 +6,11 @@
     <title>夢工廠 | 刮刮樂商城</title>
     
     <script>
+        // 🟢 1. 優先執行：推薦碼捕捉 (Ref Code)
         (function() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const refId = urlParams.get('ref');
-                // 只要網址有 ref，就強制更新暫存
                 if (refId && refId.trim() !== "") {
                     localStorage.setItem('pending_ref', refId.trim());
                     console.log("✅ 推薦碼已捕捉:", refId);
@@ -18,15 +18,42 @@
             } catch (e) { console.error("Ref Error:", e); }
         })();
 
-        // 定義填寫函數 (註冊時自動呼叫)
+        // 定義全域填寫函數
         window.forceApplyRef = function() {
             const savedRef = localStorage.getItem('pending_ref');
             const refEl = document.getElementById('refIn');
-            // 只有當欄位存在且為空時才填入
             if (savedRef && refEl && refEl.value.trim() === "") {
                 refEl.value = savedRef;
             }
         };
+
+        // 🟢 2. 核心裝置偵測 (嚴格版)
+        // 預設將網頁內容隱藏，直到確認是手機才顯示
+        document.documentElement.className = 'loading'; 
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // 偵測 User Agent 是否包含手機關鍵字
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            const blocker = document.getElementById('pc-blocker');
+            const content = document.body;
+
+            if (isMobile) {
+                // ✅ 是手機：移除封鎖畫面，顯示內容
+                if(blocker) blocker.style.display = 'none';
+                document.documentElement.classList.remove('loading');
+                document.body.style.overflow = 'auto'; // 允許捲動
+            } else {
+                // ❌ 是電腦：保持封鎖畫面，並生成 QR Code
+                if(blocker) {
+                    blocker.style.display = 'flex';
+                    // 生成 QR Code (包含當前參數)
+                    const qrImg = document.getElementById('qr-img');
+                    if(qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
+                }
+                document.documentElement.classList.remove('loading');
+            }
+        });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -34,47 +61,31 @@
     <style>
         :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800;--card-bg:#222;}
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
+        
+        /* 預設隱藏內容，避免閃爍 */
+        html.loading body > *:not(#pc-blocker) { display: none; }
+        
         body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
         
-        /* 🔴 2. 電腦版封鎖畫面設定 (CSS 遮罩法，不影響腳本執行) */
-        #pc-blocker { display: none; } /* 預設隱藏 */
-
-        /* 當螢幕寬度大於 768px (視為電腦/平板) 時觸發 */
-        @media screen and (min-width: 768px) {
-            /* 隱藏原本的網頁內容，改用模糊濾鏡，避免被誤觸 */
-            body > *:not(#pc-blocker) { 
-                filter: blur(10px); 
-                opacity: 0.1; 
-                pointer-events: none; 
-            }
-            
-            /* 顯示全螢幕遮罩 */
-            #pc-blocker {
-                display: flex !important;
-                position: fixed; inset: 0; z-index: 999999;
-                background: #2c3e50;
-                align-items: center; justify-content: center;
-                flex-direction: column; color: #fff;
-            }
-            
-            .blocker-card {
-                background: #fff; color: #333;
-                padding: 40px; border-radius: 30px; text-align: center;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-                width: 90%; max-width: 400px;
-                display: flex; flex-direction: column; align-items: center;
-            }
-            .blocker-logo { 
-                width: 90px; height: 90px; object-fit: contain; 
-                margin-bottom: 15px; border-radius: 20px; 
-                background: #f9f9f9; padding: 10px; border:1px solid #eee; 
-            }
-            .blocker-title { font-size: 1.5rem; font-weight: 900; color: #2c3e50; margin-bottom: 5px; }
-            .blocker-subtitle { font-size: 0.9rem; color: var(--primary); font-weight: bold; margin-bottom: 20px; letter-spacing: 1px; }
-            .qr-wrap { background: #f8f9fa; padding: 15px; border-radius: 20px; display: inline-block; border: 2px dashed #ddd; }
-            .qr-wrap img { display: block; width: 180px; height: 180px; }
-            .blocker-tip { margin-top: 15px; font-size: 0.85rem; color: #999; font-weight: bold; }
+        /* 🔴 電腦版封鎖畫面 (預設開啟，JS 判斷是手機才會關掉) */
+        #pc-blocker {
+            position: fixed; inset: 0; background: #2c3e50; z-index: 999999;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'PingFang TC', sans-serif;
+            /* 預設為 flex，確保電腦版一打開就看到 */
+            display: flex; 
         }
+        .blocker-card {
+            background: #fff; padding: 40px; border-radius: 30px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5); width: 90%; max-width: 400px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .blocker-logo { width: 90px; height: 90px; object-fit: contain; margin-bottom: 15px; border-radius: 20px; background: #f9f9f9; padding: 10px; border:1px solid #eee; }
+        .blocker-title { font-size: 1.5rem; font-weight: 900; color: #333; margin-bottom: 5px; }
+        .blocker-subtitle { font-size: 0.9rem; color: var(--primary); font-weight: bold; margin-bottom: 20px; letter-spacing: 1px; }
+        .qr-wrap { background: #f8f9fa; padding: 15px; border-radius: 20px; display: inline-block; border: 2px dashed #ddd; }
+        .qr-wrap img { display: block; width: 180px; height: 180px; }
+        .blocker-tip { margin-top: 15px; font-size: 0.85rem; color: #999; font-weight: bold; }
 
         /* ... 以下原有樣式保持不變 ... */
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
@@ -165,9 +176,7 @@
         <div class="blocker-subtitle">Dream Factory Online</div>
         
         <div class="qr-wrap">
-            <script>
-                document.write(`<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}" alt="Scan Me">`);
-            </script>
+            <img id="qr-img" src="" alt="Scan Me">
         </div>
         
         <div class="blocker-tip">為了確保最佳體驗與公平性<br>本站僅開放手機訪問<br>請拿起手機掃描上方 QR Code</div>
