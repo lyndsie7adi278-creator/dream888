@@ -37,15 +37,42 @@
     .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s; }
 
     .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
-    .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
     
-    /* 🔴 修改：獎項標籤樣式，改為 Flex Column 以便垂直排列號碼與名稱 */
+    /* 🔴 修改：獎項列表改為垂直排列 */
+    .prize-tag-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    
+    /* 🔴 修改：單個獎項標籤樣式 (橫向佈局) */
     .prize-tag { 
-        background: #1a1e26; color: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid #444; 
-        position: relative; min-width: 60px; text-align: center;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 10px 15px;
+        display: flex; align-items: center; justify-content: flex-start; gap: 15px;
+        position: relative; transition: 0.3s;
     }
-    .prize-tag.won::after { content: ""; position: absolute; left: 5%; top: 50%; width: 90%; height: 3px; background: var(--danger); transform: rotate(-10deg); }
+    
+    /* 號碼樣式 */
+    .p-num {
+        font-size: 1.4rem; font-weight: 900; color: var(--p);
+        background: rgba(255,184,0,0.1); padding: 2px 10px; border-radius: 6px;
+        min-width: 40px; text-align: center; font-family: monospace;
+    }
+    
+    /* 名稱樣式 */
+    .p-name {
+        font-size: 1rem; color: #fff; font-weight: bold; flex: 1;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* 中獎狀態樣式 */
+    .prize-tag.won {
+        background: linear-gradient(90deg, #1f252e, #000);
+        border-color: var(--p);
+        opacity: 0.6; /* 稍微變暗表示已開出 */
+    }
+    .prize-tag.won .p-name { color: #888; text-decoration: line-through; }
+    .prize-tag.won::after { 
+        content: "✅ 已開出"; 
+        position: absolute; right: 15px; 
+        color: var(--success); font-size: 0.8rem; font-weight: bold; 
+    }
 
     .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; }
     .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; cursor: pointer; transition: 0.2s; }
@@ -206,12 +233,12 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P`;
         } else { banner.style.display = 'none'; document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`; }
         
-        // 🔴 修正：顯示獎品名稱
+        // 🔴 修正重點：改成列表式顯示 (號碼 + 名稱)
         document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
             const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
             return `<div class="prize-tag ${w ? 'won' : ''}">
-                        <span style="font-size:1.1rem; font-weight:900; line-height:1;">${Number(x.num).toString().padStart(2,'0')}</span>
-                        <span style="font-size:0.75rem; color:#aaa; font-weight:normal; margin-top:2px;">${x.name || '大獎'}</span>
+                        <span class="p-num">${Number(x.num).toString().padStart(2,'0')}</span>
+                        <span class="p-name">${x.name || '大獎'}</span>
                     </div>`;
         }).join('');
 
