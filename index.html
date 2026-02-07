@@ -438,16 +438,6 @@ function renderHotList() {
         observeParents: true
     });
 }
-
-function renderGrid(){
-    const grid=document.getElementById('pGrid');grid.innerHTML='';
-    if(_cc==='ALL'){
-        const f=document.createElement('div');
-        f.className='p-card free-gift';
-        f.onclick=()=>window.open('https://www.dream888.fun/live/','_blank');
-        f.innerHTML=`<img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2FChatGPT%20Image%202025%E5%B9%B48%E6%9C%883%E6%97%A5%20%E4%B8%8B%E5%8D%8803_05_35.png?alt=media&token=084fa287-7f52-407d-a785-a4e3ef8ad4d2" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
-        grid.appendChild(f);
-    }
     const keys=Object.keys(_g).sort((a,b)=>(_g[a].order||99)-(_g[b].order||99));
     keys.forEach(id=>{
         const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
