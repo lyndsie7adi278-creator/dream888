@@ -177,13 +177,24 @@ window.openLogin=()=>{document.getElementById('loginModal').style.display='flex'
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
 function init(){
+    // 跑馬燈：監聽中獎紀錄
     onValue(ref(_db, 'winLogs'), (snapshot) => {
         const winData = snapshot.val();
-        let winText = "";
+        let winText = "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊"; // 預設文字
+        
         if (winData) {
-            const sortedWins = Object.values(winData).sort((a, b) => (b.time || 0) - (a.time || 0)).slice(0, 5);
-            winText = sortedWins.map(w => `🎊 恭喜玩家 【${w.user}】 在《${w.game}》刮中 【${w.nickname}】！！`).join(' 　 | 　 ');
+            const sortedWins = Object.values(winData)
+                .sort((a, b) => (b.time || 0) - (a.time || 0))
+                .slice(0, 5);
+            winText = sortedWins.map(w => 
+                `🎊 恭喜玩家【${w.nickname || '神秘客'}】在《${w.game}》刮中【${w.prize}】！！`
+            ).join(' 　 | 　 ');
         }
+    
+        const marqueeEl = document.getElementById('marqueeText');
+        if(marqueeEl) marqueeEl.innerText = winText;
+    });
+}
         get(ref(_db, 'settings/announcement')).then(annSnap => {
             const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
             const finalContent = winText ? `${winText} 　 | 　 📢 公告：${staticAnn}` : staticAnn;
@@ -344,6 +355,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
