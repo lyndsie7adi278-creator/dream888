@@ -28,7 +28,26 @@
     .thumb-item.active { border-color: var(--p); opacity: 1; transform: scale(1.05); }
     .thumb-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
+    /* 🔴 修改：價格區塊樣式，支援並排顯示 */
     .info-box { padding: 15px; background: var(--card); border-bottom: 2px solid #222; display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+    
+    .price-group { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+    
+    /* 原價樣式 (被劃掉) */
+    .old-price { 
+        font-size: 0.8rem; color: #888; text-decoration: line-through; margin-right: 5px; 
+    }
+    
+    /* 現價樣式 */
+    .current-price { 
+        color: var(--p); font-weight: 900; font-size: 1.4rem; line-height: 1;
+    }
+    
+    /* 優惠提示標籤 */
+    .promo-tag {
+        font-size: 0.7rem; background: #ff4757; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold; vertical-align: middle;
+    }
+
     #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 10px 12px 120px; box-sizing: border-box; }
     
     .progress-container { margin-bottom: 20px; }
@@ -37,35 +56,25 @@
     .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb800, #ffeb3b); box-shadow: 0 0 10px rgba(255,184,0,0.5); transition: width 0.8s; }
 
     .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
-    
-    /* 🔴 修改：獎項列表改為垂直排列 */
     .prize-tag-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-    
-    /* 🔴 修改：單個獎項標籤樣式 (橫向佈局) */
     .prize-tag { 
         background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 10px 15px;
         display: flex; align-items: center; justify-content: flex-start; gap: 15px;
         position: relative; transition: 0.3s;
     }
-    
-    /* 號碼樣式 */
     .p-num {
         font-size: 1.4rem; font-weight: 900; color: var(--p);
         background: rgba(255,184,0,0.1); padding: 2px 10px; border-radius: 6px;
         min-width: 40px; text-align: center; font-family: monospace;
     }
-    
-    /* 名稱樣式 */
     .p-name {
         font-size: 1rem; color: #fff; font-weight: bold; flex: 1;
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-
-    /* 中獎狀態樣式 */
     .prize-tag.won {
         background: linear-gradient(90deg, #1f252e, #000);
         border-color: var(--p);
-        opacity: 0.6; /* 稍微變暗表示已開出 */
+        opacity: 0.6;
     }
     .prize-tag.won .p-name { color: #888; text-decoration: line-through; }
     .prize-tag.won::after { 
@@ -111,7 +120,12 @@
     <div id="thumbBar" class="thumb-bar"></div>
 </div>
 
-<div class="info-box"><h2 id="gTitle">載入中...</h2><div id="priceDisplay" style="color:var(--p); font-weight:900; font-size:1.3rem;">-- P</div></div>
+<div class="info-box">
+    <h2 id="gTitle">載入中...</h2>
+    <div class="price-group" id="priceContainer">
+        <div id="priceDisplay" style="color:var(--p); font-weight:900; font-size:1.3rem;">-- P</div>
+    </div>
+</div>
 
 <div id="soldOutBanner" class="soldout-banner">🚨 本期大獎已開出，商品已停盤 🚨</div>
 <div id="lockBanner" class="lock-banner">🔒 玩家 <span id="lockUser">---</span> 正在包台中 (<span id="lockTimer">0</span>s)</div>
@@ -228,12 +242,24 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
 
         const pLeft = (_data.promoCount || 0) - _s;
         const banner = document.getElementById('promoBanner');
-        if(pLeft > 0 && !_isClosed) {
-            banner.style.display = 'block'; document.getElementById('promoLeft').innerText = pLeft; 
-            document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P`;
-        } else { banner.style.display = 'none'; document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`; }
+        const priceContainer = document.getElementById('priceContainer');
+
+        if(_isClosed) {
+            banner.style.display = 'none';
+            priceContainer.innerHTML = `<div class="current-price" style="color:#888">已停盤</div>`;
+        } else if (pLeft > 0) {
+            banner.style.display = 'block'; 
+            document.getElementById('promoLeft').innerText = pLeft; 
+            // 🔴 核心修正：顯示原價劃掉 + 優惠價
+            priceContainer.innerHTML = `
+                <div><span class="old-price">${_data.price} P</span> <span class="promo-tag">剩 ${pLeft} 抽</span></div>
+                <div class="current-price">${_data.promoPrice} P</div>
+            `;
+        } else {
+            banner.style.display = 'none';
+            priceContainer.innerHTML = `<div class="current-price">${_data.price} P</div>`;
+        }
         
-        // 🔴 修正重點：改成列表式顯示 (號碼 + 名稱)
         document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
             const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
             return `<div class="prize-tag ${w ? 'won' : ''}">
