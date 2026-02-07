@@ -11,7 +11,7 @@
     body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; overflow-x: hidden; }
     
     .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,184,0,0.3); position: sticky; top: 0; z-index: 1000; }
-    .back-btn { background: none; border: 1px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
+    .back-btn { background: none; border: 1.5px solid var(--p); color: var(--p); padding: 5px 15px; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
     .balance-tag { background: var(--p); padding: 5px 18px; border-radius: 50px; font-weight: 900; color: #000; box-shadow: 0 0 15px rgba(255,184,0,0.2); }
 
     .promo-banner { display: none; background: linear-gradient(90deg, #ff4757, #ff6b6b); color: white; padding: 10px; font-size: 0.9rem; font-weight: 900; text-align: center; border-bottom: 2px solid #fff; }
@@ -38,8 +38,14 @@
 
     .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
     .prize-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
-    .prize-tag { background: #1a1e26; color: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; font-size: 1.1rem; font-weight: 900; position: relative; min-width: 42px; text-align: center; }
-    .prize-tag.won::after { content: ""; position: absolute; left: 10%; top: 50%; width: 80%; height: 3px; background: var(--danger); transform: rotate(-15deg); }
+    
+    /* 🔴 修改：獎項標籤樣式，改為 Flex Column 以便垂直排列號碼與名稱 */
+    .prize-tag { 
+        background: #1a1e26; color: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid #444; 
+        position: relative; min-width: 60px; text-align: center;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .prize-tag.won::after { content: ""; position: absolute; left: 5%; top: 50%; width: 90%; height: 3px; background: var(--danger); transform: rotate(-10deg); }
 
     .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; }
     .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; cursor: pointer; transition: 0.2s; }
@@ -165,7 +171,6 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
     
-    // 🟢 修正：顯示改過的名字
     document.getElementById('gTitle').innerText = _data.name || _gid;
     
     const mainImg = _data.img || "";
@@ -201,9 +206,13 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             document.getElementById('priceDisplay').innerText = `${_data.promoPrice} P`;
         } else { banner.style.display = 'none'; document.getElementById('priceDisplay').innerText = _isClosed ? '已停盤' : `${_data.price} P`; }
         
+        // 🔴 修正：顯示獎品名稱
         document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
             const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
-            return `<div class="prize-tag ${w ? 'won' : ''}">${Number(x.num).toString().padStart(2,'0')}</div>`;
+            return `<div class="prize-tag ${w ? 'won' : ''}">
+                        <span style="font-size:1.1rem; font-weight:900; line-height:1;">${Number(x.num).toString().padStart(2,'0')}</span>
+                        <span style="font-size:0.75rem; color:#aaa; font-weight:normal; margin-top:2px;">${x.name || '大獎'}</span>
+                    </div>`;
         }).join('');
 
         grid.innerHTML = '';
@@ -244,7 +253,6 @@ async function buyTicket(idx) {
     document.body.style.pointerEvents = "none"; 
 
     const script = document.createElement('script');
-    // 🟢 核心修正：對 _gid 進行編碼，防止中文名稱造成網址斷裂
     script.src = `${GAS_URL}?gid=${encodeURIComponent(_gid)}&uid=${encodeURIComponent(_uid)}&idx=${idx}&pr=${pr}&callback=gasCallback`;
     document.body.appendChild(script);
     
