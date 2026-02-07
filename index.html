@@ -30,72 +30,7 @@
     <style>
         :root{--primary:#ff8fa3;--dark:#1a1c23;--bg:#f0f2f5;--line:#06c755;--soldout:#95a5a6;--free:#4cd137;--lock:#3498db;--gold:#ffb800;--card-bg:#222;}
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
-        
-        /* 基礎設定 */
-        html { width: 100%; height: 100%; }
-        body { 
-            font-family:'PingFang TC','Microsoft JhengHei',sans-serif;
-            background:var(--bg); margin:0; padding:0; 
-            display:flex; flex-direction:column; align-items:center; 
-            min-height:100vh; padding-bottom:100px;
-            overflow-x: hidden;
-        }
-
-        /* 🔴 電腦版強力適配 (手機模擬器模式) */
-        @media screen and (min-width: 600px) {
-            html {
-                background-color: #202020; /* 電腦背景深灰 */
-                display: flex; justify-content: center;
-                overflow-y: scroll; /* 保持捲動 */
-            }
-            body {
-                width: 100%;
-                max-width: 480px; /* 🔒 鎖定手機寬度 */
-                background: var(--bg);
-                box-shadow: 0 0 30px rgba(0,0,0,0.5); /* 手機陰影 */
-                min-height: 100vh;
-                margin: 0 auto;
-                position: relative; /* 重要：讓 absolute 參考這裡 */
-                border-left: 1px solid #333;
-                border-right: 1px solid #333;
-            }
-            /* 隱藏捲軸但可捲動 */
-            ::-webkit-scrollbar { width: 0px; background: transparent; }
-            
-            /* 修正 Fixed 元素位置，限制在手機寬度內 */
-            .top-nav {
-                max-width: 480px; /* 限制寬度 */
-                left: 50% !important; 
-                transform: translateX(-50%); /* 強制置中 */
-            }
-            /* Line 按鈕定位 */
-            .line-wrapper {
-                position: fixed;
-                left: 50% !important;
-                bottom: 30px !important;
-                margin-left: 160px; /* 從中心點往右推 (480/2 - 按鈕寬度) */
-                right: auto !important;
-            }
-            /* 讓 Modal 只蓋住手機範圍 */
-            .modal {
-                position: absolute !important; /* 改成 absolute 跟隨 body */
-                width: 100%; height: 100%;
-                max-width: 480px;
-            }
-            /* 修正 toast 位置 */
-            .welcome-toast {
-                position: fixed;
-                left: 50% !important;
-                transform: translateX(-50%) translateY(0) !important;
-                top: 80px;
-                width: auto;
-            }
-            .footer {
-                max-width: 480px;
-                width: 100%;
-            }
-        }
-
+        body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
@@ -264,7 +199,7 @@ window.openAnn=()=>{
 };
 
 window.handleUserClick = () => {
-    if(_sk) { location.href = 'member.html'; } else { openLogin(); }
+    if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
 };
 
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
@@ -503,54 +438,38 @@ function renderHotList() {
         observeParents: true
     });
 }
-
 function renderGrid(){
-    const grid = document.getElementById('pGrid');
-    
-    // 1. 先監聽直播開關狀態
-    onValue(ref(_db, 'settings/live_entry_active'), (snap) => {
-        const isLiveActive = snap.val() || false; 
-        
-        // 2. 清空並重新渲染
-        grid.innerHTML = ''; 
-
-        // 3. 如果開關是開的，且分類是 ALL，才顯示直播卡片
-        if (_cc === 'ALL' && isLiveActive) {
-            const f = document.createElement('div');
-            f.className = 'p-card free-gift';
-            f.onclick = () => window.open('https://www.dream888.fun/live/', '_blank');
-            f.innerHTML = `<img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2FChatGPT%20Image%202025%E5%B9%B48%E6%9C%883%E6%97%A5%20%E4%B8%8B%E5%8D%8803_05_35.png?alt=media&token=084fa287-7f52-407d-a785-a4e3ef8ad4d2" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
-            grid.appendChild(f);
-        }
-
-        // 4. 接著渲染一般商品
-        const keys = Object.keys(_g).sort((a,b) => (_g[a].order || 99) - (_g[b].order || 99));
-        keys.forEach(id => {
-            const it = _g[id]; 
-            if (_cc !== 'ALL' && it.category !== _cc) return;
-            
-            const sId = id.replace(/\s+/g, '-');
-            const displayTitle = it.name || id;
-            const card = document.createElement('div');
-            card.className = `p-card ${it.isSoldOut ? 'soldout' : ''}`;
-            card.onclick = () => location.href = `game.html?id=${id}`;
-            card.innerHTML = `<img src="${it.img || ''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
-            grid.appendChild(card);
-            
-            // 監聽個別商品狀態
-            onValue(ref(_db, `games/${id}`), s => {
-                const d = s.val() || {}, l = d.lock, p = d.pool || [], sB = document.getElementById(`status-${sId}`), pB = document.getElementById(`promo-${sId}`);
-                if (!sB) return;
-                if (it.isSoldOut) { sB.innerHTML = `<div class="soldout-tag">SOLD OUT / 已停盤</div>`; pB.innerHTML = ""; }
-                else if (l && l.expire > Date.now()) { sB.innerHTML = `<div class="lock-tag">🔒 玩家包台中</div>`; pB.innerHTML = ""; }
-                else {
-                    const sold = p.filter(x => x.taken).length;
-                    if (it.promoCount > 0 && sold < it.promoCount) {
-                        sB.innerHTML = `<div class="p-price-value">P${it.promoPrice} <span class="promo-tag">開盤優惠</span></div>`;
-                        pB.innerHTML = `<div class="promo-info">前${it.promoCount}刮 P${it.promoPrice} / 後 P${it.price}</div>`;
-                    } else { sB.innerHTML = `<div class="p-price-value">一刮 / P${it.price || 0}</div>`; pB.innerHTML = ""; }
+    const grid=document.getElementById('pGrid');grid.innerHTML='';
+    if(_cc==='ALL'){
+        const f=document.createElement('div');
+        f.className='p-card free-gift';
+        f.onclick=()=>window.open('https://www.dream888.fun/live/','_blank');
+        f.innerHTML=`<img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2FChatGPT%20Image%202025%E5%B9%B48%E6%9C%883%E6%97%A5%20%E4%B8%8B%E5%8D%8803_05_35.png?alt=media&token=084fa287-7f52-407d-a785-a4e3ef8ad4d2" class="p-img"><div class="p-info"><div class="p-name">🎁 直播刮刮樂</div><div class="free-tag">FREE / 點我</div></div>`;
+        grid.appendChild(f);
+    }
+    const keys=Object.keys(_g).sort((a,b)=>(_g[a].order||99)-(_g[b].order||99));
+    keys.forEach(id=>{
+        const it=_g[id]; if(_cc!=='ALL'&&it.category!==_cc)return;
+        const sId=id.replace(/\s+/g,'-');
+        const displayTitle = it.name || id;
+        const card=document.createElement('div');
+        card.className=`p-card ${it.isSoldOut?'soldout':''}`;
+        card.onclick=()=>location.href=`game.html?id=${id}`;
+        card.innerHTML=`<img src="${it.img||''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
+        grid.appendChild(card);
+        onValue(ref(_db,`games/${id}`),s=>{
+            const d=s.val()||{},l=d.lock,p=d.pool||[],sB=document.getElementById(`status-${sId}`),pB=document.getElementById(`promo-${sId}`);
+            if(!sB)return;
+            if(it.isSoldOut){sB.innerHTML=`<div class="soldout-tag">SOLD OUT / 已停盤</div>`;pB.innerHTML="";}
+            else if(l&&l.expire>Date.now()){sB.innerHTML=`<div class="lock-tag">🔒 玩家包台中</div>`;pB.innerHTML="";}
+            else{
+                const sold=p.filter(x=>x.taken).length;
+                if(it.promoCount>0&&sold<it.promoCount){
+                    sB.innerHTML=`<div class="p-price-value">P${it.promoPrice} <span class="promo-tag">開盤優惠</span></div>`;
+                    pB.innerHTML=`<div class="promo-info">前${it.promoCount}刮 P${it.promoPrice} / 後 P${it.price}</div>`;
                 }
-            });
+                else{sB.innerHTML=`<div class="p-price-value">一刮 / P${it.price||0}</div>`;pB.innerHTML="";}
+            }
         });
     });
 }
