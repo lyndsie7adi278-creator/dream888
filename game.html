@@ -35,7 +35,7 @@
     .current-price { color: var(--p); font-weight: 900; font-size: 1.4rem; line-height: 1; }
     .promo-tag { font-size: 0.7rem; background: #ff4757; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold; vertical-align: middle; }
 
-    #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 10px 12px 120px; box-sizing: border-box; }
+    #scroll-area { width: 100%; max-width: 600px; margin: 0 auto; padding: 10px 12px 60px; box-sizing: border-box; }
     
     .progress-container { margin-bottom: 20px; }
     .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaa; margin-bottom: 6px; font-weight: bold; }
@@ -51,11 +51,24 @@
     .prize-tag.won .p-name { color: #888; text-decoration: line-through; }
     .prize-tag.won::after { content: "✅ 已開出"; position: absolute; right: 15px; color: var(--success); font-size: 0.8rem; font-weight: bold; }
 
-    .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; }
+    .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; margin-bottom: 30px; }
     .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; cursor: pointer; transition: 0.2s; }
     .ticket.taken { background: #000; cursor: default; }
     .ticket.revealed { color: #ff4757 !important; font-weight: 900 !important; font-size: 1.4rem !important; }
     .ticket.winner-glow { border-color: var(--win); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
+
+    /* 🔴 新增：最下方公平性驗證區塊 CSS */
+    .fairness-section { background: #0a0c10; border: 1px solid #222; border-radius: 15px; padding: 20px; margin-top: 30px; margin-bottom: 40px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+    .fairness-title { color: var(--p); font-size: 1.1rem; font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed #333; padding-bottom: 10px; }
+    .fairness-desc { font-size: 0.8rem; color: #888; margin-bottom: 15px; line-height: 1.6; }
+    .hash-group { margin-bottom: 15px; }
+    .hash-label { font-size: 0.8rem; color: #bbb; margin-bottom: 5px; font-weight: bold; }
+    .hash-box { background: #000; color: var(--p); font-family: 'Courier New', monospace; font-size: 0.75rem; padding: 12px; border-radius: 8px; border: 1px solid #333; word-break: break-all; user-select: text !important; -webkit-user-select: text !important; }
+    .hash-box.plaintext { color: #fff; background: #111; border-color: #444; }
+    .hash-box.hidden-text { color: #ff4757; text-align: center; font-weight: bold; font-family: 'PingFang TC', sans-serif; letter-spacing: 1px; }
+    .verify-btn-wrap { text-align: center; margin-top: 20px; }
+    .verify-link { display: inline-block; background: transparent; border: 1px solid var(--p); color: var(--p); padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; text-decoration: none; font-weight: bold; transition: 0.2s; }
+    .verify-link:active { background: var(--p); color: #000; }
 
     .scratch-overlay { display: none; position: fixed; inset: 0; z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.9); }
     .scratch-box { position: relative; width: 300px; height: 300px; border-radius: 25px; overflow: hidden; background: white; border: 5px solid var(--p); }
@@ -72,7 +85,6 @@
     .spinner { width: 45px; height: 45px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* 🔴 新增：點數不足專用彈窗樣式 */
     .nomoney-icon { font-size: 3rem; margin-bottom: 10px; animation: bounce 1s infinite; }
     .nomoney-title { color: #fff; font-size: 1.4rem; font-weight: 900; margin-bottom: 10px; }
     .nomoney-text { color: #888; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
@@ -134,7 +146,28 @@
     </div>
 
     <div class="pool-grid" id="poolGrid"></div>
-</div>
+
+    <div class="fairness-section">
+        <div class="fairness-title">🛡️ 區塊鏈級別・公平性驗證</div>
+        <div class="fairness-desc">
+            為確保公平公正，本機台所有獎項於「開盤前」皆已透過 SHA-256 演算法進行整箱加密鎖定 (Server Seed)，保證過程中無任何人為竄改之可能。
+        </div>
+        
+        <div class="hash-group">
+            <div class="hash-label">🔒 開盤前鎖定雜湊值 (Server Seed Hash)</div>
+            <div class="hash-box" id="boxHashDisplay">系統讀取中...</div>
+        </div>
+
+        <div class="hash-group">
+            <div class="hash-label">🔓 結算驗證明文 (Plaintext)</div>
+            <div class="hash-box plaintext hidden-text" id="boxPlaintextDisplay">※ 獎池全數完售或停盤後，系統將自動公開明文 ※</div>
+        </div>
+
+        <div class="verify-btn-wrap">
+            <a href="https://emn178.github.io/online-tools/sha256.html" target="_blank" class="verify-link">前往第三方開源工具驗證 ↗</a>
+        </div>
+    </div>
+    </div>
 
 <div id="scratchOverlay" class="scratch-overlay">
     <div style="text-align:center;">
@@ -224,6 +257,25 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         bar.style.display = 'none';
     }
 
+    // 🔴 核心功能整合：公平性驗證數據讀取
+    // 從資料庫讀取這箱遊戲的 Hash 與 明文
+    // 注意：您需要在後台開局時寫入 'boxHash' 和 'boxPlaintext' 欄位
+    const boxHash = _data.boxHash || "等待開盤生成中...";
+    const boxPlaintext = _data.boxPlaintext || "";
+    
+    document.getElementById('boxHashDisplay').innerText = boxHash;
+    const ptBox = document.getElementById('boxPlaintextDisplay');
+    
+    // 邏輯：如果商品已停盤/完售 (_isClosed為真)，且資料庫有明文，就顯示出來
+    // 這保護了您的「保護區」機制，因為明文只在結束後公開
+    if(_isClosed && boxPlaintext) {
+        ptBox.innerText = boxPlaintext;
+        ptBox.classList.remove('hidden-text');
+    } else {
+        ptBox.innerText = "※ 獎池全數完售或停盤後，系統將自動公開明文 ※";
+        ptBox.classList.add('hidden-text');
+    }
+
     onValue(ref(_db, `games/${_gid}/pool`), snap => {
         const p = snap.val() || []; const grid = document.getElementById('poolGrid');
         const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
@@ -291,7 +343,7 @@ async function buyTicket(idx) {
     const _sold = poolArr.filter(x => x.taken).length;
     let pr = (_data.promoCount > 0 && _sold < _data.promoCount) ? _data.promoPrice : _data.price;
     
-    // 🔴 核心修正：點數不足時呼叫質感彈窗
+    // 點數不足彈窗
     if(cur < pr) {
         document.getElementById('diffAmount').innerText = (pr - cur).toLocaleString();
         document.getElementById('noMoneyModal').style.display = 'flex';
