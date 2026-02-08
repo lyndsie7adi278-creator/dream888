@@ -259,7 +259,7 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         bar.style.display = 'none';
     }
 
-    const boxHash = _data.boxHash || "正在驗證餘額並扣點...";
+    const boxHash = _data.boxHash || "等待開盤產生..";
     const boxPlaintext = _data.boxPlaintext || "";
     
     document.getElementById('boxHashDisplay').innerText = boxHash;
