@@ -6,12 +6,10 @@
     <title>夢工廠 | 刮刮樂商城</title>
     
     <script>
-        // 🟢 1. 優先執行：捕捉推薦碼 (Ref Code)
         (function() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const refId = urlParams.get('ref');
-                // 只要網址有 ref，就強制更新暫存
                 if (refId && refId.trim() !== "") {
                     localStorage.setItem('pending_ref', refId.trim());
                     console.log("✅ 推薦碼已捕捉:", refId);
@@ -19,29 +17,24 @@
             } catch (e) { console.error("Ref Error:", e); }
         })();
 
-        // 定義全域填寫函數 (註冊時自動呼叫)
         window.forceApplyRef = function() {
             const savedRef = localStorage.getItem('pending_ref');
             const refEl = document.getElementById('refIn');
-            // 只有當欄位存在且為空時才填入
             if (savedRef && refEl && refEl.value.trim() === "") {
                 refEl.value = savedRef;
             }
         };
 
-        // 🟢 2. 裝置偵測：電腦版顯示質感封鎖畫面
         (function() {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
-            // 如果是電腦 (非行動裝置)
             if (!isMobile) {
-                document.documentElement.style.overflow = 'hidden'; // 禁止捲動
+                document.documentElement.style.overflow = 'hidden'; 
                 
                 window.onload = function() {
                     const logoUrl = "https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8";
-                    const currentUrl = window.location.href; // 包含 ref 參數
+                    const currentUrl = window.location.href; 
 
-                    // 覆蓋畫面 (質感升級版)
                     document.body.innerHTML = `
                         <div id="pc-blocker">
                             <div class="glass-card">
@@ -74,7 +67,6 @@
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
         body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
         
-        /* 🔴 電腦版封鎖畫面樣式 (質感升級) */
         #pc-blocker { display: none; }
 
         @media screen and (min-width: 768px) {
@@ -89,7 +81,6 @@
                 overflow: hidden;
             }
 
-            /* 毛玻璃卡片 */
             .glass-card {
                 background: rgba(255, 255, 255, 0.05);
                 backdrop-filter: blur(20px);
@@ -103,8 +94,6 @@
                 position: relative;
                 animation: cardEntry 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
             }
-
-            /* 呼吸光暈背景 */
             .glow-bg {
                 position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
                 background: radial-gradient(circle, rgba(255,143,163,0.15) 0%, transparent 60%);
@@ -127,7 +116,6 @@
                 margin: 0 0 30px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.9;
             }
 
-            /* QR Code 容器 */
             .qr-container {
                 background: #fff; padding: 15px; border-radius: 20px; 
                 display: inline-block; position: relative; overflow: hidden;
@@ -137,7 +125,6 @@
             .qr-container:hover { transform: scale(1.05); }
             .qr-container img { display: block; width: 180px; height: 180px; }
             
-            /* 掃描線動畫 */
             .scan-line {
                 position: absolute; width: 100%; height: 3px; background: var(--primary);
                 top: 0; left: 0; box-shadow: 0 0 10px var(--primary);
@@ -157,7 +144,6 @@
             @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
         }
 
-        /* ... 以下是您原本的樣式，完全保留 ... */
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
@@ -321,18 +307,16 @@ window.openAnn=()=>{
 };
 
 window.handleUserClick = () => {
-    if(_sk) { location.href = 'member.html'; } else { openLogin(); }
+    if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
 };
 
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
 function init(){
-    // 🟢 修正 1：先監聽會員資料，建立「ID -> 暱稱」對照表
     onValue(ref(_db, 'users'), (userSnap) => {
         const allUsers = userSnap.val() || {};
 
-        // 🟢 修正 2：接著監聽中獎紀錄，並即時查表
         onValue(ref(_db, 'winLogs'), (snapshot) => {
             const winData = snapshot.val();
             let winText = "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊"; 
@@ -351,7 +335,6 @@ function init(){
                 }).join(' 　 | 　 ');
             }
             
-            // 更新跑馬燈文字與公告
             get(ref(_db, 'settings/announcement')).then(annSnap => {
                 const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
                 const finalContent = winText !== "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊" 
@@ -366,7 +349,7 @@ function init(){
                 }
             });
         });
-    }); // 🟢 這裡正確閉合了 onValue
+    }); 
 
     onValue(ref(_db,'settings/announcement_config'), s => {
         if(s.exists()){
@@ -405,7 +388,6 @@ function init(){
         }
     });
 
-    // 🟢 這裡加入了 renderHotList() 的呼叫
     onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{}; renderCats(); renderGrid(); renderHotList();});
     
     if(_sk){
@@ -438,7 +420,6 @@ window.showReg=()=>{
     document.getElementById('stepRegister').style.display='block';
     document.getElementById('loginStepTitle').innerText="註冊新帳號";
     
-    // 🟢 核心修正 3：呼叫全域函數進行強制帶入
     if(typeof window.forceApplyRef === 'function') window.forceApplyRef();
 };
 
@@ -446,7 +427,6 @@ window.backStep1=()=>{document.getElementById('step1').style.display='block';doc
 window.checkCode=async()=>{const c=document.getElementById('cIn').value.trim();if(!c)return;const s=await get(ref(_db,`users/${c}`));if(!s.exists())return alert("帳號不存在");_u={id:c,data:s.val()};document.getElementById('step1').style.display='none';document.getElementById('step2').style.display='block'};
 
 window.handleRegister=async()=>{
-    // 🟢 核心修正 4：送出註冊前最後一刻再次強制讀取暫存
     const savedRef = localStorage.getItem('pending_ref');
     const refInput = document.getElementById('refIn');
     if (savedRef && refInput && refInput.value.trim() === "") {
@@ -482,22 +462,19 @@ window.handlePinLogin=async()=>{const p=document.getElementById('pinIn').value;i
 function renderCats(){const c=new Set(['ALL']);Object.values(_g).forEach(i=>{if(i.category)c.add(i.category)});document.getElementById('catList').innerHTML=Array.from(c).map(i=>`<div class="cat-item ${_cc===i?'active':''}" onclick="filterCat('${i}')">${i==='ALL'?'全部':i}</div>`).join('')}
 window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
 
-// 🔴 渲染熱門 Top 5 卡片區塊 (已修復價格邏輯)
 function renderHotList() {
     const hotList = document.getElementById('hotList');
     hotList.innerHTML = '';
     
-    // 計算剩餘張數並排序
     const sortedGames = Object.keys(_g).map(key => {
         const item = _g[key];
         return { 
             id: key, 
             ...item, 
-            remaining: 0 // 初始值，稍後更新
+            remaining: 0 
         };
     });
 
-    // 篩選未售完商品，並依照後台設定的 order 進行排序
     const top5 = sortedGames.filter(g => !g.isSoldOut).sort((a,b) => (a.order||99) - (b.order||99)).slice(0, 5);
 
     top5.forEach((item, index) => {
@@ -525,7 +502,6 @@ function renderHotList() {
         
         hotList.appendChild(slide);
 
-        // 異步獲取剩餘數量並判斷價格顯示
         onValue(ref(_db, `games/${item.id}/pool`), snap => {
             const p = snap.val() || [];
             const left = p.filter(x => !x.taken).length;
@@ -540,7 +516,6 @@ function renderHotList() {
             if(remEl) remEl.innerText = `剩餘 ${left} 張`;
             if(barEl) barEl.style.width = `${percent}%`;
 
-            // 🔴 核心邏輯修正：判斷「已賣出數量」是否小於「優惠數量」
             if (item.promoCount > 0 && sold < item.promoCount) {
                 priceEl.innerHTML = `<s>${item.price}</s> ${item.promoPrice} G`;
                 priceEl.style.color = "#ff4757"; // 優惠時變紅色
@@ -551,7 +526,6 @@ function renderHotList() {
         });
     });
 
-    // 初始化 Swiper
     new Swiper(".hotSwiper", {
         slidesPerView: 2.2, // 一次顯示 2.2 張卡片
         spaceBetween: 15,
@@ -564,14 +538,11 @@ function renderHotList() {
 function renderGrid(){
     const grid = document.getElementById('pGrid');
     
-    // 1. 先監聽直播開關狀態
     onValue(ref(_db, 'settings/live_entry_active'), (snap) => {
         const isLiveActive = snap.val() || false; 
         
-        // 2. 清空並重新渲染
         grid.innerHTML = ''; 
 
-        // 3. 如果開關是開的，且分類是 ALL，才顯示直播卡片
         if (_cc === 'ALL' && isLiveActive) {
             const f = document.createElement('div');
             f.className = 'p-card free-gift';
@@ -580,7 +551,6 @@ function renderGrid(){
             grid.appendChild(f);
         }
 
-        // 4. 接著渲染一般商品
         const keys = Object.keys(_g).sort((a,b) => (_g[a].order || 99) - (_g[b].order || 99));
         keys.forEach(id => {
             const it = _g[id]; 
@@ -594,7 +564,6 @@ function renderGrid(){
             card.innerHTML = `<img src="${it.img || ''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
             grid.appendChild(card);
             
-            // 監聽個別商品狀態
             onValue(ref(_db, `games/${id}`), s => {
                 const d = s.val() || {}, l = d.lock, p = d.pool || [], sB = document.getElementById(`status-${sId}`), pB = document.getElementById(`promo-${sId}`);
                 if (!sB) return;
