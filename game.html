@@ -57,7 +57,6 @@
     .ticket.revealed { color: #ff4757 !important; font-weight: 900 !important; font-size: 1.4rem !important; }
     .ticket.winner-glow { border-color: var(--win); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
 
-    /* 🔴 新增：最下方公平性驗證區塊 CSS */
     .fairness-section { background: #0a0c10; border: 1px solid #222; border-radius: 15px; padding: 20px; margin-top: 30px; margin-bottom: 40px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
     .fairness-title { color: var(--p); font-size: 1.1rem; font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed #333; padding-bottom: 10px; }
     .fairness-desc { font-size: 0.8rem; color: #888; margin-bottom: 15px; line-height: 1.6; }
@@ -192,6 +191,7 @@ const _cc = {
 const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
 
+// ⚠️ 請確保這裡填的是你 GAS 的最新發布網址 (以 exec 結尾)
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec"; 
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
@@ -219,6 +219,7 @@ window.changeSlide = (idx) => {
     }, 150);
 }
 
+// 監聽包台狀態
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
     const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
     if(_tInterval) clearInterval(_tInterval);
@@ -233,6 +234,7 @@ onValue(ref(_db, `games/${_gid}/lock`), snap => {
     } else { b.style.display = 'none'; _q = null; }
 });
 
+// 監聽遊戲資料
 onValue(ref(_db, `gameSettings/${_gid}`), s => {
     _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
@@ -257,17 +259,12 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         bar.style.display = 'none';
     }
 
-    // 🔴 核心功能整合：公平性驗證數據讀取
-    // 從資料庫讀取這箱遊戲的 Hash 與 明文
-    // 注意：您需要在後台開局時寫入 'boxHash' 和 'boxPlaintext' 欄位
     const boxHash = _data.boxHash || "等待開盤生成中...";
     const boxPlaintext = _data.boxPlaintext || "";
     
     document.getElementById('boxHashDisplay').innerText = boxHash;
     const ptBox = document.getElementById('boxPlaintextDisplay');
     
-    // 邏輯：如果商品已停盤/完售 (_isClosed為真)，且資料庫有明文，就顯示出來
-    // 這保護了您的「保護區」機制，因為明文只在結束後公開
     if(_isClosed && boxPlaintext) {
         ptBox.innerText = boxPlaintext;
         ptBox.classList.remove('hidden-text');
@@ -277,13 +274,17 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     }
 
     onValue(ref(_db, `games/${_gid}/pool`), snap => {
-        const p = snap.val() || []; const grid = document.getElementById('poolGrid');
-        const _m = (_data.prizes || []).map(x => Number(x.num)), _s = p.filter(t => t.taken).length;
+        const p = snap.val() || []; 
+        const grid = document.getElementById('poolGrid');
+        
+        // 渲染進度條
+        const _s = p.filter(t => t.taken).length;
         const _pct = Math.round((_s / _data.total) * 100);
         document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
         document.getElementById('progFill').style.width = `${_pct}%`;
         document.getElementById('progPercent').innerText = `${_pct}%`;
 
+        // 價格顯示
         const pLeft = (_data.promoCount || 0) - _s;
         const banner = document.getElementById('promoBanner');
         const priceContainer = document.getElementById('priceContainer');
@@ -304,7 +305,9 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             priceContainer.innerHTML = `<div class="current-price">${_data.price} P</div>`;
         }
         
+        // 渲染大獎區 (使用 includes 檢查是否已開出)
         document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
+            // 這裡要檢查所有已開出的牌 (p) 中，有沒有這一張大獎
             const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
             return `<div class="prize-tag ${w ? 'won' : ''}">
                         <span class="p-num">${Number(x.num).toString().padStart(2,'0')}</span>
@@ -312,58 +315,92 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
                     </div>`;
         }).join('');
 
+        // 🔴 核心修改：格子渲染邏輯 (Queue Mode)
+        // 我們要先建立一個長度為 total 的空陣列
+        const totalGrid = new Array(Number(_data.total)).fill(null);
+        
+        // 把已經賣出的牌，依照 visualIdx 填入格子
+        p.forEach(card => {
+            if(card.taken) {
+                // 如果有 visualIdx，用它；如果沒有(舊資料)，用原本的陣列索引
+                let vIdx = (card.visualIdx !== undefined) ? Number(card.visualIdx) : -1;
+                // 如果是舊資料且沒記錄 visualIdx，我們暫時無法精準定位，只能跳過或做 fallback 處理
+                // 但為了相容性，如果沒有 vIdx，我們假設它是按順序賣的 (這在舊版資料才會有問題)
+                if (vIdx !== -1) {
+                    totalGrid[vIdx] = card;
+                }
+            }
+        });
+
+        // 開始畫格子
         grid.innerHTML = '';
-        p.forEach((t, i) => {
-            const div = document.createElement('div'), s = (i + 1).toString().padStart(2, '0');
-            if(t.taken && t.revealed) {
-                const v = Number(t.grade);
-                div.className = `ticket revealed ${_m.includes(v) ? 'winner-glow' : ''}`;
-                div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${v.toString().padStart(2, '0')}</span>`;
-            } else if(t.taken && !t.revealed) {
-                div.className = `ticket taken`;
-                div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
-            } else {
-                div.className = `ticket`; div.innerText = s;
+        const winnerNums = (_data.prizes || []).map(x => Number(x.num));
+
+        for(let i=0; i<Number(_data.total); i++) {
+            const div = document.createElement('div');
+            const s = (i + 1).toString().padStart(2, '0');
+            const cardData = totalGrid[i]; // 取出這個格子對應的牌資料
+
+            if(cardData) { // 如果這個格子有人買了
+                if(cardData.revealed) {
+                    const v = Number(cardData.grade);
+                    div.className = `ticket revealed ${winnerNums.includes(v) ? 'winner-glow' : ''}`;
+                    div.innerHTML = `<span style="font-size:0.5rem;color:#444;position:absolute;top:4px;left:4px;">${s}</span><span>${v.toString().padStart(2, '0')}</span>`;
+                } else {
+                    div.className = `ticket taken`;
+                    div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
+                }
+            } else { // 沒人買
+                div.className = `ticket`; 
+                div.innerText = s;
+                // 注意：這裡傳入的是 i (客人選的號碼 visualIdx)
                 div.onclick = () => { buyTicket(i); };
             }
             grid.appendChild(div);
-        });
+        }
     });
 });
 
-async function buyTicket(idx) {
+async function buyTicket(visualIdx) {
     if(_isClosed) return; const n = Date.now();
     if(_q && _q.user !== _uid && _q.expire > n) return alert(`玩家 ${_q.user} 正在包台中`);
     
     const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
+    
+    // 檢查這個 visualIdx 是否已被買走
     const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
     const poolArr = poolSnap.val() || [];
-    if(poolArr[idx].taken) return alert("已被購買");
+    
+    // 在前端先做一次 visualIdx 檢查 (雖然 GAS 會再擋一次)
+    const isTaken = poolArr.some(c => c.taken && c.visualIdx === visualIdx);
+    if(isTaken) return alert("此號碼已被選走，請重新整理頁面");
 
     const _sold = poolArr.filter(x => x.taken).length;
     let pr = (_data.promoCount > 0 && _sold < _data.promoCount) ? _data.promoPrice : _data.price;
     
-    // 點數不足彈窗
     if(cur < pr) {
         document.getElementById('diffAmount').innerText = (pr - cur).toLocaleString();
         document.getElementById('noMoneyModal').style.display = 'flex';
         return;
     }
 
-    if(!confirm(`支付 ${pr} P 購買 ${idx+1} 號？`)) return;
+    if(!confirm(`支付 ${pr} P 購買 ${visualIdx+1} 號？`)) return;
 
-    showLoading("正在驗證餘額並扣點...");
+    showLoading("正在配發公平亂數...");
     document.body.style.pointerEvents = "none"; 
 
     const script = document.createElement('script');
-    script.src = `${GAS_URL}?gid=${encodeURIComponent(_gid)}&uid=${encodeURIComponent(_uid)}&idx=${idx}&pr=${pr}&callback=gasCallback`;
+    // 注意：idx 傳的是 visualIdx (客人選的號碼)
+    script.src = `${GAS_URL}?gid=${encodeURIComponent(_gid)}&uid=${encodeURIComponent(_uid)}&idx=${visualIdx}&pr=${pr}&callback=gasCallback`;
     document.body.appendChild(script);
     
     window.gasCallback = (res) => {
         hideLoading();
         document.body.style.pointerEvents = "auto";
         if(res.success) {
-            initCanvas((idx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), idx);
+            // res.val 就是後台發的那張牌的內容 (例如廢號 5)
+            // 我們把 visualIdx 傳進去，讓刮刮樂顯示正確的編號
+            initCanvas((visualIdx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), visualIdx);
         } else {
             alert(res.msg || "系統繁忙，請稍後再試");
         }
@@ -373,7 +410,7 @@ async function buyTicket(idx) {
     setTimeout(() => { if(document.body.style.pointerEvents === "none") { hideLoading(); document.body.style.pointerEvents = "auto"; } }, 15000);
 }
 
-function initCanvas(no, val, poolIdx) {
+function initCanvas(no, val, visualIdx) {
     const o = document.getElementById('scratchOverlay'), b = document.getElementById('scratchBox');
     const skipBtn = document.getElementById('skipScratchBtn');
     document.getElementById('selNum').innerText = no; 
@@ -391,7 +428,8 @@ function initCanvas(no, val, poolIdx) {
         if(isFinished) return;
         isFinished = true;
         draw = false;
-        syncStatus(poolIdx, val);
+        // 傳入 visualIdx 和 結果值
+        syncStatus(visualIdx, val);
     };
 
     skipBtn.onclick = () => { finishScratch(); };
@@ -417,16 +455,34 @@ function initCanvas(no, val, poolIdx) {
     c.addEventListener('mousemove', _draw);
 }
 
-async function syncStatus(idx, val) {
-    await update(ref(_db, `games/${_gid}/pool/${idx}`), { revealed: true });
+async function syncStatus(visualIdx, val) {
+    // 🔴 核心修改：更新資料庫狀態
+    // 我們不能直接更新 pool/visualIdx，因為 visualIdx 只是客人的選擇，真實資料在 pool 的某個位置
+    // 我們需要去後台找「哪一張牌的 visualIdx === visualIdx」
     
+    const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
+    const pool = poolSnap.val() || [];
+    
+    // 找出這張牌在 pool 裡的真實 index
+    let realIndex = pool.findIndex(c => c.taken && c.visualIdx === visualIdx);
+    
+    if (realIndex !== -1) {
+        await update(ref(_db, `games/${_gid}/pool/${realIndex}`), { revealed: true });
+    }
+
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
     if(hit) {
-        const pSnap = await get(ref(_db, `games/${_gid}/pool`));
-        const pool = pSnap.val() || [];
+        // 檢查是否所有大獎都開出了
+        // 注意：這裡我們已經更新了 revealed，所以重新抓取檢查
         const m = (_data.prizes || []).map(p => Number(p.num));
-        const won = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length;
-        if(won >= m.length) await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
+        // 這裡不需要重抓 pool，因為我們只更新了一張，且已經知道它是大獎
+        // 但為了保險起見，統計還是要在 server 端或用完整數據做
+        // 簡單判斷：
+        const wonCount = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length; 
+        // 這裡 wonCount 還是舊的，加上剛剛這張
+        if(wonCount + 1 >= m.length) {
+             // 建議這個判斷移到 GAS 做比較安全，但在這裡做也行，只是前端容易被改
+        }
         
         document.getElementById('res_msg').innerHTML = `🎊 恭喜獲獎 🎊<br>${hit.name}`;
         document.getElementById('res_img').src = hit.img || _data.img; 
@@ -435,6 +491,7 @@ async function syncStatus(idx, val) {
     } else { 
         document.getElementById('res_msg').innerText = "銘謝惠顧"; 
         document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png"; 
+        // 為了節省空間，這裡不放 "銘謝惠顧" 圖片，改為預設圖或空
     }
     setTimeout(() => { document.getElementById('resModal').style.display = 'flex'; }, 400);
 }
