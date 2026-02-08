@@ -457,9 +457,6 @@ function initCanvas(no, val, visualIdx) {
 
 async function syncStatus(visualIdx, val) {
     // 🔴 核心修改：更新資料庫狀態
-    // 我們不能直接更新 pool/visualIdx，因為 visualIdx 只是客人的選擇，真實資料在 pool 的某個位置
-    // 我們需要去後台找「哪一張牌的 visualIdx === visualIdx」
-    
     const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
     const pool = poolSnap.val() || [];
     
@@ -468,7 +465,7 @@ async function syncStatus(visualIdx, val) {
     
     if (realIndex !== -1) {
         await update(ref(_db, `games/${_gid}/pool/${realIndex}`), { revealed: true });
-        // 🚨 修正：本地更新狀態，以便下方正確統計
+        // 🚨 修正：本地更新狀態，確保下方計算正確
         pool[realIndex].revealed = true;
     }
 
