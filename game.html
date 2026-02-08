@@ -468,22 +468,26 @@ async function syncStatus(visualIdx, val) {
     
     if (realIndex !== -1) {
         await update(ref(_db, `games/${_gid}/pool/${realIndex}`), { revealed: true });
+        // 🚨 修正：本地更新狀態，以便下方正確統計
+        pool[realIndex].revealed = true;
     }
 
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
     if(hit) {
-        // 檢查是否所有大獎都開出了
-        // 注意：這裡我們已經更新了 revealed，所以重新抓取檢查
-        const m = (_data.prizes || []).map(p => Number(p.num));
-        // 這裡不需要重抓 pool，因為我們只更新了一張，且已經知道它是大獎
-        // 但為了保險起見，統計還是要在 server 端或用完整數據做
-        // 簡單判斷：
-        const wonCount = pool.filter(t => t.revealed && m.includes(Number(t.grade))).length; 
-        // 這裡 wonCount 還是舊的，加上剛剛這張
-        if(wonCount + 1 >= m.length) {
-             // 建議這個判斷移到 GAS 做比較安全，但在這裡做也行，只是前端容易被改
-        }
+        // ✅ 自動停盤邏輯 (Auto SoldOut)
+        // 1. 取得所有大獎號碼
+        const allPrizeNums = (_data.prizes || []).map(p => Number(p.num));
         
+        // 2. 統計目前池子裡「已開出」且「是大獎」的數量
+        // 注意：這裡使用剛剛更新過的 pool (local data)
+        const currentWonCount = pool.filter(t => t.revealed && allPrizeNums.includes(Number(t.grade))).length;
+        
+        // 3. 如果開出的大獎數 >= 總大獎數，觸發停盤
+        if(currentWonCount >= allPrizeNums.length) {
+            await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
+            // 不用 reload，因為上方的 onValue 會自動監聽到改變並彈出明文
+        }
+
         document.getElementById('res_msg').innerHTML = `🎊 恭喜獲獎 🎊<br>${hit.name}`;
         document.getElementById('res_img').src = hit.img || _data.img; 
         confetti({ particleCount: 150, spread: 70 });
@@ -491,7 +495,6 @@ async function syncStatus(visualIdx, val) {
     } else { 
         document.getElementById('res_msg').innerText = "銘謝惠顧"; 
         document.getElementById('res_img').src = "https://i.ibb.co/7t4gt23K/image.png"; 
-        // 為了節省空間，這裡不放 "銘謝惠顧" 圖片，改為預設圖或空
     }
     setTimeout(() => { document.getElementById('resModal').style.display = 'flex'; }, 400);
 }
