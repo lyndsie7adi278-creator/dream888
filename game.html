@@ -59,6 +59,10 @@
 
     .fairness-section { background: #0a0c10; border: 1px solid #222; border-radius: 15px; padding: 20px; margin-top: 30px; margin-bottom: 40px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
     .fairness-title { color: var(--p); font-size: 1.1rem; font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed #333; padding-bottom: 10px; }
+    
+    .help-btn { background: rgba(255,255,255,0.1); border: 1px solid #555; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; color: #aaa; transition: 0.2s; }
+    .help-btn:active { background: var(--p); color: #000; border-color: var(--p); transform: scale(0.9); }
+
     .fairness-desc { font-size: 0.8rem; color: #888; margin-bottom: 15px; line-height: 1.6; }
     .hash-group { margin-bottom: 15px; }
     .hash-label { font-size: 0.8rem; color: #bbb; margin-bottom: 5px; font-weight: bold; }
@@ -79,6 +83,10 @@
     .modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); }
     .m-card { background: #1a1e26; border: 2px solid var(--p); border-radius: 35px; padding: 30px; width: 88%; max-width: 340px; text-align: center; }
     .m-btn { display: block; width: 100%; padding: 18px; background: var(--p); color: #000; border: none; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; margin-top: 25px; }
+    
+    .help-modal-content { width: 95%; max-width: 600px; max-height: 90vh; overflow-y: auto; background: #000; border-radius: 15px; padding: 0; position: relative; border: 1px solid #333; }
+    .help-close-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: #fff; border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 10; }
+    .help-img { width: 100%; display: block; height: auto; }
 
     #globalLoading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 20000; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
     .spinner { width: 45px; height: 45px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
@@ -115,6 +123,13 @@
     </div>
 </div>
 
+<div id="helpModal" class="modal" onclick="document.getElementById('helpModal').style.display='none'">
+    <div class="help-modal-content" onclick="event.stopPropagation()">
+        <button class="help-close-btn" onclick="document.getElementById('helpModal').style.display='none'">×</button>
+        <img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E5%8F%AA%E6%9C%89%E7%B0%A1%E5%96%AE%E5%85%A7%E5%AE%B9%E7%9A%84%E8%B3%87%E6%96%99%20%E5%BE%88%E5%AE%B9%E6%98%93%E8%A2%AB%E9%A7%AD%E5%AE%A2%E7%8C%9C%E5%88%B0%20%E5%B0%8D%E6%87%89%E7%9A%84%20Hash.png?alt=media&token=6f1d2a6d-9730-4089-83cd-6469df113a8dE" class="help-img">
+    </div>
+</div>
+
 <div id="promoBanner" class="promo-banner">🔥 開盤大優惠！剩餘 <b id="promoLeft">0</b> 抽</div>
 <div class="header"><a href="index.html" class="back-btn">← 返回</a><div class="balance-tag">P <span id="uBal">0</span></div></div>
 
@@ -147,7 +162,10 @@
     <div class="pool-grid" id="poolGrid"></div>
 
     <div class="fairness-section">
-        <div class="fairness-title">🛡️ 區塊鏈級別・公平性驗證</div>
+        <div class="fairness-title">
+            <span>🛡️ 區塊鏈級別・公平性驗證</span>
+            <div class="help-btn" onclick="document.getElementById('helpModal').style.display='flex'">?</div>
+        </div>
         <div class="fairness-desc">
             為確保公平公正，本機台所有獎項於「開盤前」皆已透過 SHA-256 演算法進行整箱加密鎖定 (Server Seed)，保證過程中無任何人為竄改之可能。
         </div>
@@ -191,7 +209,6 @@ const _cc = {
 const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
 
-// ⚠️ 請確保這裡填的是你 GAS 的最新發布網址 (以 exec 結尾)
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyw50gz20jDVHoHc4izEs50W-hGPFKiaOfNA8A9Zw4JCm5QGxQB6AoPa62EuCP7nYan/exec"; 
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
@@ -219,7 +236,6 @@ window.changeSlide = (idx) => {
     }, 150);
 }
 
-// 監聽包台狀態
 onValue(ref(_db, `games/${_gid}/lock`), snap => {
     const l = snap.val(), n = Date.now(), b = document.getElementById('lockBanner');
     if(_tInterval) clearInterval(_tInterval);
@@ -234,7 +250,6 @@ onValue(ref(_db, `games/${_gid}/lock`), snap => {
     } else { b.style.display = 'none'; _q = null; }
 });
 
-// 監聽遊戲資料
 onValue(ref(_db, `gameSettings/${_gid}`), s => {
     _data = s.val(); if(!_data) return; _isClosed = _data.isSoldOut || false;
     document.getElementById('soldOutBanner').style.display = _isClosed ? 'block' : 'none';
@@ -259,7 +274,7 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         bar.style.display = 'none';
     }
 
-    const boxHash = _data.boxHash || "等待開盤產生..";
+    const boxHash = _data.boxHash || "等待開盤生成中...";
     const boxPlaintext = _data.boxPlaintext || "";
     
     document.getElementById('boxHashDisplay').innerText = boxHash;
@@ -277,14 +292,12 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         const p = snap.val() || []; 
         const grid = document.getElementById('poolGrid');
         
-        // 渲染進度條
         const _s = p.filter(t => t.taken).length;
         const _pct = Math.round((_s / _data.total) * 100);
         document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
         document.getElementById('progFill').style.width = `${_pct}%`;
         document.getElementById('progPercent').innerText = `${_pct}%`;
 
-        // 價格顯示
         const pLeft = (_data.promoCount || 0) - _s;
         const banner = document.getElementById('promoBanner');
         const priceContainer = document.getElementById('priceContainer');
@@ -305,9 +318,7 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             priceContainer.innerHTML = `<div class="current-price">${_data.price} P</div>`;
         }
         
-        // 渲染大獎區 (使用 includes 檢查是否已開出)
         document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
-            // 這裡要檢查所有已開出的牌 (p) 中，有沒有這一張大獎
             const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
             return `<div class="prize-tag ${w ? 'won' : ''}">
                         <span class="p-num">${Number(x.num).toString().padStart(2,'0')}</span>
@@ -315,33 +326,26 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
                     </div>`;
         }).join('');
 
-        // 🔴 核心修改：格子渲染邏輯 (Queue Mode)
-        // 我們要先建立一個長度為 total 的空陣列
         const totalGrid = new Array(Number(_data.total)).fill(null);
         
-        // 把已經賣出的牌，依照 visualIdx 填入格子
         p.forEach(card => {
             if(card.taken) {
-                // 如果有 visualIdx，用它；如果沒有(舊資料)，用原本的陣列索引
                 let vIdx = (card.visualIdx !== undefined) ? Number(card.visualIdx) : -1;
-                // 如果是舊資料且沒記錄 visualIdx，我們暫時無法精準定位，只能跳過或做 fallback 處理
-                // 但為了相容性，如果沒有 vIdx，我們假設它是按順序賣的 (這在舊版資料才會有問題)
                 if (vIdx !== -1) {
                     totalGrid[vIdx] = card;
                 }
             }
         });
 
-        // 開始畫格子
         grid.innerHTML = '';
         const winnerNums = (_data.prizes || []).map(x => Number(x.num));
 
         for(let i=0; i<Number(_data.total); i++) {
             const div = document.createElement('div');
             const s = (i + 1).toString().padStart(2, '0');
-            const cardData = totalGrid[i]; // 取出這個格子對應的牌資料
+            const cardData = totalGrid[i];
 
-            if(cardData) { // 如果這個格子有人買了
+            if(cardData) { 
                 if(cardData.revealed) {
                     const v = Number(cardData.grade);
                     div.className = `ticket revealed ${winnerNums.includes(v) ? 'winner-glow' : ''}`;
@@ -350,10 +354,9 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
                     div.className = `ticket taken`;
                     div.innerHTML = `<span style="font-size:0.6rem;color:var(--p);">刮開中</span>`;
                 }
-            } else { // 沒人買
+            } else { 
                 div.className = `ticket`; 
                 div.innerText = s;
-                // 注意：這裡傳入的是 i (客人選的號碼 visualIdx)
                 div.onclick = () => { buyTicket(i); };
             }
             grid.appendChild(div);
@@ -367,11 +370,9 @@ async function buyTicket(visualIdx) {
     
     const sSnap = await get(ref(_db, `users/${_uid}/balance`)), cur = sSnap.val() || 0;
     
-    // 檢查這個 visualIdx 是否已被買走
     const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
     const poolArr = poolSnap.val() || [];
     
-    // 在前端先做一次 visualIdx 檢查 (雖然 GAS 會再擋一次)
     const isTaken = poolArr.some(c => c.taken && c.visualIdx === visualIdx);
     if(isTaken) return alert("此號碼已被選走，請重新整理頁面");
 
@@ -386,11 +387,10 @@ async function buyTicket(visualIdx) {
 
     if(!confirm(`支付 ${pr} P 購買 ${visualIdx+1} 號？`)) return;
 
-    showLoading("正在驗證餘額並扣點...");
+    showLoading("正在配發公平亂數...");
     document.body.style.pointerEvents = "none"; 
 
     const script = document.createElement('script');
-    // 注意：idx 傳的是 visualIdx (客人選的號碼)
     script.src = `${GAS_URL}?gid=${encodeURIComponent(_gid)}&uid=${encodeURIComponent(_uid)}&idx=${visualIdx}&pr=${pr}&callback=gasCallback`;
     document.body.appendChild(script);
     
@@ -398,8 +398,6 @@ async function buyTicket(visualIdx) {
         hideLoading();
         document.body.style.pointerEvents = "auto";
         if(res.success) {
-            // res.val 就是後台發的那張牌的內容 (例如廢號 5)
-            // 我們把 visualIdx 傳進去，讓刮刮樂顯示正確的編號
             initCanvas((visualIdx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), visualIdx);
         } else {
             alert(res.msg || "系統繁忙，請稍後再試");
@@ -428,7 +426,6 @@ function initCanvas(no, val, visualIdx) {
         if(isFinished) return;
         isFinished = true;
         draw = false;
-        // 傳入 visualIdx 和 結果值
         syncStatus(visualIdx, val);
     };
 
@@ -456,33 +453,24 @@ function initCanvas(no, val, visualIdx) {
 }
 
 async function syncStatus(visualIdx, val) {
-    // 🔴 核心修改：更新資料庫狀態
     const poolSnap = await get(ref(_db, `games/${_gid}/pool`));
     const pool = poolSnap.val() || [];
     
-    // 找出這張牌在 pool 裡的真實 index
     let realIndex = pool.findIndex(c => c.taken && c.visualIdx === visualIdx);
     
     if (realIndex !== -1) {
         await update(ref(_db, `games/${_gid}/pool/${realIndex}`), { revealed: true });
-        // 🚨 修正：本地更新狀態，確保下方計算正確
         pool[realIndex].revealed = true;
     }
 
     const hit = (_data.prizes || []).find(p => Number(p.num) === Number(val));
     if(hit) {
-        // ✅ 自動停盤邏輯 (Auto SoldOut)
-        // 1. 取得所有大獎號碼
         const allPrizeNums = (_data.prizes || []).map(p => Number(p.num));
         
-        // 2. 統計目前池子裡「已開出」且「是大獎」的數量
-        // 注意：這裡使用剛剛更新過的 pool (local data)
         const currentWonCount = pool.filter(t => t.revealed && allPrizeNums.includes(Number(t.grade))).length;
         
-        // 3. 如果開出的大獎數 >= 總大獎數，觸發停盤
         if(currentWonCount >= allPrizeNums.length) {
             await update(ref(_db, `gameSettings/${_gid}`), { isSoldOut: true });
-            // 不用 reload，因為上方的 onValue 會自動監聽到改變並彈出明文
         }
 
         document.getElementById('res_msg').innerHTML = `🎊 恭喜獲獎 🎊<br>${hit.name}`;
