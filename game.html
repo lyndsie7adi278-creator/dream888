@@ -387,7 +387,7 @@ async function buyTicket(visualIdx) {
 
     if(!confirm(`支付 ${pr} P 購買 ${visualIdx+1} 號？`)) return;
 
-    showLoading("正在配發公平亂數...");
+    showLoading("正在驗證餘額並扣點...");
     document.body.style.pointerEvents = "none"; 
 
     const script = document.createElement('script');
