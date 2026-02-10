@@ -73,6 +73,9 @@
         .warning-box {
             background: #fff5f5; border: 1px dashed #ff4757; border-radius: 12px; padding: 12px; margin-top: 10px;
         }
+        .highlight-box {
+            background: #f0fff4; border: 1px solid #c3e6cb; border-radius: 10px; padding: 10px; margin: 10px 0; font-size: 0.85rem; color: #155724;
+        }
 
         .footer-note { text-align: center; margin-top: 40px; font-size: 0.8rem; color: #adb5bd; padding-bottom: 50px; }
     </style>
@@ -89,6 +92,24 @@
     <a href="https://line.me/ti/p/@dream8" target="_blank" class="line-shortcut">
         <div class="line-shortcut-btn">💬 聯繫官方 LINE 客服</div>
     </a>
+
+    <div class="section-label">📱 系統與裝置限制</div>
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">為什麼我用電腦無法進入遊戲？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                <p>為了確保所有玩家的<b>公平性</b>與最佳的<b>沈浸式體驗</b>，夢工廠採用了最新的裝置偵測技術：</p>
+                <ul class="rule-list">
+                    <li><b>防止外掛：</b>限制電腦版能有效阻擋 99% 的自動點擊腳本與惡意掃描程式。</li>
+                    <li><b>觸控體驗：</b>我們的刮刮樂特效專為手指觸控設計，滑鼠無法還原真實的刮卡手感。</li>
+                </ul>
+                <p style="margin-top:10px;">請您拿起手機，掃描螢幕上的 QR Code 即可立即登入遊玩，資料與餘額皆與電腦版同步。</p>
+            </div>
+        </div>
+    </div>
 
     <div class="section-label">🔒 包台防搶機制規則</div>
     
@@ -112,6 +133,25 @@
     </div>
 
     <div class="section-label">💰 帳戶與儲值</div>
+
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">🔥 什麼是「Line 盲盒積分」？如何獲得？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                <p>這雖然是虛擬商城，但我們也送實體好禮！這是夢工廠給予忠實玩家的額外福利：</p>
+                <div class="highlight-box">
+                    <b>🧩 積分獲取規則：</b><br>
+                    單筆儲值每滿 <b>500 元</b>，即可獲得 <b>1 點</b> Line 積分。<br>
+                    (例：儲值 1000 元得 2 點，儲值 2000 元得 4 點，以此類推)
+                </div>
+                <p><b>🎁 積分用途：</b><br>
+                請加入我們的 <a href="https://line.me/ti/p/@dream8" target="_blank" style="color:var(--line);font-weight:bold;">官方 Line</a>，點選選單中的「積分兌換」，即可用點數免費兌換熱門的<b>Labubu 盲盒、限量公仔</b>等實體商品，免運費寄送到家！</p>
+            </div>
+        </div>
+    </div>
 
     <div class="faq-item">
         <div class="faq-header" onclick="toggleFaq(this)">
@@ -153,6 +193,25 @@
         </div>
     </div>
 
+    <div class="section-label">🛡️ 公平性與驗證</div>
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">如何證明你們沒有在後台偷改中獎機率？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                <p>這是我們最自豪的技術！我們採用了與國際加密貨幣同級別的 <b>SHA-256 區塊鏈加密技術</b>：</p>
+                <ol class="rule-list">
+                    <li><b>開盤即鎖定：</b>每套刮刮樂上架前，所有獎項位置都已經亂數產生並「加密」成一串亂碼 (Hash)，公佈在頁面上。</li>
+                    <li><b>過程不可逆：</b>這串亂碼是不可逆的，連工程師都無法在遊戲中途偷看或修改獎項位置。</li>
+                    <li><b>結算驗證：</b>當該套刮刮樂完售或下架後，系統會公佈原始碼 (Plaintext)。您可以將原始碼丟入任何第三方驗證網站，算出來的結果將與開盤前的亂碼 100% 吻合。</li>
+                </ol>
+                <p style="margin-top:10px;">簡單來說：<b>劇本早就寫好並鎖在保險箱(Hash)裡給大家看，沒人能中途偷改劇本。</b></p>
+            </div>
+        </div>
+    </div>
+
     <div class="section-label">🤝 盟友（推薦）計畫</div>
 
     <div class="faq-item">
@@ -168,6 +227,19 @@
                     <li><span class="alliance-highlight">好友續儲：</span>單筆滿千，您固定獲得 <span class="highlight">5%</span> 獎金。</li>
                 </ul>
                 <p style="margin-top:10px; font-size:0.8rem; background:#f0effa; color:var(--alliance); padding:10px; border-radius:10px;">※ 推薦關係一經註冊綁定即永久有效，好友往後的所有儲值您皆能分潤。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+            <div class="faq-question">朋友點了連結但沒註冊，之後再註冊還有獎金嗎？</div>
+            <div class="faq-icon">+</div>
+        </div>
+        <div class="faq-content">
+            <div class="faq-text">
+                <p><b>有的！</b>我們的系統擁有「智能追蹤」功能：</p>
+                <p>當您的朋友第一次點擊您的連結，系統就會在他的手機瀏覽器暫存您的推薦碼。即使他當下沒註冊，<b>只要在 7 天內</b>回來註冊，系統都會自動將他綁定為您的下線，獎金一分都不會少！</p>
             </div>
         </div>
     </div>
