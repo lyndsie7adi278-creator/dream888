@@ -200,7 +200,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// 🔒 系統核心加密連線參數 (已混淆處理)
 const _0x9d1 = (s) => atob(s);
 const _cc = { 
     apiKey: _0x9d1("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), 
@@ -211,7 +210,6 @@ const _cc = {
 const _app = initializeApp(_cc); const _db = getDatabase(_app);
 const _p = new URLSearchParams(window.location.search); const _gid = _p.get('id'); const _uid = localStorage.getItem('myScratchCode');
 
-// 🔒 加密 GAS 連線網址
 const GAS_URL = _0x9d1("aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J5dzUwZ3oyMGpEVkhvSGM0aXpFczUwVy1oR1BGS2lhT2ZOQThBOVp3NEpDbTVRR3hRQjZBb1BhNjJFdUNQN25ZYW4vZXhlYw==");
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
