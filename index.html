@@ -6,41 +6,35 @@
     <title>夢工廠 | 刮刮樂商城</title>
     
     <script>
-        // 🟢 1. 優先執行：推薦碼捕捉 (Ref Code)
         (function() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const refId = urlParams.get('ref');
                 if (refId && refId.trim() !== "") {
                     localStorage.setItem('pending_ref', refId.trim());
-                    console.log("✅ 推薦碼已捕捉:", refId);
+                    console.log("REF:", refId);
                 }
-            } catch (e) { console.error("Ref Error:", e); }
+            } catch (e) {}
         })();
 
-        // 定義全域填寫函數 (註冊時自動呼叫)
         window.forceApplyRef = function() {
             const savedRef = localStorage.getItem('pending_ref');
             const refEl = document.getElementById('refIn');
-            // 只有當欄位存在且為空時才填入
             if (savedRef && refEl && refEl.value.trim() === "") {
                 refEl.value = savedRef;
             }
         };
 
-        // 🟢 2. 裝置偵測：電腦版顯示質感封鎖畫面
         (function() {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
-            // 如果是電腦 (非行動裝置)
             if (!isMobile) {
-                document.documentElement.style.overflow = 'hidden'; // 禁止捲動
+                document.documentElement.style.overflow = 'hidden';
                 
                 window.onload = function() {
                     const logoUrl = "https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8";
-                    const currentUrl = window.location.href; // 包含 ref 參數
+                    const currentUrl = window.location.href;
 
-                    // 覆蓋畫面 (質感升級版)
                     document.body.innerHTML = `
                         <div id="pc-blocker">
                             <div class="glass-card">
@@ -48,12 +42,10 @@
                                 <img src="${logoUrl}" class="b-logo">
                                 <h2 class="b-title">夢工廠 刮刮樂商城</h2>
                                 <p class="b-subtitle">Dream Factory Online</p>
-                                
                                 <div class="qr-container">
                                     <div class="scan-line"></div>
                                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}&margin=10" alt="Scan QR">
                                 </div>
-                                
                                 <div class="b-msg">
                                     <span class="icon">📱</span>
                                     <span>為確保遊戲公平性，本站僅支援手機訪問</span>
@@ -74,90 +66,28 @@
         * {-webkit-tap-highlight-color:transparent;user-select:none!important;box-sizing:border-box}
         body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);margin:0;padding:0;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;padding-bottom:100px}
         
-        /* 🔴 電腦版封鎖畫面樣式 (質感升級) */
         #pc-blocker { display: none; }
 
         @media screen and (min-width: 768px) {
             body > *:not(#pc-blocker) { filter: blur(20px); pointer-events: none; opacity: 0; }
-            
-            #pc-blocker {
-                display: flex !important;
-                position: fixed; inset: 0; z-index: 999999;
-                background: radial-gradient(circle at center, #2b3245 0%, #1a1c23 100%);
-                align-items: center; justify-content: center;
-                flex-direction: column; font-family: 'PingFang TC', sans-serif;
-                overflow: hidden;
-            }
-
-            /* 毛玻璃卡片 */
-            .glass-card {
-                background: rgba(255, 255, 255, 0.05);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 40px;
-                padding: 60px 40px;
-                text-align: center;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-                width: 90%; max-width: 450px;
-                position: relative;
-                animation: cardEntry 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-            }
-
-            /* 呼吸光暈背景 */
-            .glow-bg {
-                position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-                background: radial-gradient(circle, rgba(255,143,163,0.15) 0%, transparent 60%);
-                animation: rotate 10s linear infinite;
-                z-index: -1; pointer-events: none;
-            }
-
-            .b-logo { 
-                width: 100px; height: 100px; object-fit: contain; 
-                margin-bottom: 20px; border-radius: 22px; 
-                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            }
-            
-            .b-title { 
-                font-size: 1.8rem; font-weight: 900; color: #fff; margin: 0 0 5px; 
-                text-shadow: 0 2px 10px rgba(0,0,0,0.3); letter-spacing: 2px;
-            }
-            .b-subtitle { 
-                font-size: 0.9rem; color: var(--primary); font-weight: 700; 
-                margin: 0 0 30px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.9;
-            }
-
-            /* QR Code 容器 */
-            .qr-container {
-                background: #fff; padding: 15px; border-radius: 20px; 
-                display: inline-block; position: relative; overflow: hidden;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                transition: transform 0.3s;
-            }
+            #pc-blocker { display: flex !important; position: fixed; inset: 0; z-index: 999999; background: radial-gradient(circle at center, #2b3245 0%, #1a1c23 100%); align-items: center; justify-content: center; flex-direction: column; font-family: 'PingFang TC', sans-serif; overflow: hidden; }
+            .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 40px; padding: 60px 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 90%; max-width: 450px; position: relative; animation: cardEntry 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+            .glow-bg { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,143,163,0.15) 0%, transparent 60%); animation: rotate 10s linear infinite; z-index: -1; pointer-events: none; }
+            .b-logo { width: 100px; height: 100px; object-fit: contain; margin-bottom: 20px; border-radius: 22px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+            .b-title { font-size: 1.8rem; font-weight: 900; color: #fff; margin: 0 0 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); letter-spacing: 2px; }
+            .b-subtitle { font-size: 0.9rem; color: var(--primary); font-weight: 700; margin: 0 0 30px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.9; }
+            .qr-container { background: #fff; padding: 15px; border-radius: 20px; display: inline-block; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: transform 0.3s; }
             .qr-container:hover { transform: scale(1.05); }
             .qr-container img { display: block; width: 180px; height: 180px; }
-            
-            /* 掃描線動畫 */
-            .scan-line {
-                position: absolute; width: 100%; height: 3px; background: var(--primary);
-                top: 0; left: 0; box-shadow: 0 0 10px var(--primary);
-                animation: scan 2s ease-in-out infinite; opacity: 0.7;
-            }
-
-            .b-msg { 
-                margin-top: 35px; font-size: 0.95rem; color: #ccc; 
-                display: flex; align-items: center; justify-content: center; gap: 8px;
-                background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 50px;
-            }
+            .scan-line { position: absolute; width: 100%; height: 3px; background: var(--primary); top: 0; left: 0; box-shadow: 0 0 10px var(--primary); animation: scan 2s ease-in-out infinite; opacity: 0.7; }
+            .b-msg { margin-top: 35px; font-size: 0.95rem; color: #ccc; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 50px; }
             .b-msg .icon { font-size: 1.2rem; }
             .b-footer { margin-top: 15px; font-size: 0.8rem; color: #666; font-weight: bold; }
-
             @keyframes cardEntry { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
             @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
         }
 
-        /* ... 以下是您原本的樣式，完全保留 ... */
         .welcome-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(26,28,35,.95);color:var(--gold);padding:12px 25px;border-radius:50px;font-weight:900;font-size:.9rem;z-index:5000;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid var(--gold);display:none;opacity:0;transition:.5s}
         .welcome-toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
         .top-nav{width:100%;background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000}
@@ -215,7 +145,6 @@
         .status-section{width:92%;max-width:460px;margin:35px 0 15px;background:#fff;border-radius:28px;padding:25px;border:1px solid rgba(0,0,0,.04);box-shadow:0 5px 20px rgba(0,0,0,.03)}
         .status-item{display:flex;align-items:flex-start;background:#f9fafb;padding:18px;border-radius:20px;margin-bottom:15px}.status-icon{font-size:1.6rem;margin-right:18px;margin-top:3px}
         .status-text b{display:block;font-size:.9rem;color:#1a1c23;margin-bottom:5px}.status-text p{margin:0;font-size:.75rem;color:#7f8c8d;line-height:1.6}
-        
         .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:4000;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
         .m-box{background:#fff;padding:25px 15px;border-radius:35px;width:90%;max-width:360px;text-align:center;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.3);overflow:hidden}
         .close-modal{position:absolute;top:15px;right:20px;font-size:1.5rem;color:#ccc;cursor:pointer;z-index:10}
@@ -225,11 +154,9 @@
         .pop-title { font-weight: 900; font-size: 1.1rem; color: #333; margin-bottom: 10px; }
         .pop-text { font-size: 0.9rem; color: #666; text-align: left; line-height: 1.6; white-space: pre-wrap; padding: 0 10px; }
         .swiper-pagination-bullet-active { background: var(--primary) !important; }
-        
         input{width:100%;padding:14px;margin:8px 0;border:1px solid #eee;border-radius:12px;text-align:center;font-size:1rem;font-weight:700;color:var(--primary);outline:none}
         .btn{background:var(--primary);color:#fff;border:none;padding:16px;border-radius:50px;font-weight:900;width:100%;cursor:pointer;font-size:1rem;box-shadow:0 8px 20px rgba(255,143,163,.3);margin-top:10px}
         .footer{padding:30px 0 50px;font-size:.75rem;color:#95a5a6;text-align:center;line-height:2}
-
         .modal-footer { margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 15px; }
         .no-show-label { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; color: #999; cursor: pointer; margin-bottom: 12px; }
         .no-show-label input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
@@ -242,17 +169,12 @@
     <div class="glass-card">
         <div class="glow-bg"></div>
         <img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8" class="b-logo">
-        
         <h2 class="b-title">夢工廠 刮刮樂商城</h2>
         <p class="b-subtitle">Dream Factory Online</p>
-        
         <div class="qr-container">
             <div class="scan-line"></div>
-            <script>
-                document.write(`<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}&margin=10" alt="Scan Me">`);
-            </script>
+            <script>document.write(`<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}&margin=10" alt="Scan Me">`);</script>
         </div>
-        
         <div class="b-msg">
             <span class="icon">📱</span>
             <span>為確保遊戲公平性，本站僅支援手機訪問</span>
@@ -271,11 +193,8 @@
             <div class="swiper-wrapper" id="annSwiperWrapper"></div>
             <div class="swiper-pagination"></div>
         </div>
-        
         <div class="modal-footer">
-            <label class="no-show-label">
-                <input type="checkbox" id="noMoreToday"> 今日不再顯示
-            </label>
+            <label class="no-show-label"><input type="checkbox" id="noMoreToday"> 今日不再顯示</label>
             <button class="btn" onclick="closeModal()">我知道了</button>
             <div class="tip-text">💡 溫馨提示：點擊左上角「☰ 最新公告」可再次查看</div>
         </div>
@@ -290,11 +209,7 @@
             <a href="faq.html" class="menu-item">❓ 常見問題</a>
         </div>
     </div>
-    
-    <div class="logo-txt">
-        <img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8" alt="Logo" class="logo-img">
-    </div>
-    
+    <div class="logo-txt"><img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8" alt="Logo" class="logo-img"></div>
     <div id="userEntryPoint" onclick="handleUserClick()" style="cursor:pointer;font-size:1.4rem;color:#444">👤</div>
 </div>
 
@@ -302,7 +217,7 @@
 
 <div class="hot-section-wrapper">
     <div class="hot-header">
-        <div class="hot-title-text"><span>🔥</span> 大家都在刮 Top 5</div>
+        <div class="hot-title-text"><span>🔥</span> 大家都在刮 Top 10</div>
     </div>
     <div class="swiper hotSwiper">
         <div class="swiper-wrapper" id="hotList"></div>
@@ -344,93 +259,56 @@ window.openAnn=()=>{
 };
 
 window.handleUserClick = () => {
-    if(_sk) { location.href = 'profile.html'; } else { openLogin(); }
+    if(_sk) { location.href = 'member.html'; } else { openLogin(); }
 };
 
 window.openLogin=()=>{document.getElementById('loginModal').style.display='flex';backStep1()};
 window.showWelcomeToast=(n)=>{const t=document.getElementById('welcomeToast');t.innerText=`✨ 歡迎回來，${n}！`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)};
 
 function init(){
-    // 🟢 修正 1：先監聽會員資料，建立「ID -> 暱稱」對照表
     onValue(ref(_db, 'users'), (userSnap) => {
         const allUsers = userSnap.val() || {};
-
-        // 🟢 修正 2：接著監聽中獎紀錄，並即時查表
         onValue(ref(_db, 'winLogs'), (snapshot) => {
             const winData = snapshot.val();
             let winText = "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊"; 
-            
             if (winData) {
-                const sortedWins = Object.values(winData)
-                    .sort((a, b) => (b.time || 0) - (a.time || 0))
-                    .slice(0, 5);
-                
+                const sortedWins = Object.values(winData).sort((a, b) => (b.time || 0) - (a.time || 0)).slice(0, 5);
                 winText = sortedWins.map(w => {
                     let finalName = w.nickname;
-                    if (!finalName && w.user && allUsers[w.user]) {
-                        finalName = allUsers[w.user].nickname;
-                    }
-                    return `🎊 恭喜玩家【${finalName || '神秘客'}】刮中【${w.prize}】！！`;
+                    if (!finalName && w.user && allUsers[w.user]) { finalName = allUsers[w.user].nickname; }
+                    return `🎊 恭喜玩家【${finalName || '神秘客'}】在《${w.game}》刮中【${w.prize}】！！`;
                 }).join(' 　 | 　 ');
             }
-            
-            // 更新跑馬燈文字與公告
             get(ref(_db, 'settings/announcement')).then(annSnap => {
                 const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
-                const finalContent = winText !== "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊" 
-                    ? `${winText} 　 | 　 📢 公告：${staticAnn}` 
-                    : staticAnn;
-                
+                const finalContent = winText !== "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊" ? `${winText} 　 | 　 📢 公告：${staticAnn}` : staticAnn;
                 const mq = document.getElementById('mq');
-                if(mq) {
-                    mq.innerText = finalContent;
-                    const duration = Math.max(25, Math.floor(finalContent.length * 0.3));
-                    mq.style.animationDuration = duration + 's';
-                }
+                if(mq) { mq.innerText = finalContent; const duration = Math.max(25, Math.floor(finalContent.length * 0.3)); mq.style.animationDuration = duration + 's'; }
             });
         });
-    }); // 🟢 這裡正確閉合了 onValue
+    });
 
     onValue(ref(_db,'settings/announcement_config'), s => {
         if(s.exists()){
             const config = s.val();
             const wrapper = document.getElementById('annSwiperWrapper');
             if(wrapper) wrapper.innerHTML = ""; 
-            
             if(config.active && config.items && config.items.length > 0 && wrapper) {
                 config.items.forEach(item => {
-                    const slide = document.createElement('div');
-                    slide.className = 'swiper-slide';
-                    slide.innerHTML = `
-                        ${item.img ? `<div class="pop-img-box"><img src="${item.img}"></div>` : ''}
-                        <div class="pop-title">${item.title}</div>
-                        <div class="pop-text">${item.content}</div>
-                    `;
+                    const slide = document.createElement('div'); slide.className = 'swiper-slide';
+                    slide.innerHTML = `${item.img ? `<div class="pop-img-box"><img src="${item.img}"></div>` : ''}<div class="pop-title">${item.title}</div><div class="pop-text">${item.content}</div>`;
                     wrapper.appendChild(slide);
                 });
-
-                new Swiper(".mySwiper", {
-                    pagination: { el: ".swiper-pagination", clickable: true },
-                    autoHeight: true,
-                    observer: true,
-                    observeParents: true
-                });
-
+                new Swiper(".mySwiper", { pagination: { el: ".swiper-pagination", clickable: true }, autoHeight: true, observer: true, observeParents: true });
                 const lastHideDate = localStorage.getItem('hide_ann_date');
                 const lastAnnId = localStorage.getItem('last_ann_id');
                 const today = new Date().toDateString();
-
-                if(lastAnnId !== config.id || lastHideDate !== today) {
-                    const annModal = document.getElementById('annModal');
-                    if(annModal) annModal.style.display = 'flex';
-                }
+                if(lastAnnId !== config.id || lastHideDate !== today) { const annModal = document.getElementById('annModal'); if(annModal) annModal.style.display = 'flex'; }
             }
         }
     });
 
-    // 🟢 這裡加入了 renderHotList() 的呼叫
     onValue(ref(_db,'gameSettings'),s=>{_g=s.val()||{}; renderCats(); renderGrid(); renderHotList();});
-    
     if(_sk){
         onValue(ref(_db,`users/${_sk}`),s=>{
             const u=s.val(); if(!u)return;
@@ -442,85 +320,38 @@ function init(){
 window.closeModal = () => {
     const isChecked = document.getElementById('noMoreToday').checked;
     const today = new Date().toDateString();
-    
-    if (isChecked) {
-        localStorage.setItem('hide_ann_date', today);
-    } else {
-        localStorage.removeItem('hide_ann_date');
-    }
-
-    get(ref(_db,'settings/announcement_config')).then(s => {
-        if(s.exists()) localStorage.setItem('last_ann_id', s.val().id);
-    });
-
+    if (isChecked) { localStorage.setItem('hide_ann_date', today); } else { localStorage.removeItem('hide_ann_date'); }
+    get(ref(_db,'settings/announcement_config')).then(s => { if(s.exists()) localStorage.setItem('last_ann_id', s.val().id); });
     document.getElementById('annModal').style.display = 'none';
 };
 
-window.showReg=()=>{
-    document.getElementById('step1').style.display='none';
-    document.getElementById('stepRegister').style.display='block';
-    document.getElementById('loginStepTitle').innerText="註冊新帳號";
-    
-    // 🟢 核心修正 3：呼叫全域函數進行強制帶入
-    if(typeof window.forceApplyRef === 'function') window.forceApplyRef();
+window.showReg=()=>{ 
+    document.getElementById('step1').style.display='none'; 
+    document.getElementById('stepRegister').style.display='block'; 
+    document.getElementById('loginStepTitle').innerText="註冊新帳號"; 
+    if(typeof window.forceApplyRef === 'function') window.forceApplyRef(); 
 };
-
 window.backStep1=()=>{document.getElementById('step1').style.display='block';document.getElementById('step2').style.display='none';document.getElementById('stepRegister').style.display='none';document.getElementById('loginStepTitle').innerText="會員登入"};
 window.checkCode=async()=>{const c=document.getElementById('cIn').value.trim();if(!c)return;const s=await get(ref(_db,`users/${c}`));if(!s.exists())return alert("帳號不存在");_u={id:c,data:s.val()};document.getElementById('step1').style.display='none';document.getElementById('step2').style.display='block'};
-
 window.handleRegister=async()=>{
-    // 🟢 核心修正 4：送出註冊前最後一刻再次強制讀取暫存
-    const savedRef = localStorage.getItem('pending_ref');
-    const refInput = document.getElementById('refIn');
-    if (savedRef && refInput && refInput.value.trim() === "") {
-        refInput.value = savedRef;
-    }
-
-    const i=document.getElementById('regId').value.trim(),
-          n=document.getElementById('regNick').value.trim(),
-          p1=document.getElementById('regPass1').value,
-          p2=document.getElementById('regPass2').value,
-          r=document.getElementById('refIn').value.trim();
-
-    if(!i||!n||!p1||!p2) return alert("請填寫所有欄位");
-    if(p1!==p2) return alert("密碼不一致");
-    if(i===r) return alert("推薦人不能是自己");
-    const ex=await get(ref(_db,`users/${i}`));
-    if(ex.exists()) return alert("帳號已存在");
-    if(r !== "") {
-        const rs=await get(ref(_db,`users/${r}`));
-        if(!rs.exists()) return alert("推薦人帳號不存在，請確認或留空");
-    }
-    await set(ref(_db,`users/${i}`),{
-        balance: 0, commission: 0, nickname: n, pin: p1, invitedBy: r, hasToppedUp: false, createTime: Date.now()
-    });
-    localStorage.setItem('myScratchCode',i);
-    localStorage.removeItem('pending_ref'); 
-    alert("註冊成功！");
-    location.reload();
+    if(typeof window.forceApplyRef === 'function') window.forceApplyRef();
+    const i=document.getElementById('regId').value.trim(), n=document.getElementById('regNick').value.trim(), p1=document.getElementById('regPass1').value, p2=document.getElementById('regPass2').value, r=document.getElementById('refIn').value.trim();
+    if(!i||!n||!p1||!p2) return alert("請填寫所有欄位"); if(p1!==p2) return alert("密碼不一致"); if(i===r) return alert("推薦人不能是自己");
+    const ex=await get(ref(_db,`users/${i}`)); if(ex.exists()) return alert("帳號已存在");
+    if(r !== "") { const rs=await get(ref(_db,`users/${r}`)); if(!rs.exists()) return alert("推薦人帳號不存在，請確認或留空"); }
+    await set(ref(_db,`users/${i}`),{ balance: 0, commission: 0, nickname: n, pin: p1, invitedBy: r, hasToppedUp: false, createTime: Date.now() });
+    localStorage.setItem('myScratchCode',i); localStorage.removeItem('pending_ref'); alert("註冊成功！"); location.reload();
 };
-
 window.handlePinLogin=async()=>{const p=document.getElementById('pinIn').value;if(_u.data.pin!==p)return alert("密碼錯誤");localStorage.setItem('myScratchCode',_u.id);location.reload()};
 
 function renderCats(){const c=new Set(['ALL']);Object.values(_g).forEach(i=>{if(i.category)c.add(i.category)});document.getElementById('catList').innerHTML=Array.from(c).map(i=>`<div class="cat-item ${_cc===i?'active':''}" onclick="filterCat('${i}')">${i==='ALL'?'全部':i}</div>`).join('')}
 window.filterCat=c=>{_cc=c;renderCats();renderGrid()};
 
-// 🔴 渲染熱門 Top 5 卡片區塊 (已修復 P 幣顯示)
 function renderHotList() {
     const hotList = document.getElementById('hotList');
     hotList.innerHTML = '';
-    
-    // 計算剩餘張數並排序
-    const sortedGames = Object.keys(_g).map(key => {
-        const item = _g[key];
-        return { 
-            id: key, 
-            ...item, 
-            remaining: 0 
-        };
-    });
-
-    const top5 = sortedGames.filter(g => !g.isSoldOut).sort((a,b) => (a.order||99) - (b.order||99)).slice(0, 5);
+    const sortedGames = Object.keys(_g).map(key => { const item = _g[key]; return { id: key, ...item, remaining: 0 }; });
+    const top5 = sortedGames.filter(g => !g.isSoldOut).sort((a,b) => (a.order||99) - (b.order||99)).slice(0, 10);
 
     top5.forEach((item, index) => {
         const sId = item.id.replace(/\s+/g,'-');
@@ -537,7 +368,8 @@ function renderHotList() {
                     <div class="hot-meta">
                         <span class="hot-rem" id="hot-rem-${sId}">剩餘 -- 張</span>
                         <div class="hot-price" id="hot-price-${sId}">
-                            ${item.price} P </div>
+                            ${item.price} P
+                        </div>
                     </div>
                     <div class="hot-progress-bg"><div class="hot-progress-fill" id="hot-bar-${sId}" style="width:0%"></div></div>
                 </div>
@@ -560,7 +392,6 @@ function renderHotList() {
             if(remEl) remEl.innerText = `剩餘 ${left} 張`;
             if(barEl) barEl.style.width = `${percent}%`;
 
-            // 🟢 修正單位顯示格式為：100 P
             if (item.promoCount > 0 && sold < item.promoCount) {
                 priceEl.innerHTML = `<s>${item.price}</s> ${item.promoPrice} P`;
                 priceEl.style.color = "#ff4757"; 
@@ -571,26 +402,17 @@ function renderHotList() {
         });
     });
 
-    new Swiper(".hotSwiper", {
-        slidesPerView: 2.2, 
-        spaceBetween: 15,
-        freeMode: true,
-        observer: true,
-        observeParents: true
-    });
+    new Swiper(".hotSwiper", { slidesPerView: 2.2, spaceBetween: 15, freeMode: true, observer: true, observeParents: true });
 }
 
 function renderGrid(){
     const grid = document.getElementById('pGrid');
     
-    // 1. 先監聽直播開關狀態
     onValue(ref(_db, 'settings/live_entry_active'), (snap) => {
         const isLiveActive = snap.val() || false; 
         
-        // 2. 清空並重新渲染
         grid.innerHTML = ''; 
 
-        // 3. 如果開關是開的，且分類是 ALL，才顯示直播卡片
         if (_cc === 'ALL' && isLiveActive) {
             const f = document.createElement('div');
             f.className = 'p-card free-gift';
@@ -599,7 +421,6 @@ function renderGrid(){
             grid.appendChild(f);
         }
 
-        // 4. 接著渲染一般商品
         const keys = Object.keys(_g).sort((a,b) => (_g[a].order || 99) - (_g[b].order || 99));
         keys.forEach(id => {
             const it = _g[id]; 
@@ -610,11 +431,9 @@ function renderGrid(){
             const card = document.createElement('div');
             card.className = `p-card ${it.isSoldOut ? 'soldout' : ''}`;
             card.onclick = () => location.href = `game.html?id=${id}`;
-            // 🟢 修正單位顯示：一刮 / 100 P
             card.innerHTML = `<img src="${it.img || ''}" class="p-img"><div class="p-info" id="info-${sId}"><div class="p-name" id="name-${sId}">${displayTitle}</div><div id="status-${sId}"></div><div id="promo-${sId}"></div></div>`;
             grid.appendChild(card);
             
-            // 監聽個別商品狀態
             onValue(ref(_db, `games/${id}`), s => {
                 const d = s.val() || {}, l = d.lock, p = d.pool || [], sB = document.getElementById(`status-${sId}`), pB = document.getElementById(`promo-${sId}`);
                 if (!sB) return;
@@ -623,14 +442,9 @@ function renderGrid(){
                 else {
                     const sold = p.filter(x => x.taken).length;
                     if (it.promoCount > 0 && sold < it.promoCount) {
-                        // 🟢 修正單位 P
                         sB.innerHTML = `<div class="p-price-value">${it.promoPrice} P <span class="promo-tag">開盤優惠</span></div>`;
                         pB.innerHTML = `<div class="promo-info">前${it.promoCount}刮 ${it.promoPrice} P / 後 ${it.price} P</div>`;
-                    } else { 
-                        // 🟢 修正單位 P
-                        sB.innerHTML = `<div class="p-price-value">一刮 / ${it.price || 0} P</div>`; 
-                        pB.innerHTML = ""; 
-                    }
+                    } else { sB.innerHTML = `<div class="p-price-value">一刮 / ${it.price || 0} P</div>`; pB.innerHTML = ""; }
                 }
             });
         });
