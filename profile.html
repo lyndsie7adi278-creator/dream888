@@ -21,7 +21,7 @@
     </script>
     
     <style>
-        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --success: #2ecc71; --wait: #f1c40f; --alliance: #6c5ce7; --danger: #ff4757; --line: #06c755; }
+        :root { --primary: #ff8fa3; --bg: #05070a; --card: #11141b; --line: #06c755; --danger: #ff4757; --purple: #9b59b6; --gold: #f1c40f; --success: #2ecc71; --alliance: #6c5ce7; --wait: #f1c40f;}
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 80px; }
         
@@ -72,7 +72,6 @@
         .asset-label { font-size: 0.9rem; font-weight: bold; color: #555; display: flex; align-items: center; gap: 8px; }
         .asset-val { font-size: 1.2rem; font-weight: 900; color: var(--line); }
 
-        /* 集氣條 */
         .energy-section { margin: 15px auto; width: 88%; max-width: 500px; background: linear-gradient(145deg, #1a1e26, #000); border-radius: 20px; padding: 20px; border: 1px solid #333; position: relative; overflow: hidden; color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         .energy-title { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; font-weight: bold; }
         .energy-bar-bg { width: 100%; height: 14px; background: #222; border-radius: 50px; border: 1px solid #444; overflow: hidden; position: relative; }
@@ -82,19 +81,50 @@
         .claim-btn { display: none; width: 100%; padding: 12px; background: linear-gradient(90deg, #ff9f43, #ff6b6b); color: #fff; border: none; border-radius: 50px; font-weight: 900; margin-top: 15px; font-size: 1rem; cursor: pointer; animation: pulse 1.5s infinite; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); } }
 
-        /* 爆擊動畫彈窗 */
-        .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; }
-        .gacha-box { width: 280px; height: 280px; background: #000; border-radius: 20px; display: flex; align-items: center; justify-content: center; position: relative; border: 4px solid var(--gold); box-shadow: 0 0 50px var(--gold); animation: shake 0.5s infinite; }
-        .gacha-num { font-size: 6rem; font-weight: 900; color: #fff; text-shadow: 0 0 20px var(--danger); z-index: 10; display: none; }
-        .gacha-title { color: #fff; margin-top: 25px; font-size: 1.2rem; font-weight: bold; opacity: 0; transition: 1s; text-align: center; }
-        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+        /* 🟢 升級版：能量球爆擊動畫 */
+        .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(10px); }
         
+        .gacha-orb {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: radial-gradient(circle, #fff, #ffeb3b, #ff9f43, #ff4757);
+            box-shadow: 0 0 30px #ff9f43, 0 0 60px #ff4757;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            transform: scale(1);
+        }
+        
+        /* 集氣狀態動畫 */
+        .gacha-orb.charging { animation: orb-charge 0.1s infinite alternate; }
+        @keyframes orb-charge { 
+            0% { transform: scale(1); filter: hue-rotate(0deg); } 
+            100% { transform: scale(1.1); filter: hue-rotate(30deg); box-shadow: 0 0 80px #ff4757; } 
+        }
+
+        /* 爆炸數字動畫 */
+        .gacha-num { 
+            font-size: 6rem; font-weight: 900; color: #fff; 
+            text-shadow: 0 0 20px #000, 0 0 40px #ff4757; 
+            z-index: 10; display: none; opacity: 0;
+            transform: scale(3); 
+        }
+        .gacha-num.show { display: block; animation: num-slam 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes num-slam {
+            0% { opacity: 0; transform: scale(3); }
+            50% { opacity: 1; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .gacha-title { color: #fff; margin-top: 40px; font-size: 1.2rem; font-weight: bold; opacity: 0; transition: 1s; text-align: center; line-height: 1.5; }
+        .gacha-title span { color: var(--gold); font-size: 1.4rem; display: block; margin-top: 5px; }
+
         .gacha-btn-link { 
             display: none; margin-top: 25px; padding: 15px 30px; 
             background: #06c755; color: #fff; border-radius: 50px; font-weight: 900; 
-            text-decoration: none; font-size: 1rem; width: 80%; text-align: center;
-            box-shadow: 0 5px 15px rgba(6,199,85,0.4); 
+            text-decoration: none; font-size: 1rem; width: 85%; text-align: center;
+            box-shadow: 0 5px 15px rgba(6,199,85,0.4); animation: btn-pop 0.5s ease forwards;
         }
+        @keyframes btn-pop { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+
         .gacha-btn-close {
             margin-top: 15px; background: transparent; border: 1px solid #555; color: #aaa;
             padding: 8px 20px; border-radius: 50px; cursor: pointer; display: none; font-size: 0.8rem;
@@ -174,8 +204,8 @@
 
     <div class="user-panel">
         <div class="avatar-wrap"><div class="avatar" id="avatarLetter">?</div></div>
-        <div class="nickname-box"><span id="uNick">載入中...</span></div>
-        <div class="uid-tag" onclick="copyText(localStorage.getItem('myScratchCode'), 'UID')">ID: <span id="displayUid">...</span> 📋</div>
+        <div class="nickname-box"><span id="uNick">---</span></div>
+        <div class="uid-tag" onclick="copyText(localStorage.getItem('myScratchCode'), 'UID')">ID: <span id="displayUid">--------</span> 📋</div>
         
         <div class="balance-card">
             <div class="balance-label">
@@ -294,24 +324,25 @@
 
     <div id="gachaModal" class="gacha-modal">
         <div class="gacha-box" id="gachaBox">
-            <div class="gacha-num" id="gachaNum">0</div>
+            <div class="gacha-orb" id="gachaOrb">
+                <div class="gacha-num" id="gachaNum">0</div>
+            </div>
         </div>
-        <div class="gacha-title" id="gachaResultText">能量釋放中...</div>
-        <a href="https://line.me/R/ti/p/@dream8" target="_blank" class="gacha-btn-link" id="gachaLineBtn">🎁 已存入會員中心！可點我通知客服轉點</a>
-        <button class="gacha-btn-close" id="gachaCloseBtn" onclick="location.reload()">繼續累積</button>
+        <div class="gacha-title" id="gachaResultText">⚡ 能量正在凝聚...</div>
+        
+        <a href="https://line.me/R/ti/p/@dream8" target="_blank" class="gacha-btn-link" id="gachaLineBtn">💬 截圖傳給 Line 客服進行核銷轉點</a>
+        <button class="gacha-btn-close" id="gachaCloseBtn" onclick="location.reload()">關閉</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 🔒 恢復使用與 Admin 相同的加密設定，確保連線穩定
-        const _0x9d1 = (s) => atob(s);
         const _cc = { 
-            apiKey: _0x9d1("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), 
-            databaseURL: _0x9d1("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), 
-            projectId: _0x9d1("ZHJlYW04LTdiMTYx"), 
-            appId: _0x9d1("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") 
+            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
+            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
+            projectId: "dream8-7b161", 
+            appId: "1:606218522479:web:2737643db3de735af7e29a" 
         };
         
         const _app = initializeApp(_cc); 
@@ -408,7 +439,6 @@
             }
         }
 
-        // 🟢 確保 renderLogs 存在
         function renderLogs(logs) {
             const gBody = document.getElementById('gameListBody');
             const dBody = document.getElementById('depListBody');
@@ -481,88 +511,7 @@
             document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
         };
 
-        // 🟢 爆擊演算法 (控盤版)
-        function calculateReward() {
-            const rand = Math.random() * 100; 
-            if (rand < 1) return 50; 
-            if (rand < 15) return Math.floor(Math.random() * (20 - 11 + 1)) + 11; 
-            return Math.floor(Math.random() * (10 - 1 + 1)) + 1; 
-        }
-
-        // 🟢 執行抽獎
-        window.startGacha = async () => {
-            const snap = await get(ref(_db, `users/${_uid}/spending_counter`));
-            const currentSpend = snap.val() || 0;
-            if (currentSpend < 500) return alert("能量不足！");
-
-            const modal = document.getElementById('gachaModal');
-            const numDisplay = document.getElementById('gachaNum');
-            
-            modal.style.display = 'flex';
-            
-            const rewardPoints = calculateReward();
-            
-            let counter = 0;
-            const interval = setInterval(() => {
-                numDisplay.style.display = 'block';
-                numDisplay.innerText = Math.floor(Math.random() * 50) + 1;
-                counter++;
-                if (counter > 30) { 
-                    clearInterval(interval);
-                    showResult(rewardPoints);
-                }
-            }, 80);
-
-            const uRef = ref(_db, `users/${_uid}`);
-            const uSnap = await get(uRef);
-            const u = uSnap.val();
-            
-            await update(uRef, {
-                spending_counter: (Number(u.spending_counter) || 0) - 500,
-                linePoints: (Number(u.linePoints) || 0) + rewardPoints
-            });
-
-            push(ref(_db, `users/${_uid}/logs`), {
-                game: "⚡ 能量爆發",
-                cost: 0,
-                note: `抽中 ${rewardPoints} 點`,
-                time: Date.now()
-            });
-
-            push(ref(_db, `winLogs`), {
-                uid: _uid,
-                user: u.nickname || "玩家",
-                game: "⚡ 能量爆發",
-                prize: `獲得 ${rewardPoints} 點積分`,
-                time: serverTimestamp(),
-                status: "已入帳"
-            });
-        };
-
-        function showResult(points) {
-            const box = document.getElementById('gachaBox');
-            const num = document.getElementById('gachaNum');
-            const text = document.getElementById('gachaResultText');
-            const btnLink = document.getElementById('gachaLineBtn');
-            const btnClose = document.getElementById('gachaCloseBtn');
-
-            box.style.animation = 'none';
-            box.style.border = '5px solid #fff';
-            
-            num.innerText = points;
-            num.style.color = points >= 50 ? '#ff4757' : (points > 10 ? '#f1c40f' : '#fff');
-            
-            text.style.opacity = 1;
-            text.innerHTML = points >= 50 ? `🔥 超級爆擊！獲得 ${points} 點` : (points > 10 ? `✨ 運氣不錯！獲得 ${points} 點` : `獲得 ${points} 點`);
-            
-            btnLink.style.display = 'block';
-            btnClose.style.display = 'inline-block';
-            confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
-        }
-
-        // --- 監聽器 ---
-
-        onValue(ref(_db, `users/${_uid}`), s => {
+        onValue(ref(db, `users/${_uid}`), s => {
             const u = s.val(); if(!u) return;
             
             try {
@@ -600,7 +549,83 @@
             }
         });
 
-        onValue(ref(_db, `users`), s => {
+        // 🟢 爆擊演算法 (控盤版)
+        function calculateReward() {
+            const rand = Math.random() * 100; 
+            if (rand < 1) return 50; 
+            if (rand < 15) return Math.floor(Math.random() * (20 - 11 + 1)) + 11; 
+            return Math.floor(Math.random() * (10 - 1 + 1)) + 1; 
+        }
+
+        // 🟢 執行抽獎 (升級版動畫)
+        window.startGacha = async () => {
+            const snap = await get(ref(db, `users/${_uid}/spending_counter`));
+            const currentSpend = snap.val() || 0;
+            if (currentSpend < 500) return alert("能量不足！");
+
+            const modal = document.getElementById('gachaModal');
+            const orb = document.getElementById('gachaOrb'); // 新增的球
+            const numDisplay = document.getElementById('gachaNum');
+            const title = document.getElementById('gachaResultText');
+            
+            modal.style.display = 'flex';
+            orb.classList.add('charging'); // 開始集氣動畫
+            
+            const rewardPoints = calculateReward();
+            
+            // 寫入資料庫
+            const uRef = ref(db, `users/${_uid}`);
+            const uSnap = await get(uRef);
+            const u = uSnap.val();
+
+            await update(uRef, {
+                spending_counter: (Number(u.spending_counter) || 0) - 500,
+                linePoints: (Number(u.linePoints) || 0) + rewardPoints
+            });
+
+            push(ref(db, `users/${_uid}/logs`), {
+                game: "⚡ 能量爆發",
+                cost: 0,
+                note: `抽中 ${rewardPoints} 點`,
+                time: Date.now()
+            });
+
+            push(ref(db, `winLogs`), {
+                uid: _uid,
+                user: u.nickname || "玩家",
+                game: "⚡ 能量爆發",
+                prize: `獲得 ${rewardPoints} 點積分`,
+                time: serverTimestamp(),
+                status: "已入帳"
+            });
+
+            // 動畫流程
+            let counter = 0;
+            const interval = setInterval(() => {
+                counter++;
+                if (counter > 25) { // 約 2 秒後爆炸
+                    clearInterval(interval);
+                    orb.classList.remove('charging'); // 停止集氣
+                    orb.style.display = 'none'; // 隱藏球
+                    
+                    // 顯示數字 (爆炸效果)
+                    numDisplay.classList.add('show');
+                    numDisplay.innerText = rewardPoints;
+                    
+                    // 更新文案
+                    title.style.opacity = 1;
+                    title.innerHTML = `🎁 積分已存入您的帳號！<br><span>獲得 ${rewardPoints} 點</span>`;
+                    
+                    // 顯示按鈕
+                    document.getElementById('gachaLineBtn').style.display = 'block';
+                    document.getElementById('gachaCloseBtn').style.display = 'inline-block';
+                    
+                    confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } });
+                }
+            }, 80);
+        };
+
+        onValue(ref(db, `users`), s => {
             const list = document.getElementById('referralFriendsList');
             const allUsers = s.val() || {};
             const myFriends = Object.entries(allUsers)
@@ -621,7 +646,7 @@
             }
         });
 
-        onValue(ref(_db, `referralLogs/${_uid}`), s => {
+        onValue(ref(db, `referralLogs/${_uid}`), s => {
             const list = document.getElementById('referralLogList');
             if(s.exists()) {
                 const logs = Object.values(s.val()).sort((a,b) => b.time - a.time);
@@ -638,7 +663,7 @@
             }
         });
 
-        onValue(ref(_db, `winLogs`), s => {
+        onValue(ref(db, `winLogs`), s => {
             const list = document.getElementById('winsList');
             const data = s.val() || {};
             const myWins = Object.values(data).filter(w => w.user === _uid).sort((a,b) => b.time - a.time);
