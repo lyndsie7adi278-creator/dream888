@@ -57,7 +57,6 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
 .rep-item { background: #0a0c10; padding: 15px; border-radius: 12px; border: 1px solid #222; border-left: 4px solid var(--p); }
 
-/* 滾動條美化 */
 .scroll-table-container { overflow-x: auto; max-height: 600px; overflow-y: auto; }
 .scroll-table-container::-webkit-scrollbar { width: 8px; height: 8px; }
 .scroll-table-container::-webkit-scrollbar-track { background: #000; }
@@ -103,15 +102,15 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
         </div>
         
         <div class="card">
-            <span class="title" style="font-size: 0.9rem;">📝 刮刮樂詳細紀錄 (即時更新)</span>
+            <span class="title" style="font-size: 0.9rem;">📝 詳細消費與入帳紀錄 (即時更新)</span>
             <div class="scroll-table-container">
                 <table class="win-table">
                     <thead>
                         <tr>
                             <th style="min-width:140px">時間</th>
                             <th style="min-width:120px">玩家</th>
-                            <th style="min-width:150px">遊戲項目</th>
-                            <th style="text-align:right; min-width:80px">消費</th>
+                            <th style="min-width:150px">項目</th>
+                            <th style="text-align:right; min-width:80px">金額</th>
                             <th style="min-width:150px">結果</th>
                         </tr>
                     </thead>
@@ -246,19 +245,17 @@ window.addNewPopItem = (data = {title:'', content:'', img:''}) => {
 
 window.setMonFilter = (cat) => { monFilter = cat; startSync(); };
 
-// 🟢 升級版核心數據統計 (包含未中獎明細)
+// 🟢 核心數據修正：正確區分入帳與扣款
 async function runReport(start, end) {
     const [uSnap, wSnap] = await Promise.all([get(ref(db, 'users')), get(ref(db, 'winLogs'))]);
     const users = uSnap.val() || {}, wins = wSnap.val() || {};
     let rev = 0, dep = 0, cnt = 0;
     let games = {};
     let winItems = [];
-    let detailItems = []; // 詳細流水帳
+    let detailItems = []; 
 
-    // 建立中獎快速查詢表 (加速比對)
     const winMap = {};
     Object.values(wins).forEach(w => {
-        // 為了避免時間誤差，我們用 "uid + game" 做簡單分組，實際比對還是要看時間
         const key = w.uid + "_" + w.game;
         if(!winMap[key]) winMap[key] = [];
         winMap[key].push(w);
@@ -268,18 +265,17 @@ async function runReport(start, end) {
         if(u.logs) {
             Object.values(u.logs).forEach(log => {
                 if(log.time >= start && log.time <= end) {
-                    // 1. 處理消費 (刮刮樂)
-                    if(log.cost < 0 && log.game !== "手動調整") { 
-                        const cost = Math.abs(log.cost);
+                    
+                    // 1. 遊戲消費 (Cost > 0)
+                    if(log.cost > 0) {
+                        const cost = log.cost;
                         rev += cost; 
                         cnt++; 
                         games[log.game] = (games[log.game] || 0) + cost; 
 
-                        // 🔍 智慧對帳：這筆消費有沒有中獎？
                         let resultHtml = `<span style="color:#666">❌ 未中獎</span>`;
                         const candidates = winMap[uid + "_" + log.game];
                         if (candidates) {
-                            // 找時間相近的中獎紀錄 (誤差 5 秒內)
                             const match = candidates.find(w => Math.abs(w.time - log.time) < 5000);
                             if (match) {
                                 resultHtml = `<span style="color:#2ecc71; font-weight:bold;">🏆 ${match.prize}</span>`;
@@ -291,53 +287,52 @@ async function runReport(start, end) {
                             uid: uid,
                             nick: u.nickname || '玩家',
                             game: log.game,
-                            cost: cost,
+                            costStr: `<span style="color:#ff4757; font-weight:bold;">-${cost} P</span>`,
                             result: resultHtml
                         });
                     }
-                    // 2. 處理入點 (儲值)
-                    else if(log.cost > 0) { 
-                        // dep += Math.abs(log.cost); // 暫不重複計算
+                    
+                    // 2. 儲值/獎勵 (Cost < 0)
+                    else if(log.cost < 0) {
+                        const income = Math.abs(log.cost);
+                        dep += income; // 統計入帳總額
+                        
+                        detailItems.push({
+                            time: log.time,
+                            uid: uid,
+                            nick: u.nickname || '玩家',
+                            game: log.game, // 顯示 "首儲入點" 或 "每日簽到"
+                            costStr: `<span style="color:#2ecc71; font-weight:bold;">+${income} P</span>`,
+                            result: `<span style="color:#aaa; font-size:0.8rem;">(系統入帳)</span>`
+                        });
                     }
                 }
             });
         }
     });
 
-    // 儲值另外算 (維持原邏輯)
-    Object.values(users).forEach(u => {
-        if(u.logs) Object.values(u.logs).forEach(log => {
-            if(log.time >= start && log.time <= end && log.cost > 0) dep += log.cost;
-        });
-    });
-
     Object.values(wins).forEach(w => { if(w.time >= start && w.time <= end) winItems.push(w); });
     
-    // 排序
     winItems.sort((a,b) => b.time - a.time);
     detailItems.sort((a,b) => b.time - a.time);
 
-    // 渲染上方統計卡
     document.getElementById('rRev').innerText = rev.toLocaleString();
     document.getElementById('rDep').innerText = dep.toLocaleString();
     document.getElementById('rCnt').innerText = cnt.toLocaleString();
     
-    // 渲染銷售排行
     document.getElementById('rList').innerHTML = Object.entries(games).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<div>• <b>${n}</b>: ${s} P</div>`).join('') || "無數據";
-    
-    // 渲染中獎紀錄
     document.getElementById('rWins').innerHTML = winItems.map(w=>`<tr><td>${w.user}</td><td>${w.game}<br><small style="color:var(--p)">${w.prize}</small></td><td>${new Date(w.time).toLocaleString()}</td></tr>`).join('') || "<tr><td colspan='3' style='text-align:center'>無紀錄</td></tr>";
 
-    // 🟢 渲染詳細流水帳 (含未中獎)
+    // 🟢 渲染列表：消費為紅，入帳為綠
     document.getElementById('rDetails').innerHTML = detailItems.map(d => `
         <tr>
             <td style="font-size:0.75rem; color:#888;">${new Date(d.time).toLocaleString()}</td>
             <td><div style="font-weight:bold;">${d.nick}</div><small style="color:#555; font-size:0.7rem;">${d.uid}</small></td>
             <td>${d.game}</td>
-            <td style="text-align:right; color:#ff4757; font-weight:bold;">-${d.cost}</td>
+            <td style="text-align:right;">${d.costStr}</td>
             <td>${d.result}</td>
         </tr>
-    `).join('') || "<tr><td colspan='5' style='text-align:center; padding:20px; color:#666;'>區間內無消費紀錄</td></tr>";
+    `).join('') || "<tr><td colspan='5' style='text-align:center; padding:20px; color:#666;'>區間內無紀錄</td></tr>";
 }
 
 window.fetchDailyReport = async () => {
@@ -360,15 +355,14 @@ window.fetchMonthlyReport = async () => {
     hideLoading();
 };
 
-// 🟢 新增：本週報表功能
 window.fetchWeeklyReport = async () => {
     showLoading("統計本週數據中...");
     const now = new Date();
-    const day = now.getDay() || 7; // Sunday is 7, Monday is 1
+    const day = now.getDay() || 7; 
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
-    start.setDate(now.getDate() - day + 1); // Set to Monday
-    const end = new Date(); // Until now
+    start.setDate(now.getDate() - day + 1); 
+    const end = new Date(); 
     await runReport(start.getTime(), end.getTime());
     document.getElementById('repTitle').innerText = `📅 本週報表 (${start.toLocaleDateString()} ~ 起)`;
     hideLoading();
