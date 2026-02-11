@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>DREAM CMS | 旗艦戰略中控台</title>
 <style>
-:root{--p:#ffb800;--bg:#05070a;--card:#11141b;--text:#e2e8f0;--border:rgba(255,184,0,0.3);--lock:#3498db;--success:#2ecc71}
+:root{--p:#ffb800;--bg:#05070a;--card:#11141b;--text:#e2e8f0;--border:rgba(255,184,0,0.3);--lock:#3498db;--success:#2ecc71;--line:#06c755;}
 body{font-family:'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);color:var(--text);margin:0;display:none;overflow-x:hidden}
 .sidebar{width:240px;height:100vh;background:#000;position:fixed;border-right:1px solid var(--border);padding:30px 15px;box-sizing:border-box;z-index:1000;transition:.3s;left:0}
 .main{margin-left:240px;padding:20px;padding-top:65px;transition:.3s}
@@ -490,12 +490,65 @@ for (let i = loseP.length - 1; i > 0; i--) { const j = Math.floor(Math.random() 
 const safe = Number(g.safeZone) || 0; let finalN = [];
 if (safe > 0 && loseP.length >= safe) { const front = loseP.splice(0, safe); let rest = [...loseP, ...winP]; for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; } finalN = [...front, ...rest]; } else { finalN = allArr; for (let i = finalN.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [finalN[i], finalN[j]] = [finalN[j], finalN[i]]; }}
 const poolData = finalN.map(n => ({ grade: Number(n), taken: false, revealed: false })); await set(ref(db, `games/${id}/pool`), poolData); return true; } finally { hideLoading(); }}
-window.approveDeposit = async (key, uid, amount) => { amount = Number(amount); if(!confirm(`幫 [${uid}] 增加 ${amount} P？`)) return; showLoading("上分中...");
-try { const uRef = ref(db, `users/${uid}`), snap = await get(uRef); if(!snap.exists()) return alert("無此會員"); const uData = snap.val(), isFirst = (uData.hasToppedUp === false || uData.hasToppedUp === undefined);
-let uBonus = isFirst ? 0.15 : (amount >= 1000 ? 0.03 : 0), bonusText = isFirst ? "首儲(+15%)" : (uBonus>0 ? "續儲(+3%)" : "續儲"), finalBonus = Math.floor(amount * uBonus), rRate = isFirst ? 0.1 : 0.05, rBonus = Math.floor(amount * rRate), now = Date.now();
-await update(uRef, { balance: (Number(uData.balance) || 0) + amount + finalBonus, hasToppedUp: true }); await push(ref(db, `users/${uid}/logs`), { game: bonusText + "入點", cost: -(amount + finalBonus), time: now });
-if (uData.invitedBy && uData.invitedBy !== uid) { const rRef = ref(db, `users/${uData.invitedBy}`), rSnap = await get(rRef); if (rSnap.exists()) { await update(rRef, { commission: (Number(rSnap.val().commission) || 0) + rBonus }); await push(ref(db, `referralLogs/${uData.invitedBy}`), { time: now, from_uid: uid, amount: amount, reward: rBonus, type: isFirst ? "FIRST" : "RECURRING" }); }}
-await update(ref(db, `depositRequests/${key}`), { status: 'completed' }); alert(`完成！實得：${amount+finalBonus} P`); } catch(e) { alert("錯誤: " + e.message); } finally { hideLoading(); }};
+
+// 🟢 核心功能升級：自動發放 Line 積分與推廣獎勵
+window.approveDeposit = async (key, uid, amount) => { 
+    amount = Number(amount); 
+    if(!confirm(`幫 [${uid}] 增加 ${amount} P？`)) return; 
+    showLoading("上分中...");
+    
+    try { 
+        const uRef = ref(db, `users/${uid}`), snap = await get(uRef); 
+        if(!snap.exists()) return alert("無此會員"); 
+        
+        const uData = snap.val();
+        const isFirst = (uData.hasToppedUp === false || uData.hasToppedUp === undefined);
+        
+        let uBonus = isFirst ? 0.15 : (amount >= 1000 ? 0.03 : 0), bonusText = isFirst ? "首儲(+15%)" : (uBonus>0 ? "續儲(+3%)" : "續儲");
+        let finalBonus = Math.floor(amount * uBonus);
+        
+        // 計算本筆儲值應得的 Line 積分 (每 500 元 = 1 點)
+        let linePointsEarned = Math.floor(amount / 500);
+        
+        // 更新餘額與積分
+        await update(uRef, { 
+            balance: (Number(uData.balance) || 0) + amount + finalBonus, 
+            hasToppedUp: true,
+            linePoints: (Number(uData.linePoints) || 0) + linePointsEarned
+        }); 
+        
+        await push(ref(db, `users/${uid}/logs`), { game: bonusText + "入點", cost: -(amount + finalBonus), time: Date.now() });
+        
+        // 🟢 處理推廣人獎勵 (P幣 + Line積分)
+        if (uData.invitedBy && uData.invitedBy !== uid) { 
+            const rRef = ref(db, `users/${uData.invitedBy}`), rSnap = await get(rRef); 
+            if (rSnap.exists()) { 
+                const rData = rSnap.val();
+                let rRate = isFirst ? 0.1 : 0.05; 
+                let rBonus = Math.floor(amount * rRate); 
+                
+                // 推廣人 Line 積分獎勵：如果下線單筆滿 1000，推廣人 +1 點
+                let referrerLinePoint = (amount >= 1000) ? 1 : 0;
+
+                await update(rRef, { 
+                    commission: (Number(rData.commission) || 0) + rBonus,
+                    linePoints: (Number(rData.linePoints) || 0) + referrerLinePoint 
+                }); 
+                
+                await push(ref(db, `referralLogs/${uData.invitedBy}`), { 
+                    time: Date.now(), from_uid: uid, amount: amount, reward: rBonus, type: isFirst ? "FIRST" : "RECURRING" 
+                }); 
+            }
+        }
+        await update(ref(db, `depositRequests/${key}`), { status: 'completed' }); 
+        alert(`完成！實得：${amount+finalBonus} P` + (linePointsEarned > 0 ? `\n🎁 獲得 ${linePointsEarned} 點 Line 積分` : "")); 
+    } catch(e) { 
+        alert("錯誤: " + e.message); 
+    } finally { 
+        hideLoading(); 
+    }
+};
+
 window.showUserSubTab = async (type) => { const c = document.getElementById('logItems'); c.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">載入中...</div>';
 if(type === 'spend') { const s = await get(ref(db, `users/${currentViewingUid}/logs`)); const l = s.val()||{}; c.innerHTML = Object.values(l).reverse().map(i => `<div style="padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;"><span>${i.game}<br><small>${new Date(i.time).toLocaleString()}</small></span><b style="color:${Number(i.cost)>0?'#ff4757':'#2ecc71'}">${Number(i.cost)>0?'-':'+'}${Math.abs(i.cost)}P</b></div>`).join('');
 } else { const s = await get(ref(db, `referralLogs/${currentViewingUid}`)); const l = s.val()||{}; c.innerHTML = Object.values(l).reverse().map(i => { const label = Number(i.reward) < 0 ? "結清提現" : `來自好友: ${i.from_uid}`; return `<div style="padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;"><span>${label}<br><small>${new Date(i.time).toLocaleString()}</small></span><b style="color:${Number(i.reward)>0?'#2ecc71':'#ff4757'}">${Number(i.reward)>0?'+':''}${i.reward}P</b></div>`; }).join(''); }
@@ -509,25 +562,6 @@ window.addNewCat=async()=>{const v=document.getElementById('newCatIn').value.tri
 window.editCat=async(idx,v)=>{const s=await get(ref(db,'settings/categories')),data=s.val()||[];data[idx]=v;await set(ref(db,'settings/categories'),data)};
 window.delCat=async(idx)=>{if(confirm("刪除分類？")){const s=await get(ref(db,'settings/categories')),data=s.val()||[];data.splice(idx,1);await set(ref(db,'settings/categories'),data)}};
 window.forceUnlock=async id=>{if(confirm(`解鎖 [${id}]？`)){await remove(ref(db,`games/${id}/lock`));alert("已解鎖")}};
-window.publishGame = async () => {
-    const id = document.getElementById('gId').value.trim(), gName = document.getElementById('gName').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value;
-    const prRows = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')), prs = prRows.map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value, img: r.querySelector('.prize-img-input').value }));
-    const albRows = Array.from(document.querySelectorAll('#albumContainer .dynamic-row')), alb = albRows.map(r => r.querySelector('input[type="hidden"]').value).filter(v => v.trim());
-    if (!id || !tot || 0 === prs.length || !cat) return alert("資訊不全");
-    const d = { name: gName || id, total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: false };
-    if(!d.img) return alert("請上傳主圖"); showLoading("發布中..."); try { await update(ref(db, `gameSettings/${id}`), d); if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功"); resetGameForm(); } finally { hideLoading(); }
-};
-window.resetShuffle = async id => { if (confirm(`【警告】重新洗牌 [${id}]？`)) { try { const s = await get(ref(db, `gameSettings/${id}`)), g = s.val(); if (!g) return alert("無設定"); await runMasterShuffle(id, g); await update(ref(db, `gameSettings/${id}`), { isSoldOut: false }); await remove(ref(db, `games/${id}/lock`)); alert("成功！"); } catch (e) { alert("失敗: " + e.message); }}};
-window.loadGameToEdit=async id=>{ const s=await get(ref(db,`gameSettings/${id}`)),g=s.val(); if(!g)return; isEditing=true; document.getElementById('gId').value=id; document.getElementById('gId').disabled=true; document.getElementById('gName').value = g.name || id; document.getElementById('gCat').value=g.category; document.getElementById('gTotal').value=g.total; document.getElementById('gPrice').value=g.price; document.getElementById('gSafeZone').value=g.safeZone||0; document.getElementById('pCount').value=g.promoCount||0; document.getElementById('pPrice').value=g.promoPrice||0; document.getElementById('gImg').value=g.img; document.getElementById('mainImgStatus').innerText = "✅ 已有圖"; document.getElementById('gOrder').value=g.order||99;
-const aC=document.getElementById('albumContainer'); aC.innerHTML=''; if(g.album) g.album.forEach(u=>addAlbumInput(u));
-const pC=document.getElementById('prizeContainer'); pC.innerHTML=''; g.prizes.forEach(p=>addPrizeInput(p.num, p.name, p.img || ''));
-document.getElementById('gameActionTitle').innerText="編輯：" + id; document.getElementById('publishBtn').innerText="儲存更新"; document.getElementById('cancelEditBtn').style.display="block"; switchTab('game'); window.scrollTo({top: 0, behavior: 'smooth'});};
-window.resetGameForm=()=>{ isEditing=false; document.getElementById('gId').value=''; document.getElementById('gId').disabled=false; document.getElementById('gName').value=''; document.getElementById('prizeContainer').innerHTML=''; document.getElementById('albumContainer').innerHTML=''; document.getElementById('cancelEditBtn').style.display="none"; document.getElementById('gameActionTitle').innerText="新增商品"; document.getElementById('publishBtn').innerText="發布並洗牌"; document.getElementById('mainImgStatus').innerText="點擊上傳圖片"; document.getElementById('gImg').value='';};
-window.updNum=(id,f,v)=>update(ref(db,`gameSettings/${id}`),{[f]:Number(v)});
-window.editPin=async uid=>{const p=prompt("新 PIN:");if(p)update(ref(db,`users/${uid}`),{pin:p})};
-window.deleteGame=async id=>{if(confirm("確定刪除商品？")){remove(ref(db,`gameSettings/${id}`));remove(ref(db,`games/${id}`))}};
-window.deleteUser=async uid=>{if(confirm("確定刪除會員？"))remove(ref(db,`users/${uid}`))};
-window.saveAnnouncement=async()=>{await set(ref(db,'settings/announcement'),document.getElementById('annContent').value);alert("完成")};
 window.createUser=async()=>{const u=prompt("新帳號 ID:");if(u)set(ref(db,`users/${u}`),{balance:0,nickname:"新玩家",pin:"123456"})};
 </script>
 </body>
