@@ -365,6 +365,18 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     });
 });
 
+// 🟢 核心功能：消費累積邏輯 (寫入資料庫)
+async function updateSpending(price) {
+    const userRef = ref(_db, `users/${_uid}`);
+    const snap = await get(userRef);
+    if(snap.exists()) {
+        const u = snap.val();
+        // 累積消費金額 (不做歸零，歸零由會員中心抽獎時執行)
+        const current = (Number(u.spending_counter) || 0) + Number(price);
+        await update(userRef, { spending_counter: current });
+    }
+}
+
 async function buyTicket(visualIdx) {
     if(_isClosed) return; const n = Date.now();
     if(_q && _q.user !== _uid && _q.expire > n) return alert(`玩家 ${_q.user} 正在包台中`);
@@ -399,6 +411,8 @@ async function buyTicket(visualIdx) {
         hideLoading();
         document.body.style.pointerEvents = "auto";
         if(res.success) {
+            // 🟢 成功購買後，觸發消費累積 (關鍵修復)
+            updateSpending(pr);
             initCanvas((visualIdx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), visualIdx);
         } else {
             alert(res.msg || "系統繁忙，請稍後再試");
