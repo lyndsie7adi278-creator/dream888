@@ -13,7 +13,6 @@
                 localStorage.setItem('pending_ref', refId.trim());
             }
         })();
-        // 全域賦值函數
         window.forceApplyRef = function() {
             const savedRef = localStorage.getItem('pending_ref');
             const refEl = document.getElementById('refIn');
@@ -67,7 +66,6 @@
         .page-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🟢 修正：Line 積分與集氣條樣式 */
         .assets-grid { display: grid; grid-template-columns: 1fr; margin: 120px auto 0; width: 88%; max-width: 500px; }
         .asset-box { background: #fff; border-radius: 20px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .asset-label { font-size: 0.9rem; font-weight: bold; color: #555; display: flex; align-items: center; gap: 8px; }
@@ -82,10 +80,8 @@
         .claim-btn { display: none; width: 100%; padding: 12px; background: linear-gradient(90deg, #ff9f43, #ff6b6b); color: #fff; border: none; border-radius: 50px; font-weight: 900; margin-top: 15px; font-size: 1rem; cursor: pointer; animation: pulse 1.5s infinite; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); } }
 
-        /* 🟢 升級版：能量球爆擊動畫 */
         .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(10px); }
         
-        /* 能量球本體 */
         .gacha-box { 
             width: 200px; height: 200px; 
             border-radius: 50%;
@@ -96,21 +92,33 @@
             transform: scale(1);
         }
 
-        /* 呼吸動畫 */
         .gacha-box.charging { animation: orb-charge 0.1s infinite alternate; }
         @keyframes orb-charge { 
             0% { transform: scale(1); filter: hue-rotate(0deg); } 
             100% { transform: scale(1.1); filter: hue-rotate(30deg); box-shadow: 0 0 100px #ff4757; } 
         }
 
-        /* 數字蓋章動畫 */
         .gacha-num { 
             font-size: 5rem; font-weight: 900; color: #fff; 
             text-shadow: 0 0 10px #000, 0 0 30px #ff4757; 
             z-index: 10; display: none; opacity: 0;
-            transform: scale(5); 
+            transform: scale(1); 
         }
-        .gacha-num.stamp { display: block; animation: stamp-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        .gacha-num.rolling {
+            display: block;
+            opacity: 1;
+            animation: none;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .gacha-num.stamp { 
+            display: block; 
+            opacity: 1;
+            font-size: 6rem;
+            color: #fff;
+            animation: stamp-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+        }
         @keyframes stamp-in {
             0% { opacity: 0; transform: scale(5); }
             50% { opacity: 1; transform: scale(0.8); }
@@ -133,7 +141,6 @@
             padding: 8px 20px; border-radius: 50px; cursor: pointer; display: none; font-size: 0.8rem;
         }
 
-        /* 📦 收件資訊樣式 */
         .shipping-card { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1.5px solid var(--primary); }
         .ship-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; border-radius: 12px; font-size: 0.9rem; font-weight: bold; outline: none; background: #fdfdfd; }
         .ship-input:focus { border-color: var(--primary); }
@@ -184,7 +191,6 @@
         .is-topped { color: var(--success); background: #eefdf4; }
         .not-topped { color: #999; background: #f0f0f0; }
 
-        /* 每日簽到 */
         .checkin-card { background: #fff; border-radius: 20px; padding: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .checkin-btn { background: linear-gradient(135deg, #ffb800 0%, #ff9d00 100%); color: #fff; border: none; width: 100%; padding: 15px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,184,0,0.3); transition: 0.3s; margin-bottom: 20px; }
         .checkin-btn.disabled { background: #ddd; box-shadow: none; cursor: default; }
@@ -339,13 +345,11 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 🔒 恢復使用與 Admin 相同的加密設定，確保連線穩定
-        const _0x9d1 = (s) => atob(s);
         const _cc = { 
-            apiKey: _0x9d1("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), 
-            databaseURL: _0x9d1("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), 
-            projectId: _0x9d1("ZHJlYW04LTdiMTYx"), 
-            appId: _0x9d1("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") 
+            apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), 
+            databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), 
+            projectId: atob("ZHJlYW04LTdiMTYx"), 
+            appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") 
         };
         
         const _app = initializeApp(_cc); 
@@ -354,8 +358,6 @@
 
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
-
-        // --- 核心功能函式定義 ---
 
         window.handleLogout = () => {
             if(confirm("確定要登出帳號嗎？")) {
@@ -442,7 +444,6 @@
             }
         }
 
-        // 🟢 確保 renderLogs 存在
         function renderLogs(logs) {
             const gBody = document.getElementById('gameListBody');
             const dBody = document.getElementById('depListBody');
@@ -515,7 +516,6 @@
             document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
         };
 
-        // 🟢 監聽數據 (含集氣條)
         onValue(ref(_db, `users/${_uid}`), s => {
             const u = s.val(); if(!u) return;
             
@@ -554,7 +554,6 @@
             }
         });
 
-        // 🟢 爆擊演算法 (控盤版)
         function calculateReward() {
             const rand = Math.random() * 100; 
             if (rand < 1) return 50; 
@@ -562,7 +561,6 @@
             return Math.floor(Math.random() * (10 - 1 + 1)) + 1; 
         }
 
-        // 🟢 執行抽獎 (升級版動畫)
         window.startGacha = async () => {
             const snap = await get(ref(_db, `users/${_uid}/spending_counter`));
             const currentSpend = snap.val() || 0;
@@ -574,11 +572,23 @@
             const title = document.getElementById('gachaResultText');
             
             modal.style.display = 'flex';
-            box.classList.add('charging'); // 開始集氣動畫
+            box.classList.add('charging'); 
             
+            numDisplay.classList.add('rolling');
+            numDisplay.style.display = 'block';
+
             const rewardPoints = calculateReward();
             
-            // 寫入資料庫
+            let counter = 0;
+            const interval = setInterval(() => {
+                numDisplay.innerText = Math.floor(Math.random() * 50) + 1;
+                counter++;
+                if (counter > 25) { 
+                    clearInterval(interval);
+                    showResult(rewardPoints);
+                }
+            }, 50);
+
             const uRef = ref(_db, `users/${_uid}`);
             const uSnap = await get(uRef);
             const u = uSnap.val();
@@ -603,36 +613,35 @@
                 time: serverTimestamp(),
                 status: "已入帳"
             });
-
-            // 動畫流程
-            let counter = 0;
-            const interval = setInterval(() => {
-                counter++;
-                if (counter > 25) { // 約 2 秒後爆炸
-                    clearInterval(interval);
-                    box.classList.remove('charging'); // 停止集氣
-                    box.style.background = 'transparent'; // 隱藏球
-                    box.style.boxShadow = 'none';
-                    box.style.border = 'none';
-                    
-                    // 顯示數字 (爆炸效果)
-                    numDisplay.classList.add('stamp');
-                    numDisplay.innerText = rewardPoints;
-                    
-                    // 更新文案
-                    title.style.opacity = 1;
-                    title.innerHTML = `🎁 積分已存入您的帳號！<br><span>獲得 ${rewardPoints} 點</span>`;
-                    
-                    // 顯示按鈕
-                    document.getElementById('gachaLineBtn').style.display = 'block';
-                    document.getElementById('gachaCloseBtn').style.display = 'inline-block';
-                    
-                    confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } });
-                }
-            }, 80);
         };
 
-        onValue(ref(db, `users`), s => {
+        function showResult(points) {
+            const box = document.getElementById('gachaBox');
+            const num = document.getElementById('gachaNum');
+            const text = document.getElementById('gachaResultText');
+            const btnLink = document.getElementById('gachaLineBtn');
+            const btnClose = document.getElementById('gachaCloseBtn');
+
+            box.classList.remove('charging');
+            box.style.background = 'transparent';
+            box.style.boxShadow = 'none';
+            box.style.border = 'none';
+            
+            num.classList.remove('rolling');
+            num.classList.add('stamp');
+            num.innerText = points;
+            num.style.color = points >= 50 ? '#ff4757' : (points > 10 ? '#f1c40f' : '#fff');
+            
+            text.style.opacity = 1;
+            text.innerHTML = points >= 50 ? `🎁 積分已存入您的帳號！<br><span style="color:#ff4757">🔥 超級爆擊！${points} 點</span>` : `🎁 積分已存入您的帳號！<br><span>獲得 ${points} 點</span>`;
+            
+            btnLink.style.display = 'block';
+            btnClose.style.display = 'inline-block';
+            
+            confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } });
+        }
+
+        onValue(ref(_db, `users`), s => {
             const list = document.getElementById('referralFriendsList');
             const allUsers = s.val() || {};
             const myFriends = Object.entries(allUsers)
@@ -653,7 +662,7 @@
             }
         });
 
-        onValue(ref(db, `referralLogs/${_uid}`), s => {
+        onValue(ref(_db, `referralLogs/${_uid}`), s => {
             const list = document.getElementById('referralLogList');
             if(s.exists()) {
                 const logs = Object.values(s.val()).sort((a,b) => b.time - a.time);
@@ -670,7 +679,7 @@
             }
         });
 
-        onValue(ref(db, `winLogs`), s => {
+        onValue(ref(_db, `winLogs`), s => {
             const list = document.getElementById('winsList');
             const data = s.val() || {};
             const myWins = Object.values(data).filter(w => w.user === _uid).sort((a,b) => b.time - a.time);
