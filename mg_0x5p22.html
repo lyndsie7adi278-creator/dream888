@@ -103,10 +103,18 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
         </div>
         
         <div class="card">
-            <span class="title" style="font-size: 0.9rem;">📝 詳細消費流水帳 (時間倒序)</span>
+            <span class="title" style="font-size: 0.9rem;">📝 刮刮樂詳細紀錄 (即時更新)</span>
             <div class="scroll-table-container">
                 <table class="win-table">
-                    <thead><tr><th>時間</th><th>玩家 UID / 暱稱</th><th>遊戲項目</th><th style="text-align:right">消費金額</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style="min-width:140px">時間</th>
+                            <th style="min-width:120px">玩家</th>
+                            <th style="min-width:150px">遊戲項目</th>
+                            <th style="text-align:right; min-width:80px">消費</th>
+                            <th style="min-width:150px">結果</th>
+                        </tr>
+                    </thead>
                     <tbody id="rDetails"></tbody>
                 </table>
             </div>
@@ -238,47 +246,65 @@ window.addNewPopItem = (data = {title:'', content:'', img:''}) => {
 
 window.setMonFilter = (cat) => { monFilter = cat; startSync(); };
 
-// 🟢 核心數據計算邏輯 (升級版)
+// 🟢 升級版核心數據統計 (包含未中獎明細)
 async function runReport(start, end) {
     const [uSnap, wSnap] = await Promise.all([get(ref(db, 'users')), get(ref(db, 'winLogs'))]);
     const users = uSnap.val() || {}, wins = wSnap.val() || {};
     let rev = 0, dep = 0, cnt = 0;
     let games = {};
     let winItems = [];
-    let detailItems = []; // 🟢 詳細流水帳容器
+    let detailItems = []; // 詳細流水帳
+
+    // 建立中獎快速查詢表 (加速比對)
+    const winMap = {};
+    Object.values(wins).forEach(w => {
+        // 為了避免時間誤差，我們用 "uid + game" 做簡單分組，實際比對還是要看時間
+        const key = w.uid + "_" + w.game;
+        if(!winMap[key]) winMap[key] = [];
+        winMap[key].push(w);
+    });
 
     Object.entries(users).forEach(([uid, u]) => {
         if(u.logs) {
             Object.values(u.logs).forEach(log => {
                 if(log.time >= start && log.time <= end) {
-                    // 統計消費 (排除手動調整)
+                    // 1. 處理消費 (刮刮樂)
                     if(log.cost < 0 && log.game !== "手動調整") { 
                         const cost = Math.abs(log.cost);
                         rev += cost; 
                         cnt++; 
                         games[log.game] = (games[log.game] || 0) + cost; 
+
+                        // 🔍 智慧對帳：這筆消費有沒有中獎？
+                        let resultHtml = `<span style="color:#666">❌ 未中獎</span>`;
+                        const candidates = winMap[uid + "_" + log.game];
+                        if (candidates) {
+                            // 找時間相近的中獎紀錄 (誤差 5 秒內)
+                            const match = candidates.find(w => Math.abs(w.time - log.time) < 5000);
+                            if (match) {
+                                resultHtml = `<span style="color:#2ecc71; font-weight:bold;">🏆 ${match.prize}</span>`;
+                            }
+                        }
                         
-                        // 加入詳細清單
                         detailItems.push({
                             time: log.time,
                             uid: uid,
                             nick: u.nickname || '玩家',
                             game: log.game,
-                            cost: cost
+                            cost: cost,
+                            result: resultHtml
                         });
                     }
-                    // 統計儲值
+                    // 2. 處理入點 (儲值)
                     else if(log.cost > 0) { 
-                        // dep += Math.abs(log.cost); // 這裡通常算總入帳
-                        // 如果只需要看實際儲值申請的，請參考 depositRequests，但這裡算點數流動
+                        // dep += Math.abs(log.cost); // 暫不重複計算
                     }
                 }
             });
         }
     });
 
-    // 儲值另外算 (從 depositRequests 比較準，這裡維持原本邏輯或加總)
-    // 這裡我們維持原邏輯：logs 裡的 "入點" 算儲值
+    // 儲值另外算 (維持原邏輯)
     Object.values(users).forEach(u => {
         if(u.logs) Object.values(u.logs).forEach(log => {
             if(log.time >= start && log.time <= end && log.cost > 0) dep += log.cost;
@@ -286,27 +312,32 @@ async function runReport(start, end) {
     });
 
     Object.values(wins).forEach(w => { if(w.time >= start && w.time <= end) winItems.push(w); });
-    winItems.sort((a,b) => b.time - a.time);
     
-    // 排序詳細流水帳 (新到舊)
+    // 排序
+    winItems.sort((a,b) => b.time - a.time);
     detailItems.sort((a,b) => b.time - a.time);
 
+    // 渲染上方統計卡
     document.getElementById('rRev').innerText = rev.toLocaleString();
     document.getElementById('rDep').innerText = dep.toLocaleString();
     document.getElementById('rCnt').innerText = cnt.toLocaleString();
     
+    // 渲染銷售排行
     document.getElementById('rList').innerHTML = Object.entries(games).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<div>• <b>${n}</b>: ${s} P</div>`).join('') || "無數據";
+    
+    // 渲染中獎紀錄
     document.getElementById('rWins').innerHTML = winItems.map(w=>`<tr><td>${w.user}</td><td>${w.game}<br><small style="color:var(--p)">${w.prize}</small></td><td>${new Date(w.time).toLocaleString()}</td></tr>`).join('') || "<tr><td colspan='3' style='text-align:center'>無紀錄</td></tr>";
 
-    // 🟢 渲染詳細流水帳
+    // 🟢 渲染詳細流水帳 (含未中獎)
     document.getElementById('rDetails').innerHTML = detailItems.map(d => `
         <tr>
-            <td style="font-size:0.8rem; color:#888;">${new Date(d.time).toLocaleString()}</td>
-            <td><div style="font-weight:bold;">${d.nick}</div><small style="color:#666">${d.uid}</small></td>
+            <td style="font-size:0.75rem; color:#888;">${new Date(d.time).toLocaleString()}</td>
+            <td><div style="font-weight:bold;">${d.nick}</div><small style="color:#555; font-size:0.7rem;">${d.uid}</small></td>
             <td>${d.game}</td>
-            <td style="text-align:right; color:#ff4757; font-weight:bold;">-${d.cost} P</td>
+            <td style="text-align:right; color:#ff4757; font-weight:bold;">-${d.cost}</td>
+            <td>${d.result}</td>
         </tr>
-    `).join('') || "<tr><td colspan='4' style='text-align:center; padding:20px; color:#666;'>區間內無消費紀錄</td></tr>";
+    `).join('') || "<tr><td colspan='5' style='text-align:center; padding:20px; color:#666;'>區間內無消費紀錄</td></tr>";
 }
 
 window.fetchDailyReport = async () => {
@@ -337,9 +368,7 @@ window.fetchWeeklyReport = async () => {
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
     start.setDate(now.getDate() - day + 1); // Set to Monday
-    
     const end = new Date(); // Until now
-    
     await runReport(start.getTime(), end.getTime());
     document.getElementById('repTitle').innerText = `📅 本週報表 (${start.toLocaleDateString()} ~ 起)`;
     hideLoading();
