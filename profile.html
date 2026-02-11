@@ -228,7 +228,7 @@
 
     <div class="assets-grid">
         <div class="asset-box">
-            <div class="asset-label"><span style="font-size:1.2rem;">🧩</span> Line 盲盒積分</div>
+            <div class="asset-label"><span style="font-size:1.2rem;">🧩</span> Line 點數積分</div>
             <div class="asset-val line-pt" id="pointDisplay">0</div>
         </div>
     </div>
@@ -554,11 +554,18 @@
             }
         });
 
-        function calculateReward() {
+function calculateReward() {
             const rand = Math.random() * 100; 
-            if (rand < 1) return 50; 
-            if (rand < 15) return Math.floor(Math.random() * (20 - 11 + 1)) + 11; 
-            return Math.floor(Math.random() * (10 - 1 + 1)) + 1; 
+            
+            if (rand < 1) {
+                return Math.floor(Math.random() * (50 - 31 + 1)) + 31;
+            }
+            
+            if (rand < 7) {
+                return Math.floor(Math.random() * (30 - 11 + 1)) + 11;
+            }
+            
+            return Math.floor(Math.random() * (10 - 1 + 1)) + 1;
         }
 
         window.startGacha = async () => {
