@@ -59,9 +59,25 @@
         }
         .submit-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-        .m-box { background: #fff; padding: 30px; border-radius: 30px; text-align: center; width: 100%; max-width: 320px; }
+        /* 🟢 彈窗與 LINE 按鈕樣式 (優化版) */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+        .m-box { background: #fff; padding: 30px 20px; border-radius: 30px; text-align: center; width: 100%; max-width: 320px; position: relative; }
         
+        .btn-line {
+            background: #06c755; color: white; border: none; width: 100%; padding: 15px; 
+            border-radius: 50px; font-size: 1rem; font-weight: 900; cursor: pointer;
+            margin-top: 15px; box-shadow: 0 5px 15px rgba(6,199,85,0.3);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            text-decoration: none; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+        
+        .btn-back {
+            background: #f0f2f5; color: #999; border: none; width: 100%; padding: 15px; 
+            border-radius: 50px; font-size: 0.85rem; font-weight: bold; cursor: pointer;
+            margin-top: 10px;
+        }
+
         #copyTip { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; display: none; z-index: 3000; }
     </style>
 </head>
@@ -143,10 +159,19 @@
 
     <div id="resModal" class="modal">
         <div class="m-box">
-            <div style="font-size: 3rem; margin-bottom: 15px;">✅</div>
-            <h3>申請已送出</h3>
-            <p style="color: #666; font-size: 0.9rem;">已發送通知，查帳完成後會立刻入點！</p>
-            <button class="submit-btn" style="margin-top: 20px;" onclick="location.href='profile.html'">確認並返回</button>
+            <div style="font-size: 3.5rem; margin-bottom: 10px;">✅</div>
+            <h2 style="margin: 0 0 5px; color: #333;">申請已送出！</h2>
+            
+            <p style="color: #444; font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; font-weight: bold;">
+                請務必聯繫 LINE 客服查帳<br>
+                <span style="color:#ff4757;">才能領取額外贈點與盲盒積分唷！</span>
+            </p>
+            
+            <a href="https://line.me/R/ti/p/@dream8" target="_blank" class="btn-line">
+                🎁 聯繫客服領取積分
+            </a>
+            
+            <button class="btn-back" onclick="location.href='profile.html'">暫不領取，返回會員中心</button>
         </div>
     </div>
 
@@ -154,7 +179,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, get, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 🔒 系統核心加密連線參數 (已混淆處理)
+        // 🔒 系統核心加密連線參數
         const _0x9d1 = (s) => atob(s);
         const _cc = { 
             apiKey: _0x9d1("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), 
@@ -166,12 +191,11 @@
         const _app = initializeApp(_cc); 
         const _db = getDatabase(_app);
         const _uid = localStorage.getItem('myScratchCode');
-        // 🔒 加密 GAS 連線網址
         const GAS_URL = _0x9d1("aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J6MDdVR1pFUXJGMkE5SVJsWWtxbkZRdjRaYnF1TmFJYjRQRHNFS1h4bmQ3RHJ6VXJMXzlvQnNIbDJvQjNUaEVJdGYvZXhlYw==");
 
         if(!_uid) location.href = 'index.html';
 
-        // 🟢 修正：點數計算邏輯
+        // 點數計算邏輯
         const amountInput = document.getElementById('amountIn');
         const calcP = async () => {
             const amt = Number(amountInput.value) || 0;
@@ -183,22 +207,17 @@
             let label = "";
 
             if (isFirst) {
-                // 首儲：10% + 5% = 15%
-                bonusRate = 0.15; 
+                bonusRate = 0.15; // 首儲 15%
                 label = "✨ 首儲 + 試營運加碼 (15%)";
             } else if (amt >= 1000) {
-                // 續儲滿千：3%
-                bonusRate = 0.03; 
+                bonusRate = 0.03; // 滿千 3%
                 label = "🔥 滿千回饋 (3%)";
             } else {
-                // 一般續儲：0%
                 bonusRate = 0; 
                 label = "一般儲值 (無加碼)";
             }
 
             const bonus = Math.floor(amt * bonusRate);
-
-            // 🟢 計算 Line 積分：每 500 元 = 1 點
             const linePoints = Math.floor(amt / 500);
 
             document.getElementById('bonusLabel').innerText = label;
@@ -229,7 +248,6 @@
             btn.innerText = "提交中...";
 
             try {
-                // 寫入 Firebase (僅記錄，不給錢)
                 await push(ref(_db, `depositRequests`), {
                     uid: _uid,
                     amount: Number(amt),
@@ -238,7 +256,6 @@
                     time: serverTimestamp()
                 });
 
-                // 通知 GAS (後端機器人)
                 fetch(GAS_URL, {
                     method: "POST",
                     mode: "no-cors", 
