@@ -28,7 +28,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .user-header,.request-header{padding:15px;display:flex;justify-content:space-between;align-items:center}
 .user-content{display:none;padding:15px;background:#0d1016;border-top:1px solid #222;border-radius:0 0 12px 12px}.user-content.show{display:block}
 .win-table{width:100%;border-collapse:collapse;font-size:.85rem}
-.win-table th{text-align:left;color:var(--p);padding:10px;border-bottom:2px solid #222}
+.win-table th{text-align:left;color:var(--p);padding:10px;border-bottom:2px solid #222;white-space: nowrap;}
 .win-table td{padding:10px;border-bottom:1px solid #222}
 .win-status-row { display: flex; flex-direction: column; gap: 5px; }
 .win-shipping-input { padding: 5px !important; margin-bottom: 0 !important; font-size: 0.75rem !important; border: 1px solid #444 !important; }
@@ -56,6 +56,13 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 
 .rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
 .rep-item { background: #0a0c10; padding: 15px; border-radius: 12px; border: 1px solid #222; border-left: 4px solid var(--p); }
+
+/* 滾動條美化 */
+.scroll-table-container { overflow-x: auto; max-height: 600px; overflow-y: auto; }
+.scroll-table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-table-container::-webkit-scrollbar-track { background: #000; }
+.scroll-table-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+.scroll-table-container::-webkit-scrollbar-thumb:hover { background: var(--p); }
 </style>
 </head>
 <body>
@@ -85,6 +92,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <input type="date" id="repDate" style="margin: 0; flex: 1; min-width: 150px;">
                 <button class="btn btn-sm" onclick="fetchDailyReport()" style="margin: 0; width: 100px;">單日查詢</button>
+                <button class="btn btn-sm" onclick="fetchWeeklyReport()" style="margin: 0; width: 100px;">本週報表</button>
                 <button class="btn btn-sm btn-success" onclick="fetchMonthlyReport()" style="margin: 0; width: 100px;">當月總計</button>
             </div>
         </div>
@@ -93,12 +101,23 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
             <div class="rep-item"><small style="color:#888">加點總額 (P)</small><div id="rDep" style="font-size:1.5rem; font-weight:900; color:var(--success); margin-top:5px;">0</div></div>
             <div class="rep-item"><small style="color:#888">總刮取次數</small><div id="rCnt" style="font-size:1.5rem; font-weight:900; color:#fff; margin-top:5px;">0</div></div>
         </div>
+        
         <div class="card">
-            <span class="title" style="font-size: 0.9rem;">商品銷售明細 / 分佈</span>
+            <span class="title" style="font-size: 0.9rem;">📝 詳細消費流水帳 (時間倒序)</span>
+            <div class="scroll-table-container">
+                <table class="win-table">
+                    <thead><tr><th>時間</th><th>玩家 UID / 暱稱</th><th>遊戲項目</th><th style="text-align:right">消費金額</th></tr></thead>
+                    <tbody id="rDetails"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <span class="title" style="font-size: 0.9rem;">商品銷售統計 (排行榜)</span>
             <div id="rList" style="font-size: 0.85rem; line-height: 1.8;">選擇日期或月份點擊查詢...</div>
         </div>
         <div class="card">
-            <span class="title" style="font-size: 0.9rem;">中獎紀錄</span>
+            <span class="title" style="font-size: 0.9rem;">中獎紀錄 (高價獎項)</span>
             <table class="win-table">
                 <thead><tr><th>玩家</th><th>獎項</th><th>時間</th></tr></thead>
                 <tbody id="rWins"></tbody>
@@ -219,29 +238,75 @@ window.addNewPopItem = (data = {title:'', content:'', img:''}) => {
 
 window.setMonFilter = (cat) => { monFilter = cat; startSync(); };
 
+// 🟢 核心數據計算邏輯 (升級版)
 async function runReport(start, end) {
     const [uSnap, wSnap] = await Promise.all([get(ref(db, 'users')), get(ref(db, 'winLogs'))]);
     const users = uSnap.val() || {}, wins = wSnap.val() || {};
     let rev = 0, dep = 0, cnt = 0;
     let games = {};
     let winItems = [];
-    Object.values(users).forEach(u => {
+    let detailItems = []; // 🟢 詳細流水帳容器
+
+    Object.entries(users).forEach(([uid, u]) => {
         if(u.logs) {
             Object.values(u.logs).forEach(log => {
                 if(log.time >= start && log.time <= end) {
-                    if(log.cost > 0) { rev += log.cost; cnt++; games[log.game] = (games[log.game] || 0) + log.cost; }
-                    else if(log.cost < 0) { dep += Math.abs(log.cost); }
+                    // 統計消費 (排除手動調整)
+                    if(log.cost < 0 && log.game !== "手動調整") { 
+                        const cost = Math.abs(log.cost);
+                        rev += cost; 
+                        cnt++; 
+                        games[log.game] = (games[log.game] || 0) + cost; 
+                        
+                        // 加入詳細清單
+                        detailItems.push({
+                            time: log.time,
+                            uid: uid,
+                            nick: u.nickname || '玩家',
+                            game: log.game,
+                            cost: cost
+                        });
+                    }
+                    // 統計儲值
+                    else if(log.cost > 0) { 
+                        // dep += Math.abs(log.cost); // 這裡通常算總入帳
+                        // 如果只需要看實際儲值申請的，請參考 depositRequests，但這裡算點數流動
+                    }
                 }
             });
         }
     });
+
+    // 儲值另外算 (從 depositRequests 比較準，這裡維持原本邏輯或加總)
+    // 這裡我們維持原邏輯：logs 裡的 "入點" 算儲值
+    Object.values(users).forEach(u => {
+        if(u.logs) Object.values(u.logs).forEach(log => {
+            if(log.time >= start && log.time <= end && log.cost > 0) dep += log.cost;
+        });
+    });
+
     Object.values(wins).forEach(w => { if(w.time >= start && w.time <= end) winItems.push(w); });
     winItems.sort((a,b) => b.time - a.time);
+    
+    // 排序詳細流水帳 (新到舊)
+    detailItems.sort((a,b) => b.time - a.time);
+
     document.getElementById('rRev').innerText = rev.toLocaleString();
     document.getElementById('rDep').innerText = dep.toLocaleString();
     document.getElementById('rCnt').innerText = cnt.toLocaleString();
+    
     document.getElementById('rList').innerHTML = Object.entries(games).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<div>• <b>${n}</b>: ${s} P</div>`).join('') || "無數據";
     document.getElementById('rWins').innerHTML = winItems.map(w=>`<tr><td>${w.user}</td><td>${w.game}<br><small style="color:var(--p)">${w.prize}</small></td><td>${new Date(w.time).toLocaleString()}</td></tr>`).join('') || "<tr><td colspan='3' style='text-align:center'>無紀錄</td></tr>";
+
+    // 🟢 渲染詳細流水帳
+    document.getElementById('rDetails').innerHTML = detailItems.map(d => `
+        <tr>
+            <td style="font-size:0.8rem; color:#888;">${new Date(d.time).toLocaleString()}</td>
+            <td><div style="font-weight:bold;">${d.nick}</div><small style="color:#666">${d.uid}</small></td>
+            <td>${d.game}</td>
+            <td style="text-align:right; color:#ff4757; font-weight:bold;">-${d.cost} P</td>
+        </tr>
+    `).join('') || "<tr><td colspan='4' style='text-align:center; padding:20px; color:#666;'>區間內無消費紀錄</td></tr>";
 }
 
 window.fetchDailyReport = async () => {
@@ -261,6 +326,22 @@ window.fetchMonthlyReport = async () => {
     showLoading(`統計 ${year}/${month+1} 月報中...`);
     await runReport(start, end);
     document.getElementById('repTitle').innerText = `📅 月報表：${year}年 ${month+1}月`;
+    hideLoading();
+};
+
+// 🟢 新增：本週報表功能
+window.fetchWeeklyReport = async () => {
+    showLoading("統計本週數據中...");
+    const now = new Date();
+    const day = now.getDay() || 7; // Sunday is 7, Monday is 1
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(now.getDate() - day + 1); // Set to Monday
+    
+    const end = new Date(); // Until now
+    
+    await runReport(start.getTime(), end.getTime());
+    document.getElementById('repTitle').innerText = `📅 本週報表 (${start.toLocaleDateString()} ~ 起)`;
     hideLoading();
 };
 
@@ -342,61 +423,12 @@ for (let i = loseP.length - 1; i > 0; i--) { const j = Math.floor(Math.random() 
 const safe = Number(g.safeZone) || 0; let finalN = [];
 if (safe > 0 && loseP.length >= safe) { const front = loseP.splice(0, safe); let rest = [...loseP, ...winP]; for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; } finalN = [...front, ...rest]; } else { finalN = allArr; for (let i = finalN.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [finalN[i], finalN[j]] = [finalN[j], finalN[i]]; }}
 const poolData = finalN.map(n => ({ grade: Number(n), taken: false, revealed: false })); await set(ref(db, `games/${id}/pool`), poolData); return true; } finally { hideLoading(); }}
-
-// 🟢 修正：核准上分邏輯 (15% / 3% / 0%)
-window.approveDeposit = async (key, uid, amount) => { 
-    amount = Number(amount); 
-    if(!confirm(`幫 [${uid}] 增加 ${amount} P？`)) return; 
-    showLoading("上分中...");
-    
-    try { 
-        const uRef = ref(db, `users/${uid}`), snap = await get(uRef); 
-        if(!snap.exists()) return alert("無此會員"); 
-        
-        const uData = snap.val();
-        const isFirst = (uData.hasToppedUp === false || uData.hasToppedUp === undefined);
-        
-        let uBonus = 0;
-        let bonusText = "";
-
-        if (isFirst) {
-            // 首儲：10% + 5% = 15%
-            uBonus = 0.15;
-            bonusText = "首儲(+15%)";
-        } else if (amount >= 1000) {
-            // 續儲滿千：3%
-            uBonus = 0.03;
-            bonusText = "續儲(+3%)";
-        } else {
-            // 續儲未滿千：0%
-            uBonus = 0;
-            bonusText = "續儲";
-        }
-
-        let finalBonus = Math.floor(amount * uBonus);
-        let rRate = isFirst ? 0.1 : 0.05; 
-        let rBonus = Math.floor(amount * rRate); 
-        let now = Date.now();
-
-        await update(uRef, { balance: (Number(uData.balance) || 0) + amount + finalBonus, hasToppedUp: true }); 
-        await push(ref(db, `users/${uid}/logs`), { game: bonusText + "入點", cost: -(amount + finalBonus), time: now });
-
-        if (uData.invitedBy && uData.invitedBy !== uid) { 
-            const rRef = ref(db, `users/${uData.invitedBy}`), rSnap = await get(rRef); 
-            if (rSnap.exists()) { 
-                await update(rRef, { commission: (Number(rSnap.val().commission) || 0) + rBonus }); 
-                await push(ref(db, `referralLogs/${uData.invitedBy}`), { time: now, from_uid: uid, amount: amount, reward: rBonus, type: isFirst ? "FIRST" : "RECURRING" }); 
-            }
-        }
-        await update(ref(db, `depositRequests/${key}`), { status: 'completed' }); 
-        alert(`完成！實得：${amount+finalBonus} P`); 
-    } catch(e) { 
-        alert("錯誤: " + e.message); 
-    } finally { 
-        hideLoading(); 
-    }
-};
-
+window.approveDeposit = async (key, uid, amount) => { amount = Number(amount); if(!confirm(`幫 [${uid}] 增加 ${amount} P？`)) return; showLoading("上分中...");
+try { const uRef = ref(db, `users/${uid}`), snap = await get(uRef); if(!snap.exists()) return alert("無此會員"); const uData = snap.val(), isFirst = (uData.hasToppedUp === false || uData.hasToppedUp === undefined);
+let uBonus = isFirst ? 0.15 : (amount >= 1000 ? 0.03 : 0), bonusText = isFirst ? "首儲(+15%)" : (uBonus>0 ? "續儲(+3%)" : "續儲"), finalBonus = Math.floor(amount * uBonus), rRate = isFirst ? 0.1 : 0.05, rBonus = Math.floor(amount * rRate), now = Date.now();
+await update(uRef, { balance: (Number(uData.balance) || 0) + amount + finalBonus, hasToppedUp: true }); await push(ref(db, `users/${uid}/logs`), { game: bonusText + "入點", cost: -(amount + finalBonus), time: now });
+if (uData.invitedBy && uData.invitedBy !== uid) { const rRef = ref(db, `users/${uData.invitedBy}`), rSnap = await get(rRef); if (rSnap.exists()) { await update(rRef, { commission: (Number(rSnap.val().commission) || 0) + rBonus }); await push(ref(db, `referralLogs/${uData.invitedBy}`), { time: now, from_uid: uid, amount: amount, reward: rBonus, type: isFirst ? "FIRST" : "RECURRING" }); }}
+await update(ref(db, `depositRequests/${key}`), { status: 'completed' }); alert(`完成！實得：${amount+finalBonus} P`); } catch(e) { alert("錯誤: " + e.message); } finally { hideLoading(); }};
 window.showUserSubTab = async (type) => { const c = document.getElementById('logItems'); c.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">載入中...</div>';
 if(type === 'spend') { const s = await get(ref(db, `users/${currentViewingUid}/logs`)); const l = s.val()||{}; c.innerHTML = Object.values(l).reverse().map(i => `<div style="padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;"><span>${i.game}<br><small>${new Date(i.time).toLocaleString()}</small></span><b style="color:${Number(i.cost)>0?'#ff4757':'#2ecc71'}">${Number(i.cost)>0?'-':'+'}${Math.abs(i.cost)}P</b></div>`).join('');
 } else { const s = await get(ref(db, `referralLogs/${currentViewingUid}`)); const l = s.val()||{}; c.innerHTML = Object.values(l).reverse().map(i => { const label = Number(i.reward) < 0 ? "結清提現" : `來自好友: ${i.from_uid}`; return `<div style="padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;"><span>${label}<br><small>${new Date(i.time).toLocaleString()}</small></span><b style="color:${Number(i.reward)>0?'#2ecc71':'#ff4757'}">${Number(i.reward)>0?'+':''}${i.reward}P</b></div>`; }).join(''); }
@@ -410,31 +442,19 @@ window.addNewCat=async()=>{const v=document.getElementById('newCatIn').value.tri
 window.editCat=async(idx,v)=>{const s=await get(ref(db,'settings/categories')),data=s.val()||[];data[idx]=v;await set(ref(db,'settings/categories'),data)};
 window.delCat=async(idx)=>{if(confirm("刪除分類？")){const s=await get(ref(db,'settings/categories')),data=s.val()||[];data.splice(idx,1);await set(ref(db,'settings/categories'),data)}};
 window.forceUnlock=async id=>{if(confirm(`解鎖 [${id}]？`)){await remove(ref(db,`games/${id}/lock`));alert("已解鎖")}};
-
 window.publishGame = async () => {
     const id = document.getElementById('gId').value.trim(), gName = document.getElementById('gName').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value;
-    
-    // 獲取獎項資訊 (含圖片)
-    const prRows = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row'));
-    const prs = prRows.map(r => ({ 
-        num: Number(r.querySelectorAll('input')[0].value), 
-        name: r.querySelectorAll('input')[1].value,
-        img: r.querySelector('.prize-img-input').value // 獲取圖片連結
-    }));
-    
+    const prRows = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')), prs = prRows.map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value, img: r.querySelector('.prize-img-input').value }));
     const albRows = Array.from(document.querySelectorAll('#albumContainer .dynamic-row')), alb = albRows.map(r => r.querySelector('input[type="hidden"]').value).filter(v => v.trim());
     if (!id || !tot || 0 === prs.length || !cat) return alert("資訊不全");
     const d = { name: gName || id, total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: false };
     if(!d.img) return alert("請上傳主圖"); showLoading("發布中..."); try { await update(ref(db, `gameSettings/${id}`), d); if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功"); resetGameForm(); } finally { hideLoading(); }
 };
-
 window.resetShuffle = async id => { if (confirm(`【警告】重新洗牌 [${id}]？`)) { try { const s = await get(ref(db, `gameSettings/${id}`)), g = s.val(); if (!g) return alert("無設定"); await runMasterShuffle(id, g); await update(ref(db, `gameSettings/${id}`), { isSoldOut: false }); await remove(ref(db, `games/${id}/lock`)); alert("成功！"); } catch (e) { alert("失敗: " + e.message); }}};
-
 window.loadGameToEdit=async id=>{ const s=await get(ref(db,`gameSettings/${id}`)),g=s.val(); if(!g)return; isEditing=true; document.getElementById('gId').value=id; document.getElementById('gId').disabled=true; document.getElementById('gName').value = g.name || id; document.getElementById('gCat').value=g.category; document.getElementById('gTotal').value=g.total; document.getElementById('gPrice').value=g.price; document.getElementById('gSafeZone').value=g.safeZone||0; document.getElementById('pCount').value=g.promoCount||0; document.getElementById('pPrice').value=g.promoPrice||0; document.getElementById('gImg').value=g.img; document.getElementById('mainImgStatus').innerText = "✅ 已有圖"; document.getElementById('gOrder').value=g.order||99;
 const aC=document.getElementById('albumContainer'); aC.innerHTML=''; if(g.album) g.album.forEach(u=>addAlbumInput(u));
-const pC=document.getElementById('prizeContainer'); pC.innerHTML=''; g.prizes.forEach(p=>addPrizeInput(p.num, p.name, p.img || '')); // 回填圖片
+const pC=document.getElementById('prizeContainer'); pC.innerHTML=''; g.prizes.forEach(p=>addPrizeInput(p.num, p.name, p.img || ''));
 document.getElementById('gameActionTitle').innerText="編輯：" + id; document.getElementById('publishBtn').innerText="儲存更新"; document.getElementById('cancelEditBtn').style.display="block"; switchTab('game'); window.scrollTo({top: 0, behavior: 'smooth'});};
-
 window.resetGameForm=()=>{ isEditing=false; document.getElementById('gId').value=''; document.getElementById('gId').disabled=false; document.getElementById('gName').value=''; document.getElementById('prizeContainer').innerHTML=''; document.getElementById('albumContainer').innerHTML=''; document.getElementById('cancelEditBtn').style.display="none"; document.getElementById('gameActionTitle').innerText="新增商品"; document.getElementById('publishBtn').innerText="發布並洗牌"; document.getElementById('mainImgStatus').innerText="點擊上傳圖片"; document.getElementById('gImg').value='';};
 window.updNum=(id,f,v)=>update(ref(db,`gameSettings/${id}`),{[f]:Number(v)});
 window.editPin=async uid=>{const p=prompt("新 PIN:");if(p)update(ref(db,`users/${uid}`),{pin:p})};
