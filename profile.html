@@ -13,7 +13,6 @@
                 localStorage.setItem('pending_ref', refId.trim());
             }
         })();
-        // 全域賦值函數
         window.forceApplyRef = function() {
             const savedRef = localStorage.getItem('pending_ref');
             const refEl = document.getElementById('refIn');
@@ -67,8 +66,8 @@
         .page-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🟢 新增：Line 積分與集氣條樣式 */
-        .assets-grid { display: grid; grid-template-columns: 1fr; margin: 110px auto 0; width: 88%; max-width: 500px; }
+        /* 🟢 修正：Line 積分位置往下一點，避免被遮擋 */
+        .assets-grid { display: grid; grid-template-columns: 1fr; margin: 120px auto 0; width: 88%; max-width: 500px; }
         .asset-box { background: #fff; border-radius: 20px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .asset-label { font-size: 0.9rem; font-weight: bold; color: #555; display: flex; align-items: center; gap: 8px; }
         .asset-val { font-size: 1.2rem; font-weight: 900; color: var(--line); }
@@ -82,13 +81,14 @@
         .claim-btn { display: none; width: 100%; padding: 12px; background: linear-gradient(90deg, #ff9f43, #ff6b6b); color: #fff; border: none; border-radius: 50px; font-weight: 900; margin-top: 15px; font-size: 1rem; cursor: pointer; animation: pulse 1.5s infinite; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); } }
 
-        /* 🟢 爆擊動畫彈窗 */
+        /* 爆擊動畫彈窗 */
         .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; }
         .gacha-box { width: 280px; height: 280px; background: #000; border-radius: 20px; display: flex; align-items: center; justify-content: center; position: relative; border: 4px solid var(--gold); box-shadow: 0 0 50px var(--gold); animation: shake 0.5s infinite; }
         .gacha-num { font-size: 6rem; font-weight: 900; color: #fff; text-shadow: 0 0 20px var(--danger); z-index: 10; display: none; }
         .gacha-title { color: #fff; margin-top: 25px; font-size: 1.2rem; font-weight: bold; opacity: 0; transition: 1s; text-align: center; }
         @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
         
+        /* 🟢 按鈕樣式修正 */
         .gacha-btn-link { 
             display: none; margin-top: 25px; padding: 15px 30px; 
             background: #06c755; color: #fff; border-radius: 50px; font-weight: 900; 
@@ -298,9 +298,9 @@
         </div>
         <div class="gacha-title" id="gachaResultText">能量釋放中...</div>
         
-        <a href="https://line.me/R/ti/p/@dream8" target="_blank" class="gacha-btn-link" id="gachaLineBtn">🎁 截圖並聯繫 Line 客服</a>
+        <a href="https://line.me/R/ti/p/@dream8" target="_blank" class="gacha-btn-link" id="gachaLineBtn">🎁 已存入！累積夠了點此換獎</a>
         
-        <button class="gacha-btn-close" id="gachaCloseBtn" onclick="location.reload()">關閉並重整</button>
+        <button class="gacha-btn-close" id="gachaCloseBtn" onclick="location.reload()">關閉</button>
     </div>
 
     <script type="module">
@@ -406,6 +406,23 @@
             }
         }
 
+        // 🟢 補回 renderLogs 函式
+        function renderLogs(logs) {
+            const gBody = document.getElementById('gameListBody');
+            const dBody = document.getElementById('depListBody');
+            if(!logs) { gBody.innerHTML = dBody.innerHTML = '<div class="empty-state">無紀錄</div>'; return; }
+            
+            const arr = Object.values(logs).sort((a,b)=>b.time-a.time);
+            const g = arr.filter(l => l.cost > 0);
+            const d = arr.filter(l => l.cost <= 0); // 入點 or 簽到 or 贈點
+
+            gBody.innerHTML = g.length ? g.map(l => `<div class="list-item-inner"><div class="item-info"><b>${l.game}</b><small>${new Date(l.time).toLocaleString()}</small></div><div class="item-val val-minus">-${l.cost} P</div></div>`).join('') : '<div class="empty-state">無消費</div>';
+            dBody.innerHTML = d.length ? d.map(l => {
+                const isGift = l.cost === 0 && l.note; // 判斷是否為贈點
+                return `<div class="list-item-inner"><div class="item-info"><b>${l.game}</b><small>${new Date(l.time).toLocaleString()}</small></div><div class="item-val val-plus">${isGift ? l.note : '+' + Math.abs(l.cost) + ' P'}</div></div>`;
+            }).join('') : '<div class="empty-state">無入點</div>';
+        }
+
         window.saveShippingInfo = async () => {
             const name = document.getElementById('shipName').value.trim();
             const phone = document.getElementById('shipPhone').value.trim();
@@ -474,37 +491,7 @@
             }
 
             renderCalendar(u.checkInDates || []);
-
-            const depBody = document.getElementById('depListBody');
-            const gameBody = document.getElementById('gameListBody');
-            
-            if(u.logs) {
-                const logs = Object.values(u.logs).sort((a,b) => b.time - a.time);
-                
-                const dLogs = logs.filter(l => Number(l.cost) < 0);
-                depBody.innerHTML = dLogs.length ? dLogs.map(l => `
-                    <div class="list-item-inner">
-                        <div class="item-info">
-                            <b>${l.game || '點數入帳'}</b>
-                            <small>${new Date(l.time).toLocaleString()}</small>
-                        </div>
-                        <div class="item-val val-plus">+${Math.abs(l.cost)} P</div>
-                    </div>
-                `).join('') : '<div class="empty-state">尚無入點紀錄</div>';
-
-                const gLogs = logs.filter(l => Number(l.cost) > 0);
-                gameBody.innerHTML = gLogs.length ? gLogs.map(l => `
-                    <div class="list-item-inner">
-                        <div class="item-info">
-                            <b>${l.game}</b>
-                            <small>${new Date(l.time).toLocaleString()}</small>
-                        </div>
-                        <div class="item-val val-minus">-${l.cost} P</div>
-                    </div>
-                `).join('') : '<div class="empty-state">尚無消費紀錄</div>';
-            } else {
-                depBody.innerHTML = gameBody.innerHTML = '<div class="empty-state">尚無明細資料</div>';
-            }
+            renderLogs(u.logs); // 🟢 呼叫補回的 renderLogs
         });
 
         // 🟢 爆擊演算法 (控盤版)
@@ -515,7 +502,7 @@
             return Math.floor(Math.random() * (10 - 1 + 1)) + 1; 
         }
 
-        // 🟢 執行抽獎 (含 WinLogs 寫入)
+        // 🟢 執行抽獎
         window.startGacha = async () => {
             const snap = await get(ref(db, `users/${_uid}/spending_counter`));
             const currentSpend = snap.val() || 0;
@@ -556,7 +543,7 @@
                 time: Date.now()
             });
 
-            // 🟢 新增：寫入全域中獎紀錄
+            // 寫入全域中獎紀錄
             push(ref(db, `winLogs`), {
                 uid: _uid,
                 user: u.nickname || "玩家",
