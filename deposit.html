@@ -35,10 +35,11 @@
         .rule-item b { display: block; color: var(--primary); font-size: 0.9rem; margin-bottom: 5px; }
         .rule-item p { margin: 0; font-size: 0.75rem; color: #7f8c8d; line-height: 1.6; }
 
-        /* 🟢 新增：Line 活動專用樣式 */
         .line-promo-box { background: #f0fff4; border: 1px solid #c3e6cb; border-radius: 15px; padding: 15px; margin-bottom: 15px; }
         .line-promo-title { color: var(--line); font-weight: 900; font-size: 0.95rem; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
         .line-link { color: var(--line); text-decoration: underline; font-weight: bold; cursor: pointer; }
+
+        .beta-tag { background: #ff4757; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; vertical-align: middle; margin-left: 5px; }
 
         .bank-info { background: #fdfdfd; border: 1px dashed #ddd; border-radius: 15px; padding: 15px; margin-top: 10px; }
         .bank-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; }
@@ -87,12 +88,12 @@
             </div>
 
             <div class="rule-item">
-                <b>✨ 首儲限定 (10% 贈點)</b>
-                <p>帳號「第一次」儲值即為首儲。例如：儲值 1000 元，可額外獲贈 100 P，共得 1100 P。首儲加碼僅限一次。</p>
+                <b>✨ 首儲限定 (15% 贈點) <span class="beta-tag">試營運加碼</span></b>
+                <p>帳號首次儲值，享 10% 回饋 + 試營運額外 5% 加碼，共得 15% 點數！<br>(例：儲 1000 得 1150 P)</p>
             </div>
             <div class="rule-item">
-                <b>🔥 續儲加碼 (3% 贈點)</b>
-                <p>非首儲用戶，單筆儲值滿 1000 元，獲贈 3% 點數。例如：儲值 1000 元，額外獲贈 30 P，共得 1030 P。</p>
+                <b>🔥 續儲優惠 (最高 3% 贈點)</b>
+                <p>非首儲用戶，單筆儲值滿 1000 元，額外獲贈 3% 點數回饋。</p>
             </div>
         </div>
 
@@ -109,7 +110,7 @@
             
             <div class="calc-box">
                 <div class="calc-row"><span>儲值本金</span><span id="calcBase">0 P</span></div>
-                <div class="calc-row"><span id="bonusLabel">首儲/續儲贈點</span><span id="calcBonus" style="color:var(--success)">+0 P</span></div>
+                <div class="calc-row"><span id="bonusLabel">--</span><span id="calcBonus" style="color:var(--success)">+0 P</span></div>
                 
                 <div class="calc-row" style="margin-top:5px; border-top:1px dashed #eee; padding-top:5px;">
                     <span style="color:var(--line); font-weight:bold;">🧩 Line 盲盒積分</span>
@@ -153,21 +154,24 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, get, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // 🔒 系統核心加密連線參數 (已混淆處理)
+        const _0x9d1 = (s) => atob(s);
         const _cc = { 
-            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
-            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
-            projectId: "dream8-7b161", 
-            appId: "1:606218522479:web:2737643db3de735af7e29a" 
+            apiKey: _0x9d1("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), 
+            databaseURL: _0x9d1("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), 
+            projectId: _0x9d1("ZHJlYW04LTdiMTYx"), 
+            appId: _0x9d1("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") 
         };
 
         const _app = initializeApp(_cc); 
         const _db = getDatabase(_app);
         const _uid = localStorage.getItem('myScratchCode');
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbz07UGZEQrF2A9IRlYkqnFQv4ZbquNaIb4PDsEKXxnd7DrzUrL_9oBsHl2oB3ThEItf/exec"; 
+        // 🔒 加密 GAS 連線網址
+        const GAS_URL = _0x9d1("aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J6MDdVR1pFUXJGMkE5SVJsWWtxbkZRdjRaYnF1TmFJYjRQRHNFS1h4bmQ3RHJ6VXJMXzlvQnNIbDJvQjNUaEVJdGYvZXhlYw==");
 
         if(!_uid) location.href = 'index.html';
 
-        // 🟢 檢查是否為首儲並計算點數 (含 Line 積分)
+        // 🟢 修正：點數計算邏輯
         const amountInput = document.getElementById('amountIn');
         const calcP = async () => {
             const amt = Number(amountInput.value) || 0;
@@ -175,24 +179,32 @@
             const userData = snap.val() || {};
             const isFirst = (userData.hasToppedUp === false || userData.hasToppedUp === undefined);
             
-            let bonus = 0;
+            let bonusRate = 0;
+            let label = "";
+
             if (isFirst) {
-                bonus = amt * 0.1; // 首儲 10%
-                document.getElementById('bonusLabel').innerText = "✨ 首儲加碼 (10%)";
+                // 首儲：10% + 5% = 15%
+                bonusRate = 0.15; 
+                label = "✨ 首儲 + 試營運加碼 (15%)";
             } else if (amt >= 1000) {
-                bonus = amt * 0.03; // 續儲 3% (滿千)
-                document.getElementById('bonusLabel').innerText = "🔥 續儲加碼 (3%)";
+                // 續儲滿千：3%
+                bonusRate = 0.03; 
+                label = "🔥 滿千回饋 (3%)";
             } else {
-                bonus = 0;
-                document.getElementById('bonusLabel').innerText = "一般儲值 (無加碼)";
+                // 一般續儲：0%
+                bonusRate = 0; 
+                label = "一般儲值 (無加碼)";
             }
+
+            const bonus = Math.floor(amt * bonusRate);
 
             // 🟢 計算 Line 積分：每 500 元 = 1 點
             const linePoints = Math.floor(amt / 500);
 
+            document.getElementById('bonusLabel').innerText = label;
             document.getElementById('calcBase').innerText = amt + " P";
-            document.getElementById('calcBonus').innerText = "+" + Math.floor(bonus) + " P";
-            document.getElementById('calcLinePoints').innerText = "+" + linePoints + " 點"; // 顯示積分
+            document.getElementById('calcBonus').innerText = "+" + bonus + " P";
+            document.getElementById('calcLinePoints').innerText = "+" + linePoints + " 點"; 
             document.getElementById('pOut').innerText = Math.floor(amt + bonus) + " P";
         };
         amountInput.addEventListener('input', calcP);
@@ -217,6 +229,7 @@
             btn.innerText = "提交中...";
 
             try {
+                // 寫入 Firebase (僅記錄，不給錢)
                 await push(ref(_db, `depositRequests`), {
                     uid: _uid,
                     amount: Number(amt),
@@ -225,6 +238,7 @@
                     time: serverTimestamp()
                 });
 
+                // 通知 GAS (後端機器人)
                 fetch(GAS_URL, {
                     method: "POST",
                     mode: "no-cors", 
