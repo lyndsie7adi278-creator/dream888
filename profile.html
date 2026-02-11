@@ -4,30 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
     <title>夢工廠 | 會員中心</title>
-<script>
-    (function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const refId = urlParams.get('ref');
-        if (refId && refId.trim() !== "") {
-            localStorage.setItem('pending_ref', refId.trim());
-        }
-    })();
-    // 全域賦值函數
-    window.forceApplyRef = function() {
-        const savedRef = localStorage.getItem('pending_ref');
-        const refEl = document.getElementById('refIn');
-        if (savedRef && refEl) { refEl.value = savedRef; }
-    };
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refId = urlParams.get('ref');
+            if (refId && refId.trim() !== "") {
+                localStorage.setItem('pending_ref', refId.trim());
+            }
+        })();
+        // 全域賦值函數
+        window.forceApplyRef = function() {
+            const savedRef = localStorage.getItem('pending_ref');
+            const refEl = document.getElementById('refIn');
+            if (savedRef && refEl) { refEl.value = savedRef; }
+        };
+    </script>
     
     <style>
-        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --success: #2ecc71; --wait: #f1c40f; --alliance: #6c5ce7; }
+        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --success: #2ecc71; --wait: #f1c40f; --alliance: #6c5ce7; --danger: #ff4757; --line: #06c755; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 80px; }
         
         .header { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; background: #fff; box-shadow: 0 1px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
         .back-btn { background: none; border: 1.5px solid var(--primary); color: var(--primary); padding: 5px 18px; border-radius: 50px; cursor: pointer; text-decoration: none; font-size: 0.8rem; font-weight: 900; }
-        /* 🟢 新增：登出按鈕樣式 */
         .logout-btn { background: #f0f2f5; color: #999; padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; cursor: pointer; border: none; }
 
         .user-panel { 
@@ -57,7 +57,6 @@
 
         .deposit-btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,143,163,0.3); transition: 0.3s; }
 
-        /* 🔴 核心修正：提高 z-index 防止被餘額卡片遮擋 */
         .tabs { display: flex; background: rgba(248, 249, 251, 0.95); backdrop-filter: blur(5px); margin-top: 90px; padding: 5px 10px; position: sticky; top: 58px; z-index: 10; gap: 5px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .tab-btn { flex: 0 0 auto; padding: 12px 15px; text-align: center; font-size: 0.85rem; font-weight: 900; color: #bbb; cursor: pointer; position: relative; white-space: nowrap; }
         .tab-btn.active { color: var(--primary); }
@@ -68,13 +67,35 @@
         .page-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* 🟢 新增：Line 積分與集氣條樣式 */
+        .assets-grid { display: grid; grid-template-columns: 1fr; margin: 20px auto 0; width: 88%; max-width: 500px; }
+        .asset-box { background: #fff; border-radius: 20px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .asset-label { font-size: 0.9rem; font-weight: bold; color: #555; display: flex; align-items: center; gap: 8px; }
+        .asset-val { font-size: 1.2rem; font-weight: 900; color: var(--line); }
+
+        .energy-section { margin: 15px auto; width: 88%; max-width: 500px; background: linear-gradient(145deg, #1a1e26, #000); border-radius: 20px; padding: 20px; border: 1px solid #333; position: relative; overflow: hidden; color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+        .energy-title { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; font-weight: bold; }
+        .energy-bar-bg { width: 100%; height: 14px; background: #222; border-radius: 50px; border: 1px solid #444; overflow: hidden; position: relative; }
+        .energy-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff4757, #ff6b6b); box-shadow: 0 0 15px rgba(255, 71, 87, 0.6); transition: width 0.5s ease; border-radius: 50px; }
+        .energy-text { font-size: 0.75rem; color: #aaa; margin-top: 8px; text-align: center; }
+        
+        .claim-btn { display: none; width: 100%; padding: 12px; background: linear-gradient(90deg, #ff9f43, #ff6b6b); color: #fff; border: none; border-radius: 50px; font-weight: 900; margin-top: 15px; font-size: 1rem; cursor: pointer; animation: pulse 1.5s infinite; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); } }
+
+        /* 🟢 爆擊動畫彈窗 */
+        .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; }
+        .gacha-box { width: 280px; height: 280px; background: #000; border-radius: 20px; display: flex; align-items: center; justify-content: center; position: relative; border: 4px solid var(--gold); box-shadow: 0 0 50px var(--gold); animation: shake 0.5s infinite; }
+        .gacha-num { font-size: 6rem; font-weight: 900; color: #fff; text-shadow: 0 0 20px var(--danger); z-index: 10; display: none; }
+        .gacha-title { color: #fff; margin-top: 25px; font-size: 1.2rem; font-weight: bold; opacity: 0; transition: 1s; text-align: center; }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+        .gacha-btn { margin-top: 25px; padding: 12px 40px; background: #fff; color: #000; border: none; border-radius: 50px; font-weight: 900; cursor: pointer; display: none; font-size: 1rem; }
+
         /* 📦 收件資訊樣式 */
         .shipping-card { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1.5px solid var(--primary); }
         .ship-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; border-radius: 12px; font-size: 0.9rem; font-weight: bold; outline: none; background: #fdfdfd; }
         .ship-input:focus { border-color: var(--primary); }
         .ship-btn { background: var(--primary); color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; font-size: 0.9rem; }
 
-        /* 🟢 新增：摺疊面板樣式 */
         .collapse-box { background: #fff; border-radius: 18px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .collapse-head { padding: 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 900; font-size: 0.9rem; color: #333; }
         .collapse-head .arrow { transition: 0.3s; color: #ccc; font-size: 0.7rem; }
@@ -120,7 +141,7 @@
         .is-topped { color: var(--success); background: #eefdf4; }
         .not-topped { color: #999; background: #f0f0f0; }
 
-        /* 📅 新增：每日簽到樣式 */
+        /* 每日簽到 */
         .checkin-card { background: #fff; border-radius: 20px; padding: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .checkin-btn { background: linear-gradient(135deg, #ffb800 0%, #ff9d00 100%); color: #fff; border: none; width: 100%; padding: 15px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,184,0,0.3); transition: 0.3s; margin-bottom: 20px; }
         .checkin-btn.disabled { background: #ddd; box-shadow: none; cursor: default; }
@@ -137,7 +158,7 @@
     <div id="copyToast">✅ 已複製到剪貼簿</div>
 
     <div class="header">
-        <a href="index.html" class="back-btn">← 回商城</a>
+        <a href="index.html" class="back-btn">← 返回商城</a>
         <button class="logout-btn" onclick="handleLogout()">登出帳號</button>
     </div>
 
@@ -154,6 +175,25 @@
             <div class="balance-amount"><span>P</span> <span id="uBal">0</span></div>
             <button class="deposit-btn" onclick="location.href='deposit.html'">💳 儲值點數</button>
         </div>
+    </div>
+
+    <div class="assets-grid">
+        <div class="asset-box">
+            <div class="asset-label"><span style="font-size:1.2rem;">🧩</span> Line 盲盒積分</div>
+            <div class="asset-val line-pt" id="pointDisplay">0</div>
+        </div>
+    </div>
+
+    <div class="energy-section">
+        <div class="energy-title">
+            <span>⚡ 消費能量集氣 (滿500抽獎)</span>
+            <span style="color:var(--danger)" id="energyVal">0 / 500</span>
+        </div>
+        <div class="energy-bar-bg">
+            <div class="energy-bar-fill" id="energyFill"></div>
+        </div>
+        <div class="energy-text" id="energyDesc">累積消費滿 500 P 可進行一次爆擊抽獎！<br>(有機會獲得 1~50 點積分)</div>
+        <button class="claim-btn" id="claimBtn" onclick="startGacha()">🔥 能量已滿！點擊爆發</button>
     </div>
 
     <div class="tabs">
@@ -242,9 +282,17 @@
         </div>
     </div>
 
+    <div id="gachaModal" class="gacha-modal">
+        <div class="gacha-box" id="gachaBox">
+            <div class="gacha-num" id="gachaNum">0</div>
+        </div>
+        <div class="gacha-title" id="gachaResultText">能量釋放中...</div>
+        <button class="gacha-btn" id="gachaCloseBtn" onclick="location.reload()">開心收下</button>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const _cc = { 
             apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
@@ -381,12 +429,30 @@
             document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
         };
 
+        // 🟢 監聽數據 (含集氣條)
         onValue(ref(_db, `users/${_uid}`), s => {
             const u = s.val(); if(!u) return;
             document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
             document.getElementById('uComm').innerText = (u.commission || 0).toLocaleString();
             document.getElementById('uNick').innerText = u.nickname || "新玩家";
             document.getElementById('avatarLetter').innerText = (u.nickname || _uid).charAt(0).toUpperCase();
+            document.getElementById('pointDisplay').innerText = (u.linePoints || 0);
+
+            // 集氣條 (500門檻)
+            const spending = Number(u.spending_counter) || 0;
+            const target = 500;
+            const pct = Math.min((spending / target) * 100, 100);
+            
+            document.getElementById('energyVal').innerText = `${spending} / ${target}`;
+            document.getElementById('energyFill').style.width = `${pct}%`;
+
+            if (spending >= target) {
+                document.getElementById('claimBtn').style.display = 'block';
+                document.getElementById('energyDesc').style.display = 'none';
+            } else {
+                document.getElementById('claimBtn').style.display = 'none';
+                document.getElementById('energyDesc').style.display = 'block';
+            }
 
             if (u.shipping) {
                 document.getElementById('shipName').value = u.shipping.name || '';
@@ -427,6 +493,75 @@
                 depBody.innerHTML = gameBody.innerHTML = '<div class="empty-state">尚無明細資料</div>';
             }
         });
+
+        // 🟢 爆擊演算法 (控盤版)
+        function calculateReward() {
+            const rand = Math.random() * 100; // 0 ~ 100
+            if (rand < 1) return 50; // 1%
+            if (rand < 15) return Math.floor(Math.random() * (20 - 11 + 1)) + 11; // 14%
+            return Math.floor(Math.random() * (10 - 1 + 1)) + 1; // 85%
+        }
+
+        // 🟢 執行抽獎
+        window.startGacha = async () => {
+            const snap = await get(ref(_db, `users/${_uid}/spending_counter`));
+            const currentSpend = snap.val() || 0;
+            if (currentSpend < 500) return alert("能量不足！");
+
+            const modal = document.getElementById('gachaModal');
+            const numDisplay = document.getElementById('gachaNum');
+            
+            modal.style.display = 'flex';
+            
+            const rewardPoints = calculateReward();
+            
+            let counter = 0;
+            const interval = setInterval(() => {
+                numDisplay.style.display = 'block';
+                numDisplay.innerText = Math.floor(Math.random() * 50) + 1;
+                counter++;
+                if (counter > 30) { 
+                    clearInterval(interval);
+                    showResult(rewardPoints);
+                }
+            }, 80);
+
+            // 扣除 500 額度，增加積分
+            const uRef = ref(_db, `users/${_uid}`);
+            const uSnap = await get(uRef);
+            const u = uSnap.val();
+            
+            await update(uRef, {
+                spending_counter: (Number(u.spending_counter) || 0) - 500,
+                linePoints: (Number(u.linePoints) || 0) + rewardPoints
+            });
+
+            push(ref(_db, `users/${_uid}/logs`), {
+                game: "能量爆發",
+                cost: 0,
+                note: `抽中 ${rewardPoints} 點`,
+                time: Date.now()
+            });
+        };
+
+        function showResult(points) {
+            const box = document.getElementById('gachaBox');
+            const num = document.getElementById('gachaNum');
+            const text = document.getElementById('gachaResultText');
+            const btn = document.getElementById('gachaCloseBtn');
+
+            box.style.animation = 'none';
+            box.style.border = '5px solid #fff';
+            
+            num.innerText = points;
+            num.style.color = points >= 50 ? '#ff4757' : (points > 10 ? '#f1c40f' : '#fff');
+            
+            text.style.opacity = 1;
+            text.innerHTML = points >= 50 ? `🔥 超級爆擊！獲得 ${points} 點` : (points > 10 ? `✨ 運氣不錯！獲得 ${points} 點` : `獲得 ${points} 點`);
+            
+            btn.style.display = 'block';
+            confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+        }
 
         onValue(ref(_db, `users`), s => {
             const list = document.getElementById('referralFriendsList');
