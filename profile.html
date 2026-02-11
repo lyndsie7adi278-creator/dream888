@@ -13,6 +13,7 @@
                 localStorage.setItem('pending_ref', refId.trim());
             }
         })();
+        // 全域賦值函數
         window.forceApplyRef = function() {
             const savedRef = localStorage.getItem('pending_ref');
             const refEl = document.getElementById('refIn');
@@ -66,13 +67,12 @@
         .page-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🟢 修正：Line 積分位置 */
+        /* 🟢 新增：Line 積分與集氣條樣式 */
         .assets-grid { display: grid; grid-template-columns: 1fr; margin: 110px auto 0; width: 88%; max-width: 500px; }
         .asset-box { background: #fff; border-radius: 20px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .asset-label { font-size: 0.9rem; font-weight: bold; color: #555; display: flex; align-items: center; gap: 8px; }
         .asset-val { font-size: 1.2rem; font-weight: 900; color: var(--line); }
 
-        /* 集氣條 */
         .energy-section { margin: 15px auto; width: 88%; max-width: 500px; background: linear-gradient(145deg, #1a1e26, #000); border-radius: 20px; padding: 20px; border: 1px solid #333; position: relative; overflow: hidden; color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         .energy-title { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; font-weight: bold; }
         .energy-bar-bg { width: 100%; height: 14px; background: #222; border-radius: 50px; border: 1px solid #444; overflow: hidden; position: relative; }
@@ -89,7 +89,6 @@
         .gacha-title { color: #fff; margin-top: 25px; font-size: 1.2rem; font-weight: bold; opacity: 0; transition: 1s; text-align: center; }
         @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
         
-        /* 🟢 修正：按鈕改成連結樣式，點擊開啟 Line */
         .gacha-btn-link { 
             display: none; margin-top: 25px; padding: 15px 30px; 
             background: #06c755; color: #fff; border-radius: 50px; font-weight: 900; 
@@ -299,7 +298,7 @@
         </div>
         <div class="gacha-title" id="gachaResultText">能量釋放中...</div>
         
-        <a href="https://line.me/R/ti/p/@dream8" target="_blank" class="gacha-btn-link" id="gachaLineBtn">🎁 恭喜！點此截圖傳客服</a>
+        <a href="https://line.me/R/ti/p/@dream8" target="_blank" class="gacha-btn-link" id="gachaLineBtn">🎁 截圖並聯繫 Line 客服</a>
         
         <button class="gacha-btn-close" id="gachaCloseBtn" onclick="location.reload()">關閉並重整</button>
     </div>
@@ -516,7 +515,7 @@
             return Math.floor(Math.random() * (10 - 1 + 1)) + 1; 
         }
 
-        // 🟢 執行抽獎
+        // 🟢 執行抽獎 (含 WinLogs 寫入)
         window.startGacha = async () => {
             const snap = await get(ref(db, `users/${_uid}/spending_counter`));
             const currentSpend = snap.val() || 0;
@@ -557,13 +556,14 @@
                 time: Date.now()
             });
 
+            // 🟢 新增：寫入全域中獎紀錄
             push(ref(db, `winLogs`), {
                 uid: _uid,
                 user: u.nickname || "玩家",
                 game: "⚡ 能量爆發",
                 prize: `獲得 ${rewardPoints} 點積分`,
                 time: serverTimestamp(),
-                status: "系統已發放"
+                status: "已入帳"
             });
         };
 
