@@ -295,7 +295,7 @@ async function runReport(start, end) {
                     // 2. 儲值/獎勵 (Cost < 0)
                     else if(log.cost < 0) {
                         const income = Math.abs(log.cost);
-                        dep += income; // 統計入帳總額
+                        // dep += income; // 統計入帳總額 (暫不重複計算)
                         
                         detailItems.push({
                             time: log.time,
@@ -309,6 +309,13 @@ async function runReport(start, end) {
                 }
             });
         }
+    });
+
+    // 儲值另外算 (維持原邏輯)
+    Object.values(users).forEach(u => {
+        if(u.logs) Object.values(u.logs).forEach(log => {
+            if(log.time >= start && log.time <= end && log.cost < 0 && (log.game && log.game.includes("入點"))) dep += Math.abs(log.cost);
+        });
     });
 
     Object.values(wins).forEach(w => { if(w.time >= start && w.time <= end) winItems.push(w); });
@@ -425,11 +432,48 @@ function startSync(){
             const ship = d.shipping || {};
             const shipHtml = ship.name ? `<div class="ship-info-card"><span class="ship-label">📦 收件人:</span> ${ship.name}<br><span class="ship-label">📱 電話:</span> ${ship.phone}<br><span class="ship-label">🏪 門市:</span> ${ship.store}</div>` : `<div class="ship-info-card" style="background:rgba(255,255,255,0.05); border:1px solid #333; color:#666;">尚未填寫收件資訊</div>`;
             const i=document.createElement('div'); i.className='user-item'; 
-            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b><br>${shipHtml}<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳/明細</button><button class="btn btn-sm" onclick="addBal('${id}')">手動加點</button><button class="btn btn-sm btn-unlock" onclick="clearCommission('${id}')">💰 結清獎金</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`; 
+            
+            // 🟢 新增：後台會員管理區增加「扣除積分」按鈕
+            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b> | Line積分: <b style="color:var(--success)">${d.linePoints||0} 點</b><br>${shipHtml}<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳/明細</button><button class="btn btn-sm" onclick="addBal('${id}')">手動加點</button><button class="btn btn-sm btn-unlock" onclick="clearCommission('${id}')">💰 結清獎金</button><button class="btn btn-sm btn-danger" onclick="deductPoints('${id}')">🎁 兌換核銷 (扣積分)</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`; 
             c.appendChild(i)
         })
     });
 }
+
+// 🟢 新增：後台手動扣除積分 (核銷)
+window.deductPoints = async (uid) => {
+    const p = prompt("請輸入要扣除的積分點數 (例如: 10)：");
+    if (!p || isNaN(p)) return;
+    const amount = Number(p);
+    
+    if (confirm(`確定要扣除 ${uid} 的 ${amount} 點積分嗎？`)) {
+        showLoading("處理中...");
+        try {
+            const uRef = ref(db, `users/${uid}`);
+            const snap = await get(uRef);
+            const u = snap.val();
+            const currentPoints = Number(u.linePoints) || 0;
+            
+            if (currentPoints < amount) return alert("積分不足！");
+            
+            await update(uRef, { linePoints: currentPoints - amount });
+            
+            // 寫入紀錄方便查帳
+            await push(ref(db, `users/${uid}/logs`), {
+                game: "積分兌換核銷",
+                cost: 0, // 不扣 P 幣
+                note: `扣除 ${amount} 點積分`,
+                time: Date.now()
+            });
+            
+            alert("✅ 核銷成功！");
+        } catch (e) {
+            alert("失敗：" + e.message);
+        } finally {
+            hideLoading();
+        }
+    }
+};
 
 window.saveAnnouncement=async()=>{const content = document.getElementById('annContent').value; showLoading("同步跑馬燈中..."); try { await set(ref(db,'settings/announcement'), content); alert("跑馬燈內容已同步！"); } finally { hideLoading(); }};
 window.savePopConfigs = async () => {
