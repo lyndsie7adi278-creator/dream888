@@ -66,12 +66,13 @@
         .page-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🟢 修正：Line 積分位置往下一點，避免被遮擋 */
+        /* Line 積分位置調整 */
         .assets-grid { display: grid; grid-template-columns: 1fr; margin: 120px auto 0; width: 88%; max-width: 500px; }
         .asset-box { background: #fff; border-radius: 20px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .asset-label { font-size: 0.9rem; font-weight: bold; color: #555; display: flex; align-items: center; gap: 8px; }
         .asset-val { font-size: 1.2rem; font-weight: 900; color: var(--line); }
 
+        /* 集氣條 */
         .energy-section { margin: 15px auto; width: 88%; max-width: 500px; background: linear-gradient(145deg, #1a1e26, #000); border-radius: 20px; padding: 20px; border: 1px solid #333; position: relative; overflow: hidden; color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         .energy-title { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; font-weight: bold; }
         .energy-bar-bg { width: 100%; height: 14px; background: #222; border-radius: 50px; border: 1px solid #444; overflow: hidden; position: relative; }
@@ -88,7 +89,6 @@
         .gacha-title { color: #fff; margin-top: 25px; font-size: 1.2rem; font-weight: bold; opacity: 0; transition: 1s; text-align: center; }
         @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
         
-        /* 🟢 按鈕樣式修正 */
         .gacha-btn-link { 
             display: none; margin-top: 25px; padding: 15px 30px; 
             background: #06c755; color: #fff; border-radius: 50px; font-weight: 900; 
@@ -174,8 +174,8 @@
 
     <div class="user-panel">
         <div class="avatar-wrap"><div class="avatar" id="avatarLetter">?</div></div>
-        <div class="nickname-box"><span id="uNick">---</span></div>
-        <div class="uid-tag" onclick="copyText(localStorage.getItem('myScratchCode'), 'UID')">ID: <span id="displayUid">--------</span> 📋</div>
+        <div class="nickname-box"><span id="uNick">載入中...</span></div>
+        <div class="uid-tag" onclick="copyText(localStorage.getItem('myScratchCode'), 'UID')">ID: <span id="displayUid">...</span> 📋</div>
         
         <div class="balance-card">
             <div class="balance-label">
@@ -297,9 +297,7 @@
             <div class="gacha-num" id="gachaNum">0</div>
         </div>
         <div class="gacha-title" id="gachaResultText">能量釋放中...</div>
-        
         <a href="https://line.me/R/ti/p/@dream8" target="_blank" class="gacha-btn-link" id="gachaLineBtn">🎁 已存入！累積夠了點此換獎</a>
-        
         <button class="gacha-btn-close" id="gachaCloseBtn" onclick="location.reload()">關閉</button>
     </div>
 
@@ -307,11 +305,13 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, get, update, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // 🔒 恢復使用與 Admin 相同的加密設定，確保連線穩定
+        const _0x9d1 = (s) => atob(s);
         const _cc = { 
-            apiKey: "AIzaSyDPGEIwCKyYxz6TYdxmkwAxIWjfQI8Awco", 
-            databaseURL: "https://dream8-7b161-default-rtdb.firebaseio.com", 
-            projectId: "dream8-7b161", 
-            appId: "1:606218522479:web:2737643db3de735af7e29a" 
+            apiKey: _0x9d1("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), 
+            databaseURL: _0x9d1("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), 
+            projectId: _0x9d1("ZHJlYW04LTdiMTYx"), 
+            appId: _0x9d1("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") 
         };
         
         const _app = initializeApp(_cc); 
@@ -320,6 +320,8 @@
 
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
+
+        // --- 核心功能函式定義 ---
 
         window.handleLogout = () => {
             if(confirm("確定要登出帳號嗎？")) {
@@ -406,20 +408,40 @@
             }
         }
 
-        // 🟢 補回 renderLogs 函式
+        // 🟢 確保 renderLogs 存在
         function renderLogs(logs) {
             const gBody = document.getElementById('gameListBody');
             const dBody = document.getElementById('depListBody');
-            if(!logs) { gBody.innerHTML = dBody.innerHTML = '<div class="empty-state">無紀錄</div>'; return; }
             
-            const arr = Object.values(logs).sort((a,b)=>b.time-a.time);
-            const g = arr.filter(l => l.cost > 0);
-            const d = arr.filter(l => l.cost <= 0); // 入點 or 簽到 or 贈點
+            if(!logs) { 
+                gBody.innerHTML = dBody.innerHTML = '<div class="empty-state">無紀錄</div>'; 
+                return; 
+            }
+            
+            const arr = Object.values(logs).sort((a,b) => b.time - a.time);
+            const g = arr.filter(l => Number(l.cost) > 0);
+            const d = arr.filter(l => Number(l.cost) <= 0);
 
-            gBody.innerHTML = g.length ? g.map(l => `<div class="list-item-inner"><div class="item-info"><b>${l.game}</b><small>${new Date(l.time).toLocaleString()}</small></div><div class="item-val val-minus">-${l.cost} P</div></div>`).join('') : '<div class="empty-state">無消費</div>';
+            gBody.innerHTML = g.length ? g.map(l => `
+                <div class="list-item-inner">
+                    <div class="item-info">
+                        <b>${l.game}</b>
+                        <small>${new Date(l.time).toLocaleString()}</small>
+                    </div>
+                    <div class="item-val val-minus">-${l.cost} P</div>
+                </div>
+            `).join('') : '<div class="empty-state">無消費</div>';
+
             dBody.innerHTML = d.length ? d.map(l => {
-                const isGift = l.cost === 0 && l.note; // 判斷是否為贈點
-                return `<div class="list-item-inner"><div class="item-info"><b>${l.game}</b><small>${new Date(l.time).toLocaleString()}</small></div><div class="item-val val-plus">${isGift ? l.note : '+' + Math.abs(l.cost) + ' P'}</div></div>`;
+                const isGift = l.cost === 0 && l.note;
+                return `
+                <div class="list-item-inner">
+                    <div class="item-info">
+                        <b>${l.game || '點數入帳'}</b>
+                        <small>${new Date(l.time).toLocaleString()}</small>
+                    </div>
+                    <div class="item-val val-plus">${isGift ? l.note : '+' + Math.abs(l.cost) + ' P'}</div>
+                </div>`;
             }).join('') : '<div class="empty-state">無入點</div>';
         }
 
@@ -459,41 +481,6 @@
             document.querySelectorAll('.page-content').forEach((p, i) => p.classList.toggle('active', i === idx));
         };
 
-        // 🟢 監聽數據 (含集氣條)
-        onValue(ref(db, `users/${_uid}`), s => {
-            const u = s.val(); if(!u) return;
-            document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
-            document.getElementById('uComm').innerText = (u.commission || 0).toLocaleString();
-            document.getElementById('uNick').innerText = u.nickname || "新玩家";
-            document.getElementById('avatarLetter').innerText = (u.nickname || _uid).charAt(0).toUpperCase();
-            document.getElementById('pointDisplay').innerText = (u.linePoints || 0);
-
-            // 集氣條 (500門檻)
-            const spending = Number(u.spending_counter) || 0;
-            const target = 500;
-            const pct = Math.min((spending / target) * 100, 100);
-            
-            document.getElementById('energyVal').innerText = `${spending} / ${target}`;
-            document.getElementById('energyFill').style.width = `${pct}%`;
-
-            if (spending >= target) {
-                document.getElementById('claimBtn').style.display = 'block';
-                document.getElementById('energyDesc').style.display = 'none';
-            } else {
-                document.getElementById('claimBtn').style.display = 'none';
-                document.getElementById('energyDesc').style.display = 'block';
-            }
-
-            if (u.shipping) {
-                document.getElementById('shipName').value = u.shipping.name || '';
-                document.getElementById('shipPhone').value = u.shipping.phone || '';
-                document.getElementById('shipStore').value = u.shipping.store || '';
-            }
-
-            renderCalendar(u.checkInDates || []);
-            renderLogs(u.logs); // 🟢 呼叫補回的 renderLogs
-        });
-
         // 🟢 爆擊演算法 (控盤版)
         function calculateReward() {
             const rand = Math.random() * 100; 
@@ -504,7 +491,7 @@
 
         // 🟢 執行抽獎
         window.startGacha = async () => {
-            const snap = await get(ref(db, `users/${_uid}/spending_counter`));
+            const snap = await get(ref(_db, `users/${_uid}/spending_counter`));
             const currentSpend = snap.val() || 0;
             if (currentSpend < 500) return alert("能量不足！");
 
@@ -526,25 +513,23 @@
                 }
             }, 80);
 
-            const uRef = ref(db, `users/${_uid}`);
+            const uRef = ref(_db, `users/${_uid}`);
             const uSnap = await get(uRef);
             const u = uSnap.val();
             
-            // 寫入資料庫：Line積分自動入帳，並寫入 WinLogs
             await update(uRef, {
                 spending_counter: (Number(u.spending_counter) || 0) - 500,
                 linePoints: (Number(u.linePoints) || 0) + rewardPoints
             });
 
-            push(ref(db, `users/${_uid}/logs`), {
+            push(ref(_db, `users/${_uid}/logs`), {
                 game: "⚡ 能量爆發",
                 cost: 0,
                 note: `抽中 ${rewardPoints} 點`,
                 time: Date.now()
             });
 
-            // 寫入全域中獎紀錄
-            push(ref(db, `winLogs`), {
+            push(ref(_db, `winLogs`), {
                 uid: _uid,
                 user: u.nickname || "玩家",
                 game: "⚡ 能量爆發",
@@ -568,14 +553,54 @@
             num.style.color = points >= 50 ? '#ff4757' : (points > 10 ? '#f1c40f' : '#fff');
             
             text.style.opacity = 1;
-            text.innerHTML = points >= 50 ? `🔥 超級爆擊！獲得 ${points} 點 (已入帳)` : (points > 10 ? `✨ 運氣不錯！獲得 ${points} 點 (已入帳)` : `獲得 ${points} 點 (已入帳)`);
+            text.innerHTML = points >= 50 ? `🔥 超級爆擊！獲得 ${points} 點` : (points > 10 ? `✨ 運氣不錯！獲得 ${points} 點` : `獲得 ${points} 點`);
             
             btnLink.style.display = 'block';
             btnClose.style.display = 'inline-block';
             confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
         }
 
-        onValue(ref(db, `users`), s => {
+        // --- 監聽器 ---
+
+        onValue(ref(_db, `users/${_uid}`), s => {
+            const u = s.val(); if(!u) return;
+            
+            try {
+                document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
+                document.getElementById('uComm').innerText = (u.commission || 0).toLocaleString();
+                document.getElementById('uNick').innerText = u.nickname || "新玩家";
+                document.getElementById('avatarLetter').innerText = (u.nickname || _uid).charAt(0).toUpperCase();
+                document.getElementById('pointDisplay').innerText = (u.linePoints || 0);
+
+                const spending = Number(u.spending_counter) || 0;
+                const target = 500;
+                const pct = Math.min((spending / target) * 100, 100);
+                
+                document.getElementById('energyVal').innerText = `${spending} / ${target}`;
+                document.getElementById('energyFill').style.width = `${pct}%`;
+
+                if (spending >= target) {
+                    document.getElementById('claimBtn').style.display = 'block';
+                    document.getElementById('energyDesc').style.display = 'none';
+                } else {
+                    document.getElementById('claimBtn').style.display = 'none';
+                    document.getElementById('energyDesc').style.display = 'block';
+                }
+
+                if (u.shipping) {
+                    document.getElementById('shipName').value = u.shipping.name || '';
+                    document.getElementById('shipPhone').value = u.shipping.phone || '';
+                    document.getElementById('shipStore').value = u.shipping.store || '';
+                }
+
+                renderCalendar(u.checkInDates || []);
+                renderLogs(u.logs);
+            } catch (e) {
+                console.error("Data render error:", e);
+            }
+        });
+
+        onValue(ref(_db, `users`), s => {
             const list = document.getElementById('referralFriendsList');
             const allUsers = s.val() || {};
             const myFriends = Object.entries(allUsers)
@@ -596,7 +621,7 @@
             }
         });
 
-        onValue(ref(db, `referralLogs/${_uid}`), s => {
+        onValue(ref(_db, `referralLogs/${_uid}`), s => {
             const list = document.getElementById('referralLogList');
             if(s.exists()) {
                 const logs = Object.values(s.val()).sort((a,b) => b.time - a.time);
@@ -613,7 +638,7 @@
             }
         });
 
-        onValue(ref(db, `winLogs`), s => {
+        onValue(ref(_db, `winLogs`), s => {
             const list = document.getElementById('winsList');
             const data = s.val() || {};
             const myWins = Object.values(data).filter(w => w.user === _uid).sort((a,b) => b.time - a.time);
@@ -621,7 +646,6 @@
                 list.innerHTML = myWins.map(w => {
                     let sc = "status-pending", st = w.status || "待出貨";
                     if(st === "已出貨") sc = "status-shipping"; if(st === "已完成") sc = "status-completed";
-                    // 系統自動入帳顯示為已完成
                     if(w.game === "⚡ 能量爆發") { st = "已入帳"; sc = "status-completed"; }
                     
                     return `<div class="list-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
