@@ -272,12 +272,19 @@ function init(){
             const winData = snapshot.val();
             let winText = "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊"; 
             if (winData) {
-                const sortedWins = Object.values(winData).sort((a, b) => (b.time || 0) - (a.time || 0)).slice(0, 5);
-                winText = sortedWins.map(w => {
-                    let finalName = w.nickname;
-                    if (!finalName && w.user && allUsers[w.user]) { finalName = allUsers[w.user].nickname; }
-                    return `🎊 恭喜玩家【${finalName || '神秘客'}】在《${w.game}》刮中【${w.prize}】！！`;
-                }).join(' 　 | 　 ');
+                // 🟢 這裡新增過濾條件：只保留非能量爆發的獎項
+                const sortedWins = Object.values(winData)
+                    .filter(w => w.game !== "⚡ 能量爆發") 
+                    .sort((a, b) => (b.time || 0) - (a.time || 0))
+                    .slice(0, 5);
+                    
+                if (sortedWins.length > 0) {
+                    winText = sortedWins.map(w => {
+                        let finalName = w.nickname;
+                        if (!finalName && w.user && allUsers[w.user]) { finalName = allUsers[w.user].nickname; }
+                        return `🎊 恭喜玩家【${finalName || '神秘客'}】在《${w.game}》刮中【${w.prize}】！！`;
+                    }).join(' 　 | 　 ');
+                }
             }
             get(ref(_db, 'settings/announcement')).then(annSnap => {
                 const staticAnn = annSnap.val() || "祝各位玩家都能刮中！好運連連！";
