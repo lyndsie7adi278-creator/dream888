@@ -54,14 +54,25 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .ship-info-card { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); padding: 12px; border-radius: 10px; margin: 10px 0; font-size: 0.8rem; line-height: 1.6; }
 .ship-label { color: var(--success); font-weight: bold; margin-right: 5px; }
 
-.rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-.rep-item { background: #0a0c10; padding: 15px; border-radius: 12px; border: 1px solid #222; border-left: 4px solid var(--p); }
+/* 🟢 優化後的報表樣式 */
+.report-header { background: var(--card); border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 20px; }
+.report-header h3 { margin: 0; margin-right: auto; color: var(--p); font-size: 1.1rem; min-width: 100px; }
+.report-tools { display: flex; gap: 8px; flex: 1; min-width: 250px; }
+.report-tools input { margin: 0; flex: 1; height: 42px; border: 1px solid #333; }
+.report-tools button { margin: 0; height: 42px; white-space: nowrap; padding: 0 15px; }
 
-.scroll-table-container { overflow-x: auto; max-height: 600px; overflow-y: auto; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.stat-card { background: linear-gradient(145deg, #1a1d24, #11141b); border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; padding: 20px; position: relative; overflow: hidden; }
+.stat-card::after { content: ''; position: absolute; top: 0; right: 0; width: 60px; height: 60px; background: var(--p); opacity: 0.05; border-radius: 0 0 0 100%; pointer-events: none; }
+.stat-label { font-size: 0.85rem; color: #888; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+.stat-val { font-size: 2rem; font-weight: 900; margin-top: 5px; color: #fff; line-height: 1.2; }
+.stat-val.money { color: var(--p); }
+.stat-val.dep { color: var(--success); }
+
+.scroll-table-container { overflow-x: auto; max-height: 600px; overflow-y: auto; border: 1px solid #222; border-radius: 12px; }
 .scroll-table-container::-webkit-scrollbar { width: 8px; height: 8px; }
 .scroll-table-container::-webkit-scrollbar-track { background: #000; }
 .scroll-table-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-.scroll-table-container::-webkit-scrollbar-thumb:hover { background: var(--p); }
 </style>
 </head>
 <body>
@@ -73,64 +84,76 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div id="logTabs" style="display:flex; gap:10px; margin-top:15px;"><button class="btn btn-sm" onclick="showUserSubTab('spend')">消費日誌</button><button class="btn btn-sm" onclick="showUserSubTab('comm')">分潤明細</button></div>
 <div id="logItems" class="log-list" style="overflow-y:auto;flex-grow:1;margin-top:15px"></div></div></div>
 <div class="sidebar" id="sidebar">
-    <div class="logo">DREAM ADMIN</div>
-    <div class="nav-link active" onclick="switchTab('report_page')">📈 數據報表</div>
-    <div class="nav-link" onclick="switchTab('mon')">📊 商品監控</div>
-    <div class="nav-link" onclick="switchTab('deposit')">💳 儲值審核 <span id="depositBadge" style="background:#ff4757; color:#fff; border-radius:50%; padding:2px 6px; font-size:0.6rem; display:none;">0</span></div>
-    <div class="nav-link" onclick="switchTab('game')">📦 商品管理</div>
-    <div class="nav-link" onclick="switchTab('win_logs')">🏆 中獎紀錄</div>
-    <div class="nav-link" onclick="switchTab('user')">👤 會員資料</div>
-    <div class="nav-link" onclick="switchTab('ann')">📜 公告/分類</div>
+    <div class="logo">DREAM ADMIN</div>
+    <div class="nav-link active" onclick="switchTab('report_page')">📈 數據報表</div>
+    <div class="nav-link" onclick="switchTab('mon')">📊 商品監控</div>
+    <div class="nav-link" onclick="switchTab('deposit')">💳 儲值審核 <span id="depositBadge" style="background:#ff4757; color:#fff; border-radius:50%; padding:2px 6px; font-size:0.6rem; display:none;">0</span></div>
+    <div class="nav-link" onclick="switchTab('game')">📦 商品管理</div>
+    <div class="nav-link" onclick="switchTab('win_logs')">🏆 中獎紀錄</div>
+    <div class="nav-link" onclick="switchTab('user')">👤 會員資料</div>
+    <div class="nav-link" onclick="switchTab('ann')">📜 公告/分類</div>
 </div>
 
 <div class="main">
-    <div id="report_page" class="page active">
-        <span class="title">營運數據統計報表</span>
-        <div class="card">
-            <div id="repTitle" style="font-size: 1rem; color: var(--p); margin-bottom: 15px; font-weight: bold;">📅 數據查詢</div>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <input type="date" id="repDate" style="margin: 0; flex: 1; min-width: 150px;">
-                <button class="btn btn-sm" onclick="fetchDailyReport()" style="margin: 0; width: 100px;">單日查詢</button>
-                <button class="btn btn-sm" onclick="fetchWeeklyReport()" style="margin: 0; width: 100px;">本週報表</button>
-                <button class="btn btn-sm btn-success" onclick="fetchMonthlyReport()" style="margin: 0; width: 100px;">當月總計</button>
-            </div>
-        </div>
-        <div class="rep-grid">
-            <div class="rep-item"><small style="color:#888">消費總額 (P)</small><div id="rRev" style="font-size:1.5rem; font-weight:900; color:var(--p); margin-top:5px;">0</div></div>
-            <div class="rep-item"><small style="color:#888">加點總額 (P)</small><div id="rDep" style="font-size:1.5rem; font-weight:900; color:var(--success); margin-top:5px;">0</div></div>
-            <div class="rep-item"><small style="color:#888">總刮取次數</small><div id="rCnt" style="font-size:1.5rem; font-weight:900; color:#fff; margin-top:5px;">0</div></div>
-        </div>
-        
-        <div class="card">
-            <span class="title" style="font-size: 0.9rem;">📝 詳細消費與入帳紀錄 (即時更新)</span>
-            <div class="scroll-table-container">
-                <table class="win-table">
-                    <thead>
-                        <tr>
-                            <th style="min-width:140px">時間</th>
-                            <th style="min-width:120px">玩家</th>
-                            <th style="min-width:150px">項目</th>
-                            <th style="text-align:right; min-width:80px">金額</th>
-                            <th style="min-width:150px">結果</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rDetails"></tbody>
-                </table>
-            </div>
-        </div>
+    <div id="report_page" class="page active">
+        <span class="title">營運數據中心</span>
+        
+        <div class="report-header">
+            <h3 id="repTitle">📅 請選擇查詢日期</h3>
+            <div class="report-tools">
+                <input type="date" id="repDate">
+                <button class="btn" onclick="fetchDailyReport()">單日</button>
+                <button class="btn" onclick="fetchWeeklyReport()">本週</button>
+                <button class="btn btn-success" onclick="fetchMonthlyReport()">月報</button>
+            </div>
+        </div>
 
-        <div class="card">
-            <span class="title" style="font-size: 0.9rem;">商品銷售統計 (排行榜)</span>
-            <div id="rList" style="font-size: 0.85rem; line-height: 1.8;">選擇日期或月份點擊查詢...</div>
-        </div>
-        <div class="card">
-            <span class="title" style="font-size: 0.9rem;">中獎紀錄 (高價獎項)</span>
-            <table class="win-table">
-                <thead><tr><th>玩家</th><th>獎項</th><th>時間</th></tr></thead>
-                <tbody id="rWins"></tbody>
-            </table>
-        </div>
-    </div>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-label">消費總額 (P)</div>
+                <div class="stat-val money" id="rRev">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">加點總額 (P)</div>
+                <div class="stat-val dep" id="rDep">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">總刮取次數</div>
+                <div class="stat-val" id="rCnt">0</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <span class="title" style="font-size: 0.95rem; margin-bottom:15px;">📊 商品銷售排行榜</span>
+            <div id="rList" style="font-size: 0.9rem; line-height: 1.8; color:#ccc;">選擇日期後顯示...</div>
+        </div>
+
+        <div class="card">
+            <span class="title" style="font-size: 0.95rem; margin-bottom:15px;">📝 區間詳細帳務明細</span>
+            <div class="scroll-table-container">
+                <table class="win-table">
+                    <thead>
+                        <tr>
+                            <th style="min-width:140px">時間</th>
+                            <th style="min-width:120px">玩家</th>
+                            <th style="min-width:150px">項目</th>
+                            <th style="text-align:right; min-width:100px">金額</th>
+                            <th style="min-width:120px; padding-left:20px;">結果</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rDetails"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <span class="title" style="font-size: 0.95rem; margin-bottom:15px;">🏆 區間大獎紀錄</span>
+            <table class="win-table">
+                <thead><tr><th>玩家</th><th>獎項</th><th>時間</th></tr></thead>
+                <tbody id="rWins"></tbody>
+            </table>
+        </div>
+    </div>
 
 <div id="mon" class="page"><span class="title">商品即時監控</span>
 <div id="monFilters" class="mon-filter-bar"></div>
@@ -145,7 +168,7 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input type="number" id="gTotal" placeholder="總籤數"><input type="number" id="gPrice" placeholder="單抽原價"></div>
 <div class="safe-box"><label style="font-size:0.7rem; color:var(--p); margin-left:5px;">前幾抽不中大獎 (保護區)：</label><input type="number" id="gSafeZone" placeholder="大獎保護區數量" value="0">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><input type="number" id="pCount" placeholder="優惠張數"><input type="number" id="pPrice" placeholder="優惠價格"></div></div>
-<div class="file-input-wrapper"><span id="mainImgStatus">點擊或拖曳圖片上傳</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'gImg', 'mainImgStatus')"></div><input type="hidden" id="gImg"> 
+<div class="file-input-wrapper"><span id="mainImgStatus">點擊或拖曳圖片上傳</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'gImg', 'mainImgStatus')"></div><input type="hidden" id="gImg"> 
 <div style="margin:20px 0 10px; color:var(--p); font-weight:700">展示圖片(相簿)：</div><div id="albumContainer"></div><button class="btn btn-sm" onclick="addAlbumInput()" style="width:100%; margin-bottom:20px; background:rgba(255,184,0,0.2); color:var(--p); border:1px solid var(--p)">＋ 新增一張展示圖</button>
 
 <div style="margin:20px 0 10px; color:var(--p); font-weight:700">獎項設定 (獎號必須在總籤數內)：</div>
@@ -176,30 +199,30 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div id="user" class="page"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><span class="title" style="margin:0">會員數據管理</span><button class="btn btn-sm" onclick="createUser()">＋ 新增會員</button></div><div id="userListContainer"></div></div>
 
 <div id="ann" class="page">
-    <span class="title">首頁跑馬燈公告</span>
-    <textarea id="annContent" rows="3" placeholder="輸入公告內容..."></textarea>
-    <button class="btn" style="width:100%;margin-bottom:30px" onclick="saveAnnouncement()">同步跑馬燈內容</button>
+    <span class="title">首頁跑馬燈公告</span>
+    <textarea id="annContent" rows="3" placeholder="輸入公告內容..."></textarea>
+    <button class="btn" style="width:100%;margin-bottom:30px" onclick="saveAnnouncement()">同步跑馬燈內容</button>
 
-    <span class="title">多重彈窗公告管理</span>
-    <div class="card">
-        <div id="popListContainer"></div>
-        <button class="btn btn-sm" onclick="addNewPopItem()" style="width:100%; background:rgba(52,152,219,0.2); color:#3498db; border:1px solid #3498db; margin-top:15px">＋ 新增一則公告內容</button>
-        <hr style="border:0; border-top:1px solid #333; margin:25px 0">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div><label style="font-size:0.75rem; color:var(--p)">公告 ID：</label><input type="text" id="popId" placeholder="例如: 20260204"></div>
-          <div><label style="font-size:0.75rem; color:var(--p)">是否啟用：</label><select id="popActive"><option value="true">啟用</option><option value="false">停用</option></select></div>
-        </div>
-        <button class="btn btn-success" style="width:100%; margin-top:10px" onclick="savePopConfigs()">同步發佈所有彈窗</button>
-    </div>
+    <span class="title">多重彈窗公告管理</span>
+    <div class="card">
+        <div id="popListContainer"></div>
+        <button class="btn btn-sm" onclick="addNewPopItem()" style="width:100%; background:rgba(52,152,219,0.2); color:#3498db; border:1px solid #3498db; margin-top:15px">＋ 新增一則公告內容</button>
+        <hr style="border:0; border-top:1px solid #333; margin:25px 0">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div><label style="font-size:0.75rem; color:var(--p)">公告 ID：</label><input type="text" id="popId" placeholder="例如: 20260204"></div>
+          <div><label style="font-size:0.75rem; color:var(--p)">是否啟用：</label><select id="popActive"><option value="true">啟用</option><option value="false">停用</option></select></div>
+        </div>
+        <button class="btn btn-success" style="width:100%; margin-top:10px" onclick="savePopConfigs()">同步發佈所有彈窗</button>
+    </div>
 
-    <span class="title">商城分類管理</span>
-    <div class="card">
-        <div id="catManageList"></div>
-        <div class="dynamic-row" style="margin-top:15px; border:none; background:none; padding:0">
-            <input type="text" id="newCatIn" placeholder="新分類名稱" style="flex:1">
-            <button class="btn btn-sm" onclick="addNewCat()">新增分類</button>
-        </div>
-    </div>
+    <span class="title">商城分類管理</span>
+    <div class="card">
+        <div id="catManageList"></div>
+        <div class="dynamic-row" style="margin-top:15px; border:none; background:none; padding:0">
+            <input type="text" id="newCatIn" placeholder="新分類名稱" style="flex:1">
+            <button class="btn btn-sm" onclick="addNewCat()">新增分類</button>
+        </div>
+    </div>
 </div>
 </div>
 
@@ -208,15 +231,15 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-
 import {getDatabase,ref,set,update,get,onValue,remove,push,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import {getStorage, ref as sRef, uploadBytes, getDownloadURL} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 const _0x9d1 = (s) => atob(s);
-const _cc = { 
-    apiKey: _0x9d1("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), 
-    databaseURL: _0x9d1("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), 
-    projectId: _0x9d1("ZHJlYW04LTdiMTYx"), 
-    appId: _0x9d1("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE="),
-    storageBucket: "dream8-7b161.firebasestorage.app"
+const _cc = { 
+    apiKey: _0x9d1("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), 
+    databaseURL: _0x9d1("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), 
+    projectId: _0x9d1("ZHJlYW04LTdiMTYx"), 
+    appId: _0x9d1("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE="),
+    storageBucket: "dream8-7b161.firebasestorage.app"
 };
 const app = initializeApp(_cc); const db = getDatabase(app); const storage = getStorage(app);
-let isEditing = false, currentViewingUid = "", monFilter = 'ALL'; 
+let isEditing = false, currentViewingUid = "", monFilter = 'ALL'; 
 
 window.showLoading = (t = "處理中...") => { document.getElementById('loadingText').innerText = t; document.getElementById('globalLoading').style.display = 'flex'; };
 window.hideLoading = () => { document.getElementById('globalLoading').style.display = 'none'; };
@@ -234,258 +257,258 @@ window.switchTab=id=>{document.querySelectorAll('.page').forEach(p=>p.classList.
 window.toggleUser=uid=>document.getElementById(`content-${uid}`).classList.toggle('show');
 window.closeLog=()=>document.getElementById('logModal').style.display='none';
 
-window.addPrizeInput = (num = '', name = '', img = '') => { 
-    const id = "pz_" + Math.random().toString(36).substr(2, 9);
-    const d = document.createElement('div'); 
-    d.className = 'dynamic-row'; 
-    d.innerHTML = `
-        <input type="number" placeholder="號碼" value="${num}">
-        <input type="text" placeholder="獎項名稱" value="${name}">
-        <div class="mini-upload-btn">
-            <span id="st-${id}" style="font-size:0.6rem; color:#aaa;">${img ? '✅' : '📷'}</span>
-            <input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')">
-        </div>
-        <input type="hidden" class="prize-img-input" id="in-${id}" value="${img}">
-        <img src="${img || ''}" class="upload-preview" style="${img?'':'display:none'}">
-        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
-    `; 
-    document.getElementById('prizeContainer').appendChild(d); 
+window.addPrizeInput = (num = '', name = '', img = '') => { 
+    const id = "pz_" + Math.random().toString(36).substr(2, 9);
+    const d = document.createElement('div'); 
+    d.className = 'dynamic-row'; 
+    d.innerHTML = `
+        <input type="number" placeholder="號碼" value="${num}">
+        <input type="text" placeholder="獎項名稱" value="${name}">
+        <div class="mini-upload-btn">
+            <span id="st-${id}" style="font-size:0.6rem; color:#aaa;">${img ? '✅' : '📷'}</span>
+            <input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')">
+        </div>
+        <input type="hidden" class="prize-img-input" id="in-${id}" value="${img}">
+        <img src="${img || ''}" class="upload-preview" style="${img?'':'display:none'}">
+        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+    `; 
+    document.getElementById('prizeContainer').appendChild(d); 
 };
 
 window.addAlbumInput=(url='')=>{ const id = "alb_" + Math.random().toString(36).substr(2, 9); const d=document.createElement('div'); d.className='dynamic-row'; d.innerHTML=`<div class="file-input-wrapper" style="flex:1; margin-bottom:0; padding:8px; border-style:solid; min-height:auto;"><span id="st-${id}" style="font-size:0.7rem">${url ? '✅ 已有圖' : '點擊上傳'}</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')"></div><input type="hidden" id="in-${id}" value="${url}"><img src="${url || ''}" class="upload-preview" style="${url?'':'display:none'}"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()" style="margin-top:0; flex:none;">✕</button>`; document.getElementById('albumContainer').appendChild(d)};
 window.addNewPopItem = (data = {title:'', content:'', img:''}) => {
-    const id = "pop_" + Math.random().toString(36).substr(2, 9);
-    const d = document.createElement('div');
-    d.className = 'card pop-item-config'; d.style.background = 'rgba(255,255,255,0.02)'; d.style.border = '1px solid #333';
-    d.innerHTML = `<div style="text-align:right; margin-bottom:10px;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">✕ 刪除此則</button></div><input type="text" class="p-title" placeholder="公告標題" value="${data.title}"><textarea class="p-content" rows="3" placeholder="公告內容內容">${data.content}</textarea><div class="file-input-wrapper" style="border-style:solid; min-height:40px;"><span id="st-${id}">${data.img ? '✅ 已有圖片' : '上傳圖片 (選填)'}</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'img-${id}', 'st-${id}')"></div><input type="hidden" class="p-img" id="img-${id}" value="${data.img}"><img src="${data.img || ''}" class="upload-preview" style="width:100%; height:auto; max-height:100px; object-fit:contain; margin-top:10px; ${data.img?'':'display:none'}">`;
-    document.getElementById('popListContainer').appendChild(d);
+    const id = "pop_" + Math.random().toString(36).substr(2, 9);
+    const d = document.createElement('div');
+    d.className = 'card pop-item-config'; d.style.background = 'rgba(255,255,255,0.02)'; d.style.border = '1px solid #333';
+    d.innerHTML = `<div style="text-align:right; margin-bottom:10px;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">✕ 刪除此則</button></div><input type="text" class="p-title" placeholder="公告標題" value="${data.title}"><textarea class="p-content" rows="3" placeholder="公告內容內容">${data.content}</textarea><div class="file-input-wrapper" style="border-style:solid; min-height:40px;"><span id="st-${id}">${data.img ? '✅ 已有圖片' : '上傳圖片 (選填)'}</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'img-${id}', 'st-${id}')"></div><input type="hidden" class="p-img" id="img-${id}" value="${data.img}"><img src="${data.img || ''}" class="upload-preview" style="width:100%; height:auto; max-height:100px; object-fit:contain; margin-top:10px; ${data.img?'':'display:none'}">`;
+    document.getElementById('popListContainer').appendChild(d);
 };
 
 window.setMonFilter = (cat) => { monFilter = cat; startSync(); };
 
 // 🟢 核心數據修正：正確區分入帳與扣款
 async function runReport(start, end) {
-    const [uSnap, wSnap] = await Promise.all([get(ref(db, 'users')), get(ref(db, 'winLogs'))]);
-    const users = uSnap.val() || {}, wins = wSnap.val() || {};
-    let rev = 0, dep = 0, cnt = 0;
-    let games = {};
-    let winItems = [];
-    let detailItems = []; 
+    const [uSnap, wSnap] = await Promise.all([get(ref(db, 'users')), get(ref(db, 'winLogs'))]);
+    const users = uSnap.val() || {}, wins = wSnap.val() || {};
+    let rev = 0, dep = 0, cnt = 0;
+    let games = {};
+    let winItems = [];
+    let detailItems = []; 
 
-    const winMap = {};
-    Object.values(wins).forEach(w => {
-        const key = w.uid + "_" + w.game;
-        if(!winMap[key]) winMap[key] = [];
-        winMap[key].push(w);
-    });
+    const winMap = {};
+    Object.values(wins).forEach(w => {
+        const key = w.uid + "_" + w.game;
+        if(!winMap[key]) winMap[key] = [];
+        winMap[key].push(w);
+    });
 
-    Object.entries(users).forEach(([uid, u]) => {
-        if(u.logs) {
-            Object.values(u.logs).forEach(log => {
-                if(log.time >= start && log.time <= end) {
-                    if(log.cost > 0) {
-                        const cost = log.cost;
-                        rev += cost; 
-                        cnt++; 
-                        games[log.game] = (games[log.game] || 0) + cost; 
-                        let resultHtml = `<span style="color:#666">❌ 未中獎</span>`;
-                        const candidates = winMap[uid + "_" + log.game];
-                        if (candidates) {
-                            const match = candidates.find(w => Math.abs(w.time - log.time) < 5000);
-                            if (match) {
-                                resultHtml = `<span style="color:#2ecc71; font-weight:bold;">🏆 ${match.prize}</span>`;
-                            }
-                        }
-                        detailItems.push({ time: log.time, uid: uid, nick: u.nickname || '玩家', game: log.game, costStr: `<span style="color:#ff4757; font-weight:bold;">-${cost} P</span>`, result: resultHtml });
-                    }
-                    else if(log.cost < 0) {
-                        const income = Math.abs(log.cost);
-                        detailItems.push({ time: log.time, uid: uid, nick: u.nickname || '玩家', game: log.game, costStr: `<span style="color:#2ecc71; font-weight:bold;">+${income} P</span>`, result: `<span style="color:#aaa; font-size:0.8rem;">(系統入帳)</span>` });
-                    }
-                }
-            });
-        }
-    });
+    Object.entries(users).forEach(([uid, u]) => {
+        if(u.logs) {
+            Object.values(u.logs).forEach(log => {
+                if(log.time >= start && log.time <= end) {
+                    if(log.cost > 0) {
+                        const cost = log.cost;
+                        rev += cost; 
+                        cnt++; 
+                        games[log.game] = (games[log.game] || 0) + cost; 
+                        let resultHtml = `<span style="color:#666">❌ 未中獎</span>`;
+                        const candidates = winMap[uid + "_" + log.game];
+                        if (candidates) {
+                            const match = candidates.find(w => Math.abs(w.time - log.time) < 5000);
+                            if (match) {
+                                resultHtml = `<span style="color:#2ecc71; font-weight:bold;">🏆 ${match.prize}</span>`;
+                            }
+                        }
+                        detailItems.push({ time: log.time, uid: uid, nick: u.nickname || '玩家', game: log.game, costStr: `<span style="color:#ff4757; font-weight:bold;">-${cost} P</span>`, result: resultHtml });
+                    }
+                    else if(log.cost < 0) {
+                        const income = Math.abs(log.cost);
+                        detailItems.push({ time: log.time, uid: uid, nick: u.nickname || '玩家', game: log.game, costStr: `<span style="color:#2ecc71; font-weight:bold;">+${income} P</span>`, result: `<span style="color:#aaa; font-size:0.8rem;">(系統入帳)</span>` });
+                    }
+                }
+            });
+        }
+    });
 
-    Object.values(users).forEach(u => {
-        if(u.logs) Object.values(u.logs).forEach(log => {
-            if(log.time >= start && log.time <= end && log.cost < 0 && (log.game && log.game.includes("入點"))) dep += Math.abs(log.cost);
-        });
-    });
+    Object.values(users).forEach(u => {
+        if(u.logs) Object.values(u.logs).forEach(log => {
+            if(log.time >= start && log.time <= end && log.cost < 0 && (log.game && log.game.includes("入點"))) dep += Math.abs(log.cost);
+        });
+    });
 
-    Object.values(wins).forEach(w => { if(w.time >= start && w.time <= end) winItems.push(w); });
-    
-    winItems.sort((a,b) => b.time - a.time);
-    detailItems.sort((a,b) => b.time - a.time);
+    Object.values(wins).forEach(w => { if(w.time >= start && w.time <= end) winItems.push(w); });
+    
+    winItems.sort((a,b) => b.time - a.time);
+    detailItems.sort((a,b) => b.time - a.time);
 
-    document.getElementById('rRev').innerText = rev.toLocaleString();
-    document.getElementById('rDep').innerText = dep.toLocaleString();
-    document.getElementById('rCnt').innerText = cnt.toLocaleString();
-    document.getElementById('rList').innerHTML = Object.entries(games).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<div>• <b>${n}</b>: ${s} P</div>`).join('') || "無數據";
-    document.getElementById('rWins').innerHTML = winItems.map(w=>`<tr><td>${w.user}</td><td>${w.game}<br><small style="color:var(--p)">${w.prize}</small></td><td>${new Date(w.time).toLocaleString()}</td></tr>`).join('') || "<tr><td colspan='3' style='text-align:center'>無紀錄</td></tr>";
-    document.getElementById('rDetails').innerHTML = detailItems.map(d => `<tr><td style="font-size:0.75rem; color:#888;">${new Date(d.time).toLocaleString()}</td><td><div style="font-weight:bold;">${d.nick}</div><small style="color:#555; font-size:0.7rem;">${d.uid}</small></td><td>${d.game}</td><td style="text-align:right;">${d.costStr}</td><td>${d.result}</td></tr>`).join('') || "<tr><td colspan='5' style='text-align:center; padding:20px; color:#666;'>區間內無紀錄</td></tr>";
+    document.getElementById('rRev').innerText = rev.toLocaleString();
+    document.getElementById('rDep').innerText = dep.toLocaleString();
+    document.getElementById('rCnt').innerText = cnt.toLocaleString();
+    document.getElementById('rList').innerHTML = Object.entries(games).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<div>• <b>${n}</b>: ${s} P</div>`).join('') || "無數據";
+    document.getElementById('rWins').innerHTML = winItems.map(w=>`<tr><td>${w.user}</td><td>${w.game}<br><small style="color:var(--p)">${w.prize}</small></td><td>${new Date(w.time).toLocaleString()}</td></tr>`).join('') || "<tr><td colspan='3' style='text-align:center'>無紀錄</td></tr>";
+    document.getElementById('rDetails').innerHTML = detailItems.map(d => `<tr><td style="font-size:0.75rem; color:#888;">${new Date(d.time).toLocaleString()}</td><td><div style="font-weight:bold;">${d.nick}</div><small style="color:#555; font-size:0.7rem;">${d.uid}</small></td><td>${d.game}</td><td style="text-align:right;">${d.costStr}</td><td>${d.result}</td></tr>`).join('') || "<tr><td colspan='5' style='text-align:center; padding:20px; color:#666;'>區間內無紀錄</td></tr>";
 }
 
 window.fetchDailyReport = async () => {
-    const date = document.getElementById('repDate').value; if(!date) return alert("請選擇日期");
-    showLoading(`統計 ${date} 中...`);
-    await runReport(new Date(date + "T00:00:00").getTime(), new Date(date + "T23:59:59").getTime());
-    document.getElementById('repTitle').innerText = `📅 日報表：${date}`;
-    hideLoading();
+    const date = document.getElementById('repDate').value; if(!date) return alert("請選擇日期");
+    showLoading(`統計 ${date} 中...`);
+    await runReport(new Date(date + "T00:00:00").getTime(), new Date(date + "T23:59:59").getTime());
+    document.getElementById('repTitle').innerText = `📅 日報表：${date}`;
+    hideLoading();
 };
 
 window.fetchMonthlyReport = async () => {
-    const date = document.getElementById('repDate').value; if(!date) return alert("請選擇日期以確定月份");
-    const d = new Date(date);
-    const month = d.getMonth(), year = d.getFullYear();
-    const start = new Date(year, month, 1).getTime();
-    const end = new Date(year, month + 1, 0, 23, 59, 59).getTime();
-    showLoading(`統計 ${year}/${month+1} 月報中...`);
-    await runReport(start, end);
-    document.getElementById('repTitle').innerText = `📅 月報表：${year}年 ${month+1}月`;
-    hideLoading();
+    const date = document.getElementById('repDate').value; if(!date) return alert("請選擇日期以確定月份");
+    const d = new Date(date);
+    const month = d.getMonth(), year = d.getFullYear();
+    const start = new Date(year, month, 1).getTime();
+    const end = new Date(year, month + 1, 0, 23, 59, 59).getTime();
+    showLoading(`統計 ${year}/${month+1} 月報中...`);
+    await runReport(start, end);
+    document.getElementById('repTitle').innerText = `📅 月報表：${year}年 ${month+1}月`;
+    hideLoading();
 };
 
 window.fetchWeeklyReport = async () => {
-    showLoading("統計本週數據中...");
-    const now = new Date();
-    const day = now.getDay() || 7; 
-    const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
-    start.setDate(now.getDate() - day + 1); 
-    const end = new Date(); 
-    await runReport(start.getTime(), end.getTime());
-    document.getElementById('repTitle').innerText = `📅 本週報表 (${start.toLocaleDateString()} ~ 起)`;
-    hideLoading();
+    showLoading("統計本週數據中...");
+    const now = new Date();
+    const day = now.getDay() || 7; 
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(now.getDate() - day + 1); 
+    const end = new Date(); 
+    await runReport(start.getTime(), end.getTime());
+    document.getElementById('repTitle').innerText = `📅 本週報表 (${start.toLocaleDateString()} ~ 起)`;
+    hideLoading();
 };
 
 function startSync(){
-    onValue(ref(db, 'depositRequests'), s => {
-        const container = document.getElementById('depositListContainer');
-        const badge = document.getElementById('depositBadge');
-        container.innerHTML = ''; const data = s.val() || {};
-        const pendingRequests = Object.entries(data).filter(([k, v]) => v.status === 'pending');
-        if (pendingRequests.length > 0) { badge.innerText = pendingRequests.length; badge.style.display = 'inline-block'; } 
-        else { badge.style.display = 'none'; container.innerHTML = '<div class="card" style="text-align:center;color:#666;">目前沒有待處理的申請</div>'; }
-        pendingRequests.sort((a, b) => b[1].time - a[1].time).forEach(([key, req]) => {
-            const item = document.createElement('div'); item.className = 'request-item';
-            item.innerHTML = `<div class="request-header"><div><b style="color:var(--p)">${req.amount} NTD</b><br><small style="color:#888">UID: ${req.uid} | ${new Date(req.time).toLocaleString()}</small></div><div><button class="btn btn-sm btn-success" onclick="approveDeposit('${key}', '${req.uid}', ${req.amount})">核准上分</button><button class="btn btn-sm btn-danger" onclick="rejectDeposit('${key}')">拒絕/刪除</button></div></div>`;
-            container.appendChild(item);
-        });
-    });
+    onValue(ref(db, 'depositRequests'), s => {
+        const container = document.getElementById('depositListContainer');
+        const badge = document.getElementById('depositBadge');
+        container.innerHTML = ''; const data = s.val() || {};
+        const pendingRequests = Object.entries(data).filter(([k, v]) => v.status === 'pending');
+        if (pendingRequests.length > 0) { badge.innerText = pendingRequests.length; badge.style.display = 'inline-block'; } 
+        else { badge.style.display = 'none'; container.innerHTML = '<div class="card" style="text-align:center;color:#666;">目前沒有待處理的申請</div>'; }
+        pendingRequests.sort((a, b) => b[1].time - a[1].time).forEach(([key, req]) => {
+            const item = document.createElement('div'); item.className = 'request-item';
+            item.innerHTML = `<div class="request-header"><div><b style="color:var(--p)">${req.amount} NTD</b><br><small style="color:#888">UID: ${req.uid} | ${new Date(req.time).toLocaleString()}</small></div><div><button class="btn btn-sm btn-success" onclick="approveDeposit('${key}', '${req.uid}', ${req.amount})">核准上分</button><button class="btn btn-sm btn-danger" onclick="rejectDeposit('${key}')">拒絕/刪除</button></div></div>`;
+            container.appendChild(item);
+        });
+    });
 
-    onValue(ref(db,'settings/categories'),s=>{ const list=document.getElementById('catManageList'),select=document.getElementById('gCat'),data=s.val()||[]; list.innerHTML='';select.innerHTML='<option value="">請選擇分類</option>';
-    const filterBar = document.getElementById('monFilters'); filterBar.innerHTML = `<button class="filter-btn ${monFilter==='ALL'?'active':''}" onclick="setMonFilter('ALL')">全部</button>`;
-    data.forEach((c,idx)=>{ 
-        list.innerHTML+=`<div class="dynamic-row" style="border:none; padding:0; background:none;"><input type="text" value="${c}" onchange="editCat(${idx},this.value)" style="flex:1"><button class="btn btn-sm btn-danger" onclick="delCat(${idx})" style="margin-top:0">刪除</button></div>`; 
-        select.innerHTML+=`<option value="${c}">${c}</option>`;
-        filterBar.innerHTML+=`<button class="filter-btn ${monFilter===c?'active':''}" onclick="setMonFilter('${c}')">${c}</button>`;
-    })});
+    onValue(ref(db,'settings/categories'),s=>{ const list=document.getElementById('catManageList'),select=document.getElementById('gCat'),data=s.val()||[]; list.innerHTML='';select.innerHTML='<option value="">請選擇分類</option>';
+    const filterBar = document.getElementById('monFilters'); filterBar.innerHTML = `<button class="filter-btn ${monFilter==='ALL'?'active':''}" onclick="setMonFilter('ALL')">全部</button>`;
+    data.forEach((c,idx)=>{ 
+        list.innerHTML+=`<div class="dynamic-row" style="border:none; padding:0; background:none;"><input type="text" value="${c}" onchange="editCat(${idx},this.value)" style="flex:1"><button class="btn btn-sm btn-danger" onclick="delCat(${idx})" style="margin-top:0">刪除</button></div>`; 
+        select.innerHTML+=`<option value="${c}">${c}</option>`;
+        filterBar.innerHTML+=`<button class="filter-btn ${monFilter===c?'active':''}" onclick="setMonFilter('${c}')">${c}</button>`;
+    })});
 
-    get(ref(db,'settings/announcement')).then(s=>{if(s.exists())document.getElementById('annContent').value=s.val()});
-    get(ref(db,'settings/announcement_config')).then(s=>{ if(s.exists()){ const d = s.val(); document.getElementById('popId').value = d.id || ""; document.getElementById('popActive').value = (d.active !== false).toString(); document.getElementById('popListContainer').innerHTML = ""; if(d.items) d.items.forEach(item => addNewPopItem(item)); }});
+    get(ref(db,'settings/announcement')).then(s=>{if(s.exists())document.getElementById('annContent').value=s.val()});
+    get(ref(db,'settings/announcement_config')).then(s=>{ if(s.exists()){ const d = s.val(); document.getElementById('popId').value = d.id || ""; document.getElementById('popActive').value = (d.active !== false).toString(); document.getElementById('popListContainer').innerHTML = ""; if(d.items) d.items.forEach(item => addNewPopItem(item)); }});
 
-    onValue(ref(db,'gameSettings'),s=>{ const list=document.getElementById('monList'),adj=document.getElementById('quickAdjustList'),data=s.val()||[]; list.innerHTML='',adj.innerHTML=''; const keys=Object.keys(data).sort((a,b)=>(data[a].order||99)-(data[b].order||99));
-    keys.forEach(id=>{ 
-        const g=data[id]; if(monFilter !== 'ALL' && g.category !== monFilter) return;
-        const mon=document.createElement('div'); mon.className='card'; 
-        onValue(ref(db,`games/${id}/lock`),ls=>{ 
-            const l=ls.val(),isL=l&&l.expire>Date.now(),lT=isL?`<br><small style="color:var(--lock)">🔒 包台中: ${l.user}</small>`:'',uB=isL?`<button class="btn btn-sm btn-unlock" onclick="forceUnlock('${id}')">🔓 解鎖</button>`:''; 
-            mon.innerHTML=`<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><b>${g.name || id}</b><br><small style="color:#666">${id} | ${g.category}</small></div> ${g.isSoldOut?'<span style="color:#ff4757">[已停盤]</span>':'<span style="color:#2ecc71">[銷售中]</span>'}</div>${lT}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0">--</div><div style="display:flex; flex-wrap:wrap; gap:5px;"><button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯</button><button class="btn btn-sm" onclick="resetShuffle('${id}')">洗牌</button>${uB}<button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button></div>`
-        }); list.appendChild(mon);
-        onValue(ref(db,`games/${id}/pool`),ps=>{ const p=ps.val()||[]; if(document.getElementById(`rem-${id}`))document.getElementById(`rem-${id}`).innerText=`剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`});
-        const aC=document.createElement('div'); aC.className='card'; aC.innerHTML=`<b>${g.name || id} 調控</b><div class="adj-grid" style="margin-top:10px"><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="價格"><input type="number" value="${g.order||99}" onchange="updNum('${id}','order',this.value)" title="排序"></div>`; adj.appendChild(aC)})});
+    onValue(ref(db,'gameSettings'),s=>{ const list=document.getElementById('monList'),adj=document.getElementById('quickAdjustList'),data=s.val()||[]; list.innerHTML='',adj.innerHTML=''; const keys=Object.keys(data).sort((a,b)=>(data[a].order||99)-(data[b].order||99));
+    keys.forEach(id=>{ 
+        const g=data[id]; if(monFilter !== 'ALL' && g.category !== monFilter) return;
+        const mon=document.createElement('div'); mon.className='card'; 
+        onValue(ref(db,`games/${id}/lock`),ls=>{ 
+            const l=ls.val(),isL=l&&l.expire>Date.now(),lT=isL?`<br><small style="color:var(--lock)">🔒 包台中: ${l.user}</small>`:'',uB=isL?`<button class="btn btn-sm btn-unlock" onclick="forceUnlock('${id}')">🔓 解鎖</button>`:''; 
+            mon.innerHTML=`<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><b>${g.name || id}</b><br><small style="color:#666">${id} | ${g.category}</small></div> ${g.isSoldOut?'<span style="color:#ff4757">[已停盤]</span>':'<span style="color:#2ecc71">[銷售中]</span>'}</div>${lT}<div id="rem-${id}" style="color:var(--p);font-size:1.5rem;margin:10px 0">--</div><div style="display:flex; flex-wrap:wrap; gap:5px;"><button class="btn btn-sm" onclick="loadGameToEdit('${id}')">編輯</button><button class="btn btn-sm" onclick="resetShuffle('${id}')">洗牌</button>${uB}<button class="btn btn-sm btn-danger" onclick="deleteGame('${id}')">刪除</button></div>`
+        }); list.appendChild(mon);
+        onValue(ref(db,`games/${id}/pool`),ps=>{ const p=ps.val()||[]; if(document.getElementById(`rem-${id}`))document.getElementById(`rem-${id}`).innerText=`剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`});
+        const aC=document.createElement('div'); aC.className='card'; aC.innerHTML=`<b>${g.name || id} 調控</b><div class="adj-grid" style="margin-top:10px"><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="價格"><input type="number" value="${g.order||99}" onchange="updNum('${id}','order',this.value)" title="排序"></div>`; adj.appendChild(aC)})});
 
-    // 🟢 修正中獎紀錄邏輯：自動分流 積分/能量 和 實體獎項
-    onValue(ref(db,'winLogs'),s=>{ 
-        const winList=document.getElementById('globalWinItems'); 
-        const pointList=document.getElementById('globalPointItems'); 
-        winList.innerHTML=''; 
-        pointList.innerHTML='';
+    // 🟢 修正中獎紀錄邏輯：自動分流 積分/能量 和 實體獎項
+    onValue(ref(db,'winLogs'),s=>{ 
+        const winList=document.getElementById('globalWinItems'); 
+        const pointList=document.getElementById('globalPointItems'); 
+        winList.innerHTML=''; 
+        pointList.innerHTML='';
 
-        const data = s.val() || {}; 
-        const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)).slice(0,60);
-        
-        entries.forEach(async key => { 
-            const i = data[key]; 
-            const prizeStr = String(i.prize || "");
-            
-            // 判斷是否為積分/能量相關紀錄
-            if (prizeStr.includes('積分') || prizeStr.includes('能量') || prizeStr.includes('點')) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b></td><td>${i.game}</td><td><b style="color:#2ecc71">${i.prize}</b></td>`;
-                pointList.appendChild(tr);
-            } else {
-                // 實體商品 (保留出貨管理功能)
-                const uSnap = await get(ref(db, `users/${i.uid}/shipping`));
-                const ship = uSnap.val() || {};
-                const shipText = ship.name ? `<br><small style="color:var(--success)">📍 ${ship.name} ${ship.phone} (${ship.store})</small>` : '';
-                const tr = document.createElement('tr'); 
-                tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b>${shipText}</td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`; 
-                winList.appendChild(tr); 
-            }
-        });
-    });
+        const data = s.val() || {}; 
+        const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)).slice(0,60);
+        
+        entries.forEach(async key => { 
+            const i = data[key]; 
+            const prizeStr = String(i.prize || "");
+            
+            // 判斷是否為積分/能量相關紀錄
+            if (prizeStr.includes('積分') || prizeStr.includes('能量') || prizeStr.includes('點')) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b></td><td>${i.game}</td><td><b style="color:#2ecc71">${i.prize}</b></td>`;
+                pointList.appendChild(tr);
+            } else {
+                // 實體商品 (保留出貨管理功能)
+                const uSnap = await get(ref(db, `users/${i.uid}/shipping`));
+                const ship = uSnap.val() || {};
+                const shipText = ship.name ? `<br><small style="color:var(--success)">📍 ${ship.name} ${ship.phone} (${ship.store})</small>` : '';
+                const tr = document.createElement('tr'); 
+                tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b>${shipText}</td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`; 
+                winList.appendChild(tr); 
+            }
+        });
+    });
 
-    onValue(ref(db,'users'),s=>{ 
-        const c=document.getElementById('userListContainer'); c.innerHTML='';const u=s.val()||{},r={}; 
-        Object.values(u).forEach(i=>{if(i.invitedBy)r[i.invitedBy]=(r[i.invitedBy]||0)+1});
-        Object.entries(u).forEach(([id,d])=>{ 
-            const sp = d.logs ? Object.values(d.logs).reduce((acc, log) => { const cost = Number(log.cost) || 0; return acc + (cost > 0 ? cost : 0); }, 0) : 0; 
-            const ic=r[id]||0; const comm = (d.commission || 0).toLocaleString(); 
-            const firstTag = d.hasToppedUp ? `<span class="ref-tag" style="color:#aaa; border-color:#aaa">已首儲</span>` : `<span class="ref-tag" style="color:var(--p); border-color:var(--p)">新用戶</span>`;
-            const ship = d.shipping || {};
-            const shipHtml = ship.name ? `<div class="ship-info-card"><span class="ship-label">📦 收件人:</span> ${ship.name}<br><span class="ship-label">📱 電話:</span> ${ship.phone}<br><span class="ship-label">🏪 門市:</span> ${ship.store}</div>` : `<div class="ship-info-card" style="background:rgba(255,255,255,0.05); border:1px solid #333; color:#666;">尚未填寫收件資訊</div>`;
-            const i=document.createElement('div'); i.className='user-item'; 
-            
-            // 🟢 新增：後台會員管理區增加「扣除積分」按鈕
-            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b> | Line積分: <b style="color:var(--success)">${d.linePoints||0} 點</b><br>${shipHtml}<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳/明細</button><button class="btn btn-sm" onclick="addBal('${id}')">手動加點</button><button class="btn btn-sm btn-unlock" onclick="clearCommission('${id}')">💰 結清獎金</button><button class="btn btn-sm btn-danger" onclick="deductPoints('${id}')">🎁 兌換核銷 (扣積分)</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`; 
-            c.appendChild(i)
-        })
-    });
+    onValue(ref(db,'users'),s=>{ 
+        const c=document.getElementById('userListContainer'); c.innerHTML='';const u=s.val()||{},r={}; 
+        Object.values(u).forEach(i=>{if(i.invitedBy)r[i.invitedBy]=(r[i.invitedBy]||0)+1});
+        Object.entries(u).forEach(([id,d])=>{ 
+            const sp = d.logs ? Object.values(d.logs).reduce((acc, log) => { const cost = Number(log.cost) || 0; return acc + (cost > 0 ? cost : 0); }, 0) : 0; 
+            const ic=r[id]||0; const comm = (d.commission || 0).toLocaleString(); 
+            const firstTag = d.hasToppedUp ? `<span class="ref-tag" style="color:#aaa; border-color:#aaa">已首儲</span>` : `<span class="ref-tag" style="color:var(--p); border-color:var(--p)">新用戶</span>`;
+            const ship = d.shipping || {};
+            const shipHtml = ship.name ? `<div class="ship-info-card"><span class="ship-label">📦 收件人:</span> ${ship.name}<br><span class="ship-label">📱 電話:</span> ${ship.phone}<br><span class="ship-label">🏪 門市:</span> ${ship.store}</div>` : `<div class="ship-info-card" style="background:rgba(255,255,255,0.05); border:1px solid #333; color:#666;">尚未填寫收件資訊</div>`;
+            const i=document.createElement('div'); i.className='user-item'; 
+            
+            // 🟢 新增：後台會員管理區增加「扣除積分」按鈕
+            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b> | Line積分: <b style="color:var(--success)">${d.linePoints||0} 點</b><br>${shipHtml}<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳/明細</button><button class="btn btn-sm" onclick="addBal('${id}')">手動加點</button><button class="btn btn-sm btn-unlock" onclick="clearCommission('${id}')">💰 結清獎金</button><button class="btn btn-sm btn-danger" onclick="deductPoints('${id}')">🎁 兌換核銷 (扣積分)</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`; 
+            c.appendChild(i)
+        })
+    });
 }
 
 // 🟢 新增：後台手動扣除積分 (核銷)
 window.deductPoints = async (uid) => {
-    const p = prompt("請輸入要扣除的積分點數 (例如: 10)：");
-    if (!p || isNaN(p)) return;
-    const amount = Number(p);
-    
-    if (confirm(`確定要扣除 ${uid} 的 ${amount} 點積分嗎？`)) {
-        showLoading("處理中...");
-        try {
-            const uRef = ref(db, `users/${uid}`);
-            const snap = await get(uRef);
-            const u = snap.val();
-            const currentPoints = Number(u.linePoints) || 0;
-            
-            if (currentPoints < amount) return alert("積分不足！");
-            
-            await update(uRef, { linePoints: currentPoints - amount });
-            
-            // 寫入紀錄方便查帳
-            await push(ref(db, `users/${uid}/logs`), {
-                game: "積分兌換核銷",
-                cost: 0, // 不扣 P 幣
-                note: `扣除 ${amount} 點積分`,
-                time: Date.now()
-            });
-            
-            alert("✅ 核銷成功！");
-        } catch (e) {
-            alert("失敗：" + e.message);
-        } finally {
-            hideLoading();
-        }
-    }
+    const p = prompt("請輸入要扣除的積分點數 (例如: 10)：");
+    if (!p || isNaN(p)) return;
+    const amount = Number(p);
+    
+    if (confirm(`確定要扣除 ${uid} 的 ${amount} 點積分嗎？`)) {
+        showLoading("處理中...");
+        try {
+            const uRef = ref(db, `users/${uid}`);
+            const snap = await get(uRef);
+            const u = snap.val();
+            const currentPoints = Number(u.linePoints) || 0;
+            
+            if (currentPoints < amount) return alert("積分不足！");
+            
+            await update(uRef, { linePoints: currentPoints - amount });
+            
+            // 寫入紀錄方便查帳
+            await push(ref(db, `users/${uid}/logs`), {
+                game: "積分兌換核銷",
+                cost: 0, // 不扣 P 幣
+                note: `扣除 ${amount} 點積分`,
+                time: Date.now()
+            });
+            
+            alert("✅ 核銷成功！");
+        } catch (e) {
+            alert("失敗：" + e.message);
+        } finally {
+            hideLoading();
+        }
+    }
 };
 
 window.saveAnnouncement=async()=>{const content = document.getElementById('annContent').value; showLoading("同步跑馬燈中..."); try { await set(ref(db,'settings/announcement'), content); alert("跑馬燈內容已同步！"); } finally { hideLoading(); }};
 window.savePopConfigs = async () => {
-    const titleInputs = document.querySelectorAll('#popListContainer .p-title'), contentInputs = document.querySelectorAll('#popListContainer .p-content'), imgInputs = document.querySelectorAll('#popListContainer .p-img'), items = [];
-    titleInputs.forEach((el, idx) => { items.push({ title: el.value, content: contentInputs[idx].value, img: imgInputs[idx].value }); });
-    const popId = document.getElementById('popId').value, popActive = document.getElementById('popActive').value === "true";
-    if(!popId) return alert("請輸入公告 ID"); showLoading("同步中..."); try { await set(ref(db, 'settings/announcement_config'), { id: popId, active: popActive, items: items }); alert("成功！"); } finally { hideLoading(); }
+    const titleInputs = document.querySelectorAll('#popListContainer .p-title'), contentInputs = document.querySelectorAll('#popListContainer .p-content'), imgInputs = document.querySelectorAll('#popListContainer .p-img'), items = [];
+    titleInputs.forEach((el, idx) => { items.push({ title: el.value, content: contentInputs[idx].value, img: imgInputs[idx].value }); });
+    const popId = document.getElementById('popId').value, popActive = document.getElementById('popActive').value === "true";
+    if(!popId) return alert("請輸入公告 ID"); showLoading("同步中..."); try { await set(ref(db, 'settings/announcement_config'), { id: popId, active: popActive, items: items }); alert("成功！"); } finally { hideLoading(); }
 };
 window.updateWinStatus = (key, status) => { update(ref(db, `winLogs/${key}`), { status: status }); };
 window.updateWinShipping = (key, no) => { update(ref(db, `winLogs/${key}`), { shippingNo: no }); };
@@ -501,16 +524,16 @@ let uBonus = isFirst ? 0.15 : (amount >= 1000 ? 0.03 : 0), bonusText = isFirst ?
 let finalBonus = Math.floor(amount * uBonus);
 let linePointsEarned = Math.floor(amount / 500); // 🟢 儲值滿500送1點 Line 積分
 
-await update(uRef, { balance: (Number(uData.balance) || 0) + amount + finalBonus, hasToppedUp: true, linePoints: (Number(uData.linePoints) || 0) + linePointsEarned }); 
+await update(uRef, { balance: (Number(uData.balance) || 0) + amount + finalBonus, hasToppedUp: true, linePoints: (Number(uData.linePoints) || 0) + linePointsEarned }); 
 await push(ref(db, `users/${uid}/logs`), { game: bonusText + "入點", cost: -(amount + finalBonus), time: Date.now() });
 
-if (uData.invitedBy && uData.invitedBy !== uid) { const rRef = ref(db, `users/${uData.invitedBy}`), rSnap = await get(rRef); if (rSnap.exists()) { 
-    let rRate = isFirst ? 0.1 : 0.05; let rBonus = Math.floor(amount * rRate); let referrerLinePoint = (amount >= 1000) ? 1 : 0;
-    await update(rRef, { commission: (Number(rSnap.val().commission) || 0) + rBonus, linePoints: (Number(rSnap.val().linePoints) || 0) + referrerLinePoint }); 
-    await push(ref(db, `referralLogs/${uData.invitedBy}`), { time: Date.now(), from_uid: uid, amount: amount, reward: rBonus, type: isFirst ? "FIRST" : "RECURRING" }); 
+if (uData.invitedBy && uData.invitedBy !== uid) { const rRef = ref(db, `users/${uData.invitedBy}`), rSnap = await get(rRef); if (rSnap.exists()) { 
+    let rRate = isFirst ? 0.1 : 0.05; let rBonus = Math.floor(amount * rRate); let referrerLinePoint = (amount >= 1000) ? 1 : 0;
+    await update(rRef, { commission: (Number(rSnap.val().commission) || 0) + rBonus, linePoints: (Number(rSnap.val().linePoints) || 0) + referrerLinePoint }); 
+    await push(ref(db, `referralLogs/${uData.invitedBy}`), { time: Date.now(), from_uid: uid, amount: amount, reward: rBonus, type: isFirst ? "FIRST" : "RECURRING" }); 
 }}
-await update(ref(db, `depositRequests/${key}`), { status: 'completed' }); 
-alert(`完成！實得：${amount+finalBonus} P` + (linePointsEarned > 0 ? `\n🎁 獲得 ${linePointsEarned} 點 Line 積分` : "")); 
+await update(ref(db, `depositRequests/${key}`), { status: 'completed' }); 
+alert(`完成！實得：${amount+finalBonus} P` + (linePointsEarned > 0 ? `\n🎁 獲得 ${linePointsEarned} 點 Line 積分` : "")); 
 } catch(e) { alert("錯誤: " + e.message); } finally { hideLoading(); }};
 
 window.showUserSubTab = async (type) => { const c = document.getElementById('logItems'); c.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">載入中...</div>';
@@ -528,12 +551,12 @@ window.delCat=async(idx)=>{if(confirm("刪除分類？")){const s=await get(ref(
 window.forceUnlock=async id=>{if(confirm(`解鎖 [${id}]？`)){await remove(ref(db,`games/${id}/lock`));alert("已解鎖")}};
 // 🟢 補回遺失的商品管理功能
 window.publishGame = async () => {
-    const id = document.getElementById('gId').value.trim(), gName = document.getElementById('gName').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value;
-    const prRows = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')), prs = prRows.map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value, img: r.querySelector('.prize-img-input').value }));
-    const albRows = Array.from(document.querySelectorAll('#albumContainer .dynamic-row')), alb = albRows.map(r => r.querySelector('input[type="hidden"]').value).filter(v => v.trim());
-    if (!id || !tot || 0 === prs.length || !cat) return alert("資訊不全");
-    const d = { name: gName || id, total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: false };
-    if(!d.img) return alert("請上傳主圖"); showLoading("發布中..."); try { await update(ref(db, `gameSettings/${id}`), d); if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功"); resetGameForm(); } finally { hideLoading(); }
+    const id = document.getElementById('gId').value.trim(), gName = document.getElementById('gName').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value;
+    const prRows = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')), prs = prRows.map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value, img: r.querySelector('.prize-img-input').value }));
+    const albRows = Array.from(document.querySelectorAll('#albumContainer .dynamic-row')), alb = albRows.map(r => r.querySelector('input[type="hidden"]').value).filter(v => v.trim());
+    if (!id || !tot || 0 === prs.length || !cat) return alert("資訊不全");
+    const d = { name: gName || id, total: tot, price: Number(document.getElementById('gPrice').value), prizes: prs, album: alb, safeZone: Number(document.getElementById('gSafeZone').value) || 0, img: document.getElementById('gImg').value, promoCount: Number(document.getElementById('pCount').value) || 0, promoPrice: Number(document.getElementById('pPrice').value) || 0, category: cat, order: Number(document.getElementById('gOrder').value) || 99, isSoldOut: false };
+    if(!d.img) return alert("請上傳主圖"); showLoading("發布中..."); try { await update(ref(db, `gameSettings/${id}`), d); if (!isEditing) { await runMasterShuffle(id, d); alert("發布成功"); } else alert("更新成功"); resetGameForm(); } finally { hideLoading(); }
 };
 window.resetShuffle = async id => { if (confirm(`【警告】重新洗牌 [${id}]？`)) { try { const s = await get(ref(db, `gameSettings/${id}`)), g = s.val(); if (!g) return alert("無設定"); await runMasterShuffle(id, g); await update(ref(db, `gameSettings/${id}`), { isSoldOut: false }); await remove(ref(db, `games/${id}/lock`)); alert("成功！"); } catch (e) { alert("失敗: " + e.message); }}};
 window.loadGameToEdit=async id=>{ const s=await get(ref(db,`gameSettings/${id}`)),g=s.val(); if(!g)return; isEditing=true; document.getElementById('gId').value=id; document.getElementById('gId').disabled=true; document.getElementById('gName').value = g.name || id; document.getElementById('gCat').value=g.category; document.getElementById('gTotal').value=g.total; document.getElementById('gPrice').value=g.price; document.getElementById('gSafeZone').value=g.safeZone||0; document.getElementById('pCount').value=g.promoCount||0; document.getElementById('pPrice').value=g.promoPrice||0; document.getElementById('gImg').value=g.img; document.getElementById('mainImgStatus').innerText = "✅ 已有圖"; document.getElementById('gOrder').value=g.order||99;
