@@ -276,6 +276,14 @@
                 <div class="collapse-body" id="depListBody"></div>
             </div>
 
+            <div class="collapse-box" id="boxEnergy">
+                <div class="collapse-head" onclick="toggleCollapse('boxEnergy', 'energyListBody')">
+                    <span style="color:#e67e22">⚡ 能量爆發紀錄 (點擊展開)</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="collapse-body" id="energyListBody"></div>
+            </div>
+
             <div class="collapse-box" id="boxGame">
                 <div class="collapse-head" onclick="toggleCollapse('boxGame', 'gameListBody')">
                     <span>🎰 遊戲消費紀錄 (點擊展開)</span>
@@ -447,15 +455,21 @@
         function renderLogs(logs) {
             const gBody = document.getElementById('gameListBody');
             const dBody = document.getElementById('depListBody');
+            const eBody = document.getElementById('energyListBody');
             
             if(!logs) { 
-                gBody.innerHTML = dBody.innerHTML = '<div class="empty-state">無紀錄</div>'; 
+                gBody.innerHTML = dBody.innerHTML = eBody.innerHTML = '<div class="empty-state">無紀錄</div>'; 
                 return; 
             }
             
             const arr = Object.values(logs).sort((a,b) => b.time - a.time);
+            
+            // 遊戲消費
             const g = arr.filter(l => Number(l.cost) > 0);
-            const d = arr.filter(l => Number(l.cost) <= 0);
+            // 能量爆發 (cost為0且game名稱包含能量)
+            const e = arr.filter(l => l.game && l.game.includes('能量'));
+            // 儲值/入點 (cost<=0且不是能量爆發)
+            const d = arr.filter(l => Number(l.cost) <= 0 && (!l.game || !l.game.includes('能量')));
 
             gBody.innerHTML = g.length ? g.map(l => `
                 <div class="list-item-inner">
@@ -478,6 +492,17 @@
                     <div class="item-val val-plus">${isGift ? l.note : '+' + Math.abs(l.cost) + ' P'}</div>
                 </div>`;
             }).join('') : '<div class="empty-state">無入點</div>';
+
+            // 🟢 能量爆發紀錄渲染
+            eBody.innerHTML = e.length ? e.map(l => `
+                <div class="list-item-inner">
+                    <div class="item-info">
+                        <b>${l.game}</b>
+                        <small>${new Date(l.time).toLocaleString()}</small>
+                    </div>
+                    <div class="item-val" style="color:#e67e22">${l.note || '獲得積分'}</div>
+                </div>
+            `).join('') : '<div class="empty-state">尚無爆發紀錄</div>';
         }
 
         window.saveShippingInfo = async () => {
