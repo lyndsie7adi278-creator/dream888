@@ -656,16 +656,12 @@ const pr = Math.random() * 100;
             let pt = 1;
 
             if (pr < 0.5) { 
-                // 0.5% 機率中 31~50 積分
                 pt = Math.floor(Math.random() * 20) + 31;
             } else if (pr < 1.5) { 
-                // 1% 機率 (1.5 - 0.5) 中 16~30 積分
                 pt = Math.floor(Math.random() * 15) + 16;
             } else if (pr < 6.5) { 
-                // 5% 機率 (6.5 - 1.5) 中 6~15 積分
                 pt = Math.floor(Math.random() * 10) + 6;
             } else {
-                // 剩下 93.5% 機率中 1~5 積分
                 pt = Math.floor(Math.random() * 5) + 1;
             }
 
