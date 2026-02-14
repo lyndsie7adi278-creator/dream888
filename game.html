@@ -45,42 +45,46 @@
     .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
     .prize-tag-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
     
-    /* 🟢 獎項樣式 (更新版：號碼在最前) */
-    .prize-tag { background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; position: relative; transition: 0.3s; }
+    /* 🟢 獎項樣式 */
+    .prize-tag { background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 12px 15px; display: flex; align-items: flex-start; justify-content: space-between; position: relative; transition: 0.3s; }
+    .p-left-info { display: flex; gap: 15px; align-items: flex-start; flex: 1; min-width: 0; }
     
-    /* 左側資訊區 (包含號碼與名稱) */
-    .p-left-info { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; }
+    .p-main-content { display: flex; flex-direction: column; width: 100%; min-width: 0; }
+    .p-name { font-size: 1rem; color: #fff; font-weight: bold; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     
-    /* 號碼 Badge */
+    /* 號碼顯示區域 */
+    .p-nums-box { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
     .p-num-badge { 
-        background: var(--p); 
-        color: #000; 
-        padding: 3px 8px; 
+        background: #2c3e50; 
+        color: var(--p); 
+        border: 1px solid #444; 
+        padding: 3px 8px; /* 加大間距 */
         border-radius: 4px; 
-        font-size: 0.85rem; 
+        font-size: 0.95rem; /* 加大字體 */
         font-family: monospace; 
         font-weight: 900; 
-        flex-shrink: 0;
-        min-width: 30px;
-        text-align: center;
         letter-spacing: 0.5px;
     }
-    
-    /* 查看更多號碼的按鈕 */
+    /* 已開出號碼樣式 */
+    .p-num-badge.taken {
+        text-decoration: line-through;
+        color: #666;
+        background: #111;
+        border-color: #333;
+    }
+
     .p-view-all {
         background: transparent;
         color: #3498db;
         border: 1px solid #3498db;
-        padding: 2px 8px;
+        padding: 3px 10px;
         border-radius: 4px;
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         font-weight: bold;
         cursor: pointer;
         white-space: nowrap;
     }
 
-    .p-name { font-size: 1rem; color: #fff; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
     .p-right-info { text-align: right; min-width: 70px; display: flex; flex-direction: column; justify-content: center; margin-left: 10px; }
     .p-count { font-size: 0.9rem; font-weight: 900; color: var(--p); }
     .p-progress { width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 5px; overflow: hidden; }
@@ -88,7 +92,6 @@
 
     .prize-tag.empty { opacity: 0.5; border-color: #333; }
     .prize-tag.empty .p-name { text-decoration: line-through; color: #888; }
-    .prize-tag.empty .p-num-badge { background: #555; color: #888; }
     .prize-tag.empty .p-fill { background: #555; }
     .prize-tag.empty .p-count { color: #888; }
 
@@ -144,7 +147,22 @@
     /* 🟢 號碼查看 Modal 樣式 */
     .num-modal-header { font-size: 1.2rem; font-weight: 900; color: var(--p); margin-bottom: 15px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
     .num-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-    .num-badge-lg { background: #2c3e50; border: 1px solid #444; color: var(--p); padding: 5px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; font-family: monospace; }
+    .num-badge-lg { 
+        background: #2c3e50; 
+        border: 1px solid #444; 
+        color: var(--p); 
+        padding: 8px 15px; 
+        border-radius: 6px; 
+        font-size: 1.1rem; 
+        font-weight: bold; 
+        font-family: monospace; 
+    }
+    .num-badge-lg.taken {
+        text-decoration: line-through;
+        color: #666;
+        background: #111;
+        border-color: #333;
+    }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -268,6 +286,7 @@ const GAS_URL = _0x9d1("aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J5
 
 let _data = null, _isClosed = false, _q = null, _tInterval = null;
 let _album = [];
+let _poolStatus = {}; // 紀錄每個號碼是否已被揭曉
 
 if(!_gid) location.href = 'index.html';
 
@@ -282,12 +301,21 @@ window.hideLoading = () => {
 // 🟢 號碼格式化：補零 (1 -> 01)
 const fmtNum = (n) => Number(n).toString().padStart(2, '0');
 
-// 🟢 顯示號碼視窗
-window.openNumModal = (name, nums) => {
+// 🟢 顯示號碼視窗 (包含劃掉邏輯)
+window.openNumModal = (name, numsStr) => {
+    // 解碼 JSON
+    const nums = JSON.parse(decodeURIComponent(numsStr));
     document.getElementById('numModalTitle').innerText = `【${name}】中獎號碼`;
     const container = document.getElementById('numModalContent');
+    
     // 排序並格式化
-    container.innerHTML = nums.sort((a,b) => a-b).map(n => `<div class="num-badge-lg">NO.${fmtNum(n)}</div>`).join('');
+    container.innerHTML = nums.sort((a,b) => a-b).map(n => {
+        // 檢查是否已被揭曉
+        const isTaken = _poolStatus[Number(n)] === true;
+        const takenClass = isTaken ? 'taken' : '';
+        return `<div class="num-badge-lg ${takenClass}">NO.${fmtNum(n)}</div>`;
+    }).join('');
+    
     document.getElementById('numModal').style.display = 'flex';
 };
 
@@ -359,6 +387,12 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
         const p = snap.val() || []; 
         const grid = document.getElementById('poolGrid');
         
+        // 更新全域狀態供彈窗使用
+        _poolStatus = {};
+        p.forEach(t => {
+            if (t.revealed) _poolStatus[Number(t.grade)] = true;
+        });
+        
         const _s = p.filter(t => t.taken).length;
         const _pct = Math.round((_s / _data.total) * 100);
         document.getElementById('progText').innerText = `${_s} / ${_data.total}`;
@@ -385,6 +419,7 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             priceContainer.innerHTML = `<div class="current-price">${_data.price} P</div>`;
         }
         
+        // 🟢 獎項合併 + 區間顯示 + 劃掉邏輯
         const leftCounts = {};
         p.forEach(t => {
             if (!t.taken) leftCounts[t.grade] = (leftCounts[t.grade] || 0) + 1;
@@ -417,40 +452,34 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             const width = (p.left / p.total) * 100;
             const color = p.left === 0 ? '#555' : (width < 20 ? '#ff4757' : '#2ecc71');
             
-            // 🟢 號碼顯示邏輯：區間合併 + 補零
+            // 號碼顯示邏輯
             p.nums.sort((a,b) => a - b);
-            let ranges = [];
-            let start = p.nums[0];
-            let prev = p.nums[0];
-
-            for (let i = 1; i < p.nums.length; i++) {
-                if (p.nums[i] === prev + 1) {
-                    prev = p.nums[i];
-                } else {
-                    ranges.push(start === prev ? fmtNum(start) : `${fmtNum(start)}~${fmtNum(prev)}`);
-                    start = p.nums[i];
-                    prev = p.nums[i];
-                }
-            }
-            ranges.push(start === prev ? fmtNum(start) : `${fmtNum(start)}~${fmtNum(prev)}`);
             
+            // 判斷是否超過6個
             let numDisplay = "";
-            
-            // 如果合併後的區間或號碼不超過3組，直接顯示
-            if (ranges.length <= 3) {
-                numDisplay = ranges.map(r => `<span class="p-num-badge">${r}</span>`).join('');
+            if (p.nums.length <= 6) {
+                numDisplay = p.nums.map(n => {
+                    const isTaken = _poolStatus[n] === true;
+                    return `<span class="p-num-badge ${isTaken ? 'taken' : ''}">NO.${fmtNum(n)}</span>`;
+                }).join('');
             } else {
-                // 否則顯示查看按鈕
-                const numsJson = JSON.stringify(p.nums).replace(/"/g, '&quot;');
-                numDisplay = `<span class="p-view-all" onclick="openNumModal('${p.name}', ${numsJson})">🔍 查看全部 (共${p.nums.length}號)</span>`;
+                // 超過6個，只顯示前5個 + 按鈕
+                const frontNums = p.nums.slice(0, 5).map(n => {
+                    const isTaken = _poolStatus[n] === true;
+                    return `<span class="p-num-badge ${isTaken ? 'taken' : ''}">NO.${fmtNum(n)}</span>`;
+                }).join('');
+                
+                // 安全編碼陣列
+                const numsJson = encodeURIComponent(JSON.stringify(p.nums));
+                numDisplay = `${frontNums}<span class="p-view-all" onclick="openNumModal('${p.name}', '${numsJson}')">🔍 查看全部</span>`;
             }
 
             return `
             <div class="prize-tag ${p.left === 0 ? 'empty' : ''}">
                 <div class="p-left-info">
                     <div class="p-main-content">
-                        <div class="p-nums-box">${numDisplay}</div>
                         <div class="p-name">${p.name}</div>
+                        <div class="p-nums-box">${numDisplay}</div>
                     </div>
                 </div>
                 <div class="p-right-info">
