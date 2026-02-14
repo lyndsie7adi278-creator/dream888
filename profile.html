@@ -82,7 +82,7 @@
 
         .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(10px); }
         
-        /* 🟢 高級拉霸機樣式 */
+        /* 🟢 高級拉霸機樣式 (Slot Machine) */
         .slot-machine-frame {
             width: 280px; height: 180px;
             background: linear-gradient(180deg, #2c3e50, #000, #2c3e50);
@@ -96,6 +96,7 @@
             justify-content: center;
             overflow: hidden;
         }
+        /* 玻璃反光效果 */
         .slot-machine-frame::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%;
             background: linear-gradient(180deg, rgba(255,255,255,0.1), transparent);
@@ -107,7 +108,7 @@
             width: 100%; height: 100%;
             background: #fff;
             border-radius: 10px;
-            overflow: hidden; 
+            overflow: hidden; /* 隱藏超出的捲軸 */
             position: relative;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
         }
@@ -117,11 +118,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            /* 初始位置 */
             transform: translateY(0); 
         }
 
         .slot-item {
-            height: 160px; 
+            height: 160px; /* 與視窗高度一致，確保一次只顯示一個 */
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -134,10 +136,12 @@
             box-sizing: border-box;
             background: #fff;
         }
+        .slot-item img { width: 60px; height: 60px; margin-bottom: 5px; object-fit: contain; }
         .slot-item span { font-size: 1rem; color: #666; margin-top: 5px; }
         .slot-item.gold { color: #d35400; background: #fdf5e6; }
         .slot-item.big { color: #c0392b; background: #fff0f0; }
 
+        /* 中獎閃爍特效 */
         .slot-machine-frame.win { animation: slot-win-glow 0.5s infinite alternate; border-color: #ff4757; }
         @keyframes slot-win-glow { from { box-shadow: 0 0 20px #ff4757; } to { box-shadow: 0 0 50px #ff4757; } }
 
@@ -217,11 +221,12 @@
         .cal-date.checked { background: #e3faf3; color: var(--success); }
         .cal-date.checked::after { content: '✔'; font-size: 0.5rem; position: absolute; bottom: 2px; right: 3px; }
         
-        /* 🟢 簽到加碼樣式 */
-        .event-badge { position: absolute; top: -12px; right: -10px; background: #ff4757; color: #fff; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 900; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(255,71,87,0.5); animation: bounce 1s infinite; z-index: 10; display: none; }
+        /* 🟢 活動樣式 */
+        .event-active-checkin { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4) !important; position: relative; overflow: visible !important; border: 2px solid #f1c40f !important; }
+        /* 標籤樣式 */
+        .event-badge { position: absolute; top: -12px; right: -5px; background: #ff4757; color: #fff; font-size: 0.75rem; padding: 3px 10px; border-radius: 50px; font-weight: 900; border: 2px solid #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.2); animation: bounce 1s infinite; z-index: 10; display: none; white-space: nowrap; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        .event-active-checkin { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4) !important; border: 2px solid #ffeb3b !important; }
-        .event-text { font-size: 0.7rem; color: #e74c3c; margin-top: 5px; font-weight: 900; }
+        .event-text { font-size: 0.75rem; color: #e74c3c; margin-top: -10px; margin-bottom: 20px; font-weight: 900; display: none; }
     </style>
 </head>
 <body>
@@ -396,8 +401,19 @@
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
 
-        // 🟢 反作弊保護：混淆核心數據
-        const _pMap = JSON.parse(atob("W3sidCI6IuCfkpwgMTAg56mN5YiGIiwiYyI6IiJ9LHsidCI6IvCfk7EgQXBwbGUgV2F0Y2giLCJjIjoiZ29sZCJ9LHsidCI6IuCfkpwgMzAg56mN5YiGIiwiYyI6IiJ9LHsidCI6IvCfjrggUFM1IFBybyIsImMiOiJnb2xkIn0seyJ0Ijoi4pW5IDUg56mN5YiGIiwiYyI6IiJ9LHsidCI6IvCfjqcgaVBob25lIDE2IiwiYyI6ImdvbGQifSx7InQiOiLgn5KcIDUwIOepjeWIhiIsImMiOiJiaWcifSx7InQiOiLwn5OnIDg4ODgg54++2I5L2iIsImMiOiJiaWcifV0="));
+        // 🟢 假獎項清單 (誘餌) - 正常顯示文字
+        const _fakePrizes = [
+            { t: "10 積分", c: "" },
+            { t: "📱 iPhone 16", c: "gold" },
+            { t: "30 積分", c: "" },
+            { t: "🎮 PS5 Pro", c: "gold" },
+            { t: "5 積分", c: "" },
+            { t: "🧧 現金8888", c: "big" },
+            { t: "50 積分", c: "gold" },
+            { t: "1 積分", c: "" },
+            { t: "💰 100 P幣", c: "gold" },
+            { t: "💎 500 P幣", c: "big" }
+        ];
 
         window.handleLogout = () => {
             if(confirm("確定要登出帳號嗎？")) {
@@ -438,9 +454,11 @@
 
                 if(u.lastCheckIn === todayStr) return alert("今天已經簽到過了唷！");
 
+                // 🟢 強制活動開啟 (含2/14)
                 let reward = 3;
                 let logMsg = "📅 每日簽到獎勵";
-                if (month === 2 && date >= 15 && date <= 22) {
+                // 邏輯改為：只要是 2 月，且日期在 14 到 22 之間
+                if (month === 2 && date >= 14 && date <= 22) {
                     reward = 10;
                     logMsg = "🧧 新春簽到加碼";
                 }
@@ -493,11 +511,12 @@
             const badge = document.getElementById('eventBadge');
             const eventDate = document.getElementById('eventDate');
             
-            if(month + 1 === 2 && date >= 15 && date <= 22) {
+            // 🟢 強制顯示活動 UI (包含 2/14)
+            if(month + 1 === 2 && date >= 14 && date <= 22) {
                 btn.classList.add('event-active-checkin');
                 badge.style.display = 'block';
                 eventDate.style.display = 'block';
-                btnText.innerText = "立即領取加碼 10P";
+                btnText.innerText = "🧧 新春加碼！簽到領 10P";
             } else {
                 btn.classList.remove('event-active-checkin');
                 badge.style.display = 'none';
@@ -636,7 +655,7 @@
             }
         });
 
-        // 🟢 反作弊保護邏輯：隱藏抽獎機制
+        // 🟢 真實機率運算
         function _cR() {
             const r = Math.random() * 100;
             if (r < 1) return { type: 'pcoin', val: 500 }; 
@@ -650,18 +669,19 @@
             return { type: 'point', val: pt };
         }
 
+        // 🟢 產生捲軸項目 (含誘餌與結果)
         function generateReelItems(finalResult) {
             let html = "";
-            // 🟢 動畫加長：產生 50 個隨機圖案 (原 20 個)，讓捲動時間可以拉長到 6 秒
+            // 產生 50 個隨機圖案 (誘餌)
             for(let i=0; i<50; i++) {
-                const item = _pMap[Math.floor(Math.random() * _pMap.length)];
-                // 拆解圖案與文字
-                const parts = item.t.split(" ");
-                const icon = parts[0];
-                const text = parts.slice(1).join(" ");
+                const item = _fakePrizes[Math.floor(Math.random() * _fakePrizes.length)];
+                // 簡單的圖標分離
+                const icon = item.t.substring(0, 2); 
+                const text = item.t.substring(2);
                 html += `<div class="slot-item ${item.c}">${icon}<span>${text}</span></div>`;
             }
 
+            // 最終結果
             let finalIcon = "🪙";
             let finalClass = "";
             if (finalResult.type === 'pcoin') {
@@ -702,10 +722,9 @@
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    // 🟢 動畫加長：改成 6 秒，並使用更平滑的 ease-in-out
+                    // 🟢 動畫加長至 6 秒
                     reel.style.transition = 'transform 6s cubic-bezier(0.1, 0.8, 0.1, 1)'; 
-                    // 移動距離對應 50 個 item 的高度
-                    reel.style.transform = 'translateY(-8000px)';
+                    reel.style.transform = 'translateY(-8000px)'; // 對應 50 個 item 的高度
                 });
             });
 
@@ -748,7 +767,7 @@
                 status: "已入帳"
             });
 
-            // 🟢 等待 6 秒後顯示結果
+            // 6秒後顯示結果
             setTimeout(() => {
                 frame.classList.add('win');
                 title.style.opacity = 1;
