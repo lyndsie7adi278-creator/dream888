@@ -21,7 +21,7 @@
     </script>
     
     <style>
-        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --success: #2ecc71; --wait: #f1c40f; --alliance: #6c5ce7; --danger: #ff4757; --line: #06c755; }
+        :root { --primary: #ff8fa3; --bg: #f8f9fb; --gold: #ffb800; --text: #2c3e50; --success: #2ecc71; --wait: #f1c40f; --alliance: #6c5ce7; --danger: #ff4757; --line: #06c755; --metal: #bdc3c7; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none !important; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 80px; }
         
@@ -82,58 +82,70 @@
 
         .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(10px); }
         
-        /* 🟢 優化後的 Gacha 樣式 */
-        .gacha-box { 
-            width: 220px; height: 220px; 
-            border-radius: 50%;
-            background: radial-gradient(circle, #fff, #f1c40f, #e67e22, #e74c3c);
-            box-shadow: 0 0 40px #e67e22, 0 0 80px #e74c3c, inset 0 0 20px rgba(255,255,255,0.8);
-            border: 4px solid #fff;
-            display: flex; align-items: center; justify-content: center;
-            position: relative;
-            transform: scale(1);
-            overflow: hidden;
-            text-align: center;
+        /* 🟢 高級拉霸機樣式 (Slot Machine) */
+        .slot-machine-frame {
+            width: 280px; height: 180px;
+            background: linear-gradient(180deg, #2c3e50, #000, #2c3e50);
+            border: 6px solid #f1c40f;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.5), inset 0 0 20px #000;
             padding: 10px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        /* 玻璃反光效果 */
+        .slot-machine-frame::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.1), transparent);
+            pointer-events: none;
+            z-index: 5;
         }
 
-        .gacha-box.charging { animation: orb-charge 0.1s infinite alternate; }
-        @keyframes orb-charge { 
-            0% { transform: scale(1); filter: hue-rotate(0deg); } 
-            100% { transform: scale(1.05); filter: hue-rotate(15deg); box-shadow: 0 0 100px #ff4757; } 
+        .slot-window {
+            width: 100%; height: 100%;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden; /* 隱藏超出的捲軸 */
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
         }
 
-        .gacha-num { 
-            font-size: 1.6rem; /* 縮小以顯示文字 */
-            font-weight: 900; color: #fff; 
-            text-shadow: 0 2px 5px rgba(0,0,0,0.8); 
-            z-index: 10; display: none; opacity: 0;
-            transform: scale(1); 
-            line-height: 1.2;
-            word-break: keep-all;
+        .slot-reel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* 初始位置 */
+            transform: translateY(0); 
         }
 
-        .gacha-num.rolling {
-            display: block;
-            opacity: 1;
-            animation: text-pulse 0.1s infinite alternate;
+        .slot-item {
+            height: 160px; /* 與視窗高度一致，確保一次只顯示一個 */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            box-sizing: border-box;
+            background: #fff;
         }
-        @keyframes text-pulse { from {transform: scale(1);} to {transform: scale(1.1);} }
+        .slot-item img { width: 60px; height: 60px; margin-bottom: 5px; object-fit: contain; }
+        .slot-item span { font-size: 1rem; color: #666; margin-top: 5px; }
+        .slot-item.gold { color: #d35400; background: #fdf5e6; }
+        .slot-item.big { color: #c0392b; background: #fff0f0; }
 
-        .gacha-num.stamp { 
-            display: block; 
-            opacity: 1;
-            font-size: 2.5rem; /* 結果時變大 */
-            color: #fff;
-            animation: stamp-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
-        }
-        @keyframes stamp-in {
-            0% { opacity: 0; transform: scale(5); }
-            50% { opacity: 1; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        
-        .gacha-title { color: #fff; margin-top: 40px; font-size: 1.2rem; font-weight: bold; opacity: 0; transition: 0.5s; text-align: center; }
+        /* 中獎閃爍特效 */
+        .slot-machine-frame.win { animation: slot-win-glow 0.5s infinite alternate; border-color: #ff4757; }
+        @keyframes slot-win-glow { from { box-shadow: 0 0 20px #ff4757; } to { box-shadow: 0 0 50px #ff4757; } }
+
+        .gacha-title { color: #fff; margin-top: 30px; font-size: 1.2rem; font-weight: bold; opacity: 0; transition: 0.5s; text-align: center; }
         .gacha-title span { display: block; font-size: 1.5rem; color: var(--gold); margin-top: 5px; }
 
         .gacha-btn-link { 
@@ -209,7 +221,6 @@
         .cal-date.checked { background: #e3faf3; color: var(--success); }
         .cal-date.checked::after { content: '✔'; font-size: 0.5rem; position: absolute; bottom: 2px; right: 3px; }
         
-        /* 🟢 活動樣式 */
         .event-active-checkin { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4) !important; position: relative; overflow: hidden; }
         .event-active-checkin::after { content: "🧧 加碼 10P"; position: absolute; top: -5px; right: -25px; background: #f1c40f; color: #c0392b; font-size: 0.7rem; padding: 15px 30px 5px; transform: rotate(45deg); font-weight: 900; }
     </style>
@@ -253,7 +264,7 @@
         <div class="energy-bar-bg">
             <div class="energy-bar-fill" id="energyFill"></div>
         </div>
-        <div class="energy-text" id="energyDesc">累積消費滿 500 P 可進行一次爆擊抽獎！<br>(有機會獲得 1~50 點積分)</div>
+        <div class="energy-text" id="energyDesc">累積消費滿 500 P 可進行一次爆擊抽獎！<br>(有機會獲得 1~50 點積分，甚至 P幣大獎！)</div>
         <button class="claim-btn" id="claimBtn" onclick="startGacha()">🔥 能量已滿！點擊爆發</button>
     </div>
 
@@ -352,8 +363,11 @@
     </div>
 
     <div id="gachaModal" class="gacha-modal">
-        <div class="gacha-box" id="gachaBox">
-            <div class="gacha-num" id="gachaNum">0</div>
+        <div class="slot-machine-frame" id="slotFrame">
+            <div class="slot-window">
+                <div class="slot-reel" id="slotReel">
+                    </div>
+            </div>
         </div>
         <div class="gacha-title" id="gachaResultText">能量釋放中...</div>
         
@@ -470,7 +484,6 @@
             }
 
             const btn = document.getElementById('checkBtn');
-            // 🟢 活動判斷：顯示不同按鈕樣式
             if(month + 1 === 2 && date >= 15 && date <= 22) {
                 btn.classList.add('event-active-checkin');
                 btn.innerText = "🧧 新春加碼！簽到領 10P";
@@ -609,37 +622,62 @@
             }
         });
 
-        // 🟢 假抽獎獎品清單 (誘餌)
-        // 注意：這裡只控制「顯示動畫」，不影響「實際中獎結果」
-        const fakePrizes = [
-            { t: "10 點積分", c: "#fff" },
-            { t: "📱 iPhone 16 Pro", c: "#e74c3c" }, // 誘餌
-            { t: "30 點積分", c: "#fff" },
-            { t: "🎮 PS5 Pro", c: "#3498db" }, // 誘餌
-            { t: "5 點積分", c: "#fff" },
-            { t: "🎧 AirPods Max", c: "#f1c40f" }, // 誘餌
-            { t: "50 點積分", c: "#fff" },
-            { t: "🧧 8888 現金", c: "#e74c3c" } // 誘餌
-        ];
+        // 🟢 混合型獎池邏輯
+        function calculateRealReward() {
+            const rand = Math.random() * 100;
+            
+            // 💎 真實 P 幣大獎 (5% 機率)
+            if (rand < 1) return { type: 'pcoin', val: 500 }; // 1% 機率中 500P
+            if (rand < 5) return { type: 'pcoin', val: 100 }; // 4% 機率中 100P
 
-        function calculateReward() {
-            const rand = Math.random() * 100; 
-            const today = new Date();
-            const isEvent = (today.getMonth() + 1 === 2 && today.getDate() >= 15 && today.getDate() <= 22);
+            // ⚡ 積分邏輯 (維持原本 95% 機率分佈)
+            const pRand = Math.random() * 100;
+            let points = 1;
+            if (pRand < 1) points = Math.floor(Math.random() * (50 - 31 + 1)) + 31;
+            else if (pRand < 3) points = Math.floor(Math.random() * (30 - 16 + 1)) + 16;
+            else if (pRand < 10) points = Math.floor(Math.random() * (15 - 6 + 1)) + 6;
+            else points = Math.floor(Math.random() * (5 - 1 + 1)) + 1;
 
-            // 🟢 活動期間：獲得 50 積分的機率稍微提升
-            if (isEvent) {
-                if (rand < 5) return 50; // 原本 1%，活動期間 5%
-                if (rand < 10) return Math.floor(Math.random() * (45 - 30 + 1)) + 30;
-                if (rand < 20) return Math.floor(Math.random() * (25 - 15 + 1)) + 15;
-                return Math.floor(Math.random() * (10 - 2 + 1)) + 2;
+            return { type: 'point', val: points };
+        }
+
+        // 🎰 生成拉霸機捲軸內容
+        function generateReelItems(finalResult) {
+            const dummyItems = [
+                {t: "🍒", s: "1 積分", c: ""},
+                {t: "7️⃣", s: "100 P幣", c: "gold"},
+                {t: "💎", s: "500 P幣", c: "big"},
+                {t: "🔔", s: "10 積分", c: ""},
+                {t: "🍇", s: "5 積分", c: ""},
+                {t: "📱", s: "iPhone 16", c: "gold"}, // 視覺誘餌
+                {t: "🍋", s: "3 積分", c: ""},
+                {t: "🎮", s: "PS5 Pro", c: "gold"},   // 視覺誘餌
+                {t: "🍉", s: "20 積分", c: ""}
+            ];
+            
+            let html = "";
+            // 產生 20 個隨機圖案製造滾動感
+            for(let i=0; i<20; i++) {
+                const item = dummyItems[Math.floor(Math.random() * dummyItems.length)];
+                html += `<div class="slot-item ${item.c}">${item.t}<span>${item.s}</span></div>`;
             }
 
-            // 平常機率
-            if (rand < 1) return Math.floor(Math.random() * (50 - 31 + 1)) + 31;
-            if (rand < 3) return Math.floor(Math.random() * (30 - 16 + 1)) + 16;
-            if (rand < 10) return Math.floor(Math.random() * (15 - 6 + 1)) + 6;
-            return Math.floor(Math.random() * (5 - 1 + 1)) + 1;
+            // 🟢 插入最終結果
+            let finalIcon = "✨";
+            let finalClass = "";
+            if (finalResult.type === 'pcoin') {
+                finalIcon = "💎";
+                finalClass = "big";
+            } else {
+                if (finalResult.val >= 30) { finalIcon = "🔥"; finalClass = "gold"; }
+                else if (finalResult.val >= 10) finalIcon = "🔔";
+                else finalIcon = "🍒";
+            }
+            
+            const label = finalResult.type === 'pcoin' ? `${finalResult.val} P幣` : `${finalResult.val} 積分`;
+            html += `<div class="slot-item ${finalClass}" id="finalSlotItem">${finalIcon}<span>${label}</span></div>`;
+            
+            return html;
         }
 
         window.startGacha = async () => {
@@ -648,45 +686,62 @@
             if (currentSpend < 500) return alert("能量不足！");
 
             const modal = document.getElementById('gachaModal');
-            const box = document.getElementById('gachaBox');
-            const numDisplay = document.getElementById('gachaNum');
+            const reel = document.getElementById('slotReel');
+            const frame = document.getElementById('slotFrame');
             const title = document.getElementById('gachaResultText');
             
             modal.style.display = 'flex';
-            box.classList.add('charging'); 
-            
-            numDisplay.classList.add('rolling');
-            numDisplay.style.display = 'block';
+            frame.classList.remove('win');
+            title.style.opacity = 0;
+            document.getElementById('gachaLineBtn').style.display = 'none';
+            document.getElementById('gachaCloseBtn').style.display = 'none';
 
-            const rewardPoints = calculateReward();
+            // 1. 計算結果
+            const result = calculateRealReward();
             
-            // 🟢 抽獎動畫邏輯更新：閃爍各種獎品
-            let counter = 0;
-            const interval = setInterval(() => {
-                const randomPrize = fakePrizes[Math.floor(Math.random() * fakePrizes.length)];
-                numDisplay.innerText = randomPrize.t;
-                numDisplay.style.color = randomPrize.c;
-                
-                counter++;
-                if (counter > 30) { // 跑 30 次後停下
-                    clearInterval(interval);
-                    showResult(rewardPoints);
-                }
-            }, 80); // 每 80ms 換一次
+            // 2. 準備動畫
+            reel.innerHTML = generateReelItems(result);
+            reel.style.transition = 'none';
+            reel.style.transform = 'translateY(0)'; // 重置位置
 
+            // 3. 強制重繪後執行動畫
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    reel.style.transition = 'transform 3s cubic-bezier(0.1, 0.9, 0.2, 1)'; // 減速效果
+                    // 每個 item 高度 160px，總共 20 個 dummy + 1 個結果
+                    // 移動距離 = 20 * 160px
+                    reel.style.transform = 'translateY(-3200px)';
+                });
+            });
+
+            // 4. 寫入資料庫
             const uRef = ref(_db, `users/${_uid}`);
             const uSnap = await get(uRef);
             const u = uSnap.val();
 
-            await update(uRef, {
-                spending_counter: (Number(u.spending_counter) || 0) - 500,
-                linePoints: (Number(u.linePoints) || 0) + rewardPoints
-            });
+            let updatePayload = {
+                spending_counter: (Number(u.spending_counter) || 0) - 500
+            };
+
+            let logNote = "";
+            let winLogPrize = "";
+
+            if (result.type === 'pcoin') {
+                updatePayload.balance = (Number(u.balance) || 0) + result.val;
+                logNote = `抽中 ${result.val} P幣 (大獎)`;
+                winLogPrize = `💎 獲得 ${result.val} P幣`;
+            } else {
+                updatePayload.linePoints = (Number(u.linePoints) || 0) + result.val;
+                logNote = `抽中 ${result.val} 點積分`;
+                winLogPrize = `⚡ 獲得 ${result.val} 點積分`;
+            }
+
+            await update(uRef, updatePayload);
 
             push(ref(_db, `users/${_uid}/logs`), {
                 game: "⚡ 能量爆發",
                 cost: 0,
-                note: `抽中 ${rewardPoints} 點`,
+                note: logNote,
                 time: Date.now()
             });
 
@@ -694,98 +749,28 @@
                 uid: _uid,
                 user: u.nickname || "玩家",
                 game: "⚡ 能量爆發",
-                prize: `獲得 ${rewardPoints} 點積分`,
+                prize: winLogPrize,
                 time: serverTimestamp(),
                 status: "已入帳"
             });
+
+            // 5. 動畫結束後顯示
+            setTimeout(() => {
+                frame.classList.add('win');
+                title.style.opacity = 1;
+                
+                if (result.type === 'pcoin') {
+                    title.innerHTML = `🎉 恭喜中大獎！<br><span style="color:#e74c3c; font-size:1.8rem">${result.val} P幣</span><br><small style="color:#aaa; font-size:0.8rem">已存入餘額，可直接消費！</small>`;
+                    confetti({ particleCount: 300, spread: 150, origin: { y: 0.6 } });
+                } else {
+                    title.innerHTML = `🎁 能量轉化成功！<br><span>獲得 ${result.val} 積分</span>`;
+                    confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 } });
+                }
+
+                document.getElementById('gachaLineBtn').style.display = 'block';
+                document.getElementById('gachaCloseBtn').style.display = 'inline-block';
+            }, 3000); // 配合 CSS transition 時間
         };
-
-        function showResult(points) {
-            const box = document.getElementById('gachaBox');
-            const num = document.getElementById('gachaNum');
-            const text = document.getElementById('gachaResultText');
-            const btnLink = document.getElementById('gachaLineBtn');
-            const btnClose = document.getElementById('gachaCloseBtn');
-
-            box.classList.remove('charging');
-            box.style.background = 'transparent';
-            box.style.boxShadow = 'none';
-            box.style.border = 'none';
-            
-            num.classList.remove('rolling');
-            num.classList.add('stamp');
-            
-            // 🟢 最終結果只顯示積分
-            num.innerText = `${points} 積分`;
-            num.style.color = points >= 50 ? '#ff4757' : (points > 10 ? '#f1c40f' : '#fff');
-            
-            text.style.opacity = 1;
-            text.innerHTML = points >= 50 ? `🎁 積分已存入您的帳號！<br><span style="color:#ff4757">🔥 超級爆擊！${points} 點</span>` : `🎁 積分已存入您的帳號！<br><span>獲得 ${points} 點</span>`;
-            
-            btnLink.style.display = 'block';
-            btnClose.style.display = 'inline-block';
-            
-            confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } });
-        }
-
-        onValue(ref(_db, `users`), s => {
-            const list = document.getElementById('referralFriendsList');
-            const allUsers = s.val() || {};
-            const myFriends = Object.entries(allUsers)
-                .map(([id, data]) => ({ ...data, uid: id }))
-                .filter(u => u.invitedBy === _uid)
-                .sort((a,b) => (b.createTime || 0) - (a.createTime || 0));
-
-            if(myFriends.length) {
-                list.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem; margin-top:15px;">已綁定好友 (${myFriends.length}人)</div>` + 
-                myFriends.map(f => `
-                    <div class="list-item" style="padding: 12px 18px; margin-bottom: 8px;">
-                        <div class="item-info">
-                            <b>${f.nickname || '匿名盟友'}</b>
-                            <small>ID: ${f.uid.substring(0,8)}... <span class="friend-status ${f.hasToppedUp ? 'is-topped' : 'not-topped'}">${f.hasToppedUp ? '已首儲' : '未儲值'}</span></small>
-                        </div>
-                    </div>
-                `).join('');
-            }
-        });
-
-        onValue(ref(_db, `referralLogs/${_uid}`), s => {
-            const list = document.getElementById('referralLogList');
-            if(s.exists()) {
-                const logs = Object.values(s.val()).sort((a,b) => b.time - a.time);
-                list.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem;">分潤明細</div>` + 
-                logs.map(l => `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <b>來自好友儲值回饋</b>
-                            <small>好友: ${l.from_uid ? l.from_uid.substring(0,8) : '---'}... | ${new Date(l.time).toLocaleString()}</small>
-                        </div>
-                        <div class="item-val val-plus">+${l.reward} P</div>
-                    </div>
-                `).join('');
-            }
-        });
-
-        onValue(ref(_db, `winLogs`), s => {
-            const list = document.getElementById('winsList');
-            const data = s.val() || {};
-            const myWins = Object.values(data).filter(w => w.user === _uid).sort((a,b) => b.time - a.time);
-            if(myWins.length) {
-                list.innerHTML = myWins.map(w => {
-                    let sc = "status-pending", st = w.status || "待出貨";
-                    if(st === "已出貨") sc = "status-shipping"; if(st === "已完成") sc = "status-completed";
-                    if(w.game === "⚡ 能量爆發") { st = "已入帳"; sc = "status-completed"; }
-                    
-                    return `<div class="list-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                            <div class="item-info"><b>${w.prize}</b><small>${w.game} | ${new Date(w.time).toLocaleString()}</small></div>
-                            <div class="status-tag ${sc}">${st}</div>
-                        </div>
-                        ${w.shippingNo ? `<div class="shipping-info"><div class="shipping-no-box"><span>物流編號：<b class="shipping-no">${w.shippingNo}</b></span><button class="copy-btn" onclick="copyText('${w.shippingNo}', '編號')">📋</button></div><a href="https://tracking.shopmore.com.tw/" target="_blank" class="track-link">📦 物流查詢</a></div>` : ''}
-                    </div>`;
-                }).join('');
-            } else { list.innerHTML = '<div class="empty-state">尚未中獎</div>'; }
-        });
     </script>
 </body>
 </html>
