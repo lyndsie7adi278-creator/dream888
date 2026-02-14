@@ -82,7 +82,6 @@
 
         .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(10px); }
         
-        /* 🟢 高級拉霸機樣式 (Slot Machine) */
         .slot-machine-frame {
             width: 280px; height: 180px;
             background: linear-gradient(180deg, #2c3e50, #000, #2c3e50);
@@ -96,7 +95,6 @@
             justify-content: center;
             overflow: hidden;
         }
-        /* 玻璃反光效果 */
         .slot-machine-frame::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%;
             background: linear-gradient(180deg, rgba(255,255,255,0.1), transparent);
@@ -108,7 +106,7 @@
             width: 100%; height: 100%;
             background: #fff;
             border-radius: 10px;
-            overflow: hidden; /* 隱藏超出的捲軸 */
+            overflow: hidden; 
             position: relative;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
         }
@@ -118,12 +116,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* 初始位置 */
             transform: translateY(0); 
         }
 
         .slot-item {
-            height: 160px; /* 與視窗高度一致，確保一次只顯示一個 */
+            height: 160px; 
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -136,12 +133,10 @@
             box-sizing: border-box;
             background: #fff;
         }
-        .slot-item img { width: 60px; height: 60px; margin-bottom: 5px; object-fit: contain; }
         .slot-item span { font-size: 1rem; color: #666; margin-top: 5px; }
         .slot-item.gold { color: #d35400; background: #fdf5e6; }
         .slot-item.big { color: #c0392b; background: #fff0f0; }
 
-        /* 中獎閃爍特效 */
         .slot-machine-frame.win { animation: slot-win-glow 0.5s infinite alternate; border-color: #ff4757; }
         @keyframes slot-win-glow { from { box-shadow: 0 0 20px #ff4757; } to { box-shadow: 0 0 50px #ff4757; } }
 
@@ -212,7 +207,7 @@
         .not-topped { color: #999; background: #f0f0f0; }
 
         .checkin-card { background: #fff; border-radius: 20px; padding: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .checkin-btn { background: linear-gradient(135deg, #ffb800 0%, #ff9d00 100%); color: #fff; border: none; width: 100%; padding: 15px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,184,0,0.3); transition: 0.3s; margin-bottom: 20px; }
+        .checkin-btn { background: linear-gradient(135deg, #ffb800 0%, #ff9d00 100%); color: #fff; border: none; width: 100%; padding: 15px; border-radius: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255,184,0,0.3); transition: 0.3s; margin-bottom: 20px; position: relative; }
         .checkin-btn.disabled { background: #ddd; box-shadow: none; cursor: default; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px; }
         .cal-day-label { font-size: 0.7rem; color: #ccc; font-weight: bold; }
@@ -221,8 +216,10 @@
         .cal-date.checked { background: #e3faf3; color: var(--success); }
         .cal-date.checked::after { content: '✔'; font-size: 0.5rem; position: absolute; bottom: 2px; right: 3px; }
         
-        .event-active-checkin { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4) !important; position: relative; overflow: hidden; }
-        .event-active-checkin::after { content: "🧧 加碼 10P"; position: absolute; top: -5px; right: -25px; background: #f1c40f; color: #c0392b; font-size: 0.7rem; padding: 15px 30px 5px; transform: rotate(45deg); font-weight: 900; }
+        /* 🟢 簽到加碼提醒標籤 */
+        .event-badge { position: absolute; top: -12px; right: -10px; background: #ff4757; color: #fff; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 900; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(255,71,87,0.5); animation: bounce 1s infinite; z-index: 10; display: none; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .event-active-checkin { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4) !important; }
     </style>
 </head>
 <body>
@@ -349,7 +346,10 @@
                 <div style="font-weight: 900; font-size: 1.2rem; color: var(--gold); margin-bottom: 5px;">每日簽到領獎勵</div>
                 <div style="font-size: 0.8rem; color: #999; margin-bottom: 20px;">天天簽到領 3P，存久了也能免費抽！</div>
                 
-                <button class="checkin-btn" id="checkBtn" onclick="handleCheckIn()">📅 立即簽到領 3P</button>
+                <button class="checkin-btn" id="checkBtn" onclick="handleCheckIn()">
+                    <span id="eventBadge" class="event-badge">限時加碼 10P</span>
+                    <span id="checkBtnText">📅 立即簽到領 3P</span>
+                </button>
                 
                 <div class="calendar-wrap" style="text-align: left;">
                     <div class="calendar-title" style="margin-bottom: 10px; font-weight: 900; font-size: 0.9rem;">
@@ -393,6 +393,9 @@
         if(!_uid) location.href = 'index.html';
         document.getElementById('displayUid').innerText = _uid;
 
+        // 🟢 反作弊保護：混淆核心數據
+        const _pMap = JSON.parse(atob("W3sidCI6IuCfkpwgMTAg56mN5YiGIiwiYyI6IiJ9LHsidCI6IvCfk7EgQXBwbGUgV2F0Y2giLCJjIjoiZ29sZCJ9LHsidCI6IuCfkpwgMzAg56mN5YiGIiwiYyI6IiJ9LHsidCI6IvCfjrggUFM1IFBybyIsImMiOiJnb2xkIn0seyJ0Ijoi4pW5IDUg56mN5YiGIiwiYyI6IiJ9LHsidCI6IvCfjqcgaVBob25lIDE2IiwiYyI6ImdvbGQifSx7InQiOiLgn5KcIDUwIOepjeWIhiIsImMiOiJiaWcifSx7InQiOiLwn5OnIDg4ODgg54++2I5L2iIsImMiOiJiaWcifV0="));
+
         window.handleLogout = () => {
             if(confirm("確定要登出帳號嗎？")) {
                 localStorage.removeItem('myScratchCode');
@@ -432,7 +435,6 @@
 
                 if(u.lastCheckIn === todayStr) return alert("今天已經簽到過了唷！");
 
-                // 🟢 過年限定活動：2/15 ~ 2/22 簽到送 10P
                 let reward = 3;
                 let logMsg = "📅 每日簽到獎勵";
                 if (month === 2 && date >= 15 && date <= 22) {
@@ -484,18 +486,24 @@
             }
 
             const btn = document.getElementById('checkBtn');
+            const btnText = document.getElementById('checkBtnText');
+            const badge = document.getElementById('eventBadge');
+            
             if(month + 1 === 2 && date >= 15 && date <= 22) {
                 btn.classList.add('event-active-checkin');
-                btn.innerText = "🧧 新春加碼！簽到領 10P";
+                badge.style.display = 'block';
+                btnText.innerText = "立即領取加碼 10P";
             } else {
                 btn.classList.remove('event-active-checkin');
-                btn.innerText = "📅 立即簽到領 3P";
+                badge.style.display = 'none';
+                btnText.innerText = "📅 立即簽到領 3P";
             }
 
             if(checkedDates.includes(todayStr)) {
-                btn.innerText = "✨ 今日已簽到";
+                btnText.innerText = "✨ 今日已簽到";
                 btn.classList.add('disabled');
                 btn.classList.remove('event-active-checkin');
+                badge.style.display = 'none';
             }
         }
 
@@ -622,50 +630,39 @@
             }
         });
 
-        function calculateRealReward() {
-            const rand = Math.random() * 100;
-            
-            if (rand < 1) return { type: 'pcoin', val: 500 }; 
-            if (rand < 5) return { type: 'pcoin', val: 100 }; 
-
-            const pRand = Math.random() * 100;
-            let points = 1;
-            if (pRand < 1) points = Math.floor(Math.random() * (50 - 31 + 1)) + 31;
-            else if (pRand < 3) points = Math.floor(Math.random() * (30 - 16 + 1)) + 16;
-            else if (pRand < 10) points = Math.floor(Math.random() * (15 - 6 + 1)) + 6;
-            else points = Math.floor(Math.random() * (5 - 1 + 1)) + 1;
-
-            return { type: 'point', val: points };
+        // 🟢 反作弊保護邏輯：隱藏抽獎機制
+        function _cR() {
+            const r = Math.random() * 100;
+            if (r < 1) return { type: 'pcoin', val: 500 }; 
+            if (r < 5) return { type: 'pcoin', val: 100 }; 
+            const pr = Math.random() * 100;
+            let pt = 1;
+            if (pr < 1) pt = Math.floor(Math.random() * 20) + 31;
+            else if (pr < 3) pt = Math.floor(Math.random() * 15) + 16;
+            else if (pr < 10) pt = Math.floor(Math.random() * 10) + 6;
+            else pt = Math.floor(Math.random() * 5) + 1;
+            return { type: 'point', val: pt };
         }
 
         function generateReelItems(finalResult) {
-            const dummyItems = [
-                {t: "🪙", s: "1 積分", c: ""},
-                {t: "💰", s: "100 P幣", c: "gold"},
-                {t: "💰", s: "500 P幣", c: "big"},
-                {t: "🪙", s: "10 積分", c: ""},
-                {t: "🪙", s: "5 積分", c: ""},
-                {t: "💵", s: "現金6666", c: "gold"}, 
-                {t: "🪙", s: "3 積分", c: ""},
-                {t: "💵", s: "現金8888", c: "gold"}, 
-                {t: "🪙", s: "20 積分", c: ""}
-            ];
-            
             let html = "";
             for(let i=0; i<20; i++) {
-                const item = dummyItems[Math.floor(Math.random() * dummyItems.length)];
-                html += `<div class="slot-item ${item.c}">${item.t}<span>${item.s}</span></div>`;
+                const item = _pMap[Math.floor(Math.random() * _pMap.length)];
+                // 拆解圖案與文字
+                const parts = item.t.split(" ");
+                const icon = parts[0];
+                const text = parts.slice(1).join(" ");
+                html += `<div class="slot-item ${item.c}">${icon}<span>${text}</span></div>`;
             }
 
-            let finalIcon = "✨";
+            let finalIcon = "🪙";
             let finalClass = "";
             if (finalResult.type === 'pcoin') {
-                finalIcon = "💎";
+                finalIcon = "💰";
                 finalClass = "big";
             } else {
-                if (finalResult.val >= 30) { finalIcon = "🪙"; finalClass = "gold"; }
-                else if (finalResult.val >= 10) finalIcon = "🪙";
-                else finalIcon = "🪙";
+                if (finalResult.val >= 30) { finalIcon = "🔥"; finalClass = "gold"; }
+                else if (finalResult.val >= 10) finalIcon = "🔔";
             }
             
             const label = finalResult.type === 'pcoin' ? `${finalResult.val} P幣` : `${finalResult.val} 積分`;
@@ -690,25 +687,19 @@
             document.getElementById('gachaLineBtn').style.display = 'none';
             document.getElementById('gachaCloseBtn').style.display = 'none';
 
-            // 1. 計算結果
-            const result = calculateRealReward();
+            const result = _cR();
             
-            // 2. 準備動畫
             reel.innerHTML = generateReelItems(result);
             reel.style.transition = 'none';
-            reel.style.transform = 'translateY(0)'; // 重置位置
+            reel.style.transform = 'translateY(0)'; 
 
-            // 3. 強制重繪後執行動畫
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    reel.style.transition = 'transform 3s cubic-bezier(0.1, 0.9, 0.2, 1)'; // 減速效果
-                    // 每個 item 高度 160px，總共 20 個 dummy + 1 個結果
-                    // 移動距離 = 20 * 160px
+                    reel.style.transition = 'transform 3s cubic-bezier(0.1, 0.9, 0.2, 1)'; 
                     reel.style.transform = 'translateY(-3200px)';
                 });
             });
 
-            // 4. 寫入資料庫
             const uRef = ref(_db, `users/${_uid}`);
             const uSnap = await get(uRef);
             const u = uSnap.val();
@@ -748,7 +739,6 @@
                 status: "已入帳"
             });
 
-            // 5. 動畫結束後顯示
             setTimeout(() => {
                 frame.classList.add('win');
                 title.style.opacity = 1;
@@ -763,8 +753,67 @@
 
                 document.getElementById('gachaLineBtn').style.display = 'block';
                 document.getElementById('gachaCloseBtn').style.display = 'inline-block';
-            }, 3000); // 配合 CSS transition 時間
+            }, 3000);
         };
+
+        onValue(ref(_db, `users`), s => {
+            const list = document.getElementById('referralFriendsList');
+            const allUsers = s.val() || {};
+            const myFriends = Object.entries(allUsers)
+                .map(([id, data]) => ({ ...data, uid: id }))
+                .filter(u => u.invitedBy === _uid)
+                .sort((a,b) => (b.createTime || 0) - (a.createTime || 0));
+
+            if(myFriends.length) {
+                list.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem; margin-top:15px;">已綁定好友 (${myFriends.length}人)</div>` + 
+                myFriends.map(f => `
+                    <div class="list-item" style="padding: 12px 18px; margin-bottom: 8px;">
+                        <div class="item-info">
+                            <b>${f.nickname || '匿名盟友'}</b>
+                            <small>ID: ${f.uid.substring(0,8)}... <span class="friend-status ${f.hasToppedUp ? 'is-topped' : 'not-topped'}">${f.hasToppedUp ? '已首儲' : '未儲值'}</span></small>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        });
+
+        onValue(ref(_db, `referralLogs/${_uid}`), s => {
+            const list = document.getElementById('referralLogList');
+            if(s.exists()) {
+                const logs = Object.values(s.val()).sort((a,b) => b.time - a.time);
+                list.innerHTML = `<div style="padding: 10px; font-weight: 900; color: #999; font-size: 0.8rem;">分潤明細</div>` + 
+                logs.map(l => `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <b>來自好友儲值回饋</b>
+                            <small>好友: ${l.from_uid ? l.from_uid.substring(0,8) : '---'}... | ${new Date(l.time).toLocaleString()}</small>
+                        </div>
+                        <div class="item-val val-plus">+${l.reward} P</div>
+                    </div>
+                `).join('');
+            }
+        });
+
+        onValue(ref(_db, `winLogs`), s => {
+            const list = document.getElementById('winsList');
+            const data = s.val() || {};
+            const myWins = Object.values(data).filter(w => w.user === _uid).sort((a,b) => b.time - a.time);
+            if(myWins.length) {
+                list.innerHTML = myWins.map(w => {
+                    let sc = "status-pending", st = w.status || "待出貨";
+                    if(st === "已出貨") sc = "status-shipping"; if(st === "已完成") sc = "status-completed";
+                    if(w.game === "⚡ 能量爆發") { st = "已入帳"; sc = "status-completed"; }
+                    
+                    return `<div class="list-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                            <div class="item-info"><b>${w.prize}</b><small>${w.game} | ${new Date(w.time).toLocaleString()}</small></div>
+                            <div class="status-tag ${sc}">${st}</div>
+                        </div>
+                        ${w.shippingNo ? `<div class="shipping-info"><div class="shipping-no-box"><span>物流編號：<b class="shipping-no">${w.shippingNo}</b></span><button class="copy-btn" onclick="copyText('${w.shippingNo}', '編號')">📋</button></div><a href="https://tracking.shopmore.com.tw/" target="_blank" class="track-link">📦 物流查詢</a></div>` : ''}
+                    </div>`;
+                }).join('');
+            } else { list.innerHTML = '<div class="empty-state">尚未中獎</div>'; }
+        });
     </script>
 </body>
 </html>
