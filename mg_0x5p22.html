@@ -73,6 +73,9 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .scroll-table-container::-webkit-scrollbar { width: 8px; height: 8px; }
 .scroll-table-container::-webkit-scrollbar-track { background: #000; }
 .scroll-table-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+/* 🟢 新增：日期分隔線樣式 */
+.date-header td { background: #1f2937; color: var(--p); font-weight: 900; text-align: center; font-size: 0.9rem; padding: 8px !important; letter-spacing: 1px; border-bottom: 2px solid var(--p); }
 </style>
 </head>
 <body>
@@ -181,18 +184,22 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div id="win_logs" class="page">
     <span class="title">🏆 商品/實體中獎紀錄</span>
     <div class="card">
-        <table class="win-table">
-            <thead><tr><th>時間/玩家</th><th>商品/獎項</th><th>出貨管理</th></tr></thead>
-            <tbody id="globalWinItems"></tbody>
-        </table>
+        <div class="scroll-table-container">
+            <table class="win-table">
+                <thead><tr><th>時間/玩家</th><th>商品/獎項</th><th>出貨管理</th></tr></thead>
+                <tbody id="globalWinItems"></tbody>
+            </table>
+        </div>
     </div>
     
     <span class="title" style="margin-top:30px; color:#2ecc71">⚡ 能量/積分獲得紀錄</span>
     <div class="card">
-        <table class="win-table">
-            <thead><tr><th>時間/玩家</th><th>來源</th><th>獲得點數</th></tr></thead>
-            <tbody id="globalPointItems"></tbody>
-        </table>
+        <div class="scroll-table-container">
+            <table class="win-table">
+                <thead><tr><th>時間/玩家</th><th>來源</th><th>獲得點數</th></tr></thead>
+                <tbody id="globalPointItems"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -314,7 +321,8 @@ async function runReport(start, end) {
                         let resultHtml = `<span style="color:#666">❌ 未中獎</span>`;
                         const candidates = winMap[uid + "_" + log.game];
                         if (candidates) {
-                            const match = candidates.find(w => Math.abs(w.time - log.time) < 5000);
+                            // 🟢 修正：放寬時間判定到 60 秒 (避免因手機/伺服器時間差導致顯示未中獎)
+                            const match = candidates.find(w => Math.abs(w.time - log.time) < 60000);
                             if (match) {
                                 resultHtml = `<span style="color:#2ecc71; font-weight:bold;">🏆 ${match.prize}</span>`;
                             }
@@ -420,6 +428,7 @@ function startSync(){
         const aC=document.createElement('div'); aC.className='card'; aC.innerHTML=`<b>${g.name || id} 調控</b><div class="adj-grid" style="margin-top:10px"><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="價格"><input type="number" value="${g.order||99}" onchange="updNum('${id}','order',this.value)" title="排序"></div>`; adj.appendChild(aC)})});
 
     // 🟢 修正中獎紀錄邏輯：自動分流 積分/能量 和 實體獎項
+    // 🟢 新增：日期分組顯示，且不限制數量
     onValue(ref(db,'winLogs'),s=>{ 
         const winList=document.getElementById('globalWinItems'); 
         const pointList=document.getElementById('globalPointItems'); 
@@ -427,25 +436,47 @@ function startSync(){
         pointList.innerHTML='';
 
         const data = s.val() || {}; 
-        const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)).slice(0,60);
+        const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)); // 移除 .slice 限制，顯示所有
         
-        entries.forEach(async key => { 
+        let lastDateWin = "";
+        let lastDatePoint = "";
+
+        // 輔助函式：渲染表格內容 (含日期分組)
+        const renderGroupedTable = (targetList, item, key, lastDateStr) => {
+            const dateStr = new Date(item.time).toLocaleDateString();
+            if (dateStr !== lastDateStr) {
+                const dateRow = document.createElement('tr');
+                dateRow.className = 'date-header';
+                dateRow.innerHTML = `<td colspan="3">${dateStr}</td>`;
+                targetList.appendChild(dateRow);
+                lastDateStr = dateStr;
+            }
+
+            const tr = document.createElement('tr');
+            if (targetList === pointList) {
+                // 積分表格內容
+                tr.innerHTML = `<td><small>${new Date(item.time).toLocaleTimeString()}</small><br><b>${item.user}</b></td><td>${item.game}</td><td><b style="color:#2ecc71">${item.prize}</b></td>`;
+            } else {
+                // 實體獎項表格內容 (需異步讀取物流資訊)
+                get(ref(db, `users/${item.uid}/shipping`)).then(uSnap => {
+                    const ship = uSnap.val() || {};
+                    const shipText = ship.name ? `<br><small style="color:var(--success)">📍 ${ship.name} ${ship.phone} (${ship.store})</small>` : '';
+                    tr.innerHTML = `<td><small>${new Date(item.time).toLocaleTimeString()}</small><br><b>${item.user}</b>${shipText}</td><td><small>${item.game}</small><br><span style="color:var(--p)">${item.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${item.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${item.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${item.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${item.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`;
+                });
+            }
+            targetList.appendChild(tr);
+            return lastDateStr;
+        };
+
+        entries.forEach(key => { 
             const i = data[key]; 
             const prizeStr = String(i.prize || "");
             
             // 判斷是否為積分/能量相關紀錄
             if (prizeStr.includes('積分') || prizeStr.includes('能量') || prizeStr.includes('點')) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b></td><td>${i.game}</td><td><b style="color:#2ecc71">${i.prize}</b></td>`;
-                pointList.appendChild(tr);
+                lastDatePoint = renderGroupedTable(pointList, i, key, lastDatePoint);
             } else {
-                // 實體商品 (保留出貨管理功能)
-                const uSnap = await get(ref(db, `users/${i.uid}/shipping`));
-                const ship = uSnap.val() || {};
-                const shipText = ship.name ? `<br><small style="color:var(--success)">📍 ${ship.name} ${ship.phone} (${ship.store})</small>` : '';
-                const tr = document.createElement('tr'); 
-                tr.innerHTML = `<td><small>${new Date(i.time).toLocaleString()}</small><br><b>${i.user}</b>${shipText}</td><td><small>${i.game}</small><br><span style="color:var(--p)">${i.prize}</span></td><td><div class="win-status-row"><select onchange="updateWinStatus('${key}', this.value)" class="win-shipping-input"><option value="待出貨" ${i.status==='待出貨'?'selected':''}>待出貨</option><option value="已出貨" ${i.status==='已出貨'?'selected':''}>已出貨</option><option value="已完成" ${i.status==='已完成'?'selected':''}>已完成</option></select><input type="text" placeholder="交貨便編號" value="${i.shippingNo||''}" onchange="updateWinShipping('${key}', this.value)" class="win-shipping-input"></div></td>`; 
-                winList.appendChild(tr); 
+                lastDateWin = renderGroupedTable(winList, i, key, lastDateWin);
             }
         });
     });
