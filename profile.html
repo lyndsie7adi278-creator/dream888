@@ -82,6 +82,7 @@
 
         .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(10px); }
         
+        /* 🟢 高級拉霸機樣式 */
         .slot-machine-frame {
             width: 280px; height: 180px;
             background: linear-gradient(180deg, #2c3e50, #000, #2c3e50);
@@ -216,10 +217,11 @@
         .cal-date.checked { background: #e3faf3; color: var(--success); }
         .cal-date.checked::after { content: '✔'; font-size: 0.5rem; position: absolute; bottom: 2px; right: 3px; }
         
-        /* 🟢 簽到加碼提醒標籤 */
+        /* 🟢 簽到加碼樣式 */
         .event-badge { position: absolute; top: -12px; right: -10px; background: #ff4757; color: #fff; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 900; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(255,71,87,0.5); animation: bounce 1s infinite; z-index: 10; display: none; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        .event-active-checkin { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4) !important; }
+        .event-active-checkin { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4) !important; border: 2px solid #ffeb3b !important; }
+        .event-text { font-size: 0.7rem; color: #e74c3c; margin-top: 5px; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -347,11 +349,12 @@
                 <div style="font-size: 0.8rem; color: #999; margin-bottom: 20px;">天天簽到領 3P，存久了也能免費抽！</div>
                 
                 <button class="checkin-btn" id="checkBtn" onclick="handleCheckIn()">
-                    <span id="eventBadge" class="event-badge">限時加碼 10P</span>
+                    <span id="eventBadge" class="event-badge">🧧 新春加碼</span>
                     <span id="checkBtnText">📅 立即簽到領 3P</span>
                 </button>
+                <div id="eventDate" class="event-text" style="display:none;">📅 2/15 ~ 2/22 限時加碼 10P</div>
                 
-                <div class="calendar-wrap" style="text-align: left;">
+                <div class="calendar-wrap" style="text-align: left; margin-top:20px;">
                     <div class="calendar-title" style="margin-bottom: 10px; font-weight: 900; font-size: 0.9rem;">
                         <span id="calMonth">2026年 2月</span>
                         <span style="color:var(--gold); font-size: 0.7rem; float: right;">✔ 代表簽到成功</span>
@@ -488,14 +491,17 @@
             const btn = document.getElementById('checkBtn');
             const btnText = document.getElementById('checkBtnText');
             const badge = document.getElementById('eventBadge');
+            const eventDate = document.getElementById('eventDate');
             
             if(month + 1 === 2 && date >= 15 && date <= 22) {
                 btn.classList.add('event-active-checkin');
                 badge.style.display = 'block';
+                eventDate.style.display = 'block';
                 btnText.innerText = "立即領取加碼 10P";
             } else {
                 btn.classList.remove('event-active-checkin');
                 badge.style.display = 'none';
+                eventDate.style.display = 'none';
                 btnText.innerText = "📅 立即簽到領 3P";
             }
 
@@ -646,7 +652,8 @@
 
         function generateReelItems(finalResult) {
             let html = "";
-            for(let i=0; i<20; i++) {
+            // 🟢 動畫加長：產生 50 個隨機圖案 (原 20 個)，讓捲動時間可以拉長到 6 秒
+            for(let i=0; i<50; i++) {
                 const item = _pMap[Math.floor(Math.random() * _pMap.length)];
                 // 拆解圖案與文字
                 const parts = item.t.split(" ");
@@ -695,8 +702,10 @@
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    reel.style.transition = 'transform 3s cubic-bezier(0.1, 0.9, 0.2, 1)'; 
-                    reel.style.transform = 'translateY(-3200px)';
+                    // 🟢 動畫加長：改成 6 秒，並使用更平滑的 ease-in-out
+                    reel.style.transition = 'transform 6s cubic-bezier(0.1, 0.8, 0.1, 1)'; 
+                    // 移動距離對應 50 個 item 的高度
+                    reel.style.transform = 'translateY(-8000px)';
                 });
             });
 
@@ -739,6 +748,7 @@
                 status: "已入帳"
             });
 
+            // 🟢 等待 6 秒後顯示結果
             setTimeout(() => {
                 frame.classList.add('win');
                 title.style.opacity = 1;
@@ -753,7 +763,7 @@
 
                 document.getElementById('gachaLineBtn').style.display = 'block';
                 document.getElementById('gachaCloseBtn').style.display = 'inline-block';
-            }, 3000);
+            }, 6000);
         };
 
         onValue(ref(_db, `users`), s => {
