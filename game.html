@@ -44,12 +44,24 @@
 
     .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
     .prize-tag-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-    .prize-tag { background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; justify-content: flex-start; gap: 15px; position: relative; transition: 0.3s; }
-    .p-num { font-size: 1.4rem; font-weight: 900; color: var(--p); background: rgba(255,184,0,0.1); padding: 2px 10px; border-radius: 6px; min-width: 40px; text-align: center; font-family: monospace; }
-    .p-name { font-size: 1rem; color: #fff; font-weight: bold; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .prize-tag.won { background: linear-gradient(90deg, #1f252e, #000); border-color: var(--p); opacity: 0.6; }
-    .prize-tag.won .p-name { color: #888; text-decoration: line-through; }
-    .prize-tag.won::after { content: "✅ 已開出"; position: absolute; right: 15px; color: var(--success); font-size: 0.8rem; font-weight: bold; }
+    
+    /* 🟢 新的獎項樣式 (合併後) */
+    .prize-tag { background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; position: relative; transition: 0.3s; }
+    .p-left-info { display: flex; align-items: center; gap: 15px; }
+    .p-icon { width: 35px; height: 35px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .p-name { font-size: 1rem; color: #fff; font-weight: bold; }
+    .p-count { font-size: 0.9rem; font-weight: 900; color: var(--p); text-align: right; }
+    .p-total { font-size: 0.7rem; color: #666; }
+    
+    /* 進度條 */
+    .p-progress { width: 80px; height: 4px; background: #333; border-radius: 2px; margin-top: 5px; overflow: hidden; }
+    .p-fill { height: 100%; background: var(--p); border-radius: 2px; transition: width 0.5s; }
+
+    /* 已開出樣式 */
+    .prize-tag.empty { opacity: 0.5; border-color: #333; }
+    .prize-tag.empty .p-name { text-decoration: line-through; color: #888; }
+    .prize-tag.empty .p-fill { background: #555; }
+    .prize-tag.empty .p-count { color: #888; }
 
     .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; margin-bottom: 30px; }
     .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; cursor: pointer; transition: 0.2s; }
@@ -155,7 +167,7 @@
     </div>
     
     <div class="prize-monitor">
-        <div style="color:var(--p); font-size:0.9rem; margin-bottom:12px; font-weight:900;">🏆 本期中獎號碼</div>
+        <div style="color:var(--p); font-size:0.9rem; margin-bottom:12px; font-weight:900;">🏆 獎項剩餘數量表</div>
         <div class="prize-tag-list" id="prizeTags"></div>
     </div>
 
@@ -319,12 +331,52 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             priceContainer.innerHTML = `<div class="current-price">${_data.price} P</div>`;
         }
         
-        document.getElementById('prizeTags').innerHTML = (_data.prizes || []).map(x => {
-            const w = p.some(it => Number(it.grade) === Number(x.num) && it.revealed);
-            return `<div class="prize-tag ${w ? 'won' : ''}">
-                        <span class="p-num">${Number(x.num).toString().padStart(2,'0')}</span>
-                        <span class="p-name">${x.name || '大獎'}</span>
-                    </div>`;
+        // 🟢 獎項自動合併與排序邏輯 (同首頁)
+        const leftCounts = {};
+        p.forEach(t => {
+            if (!t.taken) leftCounts[t.grade] = (leftCounts[t.grade] || 0) + 1;
+        });
+
+        const summary = {};
+        if(_data.prizes) {
+            _data.prizes.forEach(pDef => {
+                if (!summary[pDef.name]) {
+                    summary[pDef.name] = { 
+                        name: pDef.name, 
+                        total: 0, 
+                        left: 0, 
+                        img: pDef.img,
+                        value: parseInt(pDef.name.replace(/[^0-9]/g, '')) || 0
+                    };
+                }
+                summary[pDef.name].total++;
+                if (leftCounts[pDef.num]) {
+                    summary[pDef.name].left++;
+                }
+            });
+        }
+
+        const sortedPrizes = Object.values(summary).sort((a, b) => b.value - a.value);
+
+        document.getElementById('prizeTags').innerHTML = sortedPrizes.map(p => {
+            const width = (p.left / p.total) * 100;
+            const color = p.left === 0 ? '#555' : (width < 20 ? '#ff4757' : '#2ecc71');
+            const icon = p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:contain">` : '🎁';
+            
+            return `
+            <div class="prize-tag ${p.left === 0 ? 'empty' : ''}">
+                <div class="p-left-info">
+                    <div class="p-icon">${icon}</div>
+                    <div>
+                        <div class="p-name">${p.name}</div>
+                        <div class="p-total">總數: ${p.total}</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="p-count">${p.left} 張</div>
+                    <div class="p-progress"><div class="p-fill" style="width:${width}%; background:${color}"></div></div>
+                </div>
+            </div>`;
         }).join('');
 
         const totalGrid = new Array(Number(_data.total)).fill(null);
@@ -365,13 +417,11 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
     });
 });
 
-// 🟢 核心功能：消費累積邏輯 (寫入資料庫)
 async function updateSpending(price) {
     const userRef = ref(_db, `users/${_uid}`);
     const snap = await get(userRef);
     if(snap.exists()) {
         const u = snap.val();
-        // 累積消費金額 (不做歸零，歸零由會員中心抽獎時執行)
         const current = (Number(u.spending_counter) || 0) + Number(price);
         await update(userRef, { spending_counter: current });
     }
@@ -411,7 +461,6 @@ async function buyTicket(visualIdx) {
         hideLoading();
         document.body.style.pointerEvents = "auto";
         if(res.success) {
-            // 🟢 成功購買後，觸發消費累積 (關鍵修復)
             updateSpending(pr);
             initCanvas((visualIdx+1).toString().padStart(2,'0'), res.val.toString().padStart(2, '0'), visualIdx);
         } else {
