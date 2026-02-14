@@ -54,28 +54,18 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 .ship-info-card { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); padding: 12px; border-radius: 10px; margin: 10px 0; font-size: 0.8rem; line-height: 1.6; }
 .ship-label { color: var(--success); font-weight: bold; margin-right: 5px; }
 
-/* 🟢 優化後的報表樣式 */
-.report-header { background: var(--card); border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 20px; }
-.report-header h3 { margin: 0; margin-right: auto; color: var(--p); font-size: 1.1rem; min-width: 100px; }
-.report-tools { display: flex; gap: 8px; flex: 1; min-width: 250px; }
-.report-tools input { margin: 0; flex: 1; height: 42px; border: 1px solid #333; }
-.report-tools button { margin: 0; height: 42px; white-space: nowrap; padding: 0 15px; }
+.rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.rep-item { background: #0a0c10; padding: 15px; border-radius: 12px; border: 1px solid #222; border-left: 4px solid var(--p); }
 
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-.stat-card { background: linear-gradient(145deg, #1a1d24, #11141b); border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; padding: 20px; position: relative; overflow: hidden; }
-.stat-card::after { content: ''; position: absolute; top: 0; right: 0; width: 60px; height: 60px; background: var(--p); opacity: 0.05; border-radius: 0 0 0 100%; pointer-events: none; }
-.stat-label { font-size: 0.85rem; color: #888; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-.stat-val { font-size: 2rem; font-weight: 900; margin-top: 5px; color: #fff; line-height: 1.2; }
-.stat-val.money { color: var(--p); }
-.stat-val.dep { color: var(--success); }
-
-.scroll-table-container { overflow-x: auto; max-height: 600px; overflow-y: auto; border: 1px solid #222; border-radius: 12px; }
+.scroll-table-container { overflow-x: auto; max-height: 600px; overflow-y: auto; }
 .scroll-table-container::-webkit-scrollbar { width: 8px; height: 8px; }
 .scroll-table-container::-webkit-scrollbar-track { background: #000; }
 .scroll-table-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+.scroll-table-container::-webkit-scrollbar-thumb:hover { background: var(--p); }
 
-/* 🟢 新增：日期分隔線樣式 */
-.date-header td { background: #1f2937; color: var(--p); font-weight: 900; text-align: center; font-size: 0.9rem; padding: 8px !important; letter-spacing: 1px; border-bottom: 2px solid var(--p); }
+/* 🟢 批量新增區域樣式 */
+.batch-box { background: rgba(255, 184, 0, 0.1); border: 2px dashed var(--p); padding: 20px; border-radius: 15px; margin-bottom: 20px; margin-top: 10px; }
+.batch-title { font-size: 1rem; color: var(--p); font-weight: 900; margin-bottom: 15px; display: block; text-align: left; }
 </style>
 </head>
 <body>
@@ -99,40 +89,24 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 
 <div class="main">
     <div id="report_page" class="page active">
-        <span class="title">營運數據中心</span>
-        
-        <div class="report-header">
-            <h3 id="repTitle">📅 請選擇查詢日期</h3>
-            <div class="report-tools">
-                <input type="date" id="repDate">
-                <button class="btn" onclick="fetchDailyReport()">單日</button>
-                <button class="btn" onclick="fetchWeeklyReport()">本週</button>
-                <button class="btn btn-success" onclick="fetchMonthlyReport()">月報</button>
+        <span class="title">營運數據統計報表</span>
+        <div class="card">
+            <div id="repTitle" style="font-size: 1rem; color: var(--p); margin-bottom: 15px; font-weight: bold;">📅 數據查詢</div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="date" id="repDate" style="margin: 0; flex: 1; min-width: 150px;">
+                <button class="btn btn-sm" onclick="fetchDailyReport()" style="margin: 0; width: 100px;">單日查詢</button>
+                <button class="btn btn-sm" onclick="fetchWeeklyReport()" style="margin: 0; width: 100px;">本週報表</button>
+                <button class="btn btn-sm btn-success" onclick="fetchMonthlyReport()" style="margin: 0; width: 100px;">當月總計</button>
             </div>
         </div>
-
-        <div class="stat-grid">
-            <div class="stat-card">
-                <div class="stat-label">消費總額 (P)</div>
-                <div class="stat-val money" id="rRev">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">加點總額 (P)</div>
-                <div class="stat-val dep" id="rDep">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">總刮取次數</div>
-                <div class="stat-val" id="rCnt">0</div>
-            </div>
+        <div class="rep-grid">
+            <div class="rep-item"><small style="color:#888">消費總額 (P)</small><div id="rRev" style="font-size:1.5rem; font-weight:900; color:var(--p); margin-top:5px;">0</div></div>
+            <div class="rep-item"><small style="color:#888">加點總額 (P)</small><div id="rDep" style="font-size:1.5rem; font-weight:900; color:var(--success); margin-top:5px;">0</div></div>
+            <div class="rep-item"><small style="color:#888">總刮取次數</small><div id="rCnt" style="font-size:1.5rem; font-weight:900; color:#fff; margin-top:5px;">0</div></div>
         </div>
         
         <div class="card">
-            <span class="title" style="font-size: 0.95rem; margin-bottom:15px;">📊 商品銷售排行榜</span>
-            <div id="rList" style="font-size: 0.9rem; line-height: 1.8; color:#ccc;">選擇日期後顯示...</div>
-        </div>
-
-        <div class="card">
-            <span class="title" style="font-size: 0.95rem; margin-bottom:15px;">📝 區間詳細帳務明細</span>
+            <span class="title" style="font-size: 0.9rem;">📝 詳細消費與入帳紀錄 (即時更新)</span>
             <div class="scroll-table-container">
                 <table class="win-table">
                     <thead>
@@ -140,8 +114,8 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
                             <th style="min-width:140px">時間</th>
                             <th style="min-width:120px">玩家</th>
                             <th style="min-width:150px">項目</th>
-                            <th style="text-align:right; min-width:100px">金額</th>
-                            <th style="min-width:120px; padding-left:20px;">結果</th>
+                            <th style="text-align:right; min-width:80px">金額</th>
+                            <th style="min-width:150px">結果</th>
                         </tr>
                     </thead>
                     <tbody id="rDetails"></tbody>
@@ -150,7 +124,11 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
         </div>
 
         <div class="card">
-            <span class="title" style="font-size: 0.95rem; margin-bottom:15px;">🏆 區間大獎紀錄</span>
+            <span class="title" style="font-size: 0.9rem;">商品銷售統計 (排行榜)</span>
+            <div id="rList" style="font-size: 0.85rem; line-height: 1.8;">選擇日期或月份點擊查詢...</div>
+        </div>
+        <div class="card">
+            <span class="title" style="font-size: 0.9rem;">中獎紀錄 (高價獎項)</span>
             <table class="win-table">
                 <thead><tr><th>玩家</th><th>獎項</th><th>時間</th></tr></thead>
                 <tbody id="rWins"></tbody>
@@ -175,8 +153,19 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div style="margin:20px 0 10px; color:var(--p); font-weight:700">展示圖片(相簿)：</div><div id="albumContainer"></div><button class="btn btn-sm" onclick="addAlbumInput()" style="width:100%; margin-bottom:20px; background:rgba(255,184,0,0.2); color:var(--p); border:1px solid var(--p)">＋ 新增一張展示圖</button>
 
 <div style="margin:20px 0 10px; color:var(--p); font-weight:700">獎項設定 (獎號必須在總籤數內)：</div>
+
+<div class="batch-box">
+    <span class="batch-title">⚡ 快速批量新增獎項 (自動分配號碼)</span>
+    <div class="dynamic-row" style="background:none; border:none; padding:0; margin-bottom:0;">
+        <input type="text" id="batchName" placeholder="獎項名稱 (如: 200P)" style="flex:2">
+        <input type="number" id="batchCount" placeholder="數量" style="width:80px; flex:none;">
+        <button class="btn btn-sm btn-success" onclick="runBatchAdd()" style="margin:0; width:auto; white-space:nowrap;">批量加入</button>
+    </div>
+    <div style="margin-top:5px; font-size:0.7rem; color:#888;">* 系統會自動從 1 號開始，尋找並填入未使用的空號</div>
+</div>
+
 <div id="prizeContainer"></div>
-<button class="btn btn-sm" onclick="addPrizeInput()" style="width:100%; background:rgba(255,184,0,0.2); color:var(--p); border:1px solid var(--p)">＋ 新增一個獎項 (含圖片)</button>
+<button class="btn btn-sm" onclick="addPrizeInput()" style="width:100%; background:rgba(255,184,0,0.2); color:var(--p); border:1px solid var(--p)">＋ 手動新增單一獎項</button>
 
 <div style="display:flex;gap:10px;margin-top:30px"><button class="btn" style="flex:2" id="publishBtn" onclick="publishGame()">發布並自動洗牌</button><button class="btn btn-danger" style="flex:1;display:none" id="cancelEditBtn" onclick="resetGameForm()">取消編輯</button></div></div>
 <hr style="border:0;border-top:1px solid #333;margin:40px 0"><div id="quickAdjustList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:15px"></div></div>
@@ -184,22 +173,18 @@ input,textarea,select{width:100%;padding:12px;margin-bottom:12px;border-radius:8
 <div id="win_logs" class="page">
     <span class="title">🏆 商品/實體中獎紀錄</span>
     <div class="card">
-        <div class="scroll-table-container">
-            <table class="win-table">
-                <thead><tr><th>時間/玩家</th><th>商品/獎項</th><th>出貨管理</th></tr></thead>
-                <tbody id="globalWinItems"></tbody>
-            </table>
-        </div>
+        <table class="win-table">
+            <thead><tr><th>時間/玩家</th><th>商品/獎項</th><th>出貨管理</th></tr></thead>
+            <tbody id="globalWinItems"></tbody>
+        </table>
     </div>
     
     <span class="title" style="margin-top:30px; color:#2ecc71">⚡ 能量/積分獲得紀錄</span>
     <div class="card">
-        <div class="scroll-table-container">
-            <table class="win-table">
-                <thead><tr><th>時間/玩家</th><th>來源</th><th>獲得點數</th></tr></thead>
-                <tbody id="globalPointItems"></tbody>
-            </table>
-        </div>
+        <table class="win-table">
+            <thead><tr><th>時間/玩家</th><th>來源</th><th>獲得點數</th></tr></thead>
+            <tbody id="globalPointItems"></tbody>
+        </table>
     </div>
 </div>
 
@@ -282,6 +267,39 @@ window.addPrizeInput = (num = '', name = '', img = '') => {
     document.getElementById('prizeContainer').appendChild(d); 
 };
 
+// 🟢 批量新增邏輯
+window.runBatchAdd = () => {
+    const name = document.getElementById('batchName').value.trim();
+    const count = parseInt(document.getElementById('batchCount').value);
+    const total = parseInt(document.getElementById('gTotal').value) || 100;
+    
+    if(!name || !count || count <= 0) return alert("請輸入正確的名稱與數量");
+
+    // 取得目前已佔用的號碼
+    const usedNums = new Set();
+    document.querySelectorAll('#prizeContainer input[type="number"]').forEach(el => {
+        if(el.value) usedNums.add(parseInt(el.value));
+    });
+
+    let addedCount = 0;
+    for(let i = 1; i <= total; i++) {
+        if(addedCount >= count) break;
+        if(!usedNums.has(i)) {
+            addPrizeInput(i, name);
+            usedNums.add(i); // 標記為已使用
+            addedCount++;
+        }
+    }
+
+    if(addedCount < count) {
+        alert(`警告：只成功新增了 ${addedCount} 個獎項，因為可用號碼不足 (總數 ${total})`);
+    } else {
+        // 清空輸入框
+        document.getElementById('batchName').value = '';
+        document.getElementById('batchCount').value = '';
+    }
+};
+
 window.addAlbumInput=(url='')=>{ const id = "alb_" + Math.random().toString(36).substr(2, 9); const d=document.createElement('div'); d.className='dynamic-row'; d.innerHTML=`<div class="file-input-wrapper" style="flex:1; margin-bottom:0; padding:8px; border-style:solid; min-height:auto;"><span id="st-${id}" style="font-size:0.7rem">${url ? '✅ 已有圖' : '點擊上傳'}</span><input type="file" accept="image/*" onchange="handleFileUpload(this, 'in-${id}', 'st-${id}')"></div><input type="hidden" id="in-${id}" value="${url}"><img src="${url || ''}" class="upload-preview" style="${url?'':'display:none'}"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()" style="margin-top:0; flex:none;">✕</button>`; document.getElementById('albumContainer').appendChild(d)};
 window.addNewPopItem = (data = {title:'', content:'', img:''}) => {
     const id = "pop_" + Math.random().toString(36).substr(2, 9);
@@ -293,7 +311,6 @@ window.addNewPopItem = (data = {title:'', content:'', img:''}) => {
 
 window.setMonFilter = (cat) => { monFilter = cat; startSync(); };
 
-// 🟢 核心數據修正：正確區分入帳與扣款
 async function runReport(start, end) {
     const [uSnap, wSnap] = await Promise.all([get(ref(db, 'users')), get(ref(db, 'winLogs'))]);
     const users = uSnap.val() || {}, wins = wSnap.val() || {};
@@ -321,8 +338,7 @@ async function runReport(start, end) {
                         let resultHtml = `<span style="color:#666">❌ 未中獎</span>`;
                         const candidates = winMap[uid + "_" + log.game];
                         if (candidates) {
-                            // 🟢 修正：放寬時間判定到 60 秒 (避免因手機/伺服器時間差導致顯示未中獎)
-                            const match = candidates.find(w => Math.abs(w.time - log.time) < 60000);
+                            const match = candidates.find(w => Math.abs(w.time - log.time) < 60000); 
                             if (match) {
                                 resultHtml = `<span style="color:#2ecc71; font-weight:bold;">🏆 ${match.prize}</span>`;
                             }
@@ -427,8 +443,6 @@ function startSync(){
         onValue(ref(db,`games/${id}/pool`),ps=>{ const p=ps.val()||[]; if(document.getElementById(`rem-${id}`))document.getElementById(`rem-${id}`).innerText=`剩餘 ${p.filter(x=>!x.taken).length} / ${g.total}`});
         const aC=document.createElement('div'); aC.className='card'; aC.innerHTML=`<b>${g.name || id} 調控</b><div class="adj-grid" style="margin-top:10px"><input type="number" value="${g.price}" onchange="updNum('${id}','price',this.value)" title="價格"><input type="number" value="${g.order||99}" onchange="updNum('${id}','order',this.value)" title="排序"></div>`; adj.appendChild(aC)})});
 
-    // 🟢 修正中獎紀錄邏輯：自動分流 積分/能量 和 實體獎項
-    // 🟢 新增：日期分組顯示，且不限制數量
     onValue(ref(db,'winLogs'),s=>{ 
         const winList=document.getElementById('globalWinItems'); 
         const pointList=document.getElementById('globalPointItems'); 
@@ -436,12 +450,11 @@ function startSync(){
         pointList.innerHTML='';
 
         const data = s.val() || {}; 
-        const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0)); // 移除 .slice 限制，顯示所有
+        const entries = Object.keys(data).sort((a,b) => (data[b].time || 0) - (data[a].time || 0));
         
         let lastDateWin = "";
         let lastDatePoint = "";
 
-        // 輔助函式：渲染表格內容 (含日期分組)
         const renderGroupedTable = (targetList, item, key, lastDateStr) => {
             const dateStr = new Date(item.time).toLocaleDateString();
             if (dateStr !== lastDateStr) {
@@ -454,10 +467,8 @@ function startSync(){
 
             const tr = document.createElement('tr');
             if (targetList === pointList) {
-                // 積分表格內容
                 tr.innerHTML = `<td><small>${new Date(item.time).toLocaleTimeString()}</small><br><b>${item.user}</b></td><td>${item.game}</td><td><b style="color:#2ecc71">${item.prize}</b></td>`;
             } else {
-                // 實體獎項表格內容 (需異步讀取物流資訊)
                 get(ref(db, `users/${item.uid}/shipping`)).then(uSnap => {
                     const ship = uSnap.val() || {};
                     const shipText = ship.name ? `<br><small style="color:var(--success)">📍 ${ship.name} ${ship.phone} (${ship.store})</small>` : '';
@@ -471,9 +482,7 @@ function startSync(){
         entries.forEach(key => { 
             const i = data[key]; 
             const prizeStr = String(i.prize || "");
-            
-            // 判斷是否為積分/能量相關紀錄
-            if (prizeStr.includes('積分') || prizeStr.includes('能量') || prizeStr.includes('點')) {
+            if (prizeStr.includes('積分') || prizeStr.includes('能量') || prizeStr.includes('點') || prizeStr.includes('P幣')) {
                 lastDatePoint = renderGroupedTable(pointList, i, key, lastDatePoint);
             } else {
                 lastDateWin = renderGroupedTable(winList, i, key, lastDateWin);
@@ -491,15 +500,12 @@ function startSync(){
             const ship = d.shipping || {};
             const shipHtml = ship.name ? `<div class="ship-info-card"><span class="ship-label">📦 收件人:</span> ${ship.name}<br><span class="ship-label">📱 電話:</span> ${ship.phone}<br><span class="ship-label">🏪 門市:</span> ${ship.store}</div>` : `<div class="ship-info-card" style="background:rgba(255,255,255,0.05); border:1px solid #333; color:#666;">尚未填寫收件資訊</div>`;
             const i=document.createElement('div'); i.className='user-item'; 
-            
-            // 🟢 新增：後台會員管理區增加「扣除積分」按鈕
             i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b> | Line積分: <b style="color:var(--success)">${d.linePoints||0} 點</b><br>${shipHtml}<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳/明細</button><button class="btn btn-sm" onclick="addBal('${id}')">手動加點</button><button class="btn btn-sm btn-unlock" onclick="clearCommission('${id}')">💰 結清獎金</button><button class="btn btn-sm btn-danger" onclick="deductPoints('${id}')">🎁 兌換核銷 (扣積分)</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`; 
             c.appendChild(i)
         })
     });
 }
 
-// 🟢 新增：後台手動扣除積分 (核銷)
 window.deductPoints = async (uid) => {
     const p = prompt("請輸入要扣除的積分點數 (例如: 10)：");
     if (!p || isNaN(p)) return;
@@ -517,10 +523,9 @@ window.deductPoints = async (uid) => {
             
             await update(uRef, { linePoints: currentPoints - amount });
             
-            // 寫入紀錄方便查帳
             await push(ref(db, `users/${uid}/logs`), {
                 game: "積分兌換核銷",
-                cost: 0, // 不扣 P 幣
+                cost: 0, 
                 note: `扣除 ${amount} 點積分`,
                 time: Date.now()
             });
@@ -553,7 +558,7 @@ window.approveDeposit = async (key, uid, amount) => { amount = Number(amount); i
 try { const uRef = ref(db, `users/${uid}`), snap = await get(uRef); if(!snap.exists()) return alert("無此會員"); const uData = snap.val(), isFirst = (uData.hasToppedUp === false || uData.hasToppedUp === undefined);
 let uBonus = isFirst ? 0.15 : (amount >= 1000 ? 0.03 : 0), bonusText = isFirst ? "首儲(+15%)" : (uBonus>0 ? "續儲(+3%)" : "續儲");
 let finalBonus = Math.floor(amount * uBonus);
-let linePointsEarned = Math.floor(amount / 500); // 🟢 儲值滿500送1點 Line 積分
+let linePointsEarned = Math.floor(amount / 500); 
 
 await update(uRef, { balance: (Number(uData.balance) || 0) + amount + finalBonus, hasToppedUp: true, linePoints: (Number(uData.linePoints) || 0) + linePointsEarned }); 
 await push(ref(db, `users/${uid}/logs`), { game: bonusText + "入點", cost: -(amount + finalBonus), time: Date.now() });
@@ -580,7 +585,6 @@ window.addNewCat=async()=>{const v=document.getElementById('newCatIn').value.tri
 window.editCat=async(idx,v)=>{const s=await get(ref(db,'settings/categories')),data=s.val()||[];data[idx]=v;await set(ref(db,'settings/categories'),data)};
 window.delCat=async(idx)=>{if(confirm("刪除分類？")){const s=await get(ref(db,'settings/categories')),data=s.val()||[];data.splice(idx,1);await set(ref(db,'settings/categories'),data)}};
 window.forceUnlock=async id=>{if(confirm(`解鎖 [${id}]？`)){await remove(ref(db,`games/${id}/lock`));alert("已解鎖")}};
-// 🟢 補回遺失的商品管理功能
 window.publishGame = async () => {
     const id = document.getElementById('gId').value.trim(), gName = document.getElementById('gName').value.trim(), tot = Number(document.getElementById('gTotal').value), cat = document.getElementById('gCat').value;
     const prRows = Array.from(document.querySelectorAll('#prizeContainer .dynamic-row')), prs = prRows.map(r => ({ num: Number(r.querySelectorAll('input')[0].value), name: r.querySelectorAll('input')[1].value, img: r.querySelector('.prize-img-input').value }));
