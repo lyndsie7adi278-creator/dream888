@@ -622,15 +622,12 @@
             }
         });
 
-        // 🟢 混合型獎池邏輯
         function calculateRealReward() {
             const rand = Math.random() * 100;
             
-            // 💎 真實 P 幣大獎 (5% 機率)
-            if (rand < 1) return { type: 'pcoin', val: 500 }; // 1% 機率中 500P
-            if (rand < 5) return { type: 'pcoin', val: 100 }; // 4% 機率中 100P
+            if (rand < 1) return { type: 'pcoin', val: 500 }; 
+            if (rand < 5) return { type: 'pcoin', val: 100 }; 
 
-            // ⚡ 積分邏輯 (維持原本 95% 機率分佈)
             const pRand = Math.random() * 100;
             let points = 1;
             if (pRand < 1) points = Math.floor(Math.random() * (50 - 31 + 1)) + 31;
@@ -641,37 +638,34 @@
             return { type: 'point', val: points };
         }
 
-        // 🎰 生成拉霸機捲軸內容
         function generateReelItems(finalResult) {
             const dummyItems = [
-                {t: "🍒", s: "1 積分", c: ""},
-                {t: "7️⃣", s: "100 P幣", c: "gold"},
-                {t: "💎", s: "500 P幣", c: "big"},
-                {t: "🔔", s: "10 積分", c: ""},
-                {t: "🍇", s: "5 積分", c: ""},
-                {t: "📱", s: "iPhone 16", c: "gold"}, // 視覺誘餌
-                {t: "🍋", s: "3 積分", c: ""},
-                {t: "🎮", s: "PS5 Pro", c: "gold"},   // 視覺誘餌
-                {t: "🍉", s: "20 積分", c: ""}
+                {t: "🪙", s: "1 積分", c: ""},
+                {t: "💰", s: "100 P幣", c: "gold"},
+                {t: "💰", s: "500 P幣", c: "big"},
+                {t: "🪙", s: "10 積分", c: ""},
+                {t: "🪙", s: "5 積分", c: ""},
+                {t: "💵", s: "現金6666", c: "gold"}, 
+                {t: "🪙", s: "3 積分", c: ""},
+                {t: "💵", s: "現金8888", c: "gold"}, 
+                {t: "🪙", s: "20 積分", c: ""}
             ];
             
             let html = "";
-            // 產生 20 個隨機圖案製造滾動感
             for(let i=0; i<20; i++) {
                 const item = dummyItems[Math.floor(Math.random() * dummyItems.length)];
                 html += `<div class="slot-item ${item.c}">${item.t}<span>${item.s}</span></div>`;
             }
 
-            // 🟢 插入最終結果
             let finalIcon = "✨";
             let finalClass = "";
             if (finalResult.type === 'pcoin') {
                 finalIcon = "💎";
                 finalClass = "big";
             } else {
-                if (finalResult.val >= 30) { finalIcon = "🔥"; finalClass = "gold"; }
-                else if (finalResult.val >= 10) finalIcon = "🔔";
-                else finalIcon = "🍒";
+                if (finalResult.val >= 30) { finalIcon = "🪙"; finalClass = "gold"; }
+                else if (finalResult.val >= 10) finalIcon = "🪙";
+                else finalIcon = "🪙";
             }
             
             const label = finalResult.type === 'pcoin' ? `${finalResult.val} P幣` : `${finalResult.val} 積分`;
