@@ -82,40 +82,48 @@
 
         .gacha-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(10px); }
         
+        /* 🟢 優化後的 Gacha 樣式 */
         .gacha-box { 
-            width: 200px; height: 200px; 
+            width: 220px; height: 220px; 
             border-radius: 50%;
-            background: radial-gradient(circle, #fff, #ffeb3b, #ff9f43, #ff4757);
-            box-shadow: 0 0 30px #ff9f43, 0 0 60px #ff4757;
+            background: radial-gradient(circle, #fff, #f1c40f, #e67e22, #e74c3c);
+            box-shadow: 0 0 40px #e67e22, 0 0 80px #e74c3c, inset 0 0 20px rgba(255,255,255,0.8);
+            border: 4px solid #fff;
             display: flex; align-items: center; justify-content: center;
             position: relative;
             transform: scale(1);
+            overflow: hidden;
+            text-align: center;
+            padding: 10px;
         }
 
         .gacha-box.charging { animation: orb-charge 0.1s infinite alternate; }
         @keyframes orb-charge { 
             0% { transform: scale(1); filter: hue-rotate(0deg); } 
-            100% { transform: scale(1.1); filter: hue-rotate(30deg); box-shadow: 0 0 100px #ff4757; } 
+            100% { transform: scale(1.05); filter: hue-rotate(15deg); box-shadow: 0 0 100px #ff4757; } 
         }
 
         .gacha-num { 
-            font-size: 5rem; font-weight: 900; color: #fff; 
-            text-shadow: 0 0 10px #000, 0 0 30px #ff4757; 
+            font-size: 1.6rem; /* 縮小以顯示文字 */
+            font-weight: 900; color: #fff; 
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8); 
             z-index: 10; display: none; opacity: 0;
             transform: scale(1); 
+            line-height: 1.2;
+            word-break: keep-all;
         }
 
         .gacha-num.rolling {
             display: block;
             opacity: 1;
-            animation: none;
-            color: rgba(255,255,255,0.8);
+            animation: text-pulse 0.1s infinite alternate;
         }
+        @keyframes text-pulse { from {transform: scale(1);} to {transform: scale(1.1);} }
 
         .gacha-num.stamp { 
             display: block; 
             opacity: 1;
-            font-size: 6rem;
+            font-size: 2.5rem; /* 結果時變大 */
             color: #fff;
             animation: stamp-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
         }
@@ -200,6 +208,10 @@
         .cal-date.today { border: 1.5px solid var(--primary); color: var(--primary); }
         .cal-date.checked { background: #e3faf3; color: var(--success); }
         .cal-date.checked::after { content: '✔'; font-size: 0.5rem; position: absolute; bottom: 2px; right: 3px; }
+        
+        /* 🟢 活動樣式 */
+        .event-active-checkin { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4) !important; position: relative; overflow: hidden; }
+        .event-active-checkin::after { content: "🧧 加碼 10P"; position: absolute; top: -5px; right: -25px; background: #f1c40f; color: #c0392b; font-size: 0.7rem; padding: 15px 30px 5px; transform: rotate(45deg); font-weight: 900; }
     </style>
 </head>
 <body>
@@ -399,26 +411,37 @@
                 const userRef = ref(_db, `users/${_uid}`);
                 const snap = await get(userRef);
                 const u = snap.val();
-                const today = new Date().toLocaleDateString('sv-SE');
+                const todayObj = new Date();
+                const todayStr = todayObj.toLocaleDateString('sv-SE');
+                const month = todayObj.getMonth() + 1;
+                const date = todayObj.getDate();
 
-                if(u.lastCheckIn === today) return alert("今天已經簽到過了唷！");
+                if(u.lastCheckIn === todayStr) return alert("今天已經簽到過了唷！");
+
+                // 🟢 過年限定活動：2/15 ~ 2/22 簽到送 10P
+                let reward = 3;
+                let logMsg = "📅 每日簽到獎勵";
+                if (month === 2 && date >= 15 && date <= 22) {
+                    reward = 10;
+                    logMsg = "🧧 新春簽到加碼";
+                }
 
                 const newCheckInDates = u.checkInDates || [];
-                newCheckInDates.push(today);
+                newCheckInDates.push(todayStr);
 
                 await update(userRef, {
-                    balance: (u.balance || 0) + 3,
-                    lastCheckIn: today,
+                    balance: (u.balance || 0) + reward,
+                    lastCheckIn: todayStr,
                     checkInDates: newCheckInDates
                 });
 
                 await set(ref(_db, `users/${_uid}/logs/${Date.now()}`), {
-                    game: "📅 每日簽到獎勵",
-                    cost: -3, 
+                    game: logMsg,
+                    cost: -reward, 
                     time: Date.now()
                 });
 
-                alert("✅ 簽到成功！獲得 3P 獎勵");
+                alert(`✅ 簽到成功！獲得 ${reward} P 獎勵`);
                 renderCalendar(newCheckInDates);
             } catch (e) { alert("簽到失敗，請聯繫客服"); }
         };
@@ -428,6 +451,7 @@
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth();
+            const date = now.getDate();
             const todayStr = now.toLocaleDateString('sv-SE');
             
             document.getElementById('calMonth').innerText = `${year}年 ${month + 1}月`;
@@ -445,10 +469,20 @@
                 grid.innerHTML += `<div class="cal-date ${isToday} ${isChecked}">${d}</div>`;
             }
 
+            const btn = document.getElementById('checkBtn');
+            // 🟢 活動判斷：顯示不同按鈕樣式
+            if(month + 1 === 2 && date >= 15 && date <= 22) {
+                btn.classList.add('event-active-checkin');
+                btn.innerText = "🧧 新春加碼！簽到領 10P";
+            } else {
+                btn.classList.remove('event-active-checkin');
+                btn.innerText = "📅 立即簽到領 3P";
+            }
+
             if(checkedDates.includes(todayStr)) {
-                const btn = document.getElementById('checkBtn');
                 btn.innerText = "✨ 今日已簽到";
                 btn.classList.add('disabled');
+                btn.classList.remove('event-active-checkin');
             }
         }
 
@@ -464,11 +498,8 @@
             
             const arr = Object.values(logs).sort((a,b) => b.time - a.time);
             
-            // 遊戲消費
             const g = arr.filter(l => Number(l.cost) > 0);
-            // 能量爆發 (cost為0且game名稱包含能量)
             const e = arr.filter(l => l.game && l.game.includes('能量'));
-            // 儲值/入點 (cost<=0且不是能量爆發)
             const d = arr.filter(l => Number(l.cost) <= 0 && (!l.game || !l.game.includes('能量')));
 
             gBody.innerHTML = g.length ? g.map(l => `
@@ -493,7 +524,6 @@
                 </div>`;
             }).join('') : '<div class="empty-state">無入點</div>';
 
-            // 🟢 能量爆發紀錄渲染
             eBody.innerHTML = e.length ? e.map(l => `
                 <div class="list-item-inner">
                     <div class="item-info">
@@ -579,21 +609,36 @@
             }
         });
 
-function calculateReward() {
+        // 🟢 假抽獎獎品清單 (誘餌)
+        // 注意：這裡只控制「顯示動畫」，不影響「實際中獎結果」
+        const fakePrizes = [
+            { t: "10 點積分", c: "#fff" },
+            { t: "📱 iPhone 16 Pro", c: "#e74c3c" }, // 誘餌
+            { t: "30 點積分", c: "#fff" },
+            { t: "🎮 PS5 Pro", c: "#3498db" }, // 誘餌
+            { t: "5 點積分", c: "#fff" },
+            { t: "🎧 AirPods Max", c: "#f1c40f" }, // 誘餌
+            { t: "50 點積分", c: "#fff" },
+            { t: "🧧 8888 現金", c: "#e74c3c" } // 誘餌
+        ];
+
+        function calculateReward() {
             const rand = Math.random() * 100; 
-            
-            if (rand < 1) {
-                return Math.floor(Math.random() * (50 - 31 + 1)) + 31;
-            }
-            
-            if (rand < 3) {
-                return Math.floor(Math.random() * (30 - 16 + 1)) + 16;
+            const today = new Date();
+            const isEvent = (today.getMonth() + 1 === 2 && today.getDate() >= 15 && today.getDate() <= 22);
+
+            // 🟢 活動期間：獲得 50 積分的機率稍微提升
+            if (isEvent) {
+                if (rand < 5) return 50; // 原本 1%，活動期間 5%
+                if (rand < 10) return Math.floor(Math.random() * (45 - 30 + 1)) + 30;
+                if (rand < 20) return Math.floor(Math.random() * (25 - 15 + 1)) + 15;
+                return Math.floor(Math.random() * (10 - 2 + 1)) + 2;
             }
 
-            if (rand < 10) {
-                return Math.floor(Math.random() * (15 - 6 + 1)) + 6;
-            }
-            
+            // 平常機率
+            if (rand < 1) return Math.floor(Math.random() * (50 - 31 + 1)) + 31;
+            if (rand < 3) return Math.floor(Math.random() * (30 - 16 + 1)) + 16;
+            if (rand < 10) return Math.floor(Math.random() * (15 - 6 + 1)) + 6;
             return Math.floor(Math.random() * (5 - 1 + 1)) + 1;
         }
 
@@ -615,15 +660,19 @@ function calculateReward() {
 
             const rewardPoints = calculateReward();
             
+            // 🟢 抽獎動畫邏輯更新：閃爍各種獎品
             let counter = 0;
             const interval = setInterval(() => {
-                numDisplay.innerText = Math.floor(Math.random() * 50) + 1;
+                const randomPrize = fakePrizes[Math.floor(Math.random() * fakePrizes.length)];
+                numDisplay.innerText = randomPrize.t;
+                numDisplay.style.color = randomPrize.c;
+                
                 counter++;
-                if (counter > 25) { 
+                if (counter > 30) { // 跑 30 次後停下
                     clearInterval(interval);
                     showResult(rewardPoints);
                 }
-            }, 50);
+            }, 80); // 每 80ms 換一次
 
             const uRef = ref(_db, `users/${_uid}`);
             const uSnap = await get(uRef);
@@ -665,7 +714,9 @@ function calculateReward() {
             
             num.classList.remove('rolling');
             num.classList.add('stamp');
-            num.innerText = points;
+            
+            // 🟢 最終結果只顯示積分
+            num.innerText = `${points} 積分`;
             num.style.color = points >= 50 ? '#ff4757' : (points > 10 ? '#f1c40f' : '#fff');
             
             text.style.opacity = 1;
