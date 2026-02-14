@@ -45,16 +45,22 @@
     .prize-monitor { padding: 15px; background: rgba(255,184,0,0.02); border: 1px solid #222; border-radius: 15px; margin-bottom: 20px; }
     .prize-tag-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
     
-    /* 🟢 新的獎項樣式 (合併後) */
-    .prize-tag { background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; position: relative; transition: 0.3s; }
-    .p-left-info { display: flex; align-items: center; gap: 15px; }
-    .p-icon { width: 35px; height: 35px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-    .p-name { font-size: 1rem; color: #fff; font-weight: bold; }
-    .p-count { font-size: 0.9rem; font-weight: 900; color: var(--p); text-align: right; }
-    .p-total { font-size: 0.7rem; color: #666; }
+    /* 🟢 新的獎項樣式 (顯示號碼) */
+    .prize-tag { background: #1a1e26; border: 1px solid #333; border-radius: 8px; padding: 12px 15px; display: flex; align-items: flex-start; justify-content: space-between; position: relative; transition: 0.3s; }
+    .p-left-info { display: flex; gap: 15px; align-items: flex-start; flex: 1; }
+    .p-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
     
-    /* 進度條 */
-    .p-progress { width: 80px; height: 4px; background: #333; border-radius: 2px; margin-top: 5px; overflow: hidden; }
+    .p-main-content { display: flex; flex-direction: column; width: 100%; }
+    .p-name { font-size: 1rem; color: #fff; font-weight: bold; margin-bottom: 4px; }
+    
+    /* 號碼顯示區域 */
+    .p-nums-box { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+    .p-num-badge { background: #2c3e50; color: var(--p); border: 1px solid #444; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem; font-family: monospace; font-weight: bold; }
+    .p-num-more { color: #888; font-size: 0.7rem; padding: 1px 4px; }
+
+    .p-right-info { text-align: right; min-width: 70px; display: flex; flex-direction: column; justify-content: center; }
+    .p-count { font-size: 0.9rem; font-weight: 900; color: var(--p); }
+    .p-progress { width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 5px; overflow: hidden; }
     .p-fill { height: 100%; background: var(--p); border-radius: 2px; transition: width 0.5s; }
 
     /* 已開出樣式 */
@@ -62,6 +68,7 @@
     .prize-tag.empty .p-name { text-decoration: line-through; color: #888; }
     .prize-tag.empty .p-fill { background: #555; }
     .prize-tag.empty .p-count { color: #888; }
+    .prize-tag.empty .p-num-badge { color: #888; border-color: #555; background: transparent; }
 
     .pool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; margin-bottom: 30px; }
     .ticket { aspect-ratio: 1/1; background: #1a1e26; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 1.2rem; color: #888; cursor: pointer; transition: 0.2s; }
@@ -167,7 +174,7 @@
     </div>
     
     <div class="prize-monitor">
-        <div style="color:var(--p); font-size:0.9rem; margin-bottom:12px; font-weight:900;">🏆 獎項剩餘數量表</div>
+        <div style="color:var(--p); font-size:0.9rem; margin-bottom:12px; font-weight:900;">🏆 獎項與中獎號碼</div>
         <div class="prize-tag-list" id="prizeTags"></div>
     </div>
 
@@ -331,7 +338,7 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             priceContainer.innerHTML = `<div class="current-price">${_data.price} P</div>`;
         }
         
-        // 🟢 獎項自動合併與排序邏輯 (同首頁)
+        // 🟢 獎項合併 + 顯示中獎號碼
         const leftCounts = {};
         p.forEach(t => {
             if (!t.taken) leftCounts[t.grade] = (leftCounts[t.grade] || 0) + 1;
@@ -346,10 +353,12 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
                         total: 0, 
                         left: 0, 
                         img: pDef.img,
-                        value: parseInt(pDef.name.replace(/[^0-9]/g, '')) || 0
+                        value: parseInt(pDef.name.replace(/[^0-9]/g, '')) || 0,
+                        nums: [] // 收集所有號碼
                     };
                 }
                 summary[pDef.name].total++;
+                summary[pDef.name].nums.push(pDef.num); // 加入號碼
                 if (leftCounts[pDef.num]) {
                     summary[pDef.name].left++;
                 }
@@ -363,16 +372,26 @@ onValue(ref(_db, `gameSettings/${_gid}`), s => {
             const color = p.left === 0 ? '#555' : (width < 20 ? '#ff4757' : '#2ecc71');
             const icon = p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:contain">` : '🎁';
             
+            // 處理號碼顯示
+            let numDisplay = "";
+            p.nums.sort((a,b) => a-b);
+            if (p.nums.length <= 3) {
+                numDisplay = p.nums.map(n => `<span class="p-num-badge">NO.${n}</span>`).join('');
+            } else {
+                // 超過3個就只顯示前3個，加一個 "..."
+                numDisplay = p.nums.slice(0, 3).map(n => `<span class="p-num-badge">NO.${n}</span>`).join('') + `<span class="p-num-more">含 ${p.nums.length} 組號碼</span>`;
+            }
+
             return `
             <div class="prize-tag ${p.left === 0 ? 'empty' : ''}">
                 <div class="p-left-info">
                     <div class="p-icon">${icon}</div>
-                    <div>
+                    <div class="p-main-content">
                         <div class="p-name">${p.name}</div>
-                        <div class="p-total">總數: ${p.total}</div>
+                        <div class="p-nums-box">${numDisplay}</div>
                     </div>
                 </div>
-                <div style="text-align:right;">
+                <div class="p-right-info">
                     <div class="p-count">${p.left} 張</div>
                     <div class="p-progress"><div class="p-fill" style="width:${width}%; background:${color}"></div></div>
                 </div>
