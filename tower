@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>夢工廠 | 勇者爬塔</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+    :root { --bg: #1e1e2e; --row: #2a2a40; --btn: #4e4e6a; --active: #f1c40f; --gem: #2ecc71; --bomb: #e74c3c; }
+    * { -webkit-tap-highlight-color: transparent; user-select: none; }
+    body { margin: 0; padding: 0; background: var(--bg); color: #fff; font-family: 'PingFang TC', sans-serif; display: flex; flex-direction: column; min-height: 100vh; overflow: hidden; }
+    
+    .navbar { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .back-btn { color: #ccc; text-decoration: none; font-size: 0.9rem; font-weight: bold; }
+    .coin-display { background: rgba(0,0,0,0.3); border: 1px solid var(--active); padding: 5px 15px; border-radius: 50px; color: var(--active); font-weight: 900; }
+
+    .game-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 20px; padding-bottom: 80px; position: relative; max-width: 500px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+
+    .tower-container { display: flex; flex-direction: column-reverse; gap: 8px; width: 100%; margin-bottom: 20px; }
+    
+    .tower-row { display: flex; gap: 8px; padding: 5px; border-radius: 8px; transition: 0.3s; opacity: 0.5; pointer-events: none; position: relative; }
+    .tower-row.active { opacity: 1; pointer-events: auto; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transform: scale(1.02); }
+    .tower-row.cleared { opacity: 0.4; pointer-events: none; }
+
+    .tower-btn { 
+        flex: 1; aspect-ratio: 1/0.8; background: var(--btn); border-radius: 6px; cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: none;
+        transition: 0.2s; position: relative; overflow: hidden;
+    }
+    .tower-btn:active { transform: scale(0.95); }
+    
+    .tower-btn.gem { background: var(--gem); box-shadow: 0 0 15px rgba(46,204,113,0.4); animation: pop 0.3s; }
+    .tower-btn.bomb { background: var(--bomb); box-shadow: 0 0 15px rgba(231,76,60,0.4); animation: shake 0.4s; }
+    .tower-btn.revealed { background: #333; color: #555; }
+
+    .payout-tag { position: absolute; right: -60px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--active); font-weight: bold; width: 50px; text-align: left; }
+    .tower-row.active .payout-tag { color: #fff; text-shadow: 0 0 5px var(--active); }
+
+    .controls { 
+        position: fixed; bottom: 0; left: 0; right: 0; background: #252535; padding: 15px; 
+        border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px; justify-content: center; z-index: 50;
+    }
+
+    .action-btn { 
+        flex: 1; padding: 15px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 900; 
+        cursor: pointer; transition: 0.2s; max-width: 200px;
+    }
+    .btn-start { background: var(--active); color: #000; box-shadow: 0 5px 15px rgba(241,196,15,0.3); }
+    .btn-cashout { background: var(--gem); color: #000; box-shadow: 0 5px 15px rgba(46,204,113,0.3); display: none; }
+    .btn-cashout:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status-msg { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 50px; font-size: 0.9rem; pointer-events: none; z-index: 20; display: none; }
+
+    @keyframes pop { 0% { transform: scale(0.5); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+    /* Modal */
+    .modal { display: none; position: fixed; inset: 0; z-index: 2000; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
+    .m-card { background: #1e1e2e; border: 2px solid var(--active); border-radius: 20px; padding: 30px; width: 80%; max-width: 300px; text-align: center; }
+    .m-btn { background: var(--active); color: #000; border: none; padding: 12px 30px; border-radius: 50px; font-weight: 900; margin-top: 20px; cursor: pointer; font-size: 1rem; width: 100%; }
+</style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="index.html" class="back-btn">⬅ 返回大廳</a>
+    <div class="coin-display">P <span id="uBal">---</span></div>
+</div>
+
+<div class="status-msg" id="msgBox"></div>
+
+<div class="game-area">
+    <div class="tower-container" id="tower">
+        </div>
+</div>
+
+<div class="controls">
+    <button class="action-btn btn-start" id="startBtn" onclick="startGame()">開始爬塔 (10 P)</button>
+    <button class="action-btn btn-cashout" id="cashoutBtn" onclick="cashOut()">💰 收手領錢 (<span id="cashVal">0</span>)</button>
+</div>
+
+<div id="resModal" class="modal">
+    <div class="m-card">
+        <div style="font-size:3rem; margin-bottom:10px;" id="resIcon">🎉</div>
+        <div style="color:#fff; font-size:1.2rem; margin-bottom:10px;" id="resTitle">恭喜獲利</div>
+        <div style="color:var(--active); font-size:2rem; font-weight:900;" id="resAmount">+0 P</div>
+        <button class="m-btn" onclick="document.getElementById('resModal').style.display='none'">再玩一局</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, runTransaction, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const _cc = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
+    const app = initializeApp(_cc); const db = getDatabase(app);
+    const uid = localStorage.getItem('myScratchCode');
+    if(!uid) location.href = 'index.html';
+
+    // 🏆 設定賠率 (每層樓的獎金)
+    // 成本 10 P
+    const LEVELS = [
+        12,   // Lv1: 賺2P (容易)
+        15,   // Lv2: 賺5P
+        20,   // Lv3: 翻倍
+        30,   // Lv4: 3倍
+        50,   // Lv5: 5倍
+        80,   // Lv6: 8倍
+        150,  // Lv7: 15倍
+        500   // Lv8: 50倍 (通關大獎)
+    ];
+    
+    const COST = 10;
+    let currentLevel = 0;
+    let isPlaying = false;
+    let currentRowData = []; // 紀錄當前層炸彈位置 (0-3)
+
+    onValue(ref(db, `users/${uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
+
+    function initTower() {
+        const t = document.getElementById('tower');
+        t.innerHTML = '';
+        for(let i=0; i<LEVELS.length; i++) {
+            const row = document.createElement('div');
+            row.className = 'tower-row';
+            row.id = `row-${i}`;
+            
+            // 4個門
+            for(let b=0; b<4; b++) {
+                const btn = document.createElement('button');
+                btn.className = 'tower-btn';
+                btn.innerText = '❓';
+                btn.onclick = () => selectDoor(i, b);
+                row.appendChild(btn);
+            }
+
+            const tag = document.createElement('span');
+            tag.className = 'payout-tag';
+            tag.innerText = LEVELS[i] + ' P';
+            row.appendChild(tag);
+            
+            t.appendChild(row);
+        }
+    }
+
+    window.startGame = async () => {
+        if(isPlaying) return;
+        
+        // 扣款檢查
+        let success = false;
+        await runTransaction(ref(db, `users/${uid}`), (user) => {
+            if(!user) return;
+            if((user.balance || 0) < COST) throw "nomoney";
+            user.balance -= COST;
+            user.spending_counter = (user.spending_counter || 0) + COST;
+            return user;
+        }).then(() => success = true).catch(e => {
+            if(e === "nomoney") alert("餘額不足！");
+        });
+
+        if(!success) return;
+
+        // 遊戲開始
+        isPlaying = true;
+        currentLevel = 0;
+        initTower();
+        activateRow(0);
+        
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('cashoutBtn').style.display = 'block';
+        document.getElementById('cashoutBtn').disabled = true; // 第一層不能領
+        document.getElementById('cashVal').innerText = 0;
+    };
+
+    function activateRow(lvl) {
+        // 生成炸彈位置 (純前端邏輯，為了流暢度)
+        // 4個門，1個炸彈 (25% 輸，75% 贏)
+        const bombPos = Math.floor(Math.random() * 4);
+        currentRowData = [0, 0, 0, 0];
+        currentRowData[bombPos] = 1; // 1代表炸彈
+
+        const row = document.getElementById(`row-${lvl}`);
+        row.classList.add('active');
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    window.selectDoor = (lvl, idx) => {
+        if(!isPlaying || lvl !== currentLevel) return;
+
+        const row = document.getElementById(`row-${lvl}`);
+        const btns = row.querySelectorAll('.tower-btn');
+        const isBomb = currentRowData[idx] === 1;
+
+        if(isBomb) {
+            // 💣 踩到炸彈
+            btns[idx].innerText = '💣';
+            btns[idx].classList.add('bomb');
+            gameOver(false);
+        } else {
+            // 💎 踩到寶石
+            btns[idx].innerText = '💎';
+            btns[idx].classList.add('gem');
+            
+            // 顯示其他門的答案
+            currentRowData.forEach((val, i) => {
+                if(i !== idx) {
+                    btns[i].classList.add('revealed');
+                    btns[i].innerText = val === 1 ? '💣' : '💎';
+                }
+            });
+
+            row.classList.remove('active');
+            row.classList.add('cleared');
+
+            // 升級
+            currentLevel++;
+            const winAmount = LEVELS[lvl];
+            document.getElementById('cashVal').innerText = winAmount;
+            
+            if(currentLevel >= LEVELS.length) {
+                // 通關
+                gameOver(true);
+            } else {
+                // 下一層
+                activateRow(currentLevel);
+                const cashBtn = document.getElementById('cashoutBtn');
+                cashBtn.disabled = false;
+                cashBtn.innerHTML = `💰 收手領錢 (${winAmount} P)`;
+            }
+        }
+    };
+
+    window.cashOut = () => {
+        if(!isPlaying || currentLevel === 0) return;
+        gameOver(true);
+    };
+
+    async function gameOver(isWin) {
+        isPlaying = false;
+        const winAmount = isWin ? LEVELS[currentLevel - 1] : 0;
+        
+        if(isWin) {
+            // 結算入帳
+            await runTransaction(ref(db, `users/${uid}/balance`), (bal) => (bal || 0) + winAmount);
+            
+            document.getElementById('resIcon').innerText = currentLevel >= LEVELS.length ? '🏆' : '💰';
+            document.getElementById('resTitle').innerText = currentLevel >= LEVELS.length ? '塔頂通關！' : '成功撤退';
+            document.getElementById('resAmount').innerText = `+${winAmount} P`;
+            document.getElementById('resAmount').style.color = 'var(--gem)';
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+
+            // 寫入紀錄
+            if(winAmount >= 100) {
+                 push(ref(db, `winLogs`), { uid, user: "爬塔勇者", game: "勇者爬塔", prize: `${winAmount} P`, time: serverTimestamp() });
+            }
+        } else {
+            document.getElementById('resIcon').innerText = '💥';
+            document.getElementById('resTitle').innerText = '踩到炸彈...';
+            document.getElementById('resAmount').innerText = '-10 P';
+            document.getElementById('resAmount').style.color = 'var(--bomb)';
+        }
+
+        setTimeout(() => {
+            document.getElementById('resModal').style.display = 'flex';
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('cashoutBtn').style.display = 'none';
+        }, 800);
+    }
+
+    // 初始化畫面
+    initTower();
+</script>
+</body>
+</html>
