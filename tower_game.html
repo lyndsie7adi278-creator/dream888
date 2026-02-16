@@ -192,10 +192,8 @@
     }
     .btn-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
 
-    /* ID 顯示 */
-    .uid-display {
-        position: fixed; bottom: 5px; left: 10px; font-size: 0.7rem; color: rgba(255,255,255,0.3); z-index: 999;
-    }
+    /* Debug ID */
+    .uid-display { position: fixed; bottom: 5px; left: 10px; font-size: 0.7rem; color: rgba(255,255,255,0.3); z-index: 999; }
 
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -276,7 +274,7 @@
     <button class="btn-main btn-cashout" id="cashoutBtn" onclick="cashOut()">💰 見好就收</button>
 </div>
 
-<div class="uid-display" id="debugUid">ID: ---</div>
+<div class="uid-display" id="debugUid">ID: 檢查中...</div>
 
 <div class="modal-overlay" id="resModal">
     <div class="modal-card">
@@ -319,7 +317,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, runTransaction, push, serverTimestamp, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, runTransaction, push, serverTimestamp, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const _cc = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
 const app = initializeApp(_cc); const db = getDatabase(app);
@@ -330,7 +328,7 @@ if(uid) {
     document.getElementById('debugUid').innerText = "ID: " + uid;
 } else {
     document.getElementById('debugUid').innerText = "ID: 未登入";
-    alert("尚未登入，請從主網站進入！");
+    alert("請先從主網站登入！");
     location.href = 'index.html';
 }
 
@@ -341,7 +339,6 @@ let isPlaying = false;
 let bombIndices = [];
 let isAnimating = false;
 
-// 監聽餘額
 onValue(ref(db, `users/${uid}/balance`), s => {
     document.getElementById('uBal').innerText = (Number(s.val())||0).toLocaleString();
 });
@@ -384,75 +381,57 @@ function renderDoors(withAnimation = false) {
     }
 }
 
-// 核心修正：加入預先檢查 (Pre-check)
+// 核心修正：改用最穩定的 update 方法 (放棄複雜的 transaction)
 window.startGame = async () => {
     if(isPlaying || isAnimating) return;
     
     document.getElementById('loading').style.display = 'flex';
     
-    // 1. 先確認使用者是否存在，避免 Transaction 瞎忙
     try {
-        const snapshot = await get(ref(db, `users/${uid}`));
-        if (!snapshot.exists()) {
+        // 1. 先讀取當前餘額
+        const snap = await get(ref(db, `users/${uid}`));
+        if (!snap.exists()) {
             document.getElementById('loading').style.display = 'none';
-            alert(`找不到會員資料 (ID: ${uid})！\n\n請截圖告知管理員，或確認您是否在資料庫被刪除了。`);
+            alert(`找不到您的會員資料 (ID: ${uid})，請確認是否已登入！`);
             return;
         }
-        
-        const userData = snapshot.val();
-        if ((Number(userData.balance) || 0) < COST) {
-            document.getElementById('loading').style.display = 'none';
-            alert("您的 P 幣不足 (需要 10 P)，請先儲值！");
-            return;
-        }
-    } catch (err) {
-        document.getElementById('loading').style.display = 'none';
-        alert("網路連線錯誤，請檢查網路！");
-        console.error(err);
-        return;
-    }
 
-    // 2. 確定有錢有人，才執行扣款交易
-    let success = false;
-    try {
-        const txResult = await runTransaction(ref(db, `users/${uid}`), (user) => {
-            if (!user) return; // 這裡如果還是 null，通常是快取問題，下方 committed 會處理
-            
-            const bal = Number(user.balance || 0);
-            if (bal < COST) return; // 不拋錯，直接 abort
-            
-            user.balance = bal - COST;
-            user.spending_counter = (Number(user.spending_counter) || 0) + COST;
-            return user;
+        const userData = snap.val();
+        const currentBal = Number(userData.balance || 0);
+        const currentSpend = Number(userData.spending_counter || 0);
+
+        if (currentBal < COST) {
+            document.getElementById('loading').style.display = 'none';
+            alert("您的 P 幣餘額不足，請先儲值！");
+            return;
+        }
+
+        // 2. 直接寫入新餘額 (覆蓋)
+        // 這種方式最不容易因為 null 或 undefined 報錯
+        await update(ref(db, `users/${uid}`), {
+            balance: currentBal - COST,
+            spending_counter: currentSpend + COST
         });
 
-        if (txResult.committed) {
-            success = true;
-        } else {
-            // 如果跑到這裡，代表交易因為某些原因被取消 (aborted)
-            alert("扣款失敗 (交易中斷)，請再試一次！");
-        }
+        // 3. 遊戲開始
+        document.getElementById('loading').style.display = 'none';
+        isPlaying = true;
+        currentLevel = 0;
+        document.body.classList.remove('danger-mode');
+        updateHUD();
+        renderDoors(true);
+
+        document.getElementById('startBtn').style.display = 'none';
+        const cashBtn = document.getElementById('cashoutBtn');
+        cashBtn.style.display = 'block';
+        cashBtn.innerHTML = `💰 領取獎勵`;
+        cashBtn.classList.add('btn-disabled');
+
     } catch(e) {
-        console.error("交易錯誤:", e);
-        alert("系統忙碌中，請重試！");
+        document.getElementById('loading').style.display = 'none';
+        console.error("啟動失敗:", e);
+        alert("系統發生錯誤，請稍後再試。\n錯誤代碼: " + e.message);
     }
-    
-    document.getElementById('loading').style.display = 'none';
-    
-    if(!success) return;
-
-    // 3. 成功開始
-    isPlaying = true;
-    currentLevel = 0;
-    document.body.classList.remove('danger-mode');
-    updateHUD();
-    renderDoors(true);
-
-    document.getElementById('startBtn').style.display = 'none';
-    const cashBtn = document.getElementById('cashoutBtn');
-    cashBtn.style.display = 'block';
-    cashBtn.innerHTML = `💰 領取獎勵`;
-    cashBtn.classList.add('btn-disabled');
 };
 
 async function handleDoorClick(card, idx) {
@@ -504,18 +483,28 @@ async function endGame(isWin) {
     const finalWin = isWin ? PRIZES[currentLevel] : 0;
 
     if(isWin && finalWin > 0) {
-        await runTransaction(ref(db, `users/${uid}/balance`), (b) => (Number(b)||0) + finalWin);
-        
-        document.getElementById('resIcon').innerText = currentLevel >= 8 ? '👑' : '元寶';
-        document.getElementById('resIcon').innerHTML = currentLevel >= 8 ? '🏮' : '💰';
-        document.getElementById('resTitle').innerText = currentLevel >= 8 ? '恭喜通關！' : '落袋為安';
-        document.getElementById('resVal').innerText = `+${finalWin} P`;
-        document.getElementById('resVal').style.color = '#ffd700';
-        
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#ff0000', '#ffd700'] });
-        
-        if(finalWin >= 100) {
-            push(ref(db, `winLogs`), { uid, user: "新春勇者", game: "勇者爬塔", prize: `${finalWin} P`, time: serverTimestamp() });
+        // 贏錢也改用 update 確保一致性
+        try {
+            const snap = await get(ref(db, `users/${uid}/balance`));
+            const currentBal = Number(snap.val() || 0);
+            await update(ref(db, `users/${uid}`), {
+                balance: currentBal + finalWin
+            });
+            
+            document.getElementById('resIcon').innerText = currentLevel >= 8 ? '👑' : '元寶';
+            document.getElementById('resIcon').innerHTML = currentLevel >= 8 ? '🏮' : '💰';
+            document.getElementById('resTitle').innerText = currentLevel >= 8 ? '恭喜通關！' : '落袋為安';
+            document.getElementById('resVal').innerText = `+${finalWin} P`;
+            document.getElementById('resVal').style.color = '#ffd700';
+            
+            confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#ff0000', '#ffd700'] });
+            
+            if(finalWin >= 100) {
+                push(ref(db, `winLogs`), { uid, user: "新春勇者", game: "勇者爬塔", prize: `${finalWin} P`, time: serverTimestamp() });
+            }
+        } catch(e) {
+            console.error("派獎失敗:", e);
+            alert("派獎連線異常，請聯繫管理員！");
         }
     } else {
         document.getElementById('resIcon').innerText = '🧨';
