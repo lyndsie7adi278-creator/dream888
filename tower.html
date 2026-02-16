@@ -19,7 +19,6 @@
         -webkit-tap-highlight-color: transparent; 
         user-select: none; 
         box-sizing: border-box; 
-        /* 全域使用思源宋體 */
         font-family: 'Noto Serif TC', serif;
     }
     body {
@@ -68,7 +67,7 @@
     /* 進度條 HUD */
     .hud-container {
         width: 100%; max-width: 400px; margin-bottom: 25px;
-        display: flex; justify-content: space-between; align-items: flex-end;
+        display: flex; justify-content: space-between; align-items: center; /* 改為 center 對齊 */
         background: linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5), rgba(0,0,0,0.3));
         padding: 15px 20px; border-radius: 15px;
         border-top: 1px solid rgba(255,215,0,0.3);
@@ -78,8 +77,16 @@
         font-size: 2.2rem; color: var(--p); text-shadow: 0 0 10px rgba(255,215,0,0.5);
     }
     .level-label { font-size: 1rem; color: #ffcccb; margin-bottom: 5px; font-weight: 700; }
+    
     .next-prize { text-align: right; }
-    .prize-val { font-size: 1.6rem; color: #00ff88; text-shadow: 0 0 5px rgba(0,255,136,0.5); }
+    .prize-val { font-size: 1.8rem; color: #00ff88; text-shadow: 0 0 5px rgba(0,255,136,0.5); line-height: 1; }
+    
+    /* 新增：下一關提示樣式 */
+    .next-hint {
+        font-size: 0.9rem; color: #ccc; margin-top: 5px;
+        display: flex; align-items: center; justify-content: flex-end; gap: 5px;
+    }
+    .next-hint span { color: var(--p); font-weight: bold; font-size: 1.1rem; }
 
     /* 門的容器 */
     .doors-grid {
@@ -232,9 +239,13 @@
             <div class="level-label">🏮 目前樓層</div>
             <div class="level-badge num-font"><span id="curLvl">0</span><span style="font-size:1rem;color:#ffcccb">/8</span></div>
         </div>
+        
         <div class="next-prize">
             <div class="level-label">💰 當前獎金</div>
             <div class="prize-val num-font" id="curWin">0 P</div>
+            <div class="next-hint" id="nextHintBox" style="display:none">
+                下一關 ▶ <span class="num-font" id="nextWinVal">12</span> P
+            </div>
         </div>
     </div>
 
@@ -296,7 +307,6 @@ onValue(ref(db, `users/${uid}/balance`), s => {
     document.getElementById('uBal').innerText = (s.val()||0).toLocaleString();
 });
 
-// 規則彈窗控制
 window.openRules = () => {
     const m = document.getElementById('rulesModal');
     m.style.display = 'flex';
@@ -375,7 +385,6 @@ async function handleDoorClick(card, idx) {
     const back = document.getElementById(`back-${idx}`);
 
     if(idx === bombIndex) {
-        // 💣
         back.innerHTML = '🧨';
         inner.parentElement.classList.add('shake-anim');
         inner.parentElement.classList.add('bomb-style');
@@ -385,7 +394,6 @@ async function handleDoorClick(card, idx) {
             isAnimating = false;
         }, 1500);
     } else {
-        // 💎
         back.innerHTML = '💰';
         inner.parentElement.classList.add('gem-style');
         
@@ -457,6 +465,18 @@ window.closeModal = () => {
 function updateHUD() {
     document.getElementById('curLvl').innerText = currentLevel;
     document.getElementById('curWin').innerText = PRIZES[currentLevel] + ' P';
+    
+    // 更新下一關提示
+    const hintBox = document.getElementById('nextHintBox');
+    const nextValSpan = document.getElementById('nextWinVal');
+    
+    if (isPlaying && currentLevel < 8) {
+        hintBox.style.display = 'flex';
+        // 因為 PRIZES 陣列索引對應層數，下一層就是 currentLevel + 1
+        nextValSpan.innerText = PRIZES[currentLevel + 1];
+    } else {
+        hintBox.style.display = 'none';
+    }
 }
 </script>
 </body>
