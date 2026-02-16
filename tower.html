@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>夢工廠 | 新春勇者爬塔</title>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 <style>
     :root {
         --bg: #800000;
@@ -19,11 +19,12 @@
         -webkit-tap-highlight-color: transparent; 
         user-select: none; 
         box-sizing: border-box; 
-        font-family: 'ZCOOL KuaiLe', sans-serif; /* 統一中文字體 */
+        /* 全域使用思源宋體，解決繁體字型怪異問題 */
+        font-family: 'Noto Serif TC', serif;
     }
     body {
         margin: 0; padding: 0;
-        background: radial-gradient(circle at center, #a50000, #4a0000);
+        background: radial-gradient(circle at center, #850000, #4a0000);
         color: #fff;
         display: flex; flex-direction: column;
         min-height: 100vh; overflow: hidden;
@@ -37,15 +38,15 @@
         border-bottom: 2px solid var(--p);
         z-index: 100;
     }
-    .back-btn { text-decoration: none; color: #ffcccb; font-size: 1.1rem; display: flex; align-items: center; gap: 5px; }
+    .back-btn { text-decoration: none; color: #ffcccb; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 5px; }
     .coin-pill {
-        background: rgba(0, 0, 0, 0.5); border: 1px solid var(--p);
+        background: rgba(0, 0, 0, 0.6); border: 1px solid var(--p);
         padding: 6px 16px; border-radius: 50px;
         color: var(--p); 
         box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
-        display: flex; align-items: center; gap: 5px;
+        display: flex; align-items: center; gap: 8px;
     }
-    /* 數字專用字體 */
+    /* 數字專用字體 (強制使用科技字體) */
     .num-font { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
 
     /* 遊戲主區 */
@@ -56,23 +57,25 @@
 
     /* 進度條 HUD */
     .hud-container {
-        width: 100%; max-width: 400px; margin-bottom: 20px;
+        width: 100%; max-width: 400px; margin-bottom: 25px;
         display: flex; justify-content: space-between; align-items: flex-end;
-        background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px;
-        border: 1px inset rgba(255,215,0,0.3);
+        background: linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5), rgba(0,0,0,0.3));
+        padding: 15px 20px; border-radius: 15px;
+        border-top: 1px solid rgba(255,215,0,0.3);
+        border-bottom: 1px solid rgba(255,215,0,0.3);
     }
     .level-badge {
         font-size: 2.2rem; color: var(--p); text-shadow: 0 0 10px rgba(255,215,0,0.5);
     }
-    .level-label { font-size: 1rem; color: #ffcccb; margin-bottom: 5px; }
+    .level-label { font-size: 1rem; color: #ffcccb; margin-bottom: 5px; font-weight: 700; }
     .next-prize { text-align: right; }
-    .prize-val { font-size: 1.6rem; color: #00ff88; }
+    .prize-val { font-size: 1.6rem; color: #00ff88; text-shadow: 0 0 5px rgba(0,255,136,0.5); }
 
     /* 門的容器 */
     .doors-grid {
         display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
         width: 100%; max-width: 360px;
-        perspective: 1000px; /* 3D 透視深度 */
+        perspective: 1000px;
     }
 
     /* 門 (卡片外框) */
@@ -85,46 +88,48 @@
     }
     .door-card:active { transform: scale(0.96); transition: transform 0.1s; }
 
-    /* 門的內部旋轉層 (核心動畫層) */
+    /* 門的內部旋轉層 */
     .door-inner {
         position: relative;
         width: 100%; height: 100%;
         text-align: center;
-        transition: transform 0.6s; /* 翻轉速度 */
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         transform-style: preserve-3d;
         border-radius: 12px;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
 
     /* 翻牌狀態 */
     .door-inner.flipped { transform: rotateY(180deg); }
 
-    /* 門的正面與背面共用設定 */
+    /* 門的正面與背面 */
     .door-face, .door-back {
         position: absolute; width: 100%; height: 100%;
-        backface-visibility: hidden; /* 隱藏背面 */
+        backface-visibility: hidden;
         border-radius: 12px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         border: 3px solid var(--p);
     }
     
-    /* 正面：紅包樣式 */
+    /* 正面：紅包質感 */
     .door-face {
-        background: linear-gradient(135deg, #e60000, #990000);
+        background: linear-gradient(160deg, #d90000, #8f0000);
         color: var(--p);
         font-size: 2.5rem;
         z-index: 2;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
     .door-face::after {
-        content: "福"; font-size: 1.2rem; margin-top: 10px; 
-        border: 2px solid var(--p); padding: 5px 10px; border-radius: 50%;
-        background: rgba(0,0,0,0.1);
+        content: "福"; font-family: 'Noto Serif TC', serif; font-weight: 900;
+        font-size: 1.4rem; margin-top: 10px; 
+        border: 2px solid var(--p); padding: 5px 10px; border-radius: 5px;
+        background: rgba(0,0,0,0.2); box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
     }
 
-    /* 背面：揭曉內容 */
+    /* 背面：內容 */
     .door-back {
         transform: rotateY(180deg);
-        background: #222;
+        background: #1a1a1a;
         font-size: 3.5rem;
         z-index: 1;
     }
@@ -132,7 +137,7 @@
     /* 結果樣式 */
     .gem-style .door-back { 
         border-color: #00ff88; 
-        background: radial-gradient(circle, #1a472a, #000); 
+        background: radial-gradient(circle, #0a3d22, #000); 
         box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); 
     }
     .bomb-style .door-back { 
@@ -140,7 +145,6 @@
         background: radial-gradient(circle, #4a1111, #000); 
         box-shadow: 0 0 30px rgba(255, 77, 77, 0.6);
     }
-    /* 炸彈抖動動畫需套用在 card 整體 */
     .shake-anim { animation: shake 0.5s; }
 
     /* 控制按鈕區 */
@@ -151,44 +155,47 @@
     }
     .btn-main {
         flex: 1; padding: 18px; border-radius: 12px; border: 2px solid var(--p);
-        font-size: 1.3rem; 
+        font-size: 1.3rem; font-weight: 900;
         cursor: pointer; transition: 0.2s;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-        /* 字體繼承 body 設定 */
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        letter-spacing: 2px;
     }
     .btn-start {
         background: linear-gradient(to bottom, #ffd700, #ff8c00);
         color: #800000;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.4);
     }
     .btn-cashout {
         background: linear-gradient(to bottom, #00b09b, #96c93d);
         color: #fff;
         display: none;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
     .btn-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
 
-    /* 動畫 Keyframes */
+    /* 動畫 */
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     /* 結果彈窗 */
     .modal-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
+        position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
         display: none; align-items: center; justify-content: center;
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(8px);
     }
     .modal-card {
-        background: #800000; border: 3px solid var(--p);
-        padding: 30px; border-radius: 20px; text-align: center;
+        background: #800000; border: 4px solid var(--p);
+        padding: 35px; border-radius: 20px; text-align: center;
         width: 85%; max-width: 320px;
         transform: scale(0.8); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 0 50px rgba(255,215,0,0.2);
     }
     .modal-active .modal-card { transform: scale(1); }
-    .modal-icon { font-size: 4rem; margin-bottom: 15px; display: block; filter: drop-shadow(0 0 10px var(--p)); }
-    .modal-title { font-size: 1.8rem; color: var(--p); margin-bottom: 10px; }
-    .modal-amount { font-size: 2.5rem; color: #fff; margin-bottom: 25px; display: block; }
-    .modal-btn { background: var(--p); color: #800000; width: 100%; padding: 15px; border-radius: 10px; font-size: 1.2rem; cursor: pointer; border: none; }
+    .modal-icon { font-size: 4.5rem; margin-bottom: 15px; display: block; filter: drop-shadow(0 0 15px rgba(255,215,0,0.6)); }
+    .modal-title { font-size: 2rem; color: var(--p); margin-bottom: 10px; font-weight: 900; }
+    .modal-amount { font-size: 2.8rem; color: #fff; margin-bottom: 25px; display: block; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+    .modal-btn { background: var(--p); color: #800000; width: 100%; padding: 15px; border-radius: 10px; font-size: 1.3rem; font-weight: 900; cursor: pointer; border: none; letter-spacing: 2px; }
 
     #loading { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 99; justify-content: center; align-items: center; }
 </style>
@@ -213,7 +220,7 @@
     </div>
 
     <div class="doors-grid" id="doorsGrid">
-        <div style="color:var(--p); font-size:1.4rem; grid-column:span 2; text-align:center; padding:50px;">🧨 準備好開運了嗎？</div>
+        <div style="color:var(--p); font-size:1.5rem; grid-column:span 2; text-align:center; padding:50px; font-weight:900;">🧨 準備好開運了嗎？</div>
     </div>
 
     <div id="loading"><div style="font-size:3rem; animation:spin 2s linear infinite">🏮</div></div>
@@ -253,7 +260,6 @@ onValue(ref(db, `users/${uid}/balance`), s => {
     document.getElementById('uBal').innerText = (s.val()||0).toLocaleString();
 });
 
-// 生成門 (修復動畫結構)
 function renderDoors(withAnimation = false) {
     const grid = document.getElementById('doorsGrid');
     grid.innerHTML = '';
@@ -267,7 +273,6 @@ function renderDoors(withAnimation = false) {
             card.style.animation = `fadeInUp 0.4s ease ${i * 0.1}s forwards`;
         }
         
-        // 核心修復：使用 door-inner 包裹正反面
         card.innerHTML = `
             <div class="door-inner" id="inner-${i}">
                 <div class="door-face num-font">${i+1}</div>
@@ -315,38 +320,35 @@ window.startGame = async () => {
 
 async function handleDoorClick(card, idx) {
     const inner = document.getElementById(`inner-${idx}`);
-    // 防止重複點擊或動畫中點擊
     if(!isPlaying || isAnimating || inner.classList.contains('flipped')) return;
 
     isAnimating = true;
-    inner.classList.add('flipped'); // 觸發翻轉動畫
+    inner.classList.add('flipped');
     const back = document.getElementById(`back-${idx}`);
 
     if(idx === bombIndex) {
-        // 踩到鞭炮 (失敗)
+        // 💣
         back.innerHTML = '🧨';
-        inner.parentElement.classList.add('shake-anim'); // 整個卡片抖動
-        inner.parentElement.classList.add('bomb-style'); // 變更樣式
+        inner.parentElement.classList.add('shake-anim');
+        inner.parentElement.classList.add('bomb-style');
         
-        // 延長等待時間至 1.5 秒，確保玩家看清楚
         setTimeout(() => {
             endGame(false);
             isAnimating = false;
         }, 1500);
     } else {
-        // 拿到金元寶 (成功)
+        // 💎
         back.innerHTML = '💰';
         inner.parentElement.classList.add('gem-style');
         
         currentLevel++;
         
-        // 成功也等待 1.2 秒，享受開獎瞬間
         setTimeout(() => {
             updateHUD();
             if(currentLevel >= 8) {
                 endGame(true);
             } else {
-                renderDoors(true); // 重置為新的門
+                renderDoors(true);
             }
             
             const cashBtn = document.getElementById('cashoutBtn');
@@ -375,7 +377,7 @@ async function endGame(isWin) {
         document.getElementById('resVal').innerText = `+${finalWin} P`;
         document.getElementById('resVal').style.color = '#ffd700';
         
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#ff0000', '#ffd700'] });
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#ff0000', '#ffd700'] });
         
         if(finalWin >= 100) {
             push(ref(db, `winLogs`), { uid, user: "新春勇者", game: "勇者爬塔", prize: `${finalWin} P`, time: serverTimestamp() });
@@ -400,7 +402,7 @@ window.closeModal = () => {
         document.getElementById('cashoutBtn').style.display = 'none';
         currentLevel = 0;
         updateHUD();
-        document.getElementById('doorsGrid').innerHTML = '<div style="color:var(--p); font-size:1.4rem; grid-column:span 2; text-align:center; padding:50px;">🧨 準備好開運了嗎？</div>';
+        document.getElementById('doorsGrid').innerHTML = '<div style="color:var(--p); font-size:1.5rem; grid-column:span 2; text-align:center; padding:50px; font-weight:900;">🧨 準備好開運了嗎？</div>';
     }, 300);
 };
 
