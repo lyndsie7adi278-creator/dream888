@@ -345,16 +345,11 @@ function renderDoors(withAnimation = false) {
     const grid = document.getElementById('doorsGrid');
     grid.innerHTML = '';
     bombIndices = [];
-    
-    // 計算炸彈數量
     const bombCount = currentLevel >= 3 ? 2 : 1;
-    
-    // 生成不重複的炸彈位置
     while(bombIndices.length < bombCount) {
         let r = Math.floor(Math.random() * 4);
         if(bombIndices.indexOf(r) === -1) bombIndices.push(r);
     }
-
     for(let i=0; i<4; i++) {
         const card = document.createElement('div');
         card.className = 'door-card';
@@ -362,19 +357,18 @@ function renderDoors(withAnimation = false) {
             card.style.opacity = '0';
             card.style.animation = `fadeInUp 0.4s ease ${i * 0.1}s forwards`;
         }
-        
         card.innerHTML = `
             <div class="door-inner" id="inner-${i}">
                 <div class="door-face num-font">${i+1}</div>
                 <div class="door-back" id="back-${i}"></div>
             </div>
         `;
-        
         card.onclick = () => handleDoorClick(card, i);
         grid.appendChild(card);
     }
 }
 
+// 核心修正：startGame 邏輯
 window.startGame = async () => {
     if(isPlaying || isAnimating) return;
     
@@ -383,41 +377,46 @@ window.startGame = async () => {
     
     try {
         const txResult = await runTransaction(ref(db, `users/${uid}`), (user) => {
-            if (user === null) return; // 這裡返回 undefined 會導致 committed: false
-            
-            const bal = Number(user.balance || 0);
-            if (bal < COST) {
-                throw new Error("nomoney"); // 強制終止並拋出錯誤
+            if (user === null) return; 
+            if (!user.hasOwnProperty('balance')) user.balance = 0; // 防止 balance 欄位缺失
+
+            // 強制轉數字 (解決字串相減問題)
+            const currentBal = Number(user.balance);
+            if (isNaN(currentBal)) {
+                // 如果 balance 是壞掉的數據，這裡可以選擇重置或報錯
+                // user.balance = 0; 
+                throw new Error("data_error"); 
+            }
+
+            if (currentBal < COST) {
+                throw new Error("nomoney"); 
             }
             
-            user.balance = bal - COST;
-            user.spending_counter = (user.spending_counter || 0) + COST;
+            user.balance = currentBal - COST;
+            user.spending_counter = (Number(user.spending_counter) || 0) + COST;
             return user;
         });
 
-        // 🟢 關鍵修復：必須檢查交易是否真的寫入成功
         if (txResult.committed) {
             success = true;
         } else {
-            // committed 為 false 通常是因為資料尚未載入 (user 為 null)
-            console.warn("交易未提交 (User data might be loading)");
-            alert("讀取會員資料失敗，請重新整理網頁後再試！");
+            console.warn("交易未提交 (可能因網絡延遲，請重試)");
+            alert("連線忙碌中，請再按一次「開始爬塔」！");
+            // 不登出，只提示重試
         }
     } catch(e) {
         if(e.message === "nomoney" || e.message.includes("nomoney")) {
-            alert("您的 P 幣餘額不足，請先儲值！");
+            alert("💸 您的 P 幣餘額不足，請先儲值！");
         } else {
             console.error("扣款錯誤:", e);
-            alert("系統繁忙，請稍後再試 (" + e.message + ")");
+            alert("系統錯誤 (" + e.message + ")，請稍後再試。");
         }
     }
     
     document.getElementById('loading').style.display = 'none';
     
-    // 如果交易沒成功，直接 return，不讓遊戲開始
     if(!success) return;
 
-    // 遊戲開始邏輯
     isPlaying = true;
     currentLevel = 0;
     document.body.classList.remove('danger-mode');
@@ -439,7 +438,6 @@ async function handleDoorClick(card, idx) {
     inner.classList.add('flipped');
     const back = document.getElementById(`back-${idx}`);
 
-    // 檢查炸彈
     if(bombIndices.includes(idx)) {
         back.innerHTML = '🧨';
         inner.parentElement.classList.add('shake-anim');
@@ -481,7 +479,7 @@ async function endGame(isWin) {
     const finalWin = isWin ? PRIZES[currentLevel] : 0;
 
     if(isWin && finalWin > 0) {
-        await runTransaction(ref(db, `users/${uid}/balance`), (b) => (b||0) + finalWin);
+        await runTransaction(ref(db, `users/${uid}/balance`), (b) => (Number(b)||0) + finalWin);
         
         document.getElementById('resIcon').innerText = currentLevel >= 8 ? '👑' : '元寶';
         document.getElementById('resIcon').innerHTML = currentLevel >= 8 ? '🏮' : '💰';
@@ -524,7 +522,6 @@ window.closeModal = () => {
 function updateHUD() {
     let displayLvl = currentLevel + 1;
     if(currentLevel >= 8) displayLvl = 8;
-    
     document.getElementById('curLvl').innerText = displayLvl;
     document.getElementById('curWin').innerText = PRIZES[currentLevel] + ' P';
     
