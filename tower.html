@@ -15,12 +15,16 @@
         --fail: #ff4d4d;
         --accent: #ff0000;
     }
-    * { -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
+    * { 
+        -webkit-tap-highlight-color: transparent; 
+        user-select: none; 
+        box-sizing: border-box; 
+        font-family: 'ZCOOL KuaiLe', sans-serif; /* 統一中文字體 */
+    }
     body {
         margin: 0; padding: 0;
         background: radial-gradient(circle at center, #a50000, #4a0000);
         color: #fff;
-        font-family: 'ZCOOL KuaiLe', 'Microsoft JhengHei', sans-serif;
         display: flex; flex-direction: column;
         min-height: 100vh; overflow: hidden;
     }
@@ -33,13 +37,16 @@
         border-bottom: 2px solid var(--p);
         z-index: 100;
     }
-    .back-btn { text-decoration: none; color: #ffcccb; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+    .back-btn { text-decoration: none; color: #ffcccb; font-size: 1.1rem; display: flex; align-items: center; gap: 5px; }
     .coin-pill {
         background: rgba(0, 0, 0, 0.5); border: 1px solid var(--p);
         padding: 6px 16px; border-radius: 50px;
-        color: var(--p); font-family: 'Orbitron', sans-serif; font-weight: bold;
+        color: var(--p); 
         box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+        display: flex; align-items: center; gap: 5px;
     }
+    /* 數字專用字體 */
+    .num-font { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
 
     /* 遊戲主區 */
     .game-stage {
@@ -55,50 +62,63 @@
         border: 1px inset rgba(255,215,0,0.3);
     }
     .level-badge {
-        font-size: 2.2rem; font-family: 'Orbitron', sans-serif; font-weight: 900;
-        color: var(--p); text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        font-size: 2.2rem; color: var(--p); text-shadow: 0 0 10px rgba(255,215,0,0.5);
     }
-    .level-label { font-size: 0.8rem; color: #ffcccb; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+    .level-label { font-size: 1rem; color: #ffcccb; margin-bottom: 5px; }
     .next-prize { text-align: right; }
-    .prize-val { font-size: 1.6rem; color: #00ff88; font-weight: bold; font-family: 'Orbitron', sans-serif; }
+    .prize-val { font-size: 1.6rem; color: #00ff88; }
 
     /* 門的容器 */
     .doors-grid {
         display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
         width: 100%; max-width: 360px;
-        perspective: 1200px;
+        perspective: 1000px; /* 3D 透視深度 */
     }
 
-    /* 門 (卡片) */
+    /* 門 (卡片外框) */
     .door-card {
         aspect-ratio: 1/1.2;
         position: relative;
         cursor: pointer;
-        transform-style: preserve-3d;
-        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
         border-radius: 12px;
+        background: transparent;
     }
-    .door-card:active { transform: scale(0.98); }
+    .door-card:active { transform: scale(0.96); transition: transform 0.1s; }
 
-    /* 門的正面與背面 */
+    /* 門的內部旋轉層 (核心動畫層) */
+    .door-inner {
+        position: relative;
+        width: 100%; height: 100%;
+        text-align: center;
+        transition: transform 0.6s; /* 翻轉速度 */
+        transform-style: preserve-3d;
+        border-radius: 12px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    }
+
+    /* 翻牌狀態 */
+    .door-inner.flipped { transform: rotateY(180deg); }
+
+    /* 門的正面與背面共用設定 */
     .door-face, .door-back {
-        position: absolute; inset: 0; border-radius: 12px;
-        backface-visibility: hidden;
+        position: absolute; width: 100%; height: 100%;
+        backface-visibility: hidden; /* 隱藏背面 */
+        border-radius: 12px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         border: 3px solid var(--p);
     }
     
-    /* 正面：紅包感 */
+    /* 正面：紅包樣式 */
     .door-face {
-        background: linear-gradient(135deg, #d40000, #800000);
+        background: linear-gradient(135deg, #e60000, #990000);
         color: var(--p);
         font-size: 2.5rem;
-        box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        z-index: 2;
     }
     .door-face::after {
-        content: "福"; font-size: 1rem; margin-top: 10px; border: 1px solid var(--p);
-        padding: 2px 8px; border-radius: 50%;
+        content: "福"; font-size: 1.2rem; margin-top: 10px; 
+        border: 2px solid var(--p); padding: 5px 10px; border-radius: 50%;
+        background: rgba(0,0,0,0.1);
     }
 
     /* 背面：揭曉內容 */
@@ -106,13 +126,22 @@
         transform: rotateY(180deg);
         background: #222;
         font-size: 3.5rem;
+        z-index: 1;
     }
     
-    .door-card.flipped { transform: rotateY(180deg); }
-    
     /* 結果樣式 */
-    .gem-style { border-color: #00ff88 !important; background: radial-gradient(circle, #1a472a, #000) !important; box-shadow: 0 0 30px rgba(0, 255, 136, 0.4) !important; }
-    .bomb-style { border-color: var(--fail) !important; background: radial-gradient(circle, #4a1111, #000) !important; animation: shake 0.5s; }
+    .gem-style .door-back { 
+        border-color: #00ff88; 
+        background: radial-gradient(circle, #1a472a, #000); 
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); 
+    }
+    .bomb-style .door-back { 
+        border-color: var(--fail); 
+        background: radial-gradient(circle, #4a1111, #000); 
+        box-shadow: 0 0 30px rgba(255, 77, 77, 0.6);
+    }
+    /* 炸彈抖動動畫需套用在 card 整體 */
+    .shake-anim { animation: shake 0.5s; }
 
     /* 控制按鈕區 */
     .controls {
@@ -122,10 +151,10 @@
     }
     .btn-main {
         flex: 1; padding: 18px; border-radius: 12px; border: 2px solid var(--p);
-        font-size: 1.2rem; font-weight: 900;
+        font-size: 1.3rem; 
         cursor: pointer; transition: 0.2s;
         box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-        font-family: 'ZCOOL KuaiLe', sans-serif;
+        /* 字體繼承 body 設定 */
     }
     .btn-start {
         background: linear-gradient(to bottom, #ffd700, #ff8c00);
@@ -138,8 +167,8 @@
     }
     .btn-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
 
-    /* 動畫 */
-    @keyframes shake { 0%, 100% { transform: rotateY(180deg) translateX(0); } 25% { transform: rotateY(180deg) translateX(-8px); } 75% { transform: rotateY(180deg) translateX(8px); } }
+    /* 動畫 Keyframes */
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -157,9 +186,9 @@
     }
     .modal-active .modal-card { transform: scale(1); }
     .modal-icon { font-size: 4rem; margin-bottom: 15px; display: block; filter: drop-shadow(0 0 10px var(--p)); }
-    .modal-title { font-size: 1.8rem; font-weight: bold; color: var(--p); margin-bottom: 10px; }
-    .modal-amount { font-size: 2.5rem; font-weight: 900; color: #fff; margin-bottom: 25px; display: block; font-family: 'Orbitron'; }
-    .modal-btn { background: var(--p); color: #800000; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; border: none; font-size: 1.2rem; cursor: pointer; }
+    .modal-title { font-size: 1.8rem; color: var(--p); margin-bottom: 10px; }
+    .modal-amount { font-size: 2.5rem; color: #fff; margin-bottom: 25px; display: block; }
+    .modal-btn { background: var(--p); color: #800000; width: 100%; padding: 15px; border-radius: 10px; font-size: 1.2rem; cursor: pointer; border: none; }
 
     #loading { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 99; justify-content: center; align-items: center; }
 </style>
@@ -168,23 +197,23 @@
 
 <div class="navbar">
     <a href="index.html" class="back-btn">⬅ 返回大廳</a>
-    <div class="coin-pill">🧧 <span id="uBal">---</span></div>
+    <div class="coin-pill">🧧 <span id="uBal" class="num-font">---</span></div>
 </div>
 
 <div class="game-stage">
     <div class="hud-container">
         <div>
             <div class="level-label">🏮 目前樓層</div>
-            <div class="level-badge"><span id="curLvl">0</span><span style="font-size:1rem;color:#ffcccb">/8</span></div>
+            <div class="level-badge num-font"><span id="curLvl">0</span><span style="font-size:1rem;color:#ffcccb">/8</span></div>
         </div>
         <div class="next-prize">
             <div class="level-label">💰 當前獎金</div>
-            <div class="prize-val" id="curWin">0 P</div>
+            <div class="prize-val num-font" id="curWin">0 P</div>
         </div>
     </div>
 
     <div class="doors-grid" id="doorsGrid">
-        <div style="color:var(--p); font-size:1.2rem; grid-column:span 2; text-align:center; padding:50px;">🧨 準備好開運了嗎？</div>
+        <div style="color:var(--p); font-size:1.4rem; grid-column:span 2; text-align:center; padding:50px;">🧨 準備好開運了嗎？</div>
     </div>
 
     <div id="loading"><div style="font-size:3rem; animation:spin 2s linear infinite">🏮</div></div>
@@ -199,7 +228,7 @@
     <div class="modal-card">
         <span class="modal-icon" id="resIcon">🧧</span>
         <div class="modal-title" id="resTitle">新春大吉</div>
-        <span class="modal-amount" id="resVal">+0</span>
+        <span class="modal-amount num-font" id="resVal">+0</span>
         <button class="modal-btn" onclick="closeModal()">繼續努力</button>
     </div>
 </div>
@@ -224,6 +253,7 @@ onValue(ref(db, `users/${uid}/balance`), s => {
     document.getElementById('uBal').innerText = (s.val()||0).toLocaleString();
 });
 
+// 生成門 (修復動畫結構)
 function renderDoors(withAnimation = false) {
     const grid = document.getElementById('doorsGrid');
     grid.innerHTML = '';
@@ -237,9 +267,12 @@ function renderDoors(withAnimation = false) {
             card.style.animation = `fadeInUp 0.4s ease ${i * 0.1}s forwards`;
         }
         
+        // 核心修復：使用 door-inner 包裹正反面
         card.innerHTML = `
-            <div class="door-face">${i+1}</div>
-            <div class="door-back" id="back-${i}"></div>
+            <div class="door-inner" id="inner-${i}">
+                <div class="door-face num-font">${i+1}</div>
+                <div class="door-back" id="back-${i}"></div>
+            </div>
         `;
         
         card.onclick = () => handleDoorClick(card, i);
@@ -281,44 +314,46 @@ window.startGame = async () => {
 };
 
 async function handleDoorClick(card, idx) {
-    if(!isPlaying || isAnimating || card.classList.contains('flipped')) return;
+    const inner = document.getElementById(`inner-${idx}`);
+    // 防止重複點擊或動畫中點擊
+    if(!isPlaying || isAnimating || inner.classList.contains('flipped')) return;
 
     isAnimating = true;
-    card.classList.add('flipped');
+    inner.classList.add('flipped'); // 觸發翻轉動畫
     const back = document.getElementById(`back-${idx}`);
 
     if(idx === bombIndex) {
         // 踩到鞭炮 (失敗)
         back.innerHTML = '🧨';
-        back.classList.add('bomb-style');
+        inner.parentElement.classList.add('shake-anim'); // 整個卡片抖動
+        inner.parentElement.classList.add('bomb-style'); // 變更樣式
         
-        // 延遲一點點再結算，讓玩家看到翻牌
+        // 延長等待時間至 1.5 秒，確保玩家看清楚
         setTimeout(() => {
             endGame(false);
             isAnimating = false;
-        }, 1200);
+        }, 1500);
     } else {
         // 拿到金元寶 (成功)
         back.innerHTML = '💰';
-        back.classList.add('gem-style');
+        inner.parentElement.classList.add('gem-style');
         
         currentLevel++;
         
-        // 給玩家 1 秒鐘時間看翻牌結果，再決定下一步
+        // 成功也等待 1.2 秒，享受開獎瞬間
         setTimeout(() => {
             updateHUD();
             if(currentLevel >= 8) {
                 endGame(true);
             } else {
-                // 自動換下一層的門，帶入淡入動畫
-                renderDoors(true);
+                renderDoors(true); // 重置為新的門
             }
             
             const cashBtn = document.getElementById('cashoutBtn');
             cashBtn.classList.remove('btn-disabled');
             cashBtn.innerHTML = `💰 收手領錢 (${PRIZES[currentLevel]} P)`;
             isAnimating = false;
-        }, 1000);
+        }, 1200);
     }
 }
 
@@ -365,7 +400,7 @@ window.closeModal = () => {
         document.getElementById('cashoutBtn').style.display = 'none';
         currentLevel = 0;
         updateHUD();
-        document.getElementById('doorsGrid').innerHTML = '<div style="color:var(--p); font-size:1.2rem; grid-column:span 2; text-align:center; padding:50px;">🧨 準備好開運了嗎？</div>';
+        document.getElementById('doorsGrid').innerHTML = '<div style="color:var(--p); font-size:1.4rem; grid-column:span 2; text-align:center; padding:50px;">🧨 準備好開運了嗎？</div>';
     }, 300);
 };
 
