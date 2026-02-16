@@ -19,7 +19,7 @@
         -webkit-tap-highlight-color: transparent; 
         user-select: none; 
         box-sizing: border-box; 
-        /* 全域使用思源宋體，解決繁體字型怪異問題 */
+        /* 全域使用思源宋體 */
         font-family: 'Noto Serif TC', serif;
     }
     body {
@@ -38,7 +38,18 @@
         border-bottom: 2px solid var(--p);
         z-index: 100;
     }
-    .back-btn { text-decoration: none; color: #ffcccb; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+    .back-btn { text-decoration: none; color: #ffcccb; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+    
+    /* 規則按鈕樣式 */
+    .rules-btn {
+        background: rgba(0,0,0,0.3); border: 1px solid var(--p);
+        color: var(--p); padding: 5px 15px; border-radius: 20px;
+        cursor: pointer; font-size: 0.9rem; font-weight: bold;
+        transition: 0.2s;
+        display: flex; align-items: center; gap: 5px;
+    }
+    .rules-btn:active { transform: scale(0.95); background: rgba(255, 215, 0, 0.2); }
+
     .coin-pill {
         background: rgba(0, 0, 0, 0.6); border: 1px solid var(--p);
         padding: 6px 16px; border-radius: 50px;
@@ -46,7 +57,6 @@
         box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
         display: flex; align-items: center; gap: 8px;
     }
-    /* 數字專用字體 (強制使用科技字體) */
     .num-font { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
 
     /* 遊戲主區 */
@@ -78,7 +88,7 @@
         perspective: 1000px;
     }
 
-    /* 門 (卡片外框) */
+    /* 門 */
     .door-card {
         aspect-ratio: 1/1.2;
         position: relative;
@@ -88,7 +98,6 @@
     }
     .door-card:active { transform: scale(0.96); transition: transform 0.1s; }
 
-    /* 門的內部旋轉層 */
     .door-inner {
         position: relative;
         width: 100%; height: 100%;
@@ -98,11 +107,8 @@
         border-radius: 12px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
-
-    /* 翻牌狀態 */
     .door-inner.flipped { transform: rotateY(180deg); }
 
-    /* 門的正面與背面 */
     .door-face, .door-back {
         position: absolute; width: 100%; height: 100%;
         backface-visibility: hidden;
@@ -111,7 +117,6 @@
         border: 3px solid var(--p);
     }
     
-    /* 正面：紅包質感 */
     .door-face {
         background: linear-gradient(160deg, #d90000, #8f0000);
         color: var(--p);
@@ -126,7 +131,6 @@
         background: rgba(0,0,0,0.2); box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
     }
 
-    /* 背面：內容 */
     .door-back {
         transform: rotateY(180deg);
         background: #1a1a1a;
@@ -134,7 +138,6 @@
         z-index: 1;
     }
     
-    /* 結果樣式 */
     .gem-style .door-back { 
         border-color: #00ff88; 
         background: radial-gradient(circle, #0a3d22, #000); 
@@ -147,7 +150,7 @@
     }
     .shake-anim { animation: shake 0.5s; }
 
-    /* 控制按鈕區 */
+    /* 按鈕區 */
     .controls {
         position: fixed; bottom: 30px; left: 20px; right: 20px;
         max-width: 400px; margin: 0 auto;
@@ -178,7 +181,7 @@
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* 結果彈窗 */
+    /* 彈窗通用樣式 */
     .modal-overlay {
         position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
         display: none; align-items: center; justify-content: center;
@@ -186,8 +189,8 @@
     }
     .modal-card {
         background: #800000; border: 4px solid var(--p);
-        padding: 35px; border-radius: 20px; text-align: center;
-        width: 85%; max-width: 320px;
+        padding: 30px; border-radius: 20px; text-align: center;
+        width: 85%; max-width: 340px;
         transform: scale(0.8); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         box-shadow: 0 0 50px rgba(255,215,0,0.2);
     }
@@ -196,6 +199,21 @@
     .modal-title { font-size: 2rem; color: var(--p); margin-bottom: 10px; font-weight: 900; }
     .modal-amount { font-size: 2.8rem; color: #fff; margin-bottom: 25px; display: block; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
     .modal-btn { background: var(--p); color: #800000; width: 100%; padding: 15px; border-radius: 10px; font-size: 1.3rem; font-weight: 900; cursor: pointer; border: none; letter-spacing: 2px; }
+    
+    /* 規則內容樣式 */
+    .rules-content {
+        text-align: left;
+        color: #fff;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        background: rgba(0,0,0,0.2);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,215,0,0.2);
+    }
+    .rules-content ul { padding-left: 20px; margin: 0; }
+    .rules-content li { margin-bottom: 8px; }
 
     #loading { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 99; justify-content: center; align-items: center; }
 </style>
@@ -203,7 +221,8 @@
 <body>
 
 <div class="navbar">
-    <a href="index.html" class="back-btn">⬅ 返回大廳</a>
+    <a href="index.html" class="back-btn">⬅ 返回</a>
+    <button class="rules-btn" onclick="openRules()">📜 規則</button>
     <div class="coin-pill">🧧 <span id="uBal" class="num-font">---</span></div>
 </div>
 
@@ -240,6 +259,23 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="rulesModal">
+    <div class="modal-card">
+        <div class="modal-title">📜 遊戲規則</div>
+        <div class="rules-content">
+            <ul>
+                <li><strong>成本：</strong>每次挑戰消耗 10 P。</li>
+                <li><strong>機制：</strong>每層 4 扇門，含 3 個元寶(獎勵)與 1 個鞭炮(炸彈)。</li>
+                <li><strong>晉級：</strong>選中元寶可進入下一層，獎金倍增。</li>
+                <li><strong>收手：</strong>每過一層皆可選擇「見好就收」領取當前獎金。</li>
+                <li><strong>失敗：</strong>若選中鞭炮，挑戰失敗且當局獎金歸零。</li>
+                <li><strong>大獎：</strong>通關第 8 層可獲得 888 P 大獎！</li>
+            </ul>
+        </div>
+        <button class="modal-btn" onclick="closeRules()">我知道了</button>
+    </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, runTransaction, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -259,6 +295,18 @@ let isAnimating = false;
 onValue(ref(db, `users/${uid}/balance`), s => {
     document.getElementById('uBal').innerText = (s.val()||0).toLocaleString();
 });
+
+// 規則彈窗控制
+window.openRules = () => {
+    const m = document.getElementById('rulesModal');
+    m.style.display = 'flex';
+    setTimeout(() => m.classList.add('modal-active'), 10);
+};
+window.closeRules = () => {
+    const m = document.getElementById('rulesModal');
+    m.classList.remove('modal-active');
+    setTimeout(() => m.style.display = 'none', 300);
+};
 
 function renderDoors(withAnimation = false) {
     const grid = document.getElementById('doorsGrid');
