@@ -272,7 +272,6 @@ function init(){
             const winData = snapshot.val();
             let winText = "🎊 歡迎光臨夢工廠，祝您大獎連連！ 🎊"; 
             if (winData) {
-                // 🟢 這裡新增過濾條件：只保留非能量爆發的獎項
                 const sortedWins = Object.values(winData)
                     .filter(w => w.game !== "⚡ 能量爆發") 
                     .sort((a, b) => (b.time || 0) - (a.time || 0))
@@ -419,6 +418,22 @@ function renderGrid(){
         const isLiveActive = snap.val() || false; 
         
         grid.innerHTML = ''; 
+
+        // [新增] 爬塔遊戲入口 (只在全部商品分類顯示)
+        if (_cc === 'ALL') {
+            const t = document.createElement('div');
+            t.className = 'p-card';
+            t.onclick = () => location.href = 'tower_game.html';
+            t.innerHTML = `
+                <img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2F%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A8%AD%E8%A8%88%20(5).png?alt=media&token=1c7a2e9a-c1bb-465e-9a34-b179fbe98ce8" class="p-img" style="object-fit:contain;padding:10px;background:#800000">
+                <div class="p-info">
+                    <div class="p-name" style="color:#e74c3c">🧧 新春勇者爬塔</div>
+                    <div class="p-price-value" style="color:#ffb800">10 P <span class="promo-tag" style="background:#ffb800;color:#800000;margin-left:5px">HOT</span></div>
+                    <div style="font-size:0.7rem;color:#999;margin-top:5px">挑戰 888 P 大獎</div>
+                </div>
+            `;
+            grid.appendChild(t);
+        }
 
         if (_cc === 'ALL' && isLiveActive) {
             const f = document.createElement('div');
