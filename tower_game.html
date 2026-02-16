@@ -29,7 +29,6 @@
         min-height: 100vh; overflow: hidden;
         transition: background 0.5s;
     }
-    /* 危險模式背景 */
     body.danger-mode {
         background: radial-gradient(circle at center, #3d0000, #000000);
     }
@@ -93,7 +92,6 @@
     }
     .next-hint span { color: var(--p); font-weight: bold; font-size: 1.1rem; }
 
-    /* 難度提示標籤 */
     .danger-tag {
         position: absolute; top: 0; left: 0; right: 0;
         background: rgba(255, 71, 87, 0.8); color: white;
@@ -221,12 +219,11 @@
         text-align: left; color: #fff; font-size: 0.95rem; line-height: 1.6;
         margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px;
         border-radius: 10px; border: 1px solid rgba(255,215,0,0.2);
-        max-height: 60vh; overflow-y: auto; /* 避免表格太長超出畫面 */
+        max-height: 60vh; overflow-y: auto;
     }
     .rules-content ul { padding-left: 20px; margin: 0; }
     .rules-content li { margin-bottom: 6px; }
 
-    /* 表格樣式 */
     .rules-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
     .rules-table th { text-align: left; color: var(--p); border-bottom: 1px solid rgba(255,215,0,0.3); padding: 5px; }
     .rules-table td { padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -383,25 +380,47 @@ window.startGame = async () => {
     
     document.getElementById('loading').style.display = 'flex';
     let success = false;
+    
     try {
-        await runTransaction(ref(db, `users/${uid}`), (user) => {
-            if(!user) return;
-            if((user.balance || 0) < COST) throw "nomoney";
-            user.balance -= COST;
+        const txResult = await runTransaction(ref(db, `users/${uid}`), (user) => {
+            if (user === null) return; // 這裡返回 undefined 會導致 committed: false
+            
+            const bal = Number(user.balance || 0);
+            if (bal < COST) {
+                throw new Error("nomoney"); // 強制終止並拋出錯誤
+            }
+            
+            user.balance = bal - COST;
             user.spending_counter = (user.spending_counter || 0) + COST;
             return user;
         });
-        success = true;
+
+        // 🟢 關鍵修復：必須檢查交易是否真的寫入成功
+        if (txResult.committed) {
+            success = true;
+        } else {
+            // committed 為 false 通常是因為資料尚未載入 (user 為 null)
+            console.warn("交易未提交 (User data might be loading)");
+            alert("讀取會員資料失敗，請重新整理網頁後再試！");
+        }
     } catch(e) {
-        if(e === "nomoney") alert("金幣不足，快去領紅包吧！");
+        if(e.message === "nomoney" || e.message.includes("nomoney")) {
+            alert("您的 P 幣餘額不足，請先儲值！");
+        } else {
+            console.error("扣款錯誤:", e);
+            alert("系統繁忙，請稍後再試 (" + e.message + ")");
+        }
     }
     
     document.getElementById('loading').style.display = 'none';
+    
+    // 如果交易沒成功，直接 return，不讓遊戲開始
     if(!success) return;
 
+    // 遊戲開始邏輯
     isPlaying = true;
     currentLevel = 0;
-    document.body.classList.remove('danger-mode'); 
+    document.body.classList.remove('danger-mode');
     updateHUD();
     renderDoors(true);
 
