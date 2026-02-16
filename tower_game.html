@@ -192,6 +192,11 @@
     }
     .btn-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
 
+    /* ID 顯示 */
+    .uid-display {
+        position: fixed; bottom: 5px; left: 10px; font-size: 0.7rem; color: rgba(255,255,255,0.3); z-index: 999;
+    }
+
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -271,6 +276,8 @@
     <button class="btn-main btn-cashout" id="cashoutBtn" onclick="cashOut()">💰 見好就收</button>
 </div>
 
+<div class="uid-display" id="debugUid">ID: ---</div>
+
 <div class="modal-overlay" id="resModal">
     <div class="modal-card">
         <span class="modal-icon" id="resIcon">🧧</span>
@@ -312,12 +319,20 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, runTransaction, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, runTransaction, push, serverTimestamp, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const _cc = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
 const app = initializeApp(_cc); const db = getDatabase(app);
 const uid = localStorage.getItem('myScratchCode');
-if(!uid) location.href = 'index.html';
+
+// Debug: 顯示當前 ID
+if(uid) {
+    document.getElementById('debugUid').innerText = "ID: " + uid;
+} else {
+    document.getElementById('debugUid').innerText = "ID: 未登入";
+    alert("尚未登入，請從主網站進入！");
+    location.href = 'index.html';
+}
 
 const COST = 10;
 const PRIZES = [0, 12, 15, 22, 35, 60, 100, 200, 888];
@@ -326,8 +341,9 @@ let isPlaying = false;
 let bombIndices = [];
 let isAnimating = false;
 
+// 監聽餘額
 onValue(ref(db, `users/${uid}/balance`), s => {
-    document.getElementById('uBal').innerText = (s.val()||0).toLocaleString();
+    document.getElementById('uBal').innerText = (Number(s.val())||0).toLocaleString();
 });
 
 window.openRules = () => {
@@ -368,31 +384,44 @@ function renderDoors(withAnimation = false) {
     }
 }
 
-// 核心修正：startGame 邏輯
+// 核心修正：加入預先檢查 (Pre-check)
 window.startGame = async () => {
     if(isPlaying || isAnimating) return;
     
     document.getElementById('loading').style.display = 'flex';
-    let success = false;
     
+    // 1. 先確認使用者是否存在，避免 Transaction 瞎忙
+    try {
+        const snapshot = await get(ref(db, `users/${uid}`));
+        if (!snapshot.exists()) {
+            document.getElementById('loading').style.display = 'none';
+            alert(`找不到會員資料 (ID: ${uid})！\n\n請截圖告知管理員，或確認您是否在資料庫被刪除了。`);
+            return;
+        }
+        
+        const userData = snapshot.val();
+        if ((Number(userData.balance) || 0) < COST) {
+            document.getElementById('loading').style.display = 'none';
+            alert("您的 P 幣不足 (需要 10 P)，請先儲值！");
+            return;
+        }
+    } catch (err) {
+        document.getElementById('loading').style.display = 'none';
+        alert("網路連線錯誤，請檢查網路！");
+        console.error(err);
+        return;
+    }
+
+    // 2. 確定有錢有人，才執行扣款交易
+    let success = false;
     try {
         const txResult = await runTransaction(ref(db, `users/${uid}`), (user) => {
-            if (user === null) return; 
-            if (!user.hasOwnProperty('balance')) user.balance = 0; // 防止 balance 欄位缺失
-
-            // 強制轉數字 (解決字串相減問題)
-            const currentBal = Number(user.balance);
-            if (isNaN(currentBal)) {
-                // 如果 balance 是壞掉的數據，這裡可以選擇重置或報錯
-                // user.balance = 0; 
-                throw new Error("data_error"); 
-            }
-
-            if (currentBal < COST) {
-                throw new Error("nomoney"); 
-            }
+            if (!user) return; // 這裡如果還是 null，通常是快取問題，下方 committed 會處理
             
-            user.balance = currentBal - COST;
+            const bal = Number(user.balance || 0);
+            if (bal < COST) return; // 不拋錯，直接 abort
+            
+            user.balance = bal - COST;
             user.spending_counter = (Number(user.spending_counter) || 0) + COST;
             return user;
         });
@@ -400,23 +429,19 @@ window.startGame = async () => {
         if (txResult.committed) {
             success = true;
         } else {
-            console.warn("交易未提交 (可能因網絡延遲，請重試)");
-            alert("連線忙碌中，請再按一次「開始爬塔」！");
-            // 不登出，只提示重試
+            // 如果跑到這裡，代表交易因為某些原因被取消 (aborted)
+            alert("扣款失敗 (交易中斷)，請再試一次！");
         }
     } catch(e) {
-        if(e.message === "nomoney" || e.message.includes("nomoney")) {
-            alert("💸 您的 P 幣餘額不足，請先儲值！");
-        } else {
-            console.error("扣款錯誤:", e);
-            alert("系統錯誤 (" + e.message + ")，請稍後再試。");
-        }
+        console.error("交易錯誤:", e);
+        alert("系統忙碌中，請重試！");
     }
     
     document.getElementById('loading').style.display = 'none';
     
     if(!success) return;
 
+    // 3. 成功開始
     isPlaying = true;
     currentLevel = 0;
     document.body.classList.remove('danger-mode');
