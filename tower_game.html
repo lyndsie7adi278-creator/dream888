@@ -29,6 +29,7 @@
         min-height: 100vh; overflow: hidden;
         transition: background 0.5s;
     }
+    /* 危險模式背景 */
     body.danger-mode {
         background: radial-gradient(circle at center, #3d0000, #000000);
     }
@@ -257,7 +258,7 @@
             <div class="level-label">💰 當前獎金</div>
             <div class="prize-val num-font" id="curWin">0 P</div>
             <div class="next-hint" id="nextHintBox" style="display:none">
-                下一關 ▶ <span class="num-font" id="nextWinVal">12</span> P
+                下一關 ▶ <span class="num-font" id="nextWinVal">10 P</span>
             </div>
         </div>
     </div>
@@ -300,14 +301,14 @@
                 <strong style="color:var(--p)">🏆 獎金一覽表：</strong>
                 <table class="rules-table">
                     <tr><th>層數</th><th>獎勵</th><th>炸彈數</th></tr>
-                    <tr><td>1</td><td>12 P</td><td>1</td></tr>
+                    <tr><td>1</td><td>10 P</td><td>1</td></tr>
                     <tr><td>2</td><td>15 P</td><td>1</td></tr>
-                    <tr><td>3</td><td>22 P</td><td>1</td></tr>
-                    <tr class="danger-text"><td>4</td><td>35 P</td><td>2 ⚠️</td></tr>
-                    <tr class="danger-text"><td>5</td><td>60 P</td><td>2</td></tr>
-                    <tr class="danger-text"><td>6</td><td>100 P</td><td>2</td></tr>
-                    <tr class="danger-text"><td>7</td><td>200 P</td><td>2</td></tr>
-                    <tr style="color:#ffd700; font-weight:900"><td>8</td><td>888 P</td><td>2 👑</td></tr>
+                    <tr><td>3</td><td>20 P</td><td>1</td></tr>
+                    <tr class="danger-text"><td>4</td><td>40 P</td><td>2 ⚠️</td></tr>
+                    <tr class="danger-text"><td>5</td><td>70 P</td><td>2</td></tr>
+                    <tr class="danger-text"><td>6</td><td>140 P</td><td>2</td></tr>
+                    <tr class="danger-text"><td>7</td><td>300 P</td><td>2</td></tr>
+                    <tr style="color:#ffd700; font-weight:900"><td>8</td><td>888 現金紅包</td><td>2 👑</td></tr>
                 </table>
             </div>
         </div>
@@ -333,7 +334,8 @@ if(uid) {
 }
 
 const COST = 10;
-const PRIZES = [0, 12, 15, 22, 35, 60, 100, 200, 888];
+// 更新獎項陣列
+const PRIZES = [0, 10, 15, 20, 40, 70, 140, 300, 888];
 let currentLevel = 0;
 let isPlaying = false;
 let bombIndices = [];
@@ -381,7 +383,6 @@ function renderDoors(withAnimation = false) {
     }
 }
 
-// 核心修正：改用最穩定的 update 方法 (放棄複雜的 transaction)
 window.startGame = async () => {
     if(isPlaying || isAnimating) return;
     
@@ -407,7 +408,6 @@ window.startGame = async () => {
         }
 
         // 2. 直接寫入新餘額 (覆蓋)
-        // 這種方式最不容易因為 null 或 undefined 報錯
         await update(ref(db, `users/${uid}`), {
             balance: currentBal - COST,
             spending_counter: currentSpend + COST
@@ -483,7 +483,6 @@ async function endGame(isWin) {
     const finalWin = isWin ? PRIZES[currentLevel] : 0;
 
     if(isWin && finalWin > 0) {
-        // 贏錢也改用 update 確保一致性
         try {
             const snap = await get(ref(db, `users/${uid}/balance`));
             const currentBal = Number(snap.val() || 0);
@@ -494,13 +493,18 @@ async function endGame(isWin) {
             document.getElementById('resIcon').innerText = currentLevel >= 8 ? '👑' : '元寶';
             document.getElementById('resIcon').innerHTML = currentLevel >= 8 ? '🏮' : '💰';
             document.getElementById('resTitle').innerText = currentLevel >= 8 ? '恭喜通關！' : '落袋為安';
-            document.getElementById('resVal').innerText = `+${finalWin} P`;
+            
+            // 判斷是否為第 8 關現金紅包
+            let displayPrize = currentLevel >= 8 ? '888 現金紅包' : `+${finalWin} P`;
+            document.getElementById('resVal').innerText = displayPrize;
             document.getElementById('resVal').style.color = '#ffd700';
             
             confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#ff0000', '#ffd700'] });
             
             if(finalWin >= 100) {
-                push(ref(db, `winLogs`), { uid, user: "新春勇者", game: "勇者爬塔", prize: `${finalWin} P`, time: serverTimestamp() });
+                // 如果是第 8 關，跑馬燈寫「888 現金紅包」
+                let logPrizeName = currentLevel >= 8 ? '888 現金紅包' : `${finalWin} P`;
+                push(ref(db, `winLogs`), { uid, user: "新春勇者", game: "勇者爬塔", prize: logPrizeName, time: serverTimestamp() });
             }
         } catch(e) {
             console.error("派獎失敗:", e);
@@ -537,7 +541,9 @@ function updateHUD() {
     let displayLvl = currentLevel + 1;
     if(currentLevel >= 8) displayLvl = 8;
     document.getElementById('curLvl').innerText = displayLvl;
-    document.getElementById('curWin').innerText = PRIZES[currentLevel] + ' P';
+    
+    // 當前獎金顯示
+    document.getElementById('curWin').innerText = currentLevel >= 8 ? '888 現金紅包' : PRIZES[currentLevel] + ' P';
     
     const dangerTag = document.getElementById('dangerTag');
     if(currentLevel >= 3) {
@@ -553,7 +559,8 @@ function updateHUD() {
     
     if (isPlaying && currentLevel < 8) {
         hintBox.style.display = 'flex';
-        nextValSpan.innerText = PRIZES[currentLevel + 1];
+        // 下一關獎金顯示
+        nextValSpan.innerText = (currentLevel + 1 === 8) ? '888 現金紅包' : PRIZES[currentLevel + 1] + ' P';
     } else {
         hintBox.style.display = 'none';
     }
