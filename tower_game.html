@@ -83,7 +83,6 @@
     }
     .level-label { font-size: 1rem; color: #ffcccb; margin-bottom: 5px; font-weight: 700; display: flex; align-items: center; gap: 5px;}
     
-    /* 每日次數小標籤 */
     .play-count-tag {
         font-size: 0.65rem; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.3);
         padding: 2px 6px; border-radius: 5px; color: #fff; font-weight: normal;
@@ -254,7 +253,7 @@
         <div class="danger-tag" id="dangerTag">⚠️ 警戒：炸彈增量 (50%) ⚠️</div>
 
         <div>
-            <div class="level-label">🏮 當前層數 <span class="play-count-tag" id="playCountTag">次數: -/3</span></div>
+            <div class="level-label">🏮 當前層數 <span class="play-count-tag" id="playCountTag">今日挑戰次數: -/3</span></div>
             <div class="level-badge num-font"><span id="curLvl">1</span><span style="font-size:1rem;color:#ffcccb">/8</span></div>
         </div>
         
@@ -262,7 +261,7 @@
             <div class="level-label">💰 當前獎金</div>
             <div class="prize-val num-font" id="curWin">0 P</div>
             <div class="next-hint" id="nextHintBox" style="display:none">
-                下一關 ▶ <span class="num-font" id="nextWinVal">10 P</span>
+                下一關 ▶ <span class="num-font" id="nextWinVal">15 P</span>
             </div>
         </div>
     </div>
@@ -306,13 +305,13 @@
                 <strong style="color:var(--p)">🏆 獎金一覽表：</strong>
                 <table class="rules-table">
                     <tr><th>層數</th><th>獎勵</th><th>炸彈數</th></tr>
-                    <tr><td>1</td><td>10 P</td><td>1</td></tr>
-                    <tr><td>2</td><td>15 P</td><td>1</td></tr>
-                    <tr><td>3</td><td>20 P</td><td>1</td></tr>
-                    <tr class="danger-text"><td>4</td><td>40 P</td><td>2 ⚠️</td></tr>
-                    <tr class="danger-text"><td>5</td><td>70 P</td><td>2</td></tr>
-                    <tr class="danger-text"><td>6</td><td>140 P</td><td>2</td></tr>
-                    <tr class="danger-text"><td>7</td><td>300 P</td><td>2</td></tr>
+                    <tr><td>1</td><td>15 P</td><td>1</td></tr>
+                    <tr><td>2</td><td>20 P</td><td>1</td></tr>
+                    <tr><td>3</td><td>40 P</td><td>1</td></tr>
+                    <tr class="danger-text"><td>4</td><td>60 P</td><td>2 ⚠️</td></tr>
+                    <tr class="danger-text"><td>5</td><td>100 P</td><td>2</td></tr>
+                    <tr class="danger-text"><td>6</td><td>150 P</td><td>2</td></tr>
+                    <tr class="danger-text"><td>7</td><td>500 P</td><td>2</td></tr>
                     <tr style="color:#ffd700; font-weight:900"><td>8</td><td>888 現金紅包</td><td>2 👑</td></tr>
                 </table>
             </div>
@@ -323,7 +322,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, runTransaction, push, serverTimestamp, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, push, serverTimestamp, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const _cc = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
 const app = initializeApp(_cc); const db = getDatabase(app);
@@ -338,26 +337,24 @@ if(uid) {
 }
 
 const COST = 10;
-const MAX_PLAYS_PER_DAY = 3; // 每日限制次數
-const PRIZES = [0, 10, 15, 20, 40, 70, 140, 300, 888];
+const MAX_PLAYS_PER_DAY = 3; 
+// 依照要求更新獎項 (1~8層)
+const PRIZES = [0, 15, 20, 40, 60, 100, 150, 500, 888];
 let currentLevel = 0;
 let isPlaying = false;
 let bombIndices = [];
 let isAnimating = false;
 
-// 取得今天的日期字串 (YYYY-MM-DD) 作為判斷依據
 function getTodayString() {
     const today = new Date();
     return today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
 }
 
-// 監聽餘額並更新 UI
 onValue(ref(db, `users/${uid}`), s => {
     if(!s.exists()) return;
     const data = s.val();
     document.getElementById('uBal').innerText = (Number(data.balance)||0).toLocaleString();
     
-    // 檢查每日次數並顯示
     const todayStr = getTodayString();
     let currentPlays = 0;
     if(data.tower_game_date === todayStr) {
@@ -410,31 +407,27 @@ window.startGame = async () => {
     document.getElementById('loading').style.display = 'flex';
     
     try {
-        const snap = await get(ref(db, `users/${uid}`));
+        // 使用 get 抓取，如果是空值或快取問題，重新讀取一次確保最新
+        let snap = await get(ref(db, `users/${uid}`));
         if (!snap.exists()) {
             document.getElementById('loading').style.display = 'none';
-            alert(`找不到您的會員資料 (ID: ${uid})，請確認是否已登入！`);
+            alert(`連線異常：找不到您的會員資料。請重新整理網頁後再試！`);
             return;
         }
 
         const userData = snap.val();
-        
-        // --- 防沉迷：檢查每日次數 ---
         const todayStr = getTodayString();
         let playCount = 0;
         
-        // 如果資料庫紀錄的日期是今天，則讀取已經玩的次數
         if (userData.tower_game_date === todayStr) {
             playCount = Number(userData.tower_game_count) || 0;
         }
         
-        // 判斷是否達到上限
         if (playCount >= MAX_PLAYS_PER_DAY) {
             document.getElementById('loading').style.display = 'none';
             alert(`今日挑戰次數已達上限 (${MAX_PLAYS_PER_DAY}/${MAX_PLAYS_PER_DAY})！\n請明天再來挑戰大獎！`);
             return;
         }
-        // ------------------------------
 
         const currentBal = Number(userData.balance || 0);
         const currentSpend = Number(userData.spending_counter || 0);
@@ -445,7 +438,7 @@ window.startGame = async () => {
             return;
         }
 
-        // 寫入扣款並更新遊玩次數
+        // 直接扣款並增加次數
         await update(ref(db, `users/${uid}`), {
             balance: currentBal - COST,
             spending_counter: currentSpend + COST,
@@ -469,7 +462,7 @@ window.startGame = async () => {
     } catch(e) {
         document.getElementById('loading').style.display = 'none';
         console.error("啟動失敗:", e);
-        alert("系統發生錯誤，請稍後再試。\n錯誤代碼: " + e.message);
+        alert("系統發生連線錯誤，請檢查網路後再試。");
     }
 };
 
@@ -539,13 +532,14 @@ async function endGame(isWin) {
             
             confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#ff0000', '#ffd700'] });
             
+            // 寫入廣播紀錄
             if(finalWin >= 100) {
                 let logPrizeName = currentLevel >= 8 ? '888 現金紅包' : `${finalWin} P`;
                 push(ref(db, `winLogs`), { uid, user: "新春勇者", game: "勇者爬塔", prize: logPrizeName, time: serverTimestamp() });
             }
         } catch(e) {
             console.error("派獎失敗:", e);
-            alert("派獎連線異常，請聯繫管理員！");
+            alert("派獎連線異常，請重新整理確認餘額，如有問題請聯繫管理員！");
         }
     } else {
         document.getElementById('resIcon').innerText = '🧨';
