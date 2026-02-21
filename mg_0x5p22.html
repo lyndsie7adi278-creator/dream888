@@ -235,7 +235,7 @@ let isEditing = false, currentViewingUid = "", monFilter = 'ALL';
 
 window.showLoading = (t = "處理中...") => { document.getElementById('loadingText').innerText = t; document.getElementById('globalLoading').style.display = 'flex'; };
 window.hideLoading = () => { document.getElementById('globalLoading').style.display = 'none'; };
-window.onload=()=>{ const auth = prompt("管理授權碼:"); if("8888"===auth){ document.body.style.display="block"; document.getElementById('repDate').value = new Date().toISOString().split('T')[0]; startSync(); fetchDailyReport(); }else{ location.href="index.html"; }};
+window.onload=()=>{ const auth = prompt("管理授權碼:"); if("we20401150"===auth){ document.body.style.display="block"; document.getElementById('repDate').value = new Date().toISOString().split('T')[0]; startSync(); fetchDailyReport(); }else{ location.href="index.html"; }};
 
 window.handleFileUpload = async (input, targetId, statusId) => {
 const file = input.files[0]; if(!file) return; const status = document.getElementById(statusId); if(status) {status.innerText = "⏳"; status.style.color = "#ffb800";}
