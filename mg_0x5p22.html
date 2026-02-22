@@ -319,11 +319,12 @@ async function runReport(start, end) {
     let winItems = [];
     let detailItems = []; 
 
-    const winMap = {};
+    // 🟢 修正：放寬配對條件
+    // 建立一個 "依據玩家UID" 分類的快取表，並把時間轉成數字
+    const winMapByUid = {};
     Object.values(wins).forEach(w => {
-        const key = w.uid + "_" + w.game;
-        if(!winMap[key]) winMap[key] = [];
-        winMap[key].push(w);
+        if(!winMapByUid[w.uid]) winMapByUid[w.uid] = [];
+        winMapByUid[w.uid].push({ ...w, used: false, timeNum: Number(w.time) });
     });
 
     Object.entries(users).forEach(([uid, u]) => {
@@ -335,14 +336,22 @@ async function runReport(start, end) {
                         rev += cost; 
                         cnt++; 
                         games[log.game] = (games[log.game] || 0) + cost; 
+                        
                         let resultHtml = `<span style="color:#666">❌ 未中獎</span>`;
-                        const candidates = winMap[uid + "_" + log.game];
+                        
+                        // 🟢 修正邏輯：只找同一個玩家，在 10 分鐘內的中獎紀錄 (不管商品名稱)
+                        const candidates = winMapByUid[uid];
                         if (candidates) {
-                            const match = candidates.find(w => Math.abs(w.time - log.time) < 60000); 
-                            if (match) {
+                            // 放寬時間差為 10 分鐘 (600,000 毫秒)
+                            const matchIndex = candidates.findIndex(w => !w.used && Math.abs(w.timeNum - log.time) < 600000); 
+                            
+                            if (matchIndex !== -1) {
+                                const match = candidates[matchIndex];
                                 resultHtml = `<span style="color:#2ecc71; font-weight:bold;">🏆 ${match.prize}</span>`;
+                                match.used = true; // 標記為已使用，防止一個獎被配對兩次
                             }
                         }
+                        
                         detailItems.push({ time: log.time, uid: uid, nick: u.nickname || '玩家', game: log.game, costStr: `<span style="color:#ff4757; font-weight:bold;">-${cost} P</span>`, result: resultHtml });
                     }
                     else if(log.cost < 0) {
@@ -500,7 +509,9 @@ function startSync(){
             const ship = d.shipping || {};
             const shipHtml = ship.name ? `<div class="ship-info-card"><span class="ship-label">📦 收件人:</span> ${ship.name}<br><span class="ship-label">📱 電話:</span> ${ship.phone}<br><span class="ship-label">🏪 門市:</span> ${ship.store}</div>` : `<div class="ship-info-card" style="background:rgba(255,255,255,0.05); border:1px solid #333; color:#666;">尚未填寫收件資訊</div>`;
             const i=document.createElement('div'); i.className='user-item'; 
-            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'玩家'}</b><span class="spent-badge">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">UID: ${id} | PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b> | Line積分: <b style="color:var(--success)">${d.linePoints||0} 點</b><br>${shipHtml}<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳/明細</button><button class="btn btn-sm" onclick="addBal('${id}')">手動加點</button><button class="btn btn-sm btn-unlock" onclick="clearCommission('${id}')">💰 結清獎金</button><button class="btn btn-sm btn-danger" onclick="deductPoints('${id}')">🎁 兌換核銷 (扣積分)</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`; 
+            
+            // 🟢 修正：在列表直接顯示帳號 (UID) 與 暱稱
+            i.innerHTML=`<div class="user-header" onclick="toggleUser('${id}')"><div><b>${d.nickname||'無暱稱'}</b> <span style="color:#888; font-size:0.8rem; font-family:monospace;">(${id})</span><br><span class="spent-badge" style="margin-left:0; margin-top:5px; display:inline-block;">累計消費:${sp.toLocaleString()}P</span>${d.invitedBy?`<span class="ref-tag">源:${d.invitedBy}</span>`:''}${ic>0?`<span class="ref-tag" style="color:#2ecc71;border-color:#2ecc71">邀:${ic}人</span>`:''}${firstTag}</div><div style="color:var(--p)">${(d.balance||0).toLocaleString()}P ▼</div></div><div class="user-content" id="content-${id}">PIN: ${d.pin||'無'}<br>盟友獎金: <b style="color:var(--success)">${comm} P</b> | Line積分: <b style="color:var(--success)">${d.linePoints||0} 點</b><br>${shipHtml}<div style="margin-top:10px"><button class="btn btn-sm" onclick="showLogs('${id}')">對帳/明細</button><button class="btn btn-sm" onclick="addBal('${id}')">手動加點</button><button class="btn btn-sm btn-unlock" onclick="clearCommission('${id}')">💰 結清獎金</button><button class="btn btn-sm btn-danger" onclick="deductPoints('${id}')">🎁 兌換核銷 (扣積分)</button><button class="btn btn-sm" onclick="editPin('${id}')">PIN</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">刪除</button></div></div>`; 
             c.appendChild(i)
         })
     });
