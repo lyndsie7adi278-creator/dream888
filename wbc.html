@@ -53,18 +53,8 @@
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--p); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* 修正後的滑動區域 */
-        .modal-body-scroll {
-            max-height: 55vh; 
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; 
-            font-size: 0.85rem; 
-            line-height: 1.7; 
-            color: #cbd5e1; 
-            padding-right: 10px; 
-            margin-bottom: 20px;
-            display: block;
-        }
+        .modal-body-scroll { max-height: 55vh; overflow-y: auto; -webkit-overflow-scrolling: touch; font-size: 0.85rem; line-height: 1.7; color: #cbd5e1; padding-right: 10px; margin-bottom: 20px; display: block; }
+        .bet-badge { background: rgba(56,189,248,0.15); color: var(--p); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -72,23 +62,20 @@
     <div id="rulesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; padding: 20px;">
         <div style="background:#1e293b; padding:25px 20px; border-radius:15px; max-width:400px; width:100%; border:1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position:relative;">
             <h2 style="color:#38bdf8; margin-top:0; text-align:center; font-size:1.3rem;">📋 遊戲規則與免責聲明</h2>
-            
             <div class="modal-body-scroll">
                 <h4 style="color:#f59e0b; margin:0 0 5px 0;">⚠️ 總規則 / 免責聲明</h4>
                 <p style="margin-top:0;">1. 點數(P幣)僅供娛樂用途，無法與本平台兌換現金。若以非官方管道取得點數發生任何問題，需由玩家自行承擔。<br>
                 2. 所有賽果及注單之認定皆以本網站訂定之規則為準，如遇特殊狀況，本網站有權做最終決定。</p>
-                
                 <h4 style="color:#f59e0b; margin:15px 0 5px 0;">⚾ 棒球預測規則</h4>
                 <p style="margin-top:0;">1. <b>賽果認定：</b>依照各聯盟之裁定為最終賽果。<br>
                 2. <b>取消/保留/延期：</b>該場賽事之注單視為「無效」，系統將全額退回本金。<br>
-                3. <b>賽事局數：</b>全場賽事必須打完 1~9 局（含延長賽），注單才算有效。如遇突發因素（如下雨）未滿九局經聯盟裁定勝負，則「讓分」盤口無效退本金，「不讓分」盤口仍然有效。<br>
+                3. <b>賽事局數：</b>全場賽事必須打完 1~9 局（含延長賽），注單才算有效。如遇突發因素未滿九局經聯盟裁定勝負，則「讓分」盤口無效退本金，「不讓分」盤口仍然有效。<br>
                 4. <b>平手/和局：</b>所有賽事如遇平手裁定，讓分注單一律為有效。<br>
                 5. <b>國際賽特別規則：</b><br>
                 - 如遇主客場異動，注單視為有效。<br>
                 - 如遇比分懸殊提前結束（扣倒）經大會裁定勝負，所有注單有效。若因天候裁定，則「讓分」無效退款。<br>
                 - 若採取突破僵局制，賽果裁定依官網為準。</p>
             </div>
-
             <button id="agreeBtn" class="btn btn-a" style="width:100%; font-size:1.1rem; padding:12px;">我已閱讀並同意</button>
             <button id="closeRulesBtn" class="btn btn-disabled" style="width:100%; font-size:1.1rem; padding:12px; display:none;" onclick="document.getElementById('rulesModal').style.display='none'">關閉</button>
         </div>
@@ -116,9 +103,7 @@
             </ul>
         </div>
 
-        <div id="matchesContainer">
-            <div style="text-align:center; padding:50px; color:#64748b;">載入今日賽事中...</div>
-        </div>
+        <div id="matchesContainer"><div style="text-align:center; padding:50px; color:#64748b;">載入今日賽事中...</div></div>
 
         <div class="history-sec">
             <div class="h-title">📋 我的預測注單</div>
@@ -135,7 +120,6 @@
     const uid = localStorage.getItem('myScratchCode');
     if(!uid) { alert("請先登入！"); location.href='index.html'; }
 
-    // 規則彈窗邏輯
     window.onload = () => {
         if (!localStorage.getItem('wbc_rules_agreed')) {
             document.getElementById('rulesModal').style.display = 'flex';
@@ -148,7 +132,6 @@
             document.getElementById('closeRulesBtn').style.display = 'block';
         }
     };
-
     window.openRules = () => {
         document.getElementById('agreeBtn').style.display = 'none';
         document.getElementById('closeRulesBtn').style.display = 'block';
@@ -169,8 +152,8 @@
 
             const isOpen = m.status === 'open';
             const statusDiv = isOpen ? `<div class="match-status s-open">🟢 開放預測中</div>` : `<div class="match-status s-locked">🔒 已封盤，比賽進行中</div>`;
-            const btnA = isOpen ? `<button class="btn btn-a" onclick="placeBet('${matchId}', '${m.teamA} vs ${m.teamB}', '${m.teamA}', 'amt_${matchId}', ${m.oddsA})">押 ${m.teamA}</button>` : `<button class="btn btn-disabled" disabled>已封盤</button>`;
-            const btnB = isOpen ? `<button class="btn btn-b" onclick="placeBet('${matchId}', '${m.teamA} vs ${m.teamB}', '${m.teamB}', 'amt_${matchId}', ${m.oddsB})">押 ${m.teamB}</button>` : `<button class="btn btn-disabled" disabled>已封盤</button>`;
+            const btnA = isOpen ? `<button class="btn btn-a" onclick="placeBet('${matchId}', '${m.teamA} vs ${m.teamB}', '${m.teamA}', '${m.handicapA}', ${m.oddsA}, 'amt_${matchId}')">押 ${m.teamA}</button>` : `<button class="btn btn-disabled" disabled>已封盤</button>`;
+            const btnB = isOpen ? `<button class="btn btn-b" onclick="placeBet('${matchId}', '${m.teamA} vs ${m.teamB}', '${m.teamB}', '${m.handicapB}', ${m.oddsB}, 'amt_${matchId}')">押 ${m.teamB}</button>` : `<button class="btn btn-disabled" disabled>已封盤</button>`;
 
             container.innerHTML += `
                 <div class="match-card">
@@ -188,21 +171,16 @@
                             <div class="t-odds">賠率 ${m.oddsB}</div>
                         </div>
                     </div>
-                    
                     <div class="bet-controls">
                         <div class="input-wrapper">
                             <span>投入 P 幣</span>
                             <input type="number" id="amt_${matchId}" value="100" min="100" step="100" ${isOpen ? '' : 'disabled'}>
                         </div>
-                        <div class="btn-grid">
-                            ${btnA}
-                            ${btnB}
-                        </div>
+                        <div class="btn-grid">${btnA}${btnB}</div>
                     </div>
                 </div>
             `;
         });
-
         if(!hasActive) container.innerHTML = '<div style="text-align:center; padding:30px; color:#64748b;">今日暫無賽事開盤</div>';
     });
 
@@ -216,6 +194,8 @@
             let statusClass = 'wait', statusText = '⏳ 等待賽果', statusColor = '#f59e0b';
             const odds = b.odds || 2.0;
             const profit = Math.round(b.amount * odds) - b.amount;
+            // ⭐️ 新增讓分顯示
+            const hcText = b.handicap ? `<span class="bet-badge">${b.handicap}</span>` : '';
 
             if(b.cancelled) {
                 statusClass = 'wait'; statusText = '🚫 已註銷 (退回本金)'; statusColor = '#94a3b8';
@@ -231,7 +211,7 @@
                 <div class="h-card ${statusClass}">
                     <div class="h-header"><span>${b.matchTitle}</span> <span>${timeStr}</span></div>
                     <div class="h-body">
-                        <span style="font-size:1rem; font-weight:bold; color:${b.cancelled ? '#64748b' : '#fff'};">支持 ${b.selectedTeam} <small style="color:#94a3b8">(${b.amount} P @${odds})</small></span>
+                        <span style="font-size:1rem; font-weight:bold; color:${b.cancelled ? '#64748b' : '#fff'};">支持 ${b.selectedTeam} ${hcText} <small style="color:#94a3b8">(${b.amount} P @${odds})</small></span>
                         <b style="font-size:0.8rem; color: ${statusColor}">${statusText}</b>
                     </div>
                 </div>
@@ -240,13 +220,12 @@
         if(myBets.length === 0) container.innerHTML = '<div style="color:#64748b; font-size:0.9rem;">尚無預測紀錄</div>';
     });
 
-    // ⭐️ 修正的強制扣款邏輯
-    window.placeBet = async (matchId, matchTitle, team, inputId, odds) => {
+    window.placeBet = async (matchId, matchTitle, team, handicap, odds, inputId) => {
         const amt = parseInt(document.getElementById(inputId).value);
         if(isNaN(amt) || amt < 100) return alert("最低預測額度為 100 P");
 
         const profit = Math.round(amt * odds) - amt;
-        if(!confirm(`即將支持：【${team}】\n投入金額：${amt} P (賠率 ${odds})\n\n🏆 若順利過盤：\n系統將自動退回本金 ${amt} P\n老闆將加發 ${profit} 元雲端開心卡！\n\n確定下注嗎？`)) return;
+        if(!confirm(`即將支持：【${team}】(讓分 ${handicap})\n投入金額：${amt} P (賠率 ${odds})\n\n🏆 若順利過盤：\n系統將自動退回本金 ${amt} P\n老闆將加發 ${profit} 元雲端開心卡！\n\n確定下注嗎？`)) return;
 
         document.getElementById('loading').style.display = 'flex';
 
@@ -255,28 +234,16 @@
             const uSnap = await get(uRef);
             const userData = uSnap.val();
 
-            // 1. 檢查餘額是否足夠
-            if (!userData || (userData.balance || 0) < amt) {
-                throw new Error("nomoney");
-            }
+            if (!userData || (userData.balance || 0) < amt) throw new Error("nomoney");
 
-            // 2. 強制更新扣款
-            await update(uRef, {
-                balance: userData.balance - amt,
-                spending_counter: (userData.spending_counter || 0) + amt
-            });
+            await update(uRef, { balance: userData.balance - amt, spending_counter: (userData.spending_counter || 0) + amt });
 
-            // 3. 寫入消費日誌 (這樣數據報表才會顯示營收)
-            await push(ref(db, `users/${uid}/logs`), {
-                game: `WBC預測: ${team}`,
-                cost: amt,
-                time: Date.now()
-            });
+            await push(ref(db, `users/${uid}/logs`), { game: `WBC預測: ${team} (${handicap})`, cost: amt, time: Date.now() });
 
-            // 4. 產生注單
+            // ⭐️ 注單存入讓分資訊
             await push(ref(db, `wbcBets`), {
                 uid: uid, matchId: matchId, matchTitle: matchTitle,
-                selectedTeam: team, amount: amt, odds: odds,
+                selectedTeam: team, handicap: handicap, amount: amt, odds: odds,
                 settled: false, cancelled: false, win: false, time: serverTimestamp()
             });
 
