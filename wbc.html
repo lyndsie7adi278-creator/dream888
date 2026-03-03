@@ -82,8 +82,9 @@
             <h2 style="color:#38bdf8; margin-top:0; text-align:center; font-size:1.3rem;">📋 規則與免責聲明</h2>
             
             <div class="modal-body-scroll">
-                <h4 style="color:#ef4444; margin:0 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">總規則</h4>
+                <h4 style="color:#ef4444; margin:0 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">⚠️ 總規則 (嚴禁賭博，純屬娛樂)</h4>
                 <ol>
+                    <li style="color:#fca5a5; font-weight:bold;">本平台嚴禁任何非法賭博行為，各項預測活動純屬娛樂性質。</li>
                     <li>會員務必於開始遊戲前，詳細閱讀本網站所訂之各項規則，一經『同意』進入本遊戲進行時，即視為會員已接受所有規則。</li>
                     <li>所有賽事都必須在"預定日期"或“賽事主辦單位規定之法定時間”內進行，若該場賽事因故取消或中止，則該場賽事將視為“無效賽事” ，本網站將退回該賽事的所有遊戲單。</li>
                     <li>比賽結果以各聯盟官方網站所公佈的結果為準。賽果均在賽事結束後判定，除非在個別體育規章有另註明，若開賽12小時後官網有賽果異動及爭議，本網站有權按原賽果計算。</li>
@@ -122,8 +123,9 @@
                     </li>
                 </ol>
 
-                <h4 style="color:#10b981; margin:25px 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">棒球全場上半場單注規則說明</h4>
-                <p style="margin-top:5px; color:#cbd5e1;">讓分遊戲結果 = 遊戲金額 * 賠率<br>大小遊戲結果 = 遊戲金額 * 賠率</p>
+                <h4 style="color:#10b981; margin:25px 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">棒球單注規則與圖解範例</h4>
+                <p style="margin-top:5px; color:#cbd5e1; font-weight:bold;">成功過盤：退回下注本金，並額外獲得【開心卡點數】</p>
+                <p style="margin-top:5px; color:#cbd5e1;">開心卡點數計算 = 遊戲金額 * 賠率</p>
                 
                 <div style="background: rgba(0,0,0,0.3); border: 1px solid #38bdf8; border-radius: 10px; padding: 15px; margin-top: 10px;">
                     <div style="text-align: center; color: #fff; font-size: 1rem; font-weight: bold; margin-bottom: 10px;">
@@ -135,16 +137,16 @@
                     <div style="background: #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 3px solid #38bdf8;">
                         <div style="color: #38bdf8; font-weight: bold; margin-bottom: 5px;">🔹 讓分遊戲範例</div>
                         <div style="font-size: 0.85rem; color: #cbd5e1;">
-                            遊戲中華隊1,000點 → <span style="color:#ef4444; font-weight:bold;">輸</span>，1,000 * -1 = -1,000點<br><br>
-                            遊戲澳洲隊1,000點 → <span style="color:#10b981; font-weight:bold;">贏</span>，1,000 * 1.9 = 1,900點
+                            遊戲中華隊1,000P → <span style="color:#ef4444; font-weight:bold;">輸</span>，扣除1,000P本金<br><br>
+                            遊戲澳洲隊1,000P → <span style="color:#10b981; font-weight:bold;">贏</span>，退回1,000P本金，<br><span style="color:#fca5a5;">並獲得 1,900點 開心卡點數</span>
                         </div>
                     </div>
 
                     <div style="background: #1e293b; border-radius: 8px; padding: 12px; border-left: 3px solid #f59e0b;">
                         <div style="color: #f59e0b; font-weight: bold; margin-bottom: 5px;">🔸 大小遊戲範例</div>
                         <div style="font-size: 0.85rem; color: #cbd5e1;">
-                            遊戲大分1,000點 → <span style="color:#10b981; font-weight:bold;">贏</span>，1,000 * 1.9 = 1900點<br><br>
-                            遊戲小分1,000點 → <span style="color:#ef4444; font-weight:bold;">輸</span>，1,000 * -1 = -1,000點
+                            遊戲大分1,000P → <span style="color:#10b981; font-weight:bold;">贏</span>，退回1,000P本金，<br><span style="color:#fca5a5;">並獲得 1,900點 開心卡點數</span><br><br>
+                            遊戲小分1,000P → <span style="color:#ef4444; font-weight:bold;">輸</span>，扣除1,000P本金
                         </div>
                     </div>
                 </div>
@@ -198,10 +200,10 @@
     if(!uid) { alert("請先登入！"); location.href='index.html'; }
 
     window.onload = () => {
-        if (!localStorage.getItem('wbc_rules_agreed_v4')) {
+        if (!localStorage.getItem('wbc_rules_agreed_v5')) {
             document.getElementById('rulesModal').style.display = 'flex';
             document.getElementById('agreeBtn').onclick = () => {
-                localStorage.setItem('wbc_rules_agreed_v4', 'true');
+                localStorage.setItem('wbc_rules_agreed_v5', 'true');
                 document.getElementById('rulesModal').style.display = 'none';
             };
         } else {
@@ -215,7 +217,6 @@
         document.getElementById('rulesModal').style.display = 'flex';
     };
 
-    // 監聽 P幣 與 開心卡餘額
     onValue(ref(db, `users/${uid}`), s => {
         const u = s.val() || {};
         document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
@@ -285,7 +286,7 @@
             if(b.cancelled) {
                 statusClass = 'wait'; statusText = '🔄 退款/掉洞 (已退本金)'; statusColor = '#94a3b8';
             } else if(b.settled) {
-                if(b.win) { statusClass = 'win'; statusText = `✅ 命中! (已退 ${b.amount}P, 將發 ${profit}元卡)`; statusColor = '#10b981'; }
+                if(b.win) { statusClass = 'win'; statusText = `✅ 命中! (已退 ${b.amount}P, 得卡 ${profit}點)`; statusColor = '#10b981'; }
                 else { statusClass = 'lose'; statusText = '❌ 未命中'; statusColor = '#ef4444'; }
             }
 
@@ -344,7 +345,6 @@
         }
     };
 
-    // 轉換中心邏輯
     window.exchangeCardToP = async () => {
         const amt = parseInt(document.getElementById('exAmount').value);
         if(isNaN(amt) || amt <= 0) return alert("請輸入正確兌換金額");
@@ -359,7 +359,6 @@
 
             if (currentCard < amt) throw new Error("nocard");
 
-            // 扣卡點，加P幣
             await update(uRef, { 
                 cardBalance: currentCard - amt,
                 balance: (uData.balance || 0) + amt
