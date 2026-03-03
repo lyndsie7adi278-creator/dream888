@@ -16,15 +16,43 @@
         .btn-warn { background: #f59e0b; color: #fff; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         th, td { padding: 12px; border-bottom: 1px solid #334155; text-align: left; }
-        th { color: #94a3b8; background: #0f172a; }
+        th { color: #94a3b8; background: #0f172a; position: sticky; top: 0; }
         .match-item { background: #0f172a; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
         .match-info b { font-size: 1.1rem; color: #fff; }
         .match-info span { color: #f59e0b; margin: 0 10px; }
         .odds-tag { background: #047857; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-left: 5px; }
+        
+        .rep-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
+        .rep-item { background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #334155; text-align: center; }
+        .rep-val { font-size: 1.5rem; font-weight: bold; margin-top: 5px; }
+        .scroll-table { max-height: 300px; overflow-y: auto; border: 1px solid #334155; border-radius: 8px; }
     </style>
 </head>
 <body>
     <h1>⚾ WBC 動態盤口與注單管理</h1>
+
+    <div class="card" style="border-color: #38bdf8;">
+        <h3 style="color: #38bdf8;">📊 WBC 數據報表 (包含歷史明細)</h3>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
+            <input type="date" id="repDate" style="width: auto; margin:0;">
+            <button class="btn btn-primary" onclick="fetchReport('day')">單日查詢</button>
+            <button class="btn btn-warn" onclick="fetchReport('week')">本週查詢</button>
+            <button class="btn btn-success" onclick="fetchReport('all')">歷史總計</button>
+        </div>
+        
+        <div class="rep-grid">
+            <div class="rep-item"><div style="color:#94a3b8; font-size:0.85rem;">玩家總下注額 (P幣)</div><div class="rep-val" id="rTotalBet" style="color:#38bdf8;">0</div></div>
+            <div class="rep-item"><div style="color:#94a3b8; font-size:0.85rem;">已退還本金 (P幣)</div><div class="rep-val" id="rTotalRefund" style="color:#f59e0b;">0</div></div>
+            <div class="rep-item"><div style="color:#94a3b8; font-size:0.85rem;">應發開心卡總成本 (元)</div><div class="rep-val" id="rTotalCard" style="color:#10b981;">0</div></div>
+        </div>
+
+        <div class="scroll-table">
+            <table>
+                <thead><tr><th>時間</th><th>玩家</th><th>賽事與下注隊伍</th><th>下注金額</th><th>狀態結果</th></tr></thead>
+                <tbody id="rDetails"></tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="card">
         <h3>➕ 新增今日賽事盤口</h3>
@@ -72,6 +100,72 @@
     const _c = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
     const app = initializeApp(_c); const db = getDatabase(app);
 
+    // 設定今日日期
+    document.getElementById('repDate').value = new Date().toISOString().split('T')[0];
+
+    // 📊 報表查詢系統
+    window.fetchReport = async (type) => {
+        const snap = await get(ref(db, `wbcBets`));
+        const bets = snap.val() || {};
+        
+        let start = 0, end = Date.now();
+        const now = new Date();
+        const dateInput = document.getElementById('repDate').value;
+        
+        if(type === 'day') {
+            if(!dateInput) return alert("請選擇日期");
+            start = new Date(dateInput + "T00:00:00").getTime();
+            end = new Date(dateInput + "T23:59:59").getTime();
+        } else if (type === 'week') {
+            const day = now.getDay() || 7; 
+            const sDate = new Date(now);
+            sDate.setHours(0, 0, 0, 0);
+            sDate.setDate(now.getDate() - day + 1); 
+            start = sDate.getTime();
+        } // all 就用預設的 0 到現在
+
+        let tBet = 0, tRefund = 0, tCard = 0;
+        let detailsHtml = '';
+
+        const filterdBets = Object.values(bets).filter(b => b.time >= start && b.time <= end).sort((a,b) => b.time - a.time);
+
+        filterdBets.forEach(b => {
+            // 只要不是被註銷的，都算進玩家總下注額
+            if(!b.cancelled) tBet += b.amount;
+            
+            let stText = '<span style="color:#f59e0b">⏳ 待開獎</span>';
+            if(b.cancelled) {
+                stText = '<span style="color:#94a3b8">🚫 已註銷 (已退本金)</span>';
+            } else if(b.settled) {
+                if(b.win) {
+                    const profit = Math.round(b.amount * (b.odds || 2.0)) - b.amount;
+                    stText = `<span style="color:#10b981">✅ 過盤 (已退${b.amount}P, 發卡${profit}元)</span>`;
+                    tRefund += b.amount;
+                    tCard += profit;
+                } else {
+                    stText = '<span style="color:#ef4444">❌ 未過盤 (扣除本金)</span>';
+                }
+            }
+
+            const timeStr = new Date(b.time).toLocaleString();
+            detailsHtml += `<tr>
+                <td style="font-size:0.8rem; color:#94a3b8;">${timeStr}</td>
+                <td style="color:#38bdf8;">${b.uid}</td>
+                <td>${b.matchTitle}<br><small style="color:#cbd5e1">押: ${b.selectedTeam} ${b.handicap?`(${b.handicap})`:''} @${b.odds||2}</small></td>
+                <td><b>${b.amount} P</b></td>
+                <td>${stText}</td>
+            </tr>`;
+        });
+
+        document.getElementById('rTotalBet').innerText = tBet.toLocaleString();
+        document.getElementById('rTotalRefund').innerText = tRefund.toLocaleString();
+        document.getElementById('rTotalCard').innerText = tCard.toLocaleString();
+        document.getElementById('rDetails').innerHTML = detailsHtml || '<tr><td colspan="5" style="text-align:center;">無資料</td></tr>';
+    };
+
+    // 啟動時先載入今日報表
+    fetchReport('day');
+
     window.createMatch = async () => {
         const tA = document.getElementById('tA').value.trim();
         const hA = document.getElementById('hA').value.trim();
@@ -100,7 +194,6 @@
         list.innerHTML = '';
         Object.entries(data).reverse().forEach(([id, m]) => {
             let btns = '', statusTag = '';
-            
             if(m.status === 'open') {
                 statusTag = `<span style="color:#10b981">🟢 開放下注中</span>`;
                 btns = `<button class="btn btn-warn" onclick="lockMatch('${id}')">🔒 停止下注(封盤)</button>`;
@@ -141,13 +234,14 @@
 
         for (let key in bets) {
             const b = bets[key];
-            // 排除已被註銷的單
             if (b.matchId === matchId && !b.settled && !b.cancelled) {
                 const isWin = (b.selectedTeam === winnerTeam);
                 if (isWin) {
-                    const uRef = ref(db, `users/${b.uid}/balance`);
+                    const uRef = ref(db, `users/${b.uid}`);
                     const uSnap = await get(uRef);
-                    await update(ref(db, `users/${b.uid}`), { balance: (uSnap.val() || 0) + b.amount });
+                    const uData = uSnap.val();
+                    await update(uRef, { balance: (uData.balance || 0) + b.amount });
+                    await push(ref(db, `users/${b.uid}/logs`), { game: `WBC派彩(退本金): ${winnerTeam}`, cost: -b.amount, time: Date.now() });
                     count++;
                 }
                 await update(ref(db, `wbcBets/${key}`), { settled: true, win: isWin });
@@ -155,21 +249,19 @@
         }
         await update(ref(db, `wbcMatches/${matchId}`), { status: 'settled', winner: winnerTeam });
         alert(`結算完成！\n已自動退還 ${count} 筆注單的本金。\n請至下方清單查看需手動發送的開心卡！`);
+        fetchReport('day'); // 更新報表
     };
 
-    // 監聽所有注單 (即時注單區 + 派彩區)
     onValue(ref(db, `wbcBets`), s => {
         const data = s.val() || {};
         const tbodyRealtime = document.getElementById('realtimeBetsTable');
         const tbodyPayout = document.getElementById('payoutTable');
-        
         tbodyRealtime.innerHTML = '';
         tbodyPayout.innerHTML = '';
 
         const allBets = Object.entries(data).map(([key, val]) => ({id: key, ...val})).reverse();
 
         allBets.forEach(b => {
-            // --- 派彩區邏輯 (贏錢且未被註銷) ---
             if(b.settled && b.win && !b.cancelled) {
                 const odds = b.odds || 2.0; 
                 const profit = Math.round(b.amount * odds) - b.amount;
@@ -177,24 +269,22 @@
                     <tr>
                         <td>${b.matchTitle}</td>
                         <td style="color:#38bdf8">${b.uid}</td>
-                        <td>${b.selectedTeam} <small>(@${odds})</small></td>
+                        <td>${b.selectedTeam} ${b.handicap?`(${b.handicap})`:''} <small>(@${odds})</small></td>
                         <td>${b.amount} P</td>
                         <td><b style="color:#10b981; font-size:1.1rem;">${profit} 元</b></td>
                     </tr>
                 `;
             }
 
-            // --- 即時注單區邏輯 (還沒開獎、且未被註銷) ---
             if(!b.settled && !b.cancelled) {
                 const d = new Date(b.time);
                 const timeStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                
                 tbodyRealtime.innerHTML += `
                     <tr>
                         <td style="color:#94a3b8">${timeStr}</td>
                         <td>${b.matchTitle}</td>
                         <td style="color:#38bdf8">${b.uid}</td>
-                        <td><b>${b.selectedTeam}</b> <small style="color:#10b981">(@${b.odds || 2.0})</small></td>
+                        <td><b>${b.selectedTeam}</b> ${b.handicap?`(${b.handicap})`:''} <small style="color:#10b981">(@${b.odds || 2.0})</small></td>
                         <td>${b.amount} P</td>
                         <td><button class="btn btn-danger" style="padding:6px 12px; font-size:0.8rem;" onclick="cancelBet('${b.id}', '${b.uid}', ${b.amount})">註銷退款</button></td>
                     </tr>
@@ -203,20 +293,17 @@
         });
     });
 
-    // 註銷注單
     window.cancelBet = async (betId, uid, amount) => {
         if(!confirm(`確定要註銷這筆注單嗎？\n系統將自動把 ${amount} P 幣退還給玩家！`)) return;
-        
         try {
-            // 1. 退還本金
-            const uRef = ref(db, `users/${uid}/balance`);
+            const uRef = ref(db, `users/${uid}`);
             const uSnap = await get(uRef);
-            await update(ref(db, `users/${uid}`), { balance: (uSnap.val() || 0) + amount });
-            
-            // 2. 標記為已註銷 (玩家前台會顯示已註銷並變灰)
+            const uData = uSnap.val();
+            await update(uRef, { balance: (uData.balance || 0) + amount });
+            await push(ref(db, `users/${uid}/logs`), { game: `WBC注單註銷退款`, cost: -amount, time: Date.now() });
             await update(ref(db, `wbcBets/${betId}`), { cancelled: true, settled: true, win: false });
-            
             alert("✅ 注單已註銷，本金已退還！");
+            fetchReport('day'); // 更新報表
         } catch(e) {
             alert("註銷失敗：" + e.message);
         }
