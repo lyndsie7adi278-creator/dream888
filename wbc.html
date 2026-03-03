@@ -74,8 +74,8 @@
                 <div style="color:#10b981; font-weight:bold; margin-top:5px;">過盤時，將全額退回您投入的「本金 P幣」！</div>
                 <div style="color:#f59e0b; font-weight:bold; margin-top:5px;">並且依照賠率，額外贈送「雲端開心卡」！</div>
                 <ul style="margin:5px 0 0; padding-left:20px; color:#94a3b8;">
-                    <li>舉例：您投入 <b>100 P</b>，賠率 <b>1.8</b></li>
-                    <li>過盤獎勵 = 退回 100 P + 獲得 80 元開心卡！</li>
+                    <li>舉例：您投入 <b>100 P</b>，賠率 <b>1.9</b></li>
+                    <li>過盤獎勵 = 退回 100 P + 獲得 90 元開心卡！</li>
                     <li><i>(若未過盤，則不退還 P 幣)</i></li>
                 </ul>
             </div>
@@ -160,7 +160,8 @@
         myBets.forEach(b => {
             let statusClass = 'wait', statusText = '⏳ 等待賽果';
             const odds = b.odds || 2.0;
-            const profit = Math.floor(b.amount * (odds - 1));
+            // ⭐️ 修正計算公式：用四捨五入計算總額後扣除本金
+            const profit = Math.round(b.amount * odds) - b.amount;
 
             if(b.settled) {
                 if(b.win) { statusClass = 'win'; statusText = `✅ 命中! (已退 ${b.amount}P, 將發 ${profit}元卡)`; }
@@ -187,7 +188,8 @@
         const amt = parseInt(document.getElementById(inputId).value);
         if(isNaN(amt) || amt < 100) return alert("最低預測額度為 100 P");
 
-        const profit = Math.floor(amt * (odds - 1));
+        // ⭐️ 修正計算公式
+        const profit = Math.round(amt * odds) - amt;
         if(!confirm(`即將支持：【${team}】\n投入金額：${amt} P (賠率 ${odds})\n\n🏆 若順利過盤：\n系統將自動退回本金 ${amt} P\n老闆將加發 ${profit} 元雲端開心卡！\n\n確定下注嗎？`)) return;
 
         document.getElementById('loading').style.display = 'flex';
