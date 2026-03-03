@@ -52,14 +52,28 @@
         #loading { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999; align-items:center; justify-content:center; flex-direction:column; }
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--p); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 修正後的滑動區域 */
+        .modal-body-scroll {
+            max-height: 55vh; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
+            font-size: 0.85rem; 
+            line-height: 1.7; 
+            color: #cbd5e1; 
+            padding-right: 10px; 
+            margin-bottom: 20px;
+            display: block;
+        }
     </style>
 </head>
 <body>
 
     <div id="rulesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; padding: 20px;">
-        <div style="background:#1e293b; padding:25px 20px; border-radius:15px; max-width:400px; width:100%; max-height:85vh; display:flex; flex-direction:column; border:1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="background:#1e293b; padding:25px 20px; border-radius:15px; max-width:400px; width:100%; border:1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position:relative;">
             <h2 style="color:#38bdf8; margin-top:0; text-align:center; font-size:1.3rem;">📋 遊戲規則與免責聲明</h2>
-            <div style="overflow-y:auto; flex:1; font-size:0.85rem; line-height:1.7; color:#cbd5e1; padding-right:5px; margin-bottom:15px;">
+            
+            <div class="modal-body-scroll">
                 <h4 style="color:#f59e0b; margin:0 0 5px 0;">⚠️ 總規則 / 免責聲明</h4>
                 <p style="margin-top:0;">1. 點數(P幣)僅供娛樂用途，無法與本平台兌換現金。若以非官方管道取得點數發生任何問題，需由玩家自行承擔。<br>
                 2. 所有賽果及注單之認定皆以本網站訂定之規則為準，如遇特殊狀況，本網站有權做最終決定。</p>
@@ -74,6 +88,7 @@
                 - 如遇比分懸殊提前結束（扣倒）經大會裁定勝負，所有注單有效。若因天候裁定，則「讓分」無效退款。<br>
                 - 若採取突破僵局制，賽果裁定依官網為準。</p>
             </div>
+
             <button id="agreeBtn" class="btn btn-a" style="width:100%; font-size:1.1rem; padding:12px;">我已閱讀並同意</button>
             <button id="closeRulesBtn" class="btn btn-disabled" style="width:100%; font-size:1.1rem; padding:12px; display:none;" onclick="document.getElementById('rulesModal').style.display='none'">關閉</button>
         </div>
@@ -113,7 +128,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, push, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, push, get, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const _c = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
     const app = initializeApp(_c); const db = getDatabase(app);
@@ -225,6 +240,7 @@
         if(myBets.length === 0) container.innerHTML = '<div style="color:#64748b; font-size:0.9rem;">尚無預測紀錄</div>';
     });
 
+    // ⭐️ 修正的強制扣款邏輯
     window.placeBet = async (matchId, matchTitle, team, inputId, odds) => {
         const amt = parseInt(document.getElementById(inputId).value);
         if(isNaN(amt) || amt < 100) return alert("最低預測額度為 100 P");
@@ -235,23 +251,38 @@
         document.getElementById('loading').style.display = 'flex';
 
         try {
-            await runTransaction(ref(db, `users/${uid}`), (user) => {
-                if(!user) return;
-                if((user.balance || 0) < amt) throw "nomoney";
-                user.balance -= amt;
-                user.spending_counter = (user.spending_counter || 0) + amt;
-                return user;
+            const uRef = ref(db, `users/${uid}`);
+            const uSnap = await get(uRef);
+            const userData = uSnap.val();
+
+            // 1. 檢查餘額是否足夠
+            if (!userData || (userData.balance || 0) < amt) {
+                throw new Error("nomoney");
+            }
+
+            // 2. 強制更新扣款
+            await update(uRef, {
+                balance: userData.balance - amt,
+                spending_counter: (userData.spending_counter || 0) + amt
             });
 
+            // 3. 寫入消費日誌 (這樣數據報表才會顯示營收)
+            await push(ref(db, `users/${uid}/logs`), {
+                game: `WBC預測: ${team}`,
+                cost: amt,
+                time: Date.now()
+            });
+
+            // 4. 產生注單
             await push(ref(db, `wbcBets`), {
                 uid: uid, matchId: matchId, matchTitle: matchTitle,
                 selectedTeam: team, amount: amt, odds: odds,
                 settled: false, cancelled: false, win: false, time: serverTimestamp()
             });
 
-            alert("🎉 下注成功！注單已成立。");
+            alert("🎉 下注成功！注單已成立，已扣除 P 幣。");
         } catch(e) {
-            if(e === "nomoney") alert("餘額不足，請先至大廳儲值！");
+            if(e.message === "nomoney") alert("餘額不足，請先至大廳儲值！");
             else alert("發生錯誤：" + e.message);
         } finally {
             document.getElementById('loading').style.display = 'none';
