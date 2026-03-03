@@ -64,9 +64,12 @@
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--p); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .modal-body-scroll { max-height: 65vh; overflow-y: auto; -webkit-overflow-scrolling: touch; font-size: 0.85rem; line-height: 1.7; color: #cbd5e1; padding-right: 10px; margin-bottom: 20px; display: block; overscroll-behavior: contain; }
+        .modal-body-scroll { max-height: 65vh; overflow-y: auto; -webkit-overflow-scrolling: touch; font-size: 0.85rem; line-height: 1.7; color: #cbd5e1; padding-right: 10px; margin-bottom: 20px; display: block; overscroll-behavior: contain; text-align: left; }
         .bet-badge { background: rgba(56,189,248,0.15); color: var(--p); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; border: 1px solid rgba(56,189,248,0.3); }
         .type-badge { background: #334155; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; }
+        
+        ol { padding-left: 20px; margin-top: 5px; }
+        li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -74,20 +77,75 @@
     <div id="rulesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; padding: 15px;">
         <div style="background:#1e293b; padding:20px; border-radius:15px; max-width:450px; width:100%; border:1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.8); position:relative; max-height: 90vh; display: flex; flex-direction: column;">
             <h2 style="color:#38bdf8; margin-top:0; text-align:center; font-size:1.3rem;">📋 規則與免責聲明</h2>
+            
             <div class="modal-body-scroll">
-                <h4 style="color:#ef4444; margin:0 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">⚠️ 總規則</h4>
-                <ol style="padding-left:20px; margin-top:5px;">
-                    <li>單筆下注限制：最低 100 P，最高 10,000 P。</li>
-                    <li>點數(P幣)僅供娛樂用途，無法兌換現金。</li>
-                    <li>所有賽果及注單之認定皆以本網站規則為準。</li>
+                <h4 style="color:#ef4444; margin:0 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">總規則</h4>
+                <ol>
+                    <li>會員務必於開始遊戲前，詳細閱讀本網站所訂之各項規則，一經『同意』進入本遊戲進行時，即視為會員已接受所有規則。</li>
+                    <li>所有賽事都必須在"預定日期"或“賽事主辦單位規定之法定時間”內進行，若該場賽事因故取消或中止，則該場賽事將視為“無效賽事” ，本網站將退回該賽事的所有遊戲單。</li>
+                    <li>比賽結果以各聯盟官方網站所公佈的結果為準。賽果均在賽事結束後判定，除非在個別體育規章有另註明，若開賽12小時後官網有賽果異動及爭議，本網站有權按原賽果計算。</li>
+                    <li>會員有責任在下單後，等待“送出完成”的視窗顯示與確定。並到「遊戲記錄」中確認該筆遊戲單是否成功，且應仔細核對該筆遊戲單之遊戲內容與遊戲金額。本網站僅以會員『遊戲記錄』的內容為計算結果之依據。</li>
+                    <li>本網站所有賽事的”賠率”或”盤分”，會隨時變動。您所遊戲的賠率及盤分，將以顯示於「遊戲記錄」中成功的遊戲單為計算結果之依據。</li>
+                    <li>任何球賽如提前舉行，在球賽開打前，已接受的遊戲單均為“有效遊戲單” 。球賽開打後的遊戲單，一律將被視為“無效遊戲單”。</li>
+                    <li>本網站在公佈各種賽事盤分及賠率時，若出現任何的打字錯誤或非故意之人為疏失，本網站將保留刪除任何錯誤盤分及賠率遊戲單的權利，並將資訊公佈於「臨時公告」中，敬請註意。</li>
+                    <li>會員有責任確保自己的帳戶及登入資料的保密性，登入會員帳號後進行的任何網上遊戲，將被視為“有效遊戲單”。如果會員發現或懷疑自己的資料被盜用，請自行立即變更密碼，或告知本網站協助修改密碼（未變更密碼前所遊戲的遊戲單，亦視為有效）。</li>
+                    <li>若遭惡意入侵或發生不可抗拒之災害導致網站故障或資料遺失等情況，為確保各方真實利益，本網站將以備份資料為最後處理依據。</li>
+                    <li>使用者有責任核對自己的帳戶額度，如對帳戶額度有任何疑問，請立即通知本網站。</li>
+                    <li>比賽若延賽、裁定，或若經本網站取消、退回..等狀況，一律會在”遊戲記錄”內遊戲單欄位中的「詳情」寫明原因。</li>
+                    <li>本網站對於任何個人或團體使用外掛軟體程式，同時在同一項目遊戲相同內容的遊戲單，或經站方判定後，認為是以不正常遊戲方法所遊戲的遊戲單，對於此類遊戲單，本網站有權審核您的遊戲單，經審核後有保留或取消遊戲單的權利，若本站取消您的遊戲單，將會在比賽開始前退回您的注金，敬請注意。</li>
+                    <li>若本網站因任何原因無法確認某個特定盤口的結果，則所有遊戲視為無效遊戲單，除非遊戲的結果已經可以確定。</li>
+                    <li>如果賽事的官方網站無法提供成績，或官方網站所發佈的成績明顯錯誤，本網站保留做決定/修正最終賽果的權利。</li>
+                    <li>賽事因故保留、取消、延期比賽或預定開賽時間12小時內聯盟沒有裁定比賽結果，則遊戲該場賽事之遊戲單視為“無效遊戲單”，本網站將退回注金。</li>
+                    <li>過關遊戲單之獲利計算不包含本金。</li>
+                    <li>比賽結果如與遊戲單之盤口相同，視為掉洞，未有輸贏，一律退回注金。</li>
+                    <li>如遊戲單審核中遇賠率更新，系統將自動以最新賠率接收遊戲單。</li>
+                    <li>相關比賽數據、即時比分僅供參考，請以實際賽況為主，恕網站不負責任。</li>
+                    <li>所有賽果及遊戲單之認定皆以本網站所訂定之規則為準，如遇特殊狀況，本網站有權做最終決定。</li>
                 </ol>
-                <h4 style="color:#f59e0b; margin:20px 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">⚾ 棒球預測規則</h4>
-                <ol style="padding-left:20px; margin-top:5px;">
-                    <li>賽果依照各聯盟之裁定為最終賽果。全場賽事必須打完1~9局(含延長賽)。</li>
-                    <li><b>掉洞退款：</b>比賽結果如與注單之盤口(讓分或大小)剛好相同，視為掉洞平手，無效退回注金。</li>
-                    <li><b>預測成功獎勵：</b>過盤將全額退回下注的 P 幣，並依賠率贈送「開心卡點數」！(開心卡點數可等候老闆手動發送，或自行於轉換中心兌換回 P 幣繼續遊玩)</li>
+
+                <h4 style="color:#f59e0b; margin:25px 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">棒球一般規則</h4>
+                <ol>
+                    <li>所有棒球遊戲之賽果認定皆以本網站訂定之規則為準。</li>
+                    <li>棒球遊戲之賽果依照各聯盟之裁定為最終賽果與賽事完賽認定。</li>
+                    <li>棒球賽事因故保留、取消或延期比賽，則遊戲該場賽事之全場遊戲單視為“無效遊戲單”，本網站將退回注金。</li>
+                    <li>棒球賽事如遇該場賽事原訂投手無法上場，而更換新投手，該場賽事所有遊戲單視為“有效遊戲單”。</li>
+                    <li>棒球全場遊戲為1~9局（含延長賽局），全場賽事必須打完1~9局（含延長賽局），所遊戲之遊戲單才算“有效遊戲單”，如遇全場比賽未滿九局時，發生突發因素如（下雨、下雪…等），經聯盟裁定勝負，則”讓分”、”大小”、”主客大小”之賽前、走地遊戲單均為“無效遊戲單”，僅”不讓分”、”走地不讓分”盤口之遊戲單仍然為“有效遊戲單”。但如比賽已打滿九局或進行至延長賽，若經聯盟裁定勝負，所有遊戲單均為”有效遊戲單“。</li>
+                    <li>所有比賽如遇主客異動，所有遊戲單視為有效遊戲單。</li>
+                    <li>國際棒球比賽規則：<br>
+                        a.如遇主客場異動所有遊戲單視為有效遊戲單。<br>
+                        b.如遇比賽比分懸殊提前結束經主辦大會裁定勝負，該場所有遊戲單視為有效遊戲單，但因天候因素或其它突發因素而經主辦大會裁定勝負，則”不讓分”盤口之賽前、走地遊戲單視為有效，”讓分”、”大小”、”主客大小”盤口之賽前、走地遊戲單視為無效。<br>
+                        c.本賽事若採取突破僵局制，所有賽果裁定均依官網為準。
+                    </li>
                 </ol>
+
+                <h4 style="color:#10b981; margin:25px 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">棒球全場上半場單注規則說明</h4>
+                <p style="margin-top:5px; color:#cbd5e1;">讓分遊戲結果 = 遊戲金額 * 賠率<br>大小遊戲結果 = 遊戲金額 * 賠率</p>
+                
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid #38bdf8; border-radius: 10px; padding: 15px; margin-top: 10px;">
+                    <div style="text-align: center; color: #fff; font-size: 1rem; font-weight: bold; margin-bottom: 10px;">
+                        遊戲範例 比賽結果<br>
+                        <span style="color:#cbd5e1; font-size:0.85rem; font-weight:normal;">中華隊 -1.5 賠率1.8 vs 澳洲隊 +1.5 大小分 8分</span><br>
+                        <span style="color:#10b981; font-size:1.4rem; display:block; margin-top:5px;">中華隊 vs 澳洲隊 → 8 : 7</span>
+                    </div>
+
+                    <div style="background: #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 3px solid #38bdf8;">
+                        <div style="color: #38bdf8; font-weight: bold; margin-bottom: 5px;">🔹 讓分遊戲範例</div>
+                        <div style="font-size: 0.85rem; color: #cbd5e1;">
+                            遊戲中華隊1,000點 → <span style="color:#ef4444; font-weight:bold;">輸</span>，1,000 * -1 = -1,000點<br><br>
+                            遊戲澳洲隊1,000點 → <span style="color:#10b981; font-weight:bold;">贏</span>，1,000 * 1.9 = 1,900點
+                        </div>
+                    </div>
+
+                    <div style="background: #1e293b; border-radius: 8px; padding: 12px; border-left: 3px solid #f59e0b;">
+                        <div style="color: #f59e0b; font-weight: bold; margin-bottom: 5px;">🔸 大小遊戲範例</div>
+                        <div style="font-size: 0.85rem; color: #cbd5e1;">
+                            遊戲大分1,000點 → <span style="color:#10b981; font-weight:bold;">贏</span>，1,000 * 1.9 = 1900點<br><br>
+                            遊戲小分1,000點 → <span style="color:#ef4444; font-weight:bold;">輸</span>，1,000 * -1 = -1,000點
+                        </div>
+                    </div>
+                </div>
             </div>
+            
             <div style="padding-top:10px; border-top: 1px solid #334155;">
                 <button id="agreeBtn" class="btn btn-a" style="width:100%; font-size:1.1rem; padding:12px;">我已詳細閱讀並同意</button>
                 <button id="closeRulesBtn" class="btn btn-disabled" style="width:100%; font-size:1.1rem; padding:12px; display:none;" onclick="document.getElementById('rulesModal').style.display='none'">關閉</button>
@@ -135,11 +193,12 @@
     const uid = localStorage.getItem('myScratchCode');
     if(!uid) { alert("請先登入！"); location.href='index.html'; }
 
+    // 更新了 Key，讓之前點過的人也會再彈出一次新版規則
     window.onload = () => {
-        if (!localStorage.getItem('wbc_rules_agreed_v3')) {
+        if (!localStorage.getItem('wbc_rules_agreed_v4')) {
             document.getElementById('rulesModal').style.display = 'flex';
             document.getElementById('agreeBtn').onclick = () => {
-                localStorage.setItem('wbc_rules_agreed_v3', 'true');
+                localStorage.setItem('wbc_rules_agreed_v4', 'true');
                 document.getElementById('rulesModal').style.display = 'none';
             };
         } else {
@@ -223,7 +282,7 @@
             if(b.cancelled) {
                 statusClass = 'wait'; statusText = '🔄 退款/掉洞 (已退本金)'; statusColor = '#94a3b8';
             } else if(b.settled) {
-                if(b.win) { statusClass = 'win'; statusText = `✅ 命中! (得卡 ${profit}點)`; statusColor = '#10b981'; }
+                if(b.win) { statusClass = 'win'; statusText = `✅ 命中! (已退 ${b.amount}P, 將發 ${profit}元卡)`; statusColor = '#10b981'; }
                 else { statusClass = 'lose'; statusText = '❌ 未命中'; statusColor = '#ef4444'; }
             }
 
@@ -264,6 +323,7 @@
             if (!userData || (userData.balance || 0) < amt) throw new Error("nomoney");
 
             await update(uRef, { balance: userData.balance - amt, spending_counter: (userData.spending_counter || 0) + amt });
+
             await push(ref(db, `users/${uid}/logs`), { game: `WBC[${typeName}]: ${team} (${handicap})`, cost: amt, time: Date.now() });
 
             await push(ref(db, `wbcBets`), {
