@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>WBC 賽事管理中心 | DREAM ADMIN</title>
+    <style>
+        body { font-family: 'PingFang TC', sans-serif; background: #0f172a; color: #eee; padding: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #334155; }
+        h1, h2, h3 { color: #38bdf8; margin-top: 0; }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; box-sizing: border-box; }
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-warn { background: #f59e0b; color: #fff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { padding: 12px; border-bottom: 1px solid #334155; text-align: left; }
+        th { color: #94a3b8; }
+        .match-item { background: #0f172a; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .match-info b { font-size: 1.1rem; color: #fff; }
+        .match-info span { color: #f59e0b; margin: 0 10px; }
+    </style>
+</head>
+<body>
+    <h1>⚾ WBC 動態賽事與讓分管理</h1>
+
+    <div class="card">
+        <h3>➕ 新增今日賽事盤口</h3>
+        <div class="input-row">
+            <div><label>隊伍 A 名稱</label><input type="text" id="tA" placeholder="例: 中華隊"></div>
+            <div><label>隊伍 A 讓分/受讓</label><input type="text" id="hA" placeholder="例: -1.5"></div>
+        </div>
+        <div class="input-row">
+            <div><label>隊伍 B 名稱</label><input type="text" id="tB" placeholder="例: 日本隊"></div>
+            <div><label>隊伍 B 讓分/受讓</label><input type="text" id="hB" placeholder="例: +1.5"></div>
+        </div>
+        <button class="btn btn-primary" onclick="createMatch()">發佈賽事至大廳</button>
+    </div>
+
+    <div class="card">
+        <h3>🏟️ 目前賽事列表 (封盤與結算)</h3>
+        <div id="matchList">載入中...</div>
+    </div>
+
+    <div class="card">
+        <h3>🎁 待發送「雲端開心卡」名單</h3>
+        <p style="font-size:0.85rem; color:#94a3b8;">當您結算賽事後，贏得開心卡的玩家會顯示在這裡。請依此名單操作 OPEN POINT 轉贈。</p>
+        <table>
+            <thead><tr><th>賽事</th><th>玩家 UID</th><th>應轉贈面額</th><th>下注隊伍</th></tr></thead>
+            <tbody id="payoutTable"></tbody>
+        </table>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, get, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const _c = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
+    const app = initializeApp(_c); const db = getDatabase(app);
+
+    // 1. 新增賽事
+    window.createMatch = async () => {
+        const tA = document.getElementById('tA').value.trim();
+        const hA = document.getElementById('hA').value.trim();
+        const tB = document.getElementById('tB').value.trim();
+        const hB = document.getElementById('hB').value.trim();
+        
+        if(!tA || !tB) return alert("請填寫隊伍名稱！");
+
+        if(confirm(`即將發佈賽事：\n${tA} (${hA}) VS ${tB} (${hB})`)) {
+            await push(ref(db, `wbcMatches`), {
+                teamA: tA, handicapA: hA,
+                teamB: tB, handicapB: hB,
+                status: 'open', // open: 可下注, locked: 封盤, settled: 已結算
+                time: serverTimestamp()
+            });
+            alert("賽事已發佈！玩家現在可以下注了。");
+            document.querySelectorAll('input').forEach(i => i.value = '');
+        }
+    };
+
+    // 2. 監聽賽事列表
+    onValue(ref(db, `wbcMatches`), s => {
+        const data = s.val() || {};
+        const list = document.getElementById('matchList');
+        list.innerHTML = '';
+        Object.entries(data).reverse().forEach(([id, m]) => {
+            let btns = '';
+            let statusTag = '';
+            
+            if(m.status === 'open') {
+                statusTag = `<span style="color:#10b981">🟢 開放下注中</span>`;
+                btns = `<button class="btn btn-warn" onclick="lockMatch('${id}')">🔒 停止下注(封盤)</button>`;
+            } else if(m.status === 'locked') {
+                statusTag = `<span style="color:#f59e0b">🔒 比賽中(已封盤)</span>`;
+                btns = `
+                    <button class="btn btn-success" onclick="settleMatch('${id}', '${m.teamA}')">🏆 結算: ${m.teamA} 過盤</button>
+                    <button class="btn btn-danger" onclick="settleMatch('${id}', '${m.teamB}')">🏆 結算: ${m.teamB} 過盤</button>
+                `;
+            } else {
+                statusTag = `<span style="color:#64748b">✅ 已結算 (贏家: ${m.winner})</span>`;
+            }
+
+            list.innerHTML += `
+                <div class="match-item">
+                    <div class="match-info">
+                        <b>${m.teamA} <small>(${m.handicapA})</small></b> 
+                        <span>VS</span> 
+                        <b>${m.teamB} <small>(${m.handicapB})</small></b>
+                        <div style="margin-top:5px; font-size:0.8rem;">狀態: ${statusTag}</div>
+                    </div>
+                    <div style="display:flex; gap:10px;">${btns}</div>
+                </div>
+            `;
+        });
+    });
+
+    // 3. 封盤
+    window.lockMatch = async (id) => {
+        if(confirm("確定要封盤嗎？封盤後玩家將無法再下注。")) {
+            await update(ref(db, `wbcMatches/${id}`), { status: 'locked' });
+        }
+    };
+
+    // 4. 結算派彩 (最核心)
+    window.settleMatch = async (matchId, winnerTeam) => {
+        if(!confirm(`⚠️ 警告！\n確定宣佈【${winnerTeam}】贏得盤口嗎？\n系統將立刻退還 P 幣給押中的玩家，此操作無法復原！`)) return;
+
+        // 取得該場比賽的所有下注紀錄
+        const snap = await get(ref(db, `wbcBets`));
+        const bets = snap.val() || {};
+        
+        let payoutCount = 0;
+        let payoutAmount = 0;
+
+        for (let key in bets) {
+            const b = bets[key];
+            if (b.matchId === matchId && !b.settled) {
+                const isWin = (b.selectedTeam === winnerTeam);
+                
+                if (isWin) {
+                    // 退還 P 幣 (本金)
+                    const uRef = ref(db, `users/${b.uid}/balance`);
+                    const uSnap = await get(uRef);
+                    await update(ref(db, `users/${b.uid}`), { balance: (uSnap.val() || 0) + b.amount });
+                    payoutCount++;
+                    payoutAmount += b.amount;
+                }
+                
+                // 標記該筆注單已結算
+                await update(ref(db, `wbcBets/${key}`), { settled: true, win: isWin });
+            }
+        }
+
+        // 更新比賽狀態
+        await update(ref(db, `wbcMatches/${matchId}`), { status: 'settled', winner: winnerTeam });
+        alert(`結算完成！\n共派發 ${payoutCount} 筆注單，總計退回 ${payoutAmount} P 幣！\n請至下方清單查看需發送的開心卡名單。`);
+    };
+
+    // 5. 載入開心卡派發表
+    onValue(ref(db, `wbcBets`), s => {
+        const data = s.val() || {};
+        const tbody = document.getElementById('payoutTable');
+        tbody.innerHTML = '';
+        Object.values(data).reverse().forEach(b => {
+            if(b.settled && b.win) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${b.matchTitle}</td>
+                        <td style="color:#38bdf8">${b.uid}</td>
+                        <td><b style="color:#10b981">${b.amount} 元</b></td>
+                        <td>${b.selectedTeam}</td>
+                    </tr>
+                `;
+            }
+        });
+    });
+</script>
+</body>
+</html>
