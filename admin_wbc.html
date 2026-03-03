@@ -8,9 +8,10 @@
         .card { background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #334155; }
         h1, h2, h3 { color: #38bdf8; margin-top: 0; display: flex; align-items: center; gap: 10px; }
         .input-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; box-sizing: border-box; }
+        .full-row { margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; box-sizing: border-box; font-size:1rem; }
         .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary { background: #3b82f6; color: #fff; width:100%; padding:15px; font-size:1.1rem; margin-top:10px;}
         .btn-danger { background: #ef4444; color: #fff; }
         .btn-success { background: #10b981; color: #fff; }
         .btn-warn { background: #f59e0b; color: #fff; }
@@ -22,6 +23,7 @@
         .match-info b { font-size: 1.1rem; color: #fff; }
         .match-info span { color: #f59e0b; margin: 0 10px; }
         .odds-tag { background: #047857; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-left: 5px; }
+        .m-title { display: inline-block; background: rgba(56,189,248,0.2); color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
         
         .rep-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
         .rep-item { background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #334155; text-align: center; }
@@ -37,9 +39,9 @@
         <h3 style="color: #38bdf8;">📊 WBC 數據報表 (包含歷史明細)</h3>
         <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
             <input type="date" id="repDate" style="width: auto; margin:0;">
-            <button class="btn btn-primary" onclick="fetchReport('day')">單日查詢</button>
-            <button class="btn btn-warn" onclick="fetchReport('week')">本週查詢</button>
-            <button class="btn btn-success" onclick="fetchReport('all')">歷史總計</button>
+            <button class="btn btn-primary" style="width:auto; padding:8px 15px; margin:0; font-size:0.9rem;" onclick="fetchReport('day')">單日查詢</button>
+            <button class="btn btn-warn" style="width:auto; padding:8px 15px; margin:0; font-size:0.9rem;" onclick="fetchReport('week')">本週查詢</button>
+            <button class="btn btn-success" style="width:auto; padding:8px 15px; margin:0; font-size:0.9rem;" onclick="fetchReport('all')">歷史總計</button>
         </div>
         
         <div class="rep-grid">
@@ -58,6 +60,11 @@
 
     <div class="card">
         <h3>➕ 新增今日賽事盤口</h3>
+        <div class="full-row">
+            <label style="color:#fff; display:block; margin-bottom:5px;">賽事標題 / 開打時間 (前台會顯示在卡片最上方)</label>
+            <input type="text" id="mTitle" placeholder="例如：3/4 18:30 WBC A組預賽">
+        </div>
+
         <div class="input-row">
             <div><label style="color:#38bdf8">隊伍 A 名稱</label><input type="text" id="tA" placeholder="例: 中華隊"></div>
             <div><label style="color:#38bdf8">讓分/受讓</label><input type="text" id="hA" placeholder="例: -1.5"></div>
@@ -73,11 +80,11 @@
             <div><label style="color:#10b981">大分 賠率</label><input type="number" step="0.01" id="oO" placeholder="例: 1.90"></div>
             <div><label style="color:#d97706">小分 賠率</label><input type="number" step="0.01" id="oU" placeholder="例: 1.90"></div>
         </div>
-        <button class="btn btn-primary" onclick="createMatch()">發佈賽事至大廳</button>
+        <button class="btn btn-primary" onclick="createMatch()">🔥 立即發佈賽事至大廳</button>
     </div>
 
     <div class="card">
-        <h3>🏟️ 目前賽事列表 (封盤與獨立結算)</h3>
+        <h3>🏟️ 目前賽事列表 (支援多場次並排)</h3>
         <div id="matchList">載入中...</div>
     </div>
 
@@ -168,20 +175,22 @@
     fetchReport('day');
 
     window.createMatch = async () => {
+        const mTitle = document.getElementById('mTitle').value.trim(); // ⭐️ 讀取標題
         const tA = document.getElementById('tA').value.trim(), hA = document.getElementById('hA').value.trim(), oA = parseFloat(document.getElementById('oA').value);
         const tB = document.getElementById('tB').value.trim(), hB = document.getElementById('hB').value.trim(), oB = parseFloat(document.getElementById('oB').value);
         const tR = document.getElementById('tR').value.trim(), oO = parseFloat(document.getElementById('oO').value), oU = parseFloat(document.getElementById('oU').value);
         
         if(!tA || !tB || isNaN(oA) || isNaN(oB) || !tR || isNaN(oO) || isNaN(oU)) return alert("請填寫所有欄位 (包含讓分與大小分)！");
 
-        if(confirm(`即將發佈賽事：\n${tA} VS ${tB}\n大小分盤：${tR}`)) {
+        if(confirm(`即將發佈賽事：\n${mTitle}\n${tA} VS ${tB}\n大小分盤：${tR}`)) {
             await push(ref(db, `wbcMatches`), {
+                matchTitle: mTitle || '⚾ 經典賽事', // ⭐️ 存入標題，沒有就給預設
                 teamA: tA, handicapA: hA, oddsA: oA,
                 teamB: tB, handicapB: hB, oddsB: oB,
                 totalRuns: tR, oddsOver: oO, oddsUnder: oU,
                 status: 'open', time: serverTimestamp()
             });
-            alert("賽事發佈成功！");
+            alert("賽事發佈成功！可繼續新增下一場。");
             document.querySelectorAll('input:not(#repDate)').forEach(i => i.value = '');
         }
     };
@@ -199,7 +208,6 @@
             } else {
                 statusTag = `<span style="color:#f59e0b">🔒 已封盤 (比賽中/結算中)</span>`;
                 
-                // 讓分盤結算按鈕
                 if (!m.winnerHandicap) {
                     hBtns = `
                         <div style="color:#38bdf8; font-size:0.85rem; width:100%; margin-bottom:5px;">🔹 讓分盤結算：</div>
@@ -211,7 +219,6 @@
                     hBtns = `<div style="color:#10b981; font-size:0.85rem; width:100%;">✅ 讓分已結算: ${m.winnerHandicap}</div>`;
                 }
 
-                // 大小分盤結算按鈕
                 if (!m.winnerTotal) {
                     tBtns = `
                         <div style="color:#f59e0b; font-size:0.85rem; width:100%; margin-bottom:5px;">🔸 大小分盤結算：</div>
@@ -224,9 +231,11 @@
                 }
             }
 
+            // ⭐️ 加上標題顯示
             list.innerHTML += `
                 <div class="match-item">
                     <div style="flex:1;">
+                        <div class="m-title">${m.matchTitle || '⚾ 經典賽事'}</div>
                         <div class="match-info">
                             <b>${m.teamA} <small>(${m.handicapA})</small><span class="odds-tag">${m.oddsA}</span></b> 
                             <span>VS</span> 
@@ -264,13 +273,10 @@
 
         for (let key in bets) {
             const b = bets[key];
-            const bType = b.betType || 'handicap'; // 相容舊注單
+            const bType = b.betType || 'handicap'; 
 
-            // 只處理「同場比賽」+「尚未結算」+「同盤口類型」的注單
             if (b.matchId === matchId && !b.settled && !b.cancelled && bType === betType) {
-                
                 if (isPush) {
-                    // 掉洞退款
                     const uRef = ref(db, `users/${b.uid}`);
                     const uSnap = await get(uRef);
                     await update(uRef, { balance: (uSnap.val().balance || 0) + b.amount });
@@ -278,7 +284,6 @@
                     await update(ref(db, `wbcBets/${key}`), { cancelled: true, settled: true, win: false });
                     count++;
                 } else {
-                    // 正常過盤派彩
                     const isWin = (b.selectedTeam === winnerTeam);
                     if (isWin) {
                         const uRef = ref(db, `users/${b.uid}`);
@@ -292,7 +297,6 @@
             }
         }
         
-        // 更新賽事狀態
         const updateObj = {};
         if (betType === 'handicap') updateObj.winnerHandicap = winnerTeam;
         if (betType === 'total') updateObj.winnerTotal = winnerTeam;
@@ -315,7 +319,6 @@
             const typeLabel = b.betType === 'total' ? '<span class="odds-tag" style="background:#f59e0b">大小分</span>' : '<span class="odds-tag">讓分盤</span>';
             const hcText = b.handicap ? `(${b.handicap})` : '';
 
-            // 派彩區 (贏錢且未註銷)
             if(b.settled && b.win && !b.cancelled) {
                 const odds = b.odds || 2.0; 
                 const profit = Math.round(b.amount * odds) - b.amount;
@@ -330,7 +333,6 @@
                 `;
             }
 
-            // 即時注單區 (未結算未註銷)
             if(!b.settled && !b.cancelled) {
                 const d = new Date(b.time);
                 const timeStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
