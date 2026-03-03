@@ -154,9 +154,9 @@
         tbody.innerHTML = '';
         Object.values(data).reverse().forEach(b => {
             if(b.settled && b.win) {
-                // 計算開心卡面額：本金 * (賠率 - 1)
-                const odds = b.odds || 2.0; // 防呆，舊紀錄沒賠率算2.0
-                const profit = Math.floor(b.amount * (odds - 1));
+                // ⭐️ 修正計算公式：用四捨五入計算總額後扣除本金
+                const odds = b.odds || 2.0; 
+                const profit = Math.round(b.amount * odds) - b.amount;
                 
                 tbody.innerHTML += `
                     <tr>
