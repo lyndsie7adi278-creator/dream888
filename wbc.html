@@ -12,10 +12,9 @@
         .bal-badge { background: rgba(56,189,248,0.1); border: 1px solid var(--p); padding: 5px 15px; border-radius: 50px; color: var(--p); font-weight: 900; }
         
         .container { width: 94%; max-width: 500px; margin-top: 20px; }
-        .header-title { font-size: 1.5rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 20px; text-shadow: 0 2px 10px rgba(56,189,248,0.5); }
+        .header-title { font-size: 1.5rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(56,189,248,0.5); }
         
         .rule-card { background: rgba(255,255,255,0.03); border: 1px solid #334155; border-radius: 15px; padding: 15px 20px; margin-bottom: 25px; font-size: 0.85rem; line-height: 1.6; color: #cbd5e1; }
-        .rule-card h4 { margin: 0 0 10px 0; color: #f59e0b; font-size: 1rem; }
         .rule-highlight { color: #38bdf8; font-weight: bold; }
         
         .match-card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
@@ -56,6 +55,30 @@
     </style>
 </head>
 <body>
+
+    <div id="rulesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; padding: 20px;">
+        <div style="background:#1e293b; padding:25px 20px; border-radius:15px; max-width:400px; width:100%; max-height:85vh; display:flex; flex-direction:column; border:1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <h2 style="color:#38bdf8; margin-top:0; text-align:center; font-size:1.3rem;">📋 遊戲規則與免責聲明</h2>
+            <div style="overflow-y:auto; flex:1; font-size:0.85rem; line-height:1.7; color:#cbd5e1; padding-right:5px; margin-bottom:15px;">
+                <h4 style="color:#f59e0b; margin:0 0 5px 0;">⚠️ 總規則 / 免責聲明</h4>
+                <p style="margin-top:0;">1. 點數(P幣)僅供娛樂用途，無法與本平台兌換現金。若以非官方管道取得點數發生任何問題，需由玩家自行承擔。<br>
+                2. 所有賽果及注單之認定皆以本網站訂定之規則為準，如遇特殊狀況，本網站有權做最終決定。</p>
+                
+                <h4 style="color:#f59e0b; margin:15px 0 5px 0;">⚾ 棒球預測規則</h4>
+                <p style="margin-top:0;">1. <b>賽果認定：</b>依照各聯盟之裁定為最終賽果。<br>
+                2. <b>取消/保留/延期：</b>該場賽事之注單視為「無效」，系統將全額退回本金。<br>
+                3. <b>賽事局數：</b>全場賽事必須打完 1~9 局（含延長賽），注單才算有效。如遇突發因素（如下雨）未滿九局經聯盟裁定勝負，則「讓分」盤口無效退本金，「不讓分」盤口仍然有效。<br>
+                4. <b>平手/和局：</b>所有賽事如遇平手裁定，讓分注單一律為有效。<br>
+                5. <b>國際賽特別規則：</b><br>
+                - 如遇主客場異動，注單視為有效。<br>
+                - 如遇比分懸殊提前結束（扣倒）經大會裁定勝負，所有注單有效。若因天候裁定，則「讓分」無效退款。<br>
+                - 若採取突破僵局制，賽果裁定依官網為準。</p>
+            </div>
+            <button id="agreeBtn" class="btn btn-a" style="width:100%; font-size:1.1rem; padding:12px;">我已閱讀並同意</button>
+            <button id="closeRulesBtn" class="btn btn-disabled" style="width:100%; font-size:1.1rem; padding:12px; display:none;" onclick="document.getElementById('rulesModal').style.display='none'">關閉</button>
+        </div>
+    </div>
+
     <div id="loading"><div class="spinner"></div><div style="margin-top:15px; font-weight:bold;">處理注單中...</div></div>
 
     <div class="nav">
@@ -66,19 +89,16 @@
     <div class="container">
         <div class="header-title">⚾ WBC 賽事預測中心</div>
         
+        <button class="btn btn-disabled" style="width:100%; padding:10px; font-size:0.9rem; margin-bottom:15px; color:#94a3b8;" onclick="openRules()">📖 點此查看詳細規則與免責聲明</button>
+
         <div class="rule-card">
-            <h4>📖 賠率與派彩規則說明</h4>
-            <div>球隊下方會標示 <b>「讓分」</b> 與 <b>「賠率」</b>。</div>
-            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top:10px;">
-                <div class="rule-highlight">【預測成功獎勵計算】</div>
-                <div style="color:#10b981; font-weight:bold; margin-top:5px;">過盤時，將全額退回您投入的「本金 P幣」！</div>
-                <div style="color:#f59e0b; font-weight:bold; margin-top:5px;">並且依照賠率，額外贈送「雲端開心卡」！</div>
-                <ul style="margin:5px 0 0; padding-left:20px; color:#94a3b8;">
-                    <li>舉例：您投入 <b>100 P</b>，賠率 <b>1.9</b></li>
-                    <li>過盤獎勵 = 退回 100 P + 獲得 90 元開心卡！</li>
-                    <li><i>(若未過盤，則不退還 P 幣)</i></li>
-                </ul>
-            </div>
+            <div style="color:#10b981; font-weight:bold;">🏆 預測成功獎勵計算：</div>
+            <div style="color:#f59e0b; font-weight:bold; margin-top:5px;">過盤退回「100% 本金 P幣」並加發「開心卡」！</div>
+            <ul style="margin:5px 0 0; padding-left:20px; color:#94a3b8;">
+                <li>舉例：您投入 <b>100 P</b>，賠率 <b>1.9</b></li>
+                <li>過盤獎勵 = 退回 100 P + 獲得 90 元開心卡！</li>
+                <li><i>(若未過盤，則不退還 P 幣)</i></li>
+            </ul>
         </div>
 
         <div id="matchesContainer">
@@ -99,6 +119,26 @@
     const app = initializeApp(_c); const db = getDatabase(app);
     const uid = localStorage.getItem('myScratchCode');
     if(!uid) { alert("請先登入！"); location.href='index.html'; }
+
+    // 規則彈窗邏輯
+    window.onload = () => {
+        if (!localStorage.getItem('wbc_rules_agreed')) {
+            document.getElementById('rulesModal').style.display = 'flex';
+            document.getElementById('agreeBtn').onclick = () => {
+                localStorage.setItem('wbc_rules_agreed', 'true');
+                document.getElementById('rulesModal').style.display = 'none';
+            };
+        } else {
+            document.getElementById('agreeBtn').style.display = 'none';
+            document.getElementById('closeRulesBtn').style.display = 'block';
+        }
+    };
+
+    window.openRules = () => {
+        document.getElementById('agreeBtn').style.display = 'none';
+        document.getElementById('closeRulesBtn').style.display = 'block';
+        document.getElementById('rulesModal').style.display = 'flex';
+    };
 
     onValue(ref(db, `users/${uid}/balance`), s => document.getElementById('uBal').innerText = (s.val()||0).toLocaleString());
 
@@ -158,14 +198,15 @@
         const myBets = Object.values(bets).filter(b => b.uid === uid).sort((a,b) => b.time - a.time);
         
         myBets.forEach(b => {
-            let statusClass = 'wait', statusText = '⏳ 等待賽果';
+            let statusClass = 'wait', statusText = '⏳ 等待賽果', statusColor = '#f59e0b';
             const odds = b.odds || 2.0;
-            // ⭐️ 修正計算公式：用四捨五入計算總額後扣除本金
             const profit = Math.round(b.amount * odds) - b.amount;
 
-            if(b.settled) {
-                if(b.win) { statusClass = 'win'; statusText = `✅ 命中! (已退 ${b.amount}P, 將發 ${profit}元卡)`; }
-                else { statusClass = 'lose'; statusText = '❌ 未命中'; }
+            if(b.cancelled) {
+                statusClass = 'wait'; statusText = '🚫 已註銷 (退回本金)'; statusColor = '#94a3b8';
+            } else if(b.settled) {
+                if(b.win) { statusClass = 'win'; statusText = `✅ 命中! (已退 ${b.amount}P, 將發 ${profit}元卡)`; statusColor = '#10b981'; }
+                else { statusClass = 'lose'; statusText = '❌ 未命中'; statusColor = '#ef4444'; }
             }
 
             const d = new Date(b.time);
@@ -175,8 +216,8 @@
                 <div class="h-card ${statusClass}">
                     <div class="h-header"><span>${b.matchTitle}</span> <span>${timeStr}</span></div>
                     <div class="h-body">
-                        <span style="font-size:1rem; font-weight:bold; color:#fff;">支持 ${b.selectedTeam} <small style="color:#94a3b8">(${b.amount} P @${odds})</small></span>
-                        <b style="font-size:0.8rem; color: ${statusClass === 'win' ? '#10b981' : (statusClass === 'lose' ? '#ef4444' : '#f59e0b')}">${statusText}</b>
+                        <span style="font-size:1rem; font-weight:bold; color:${b.cancelled ? '#64748b' : '#fff'};">支持 ${b.selectedTeam} <small style="color:#94a3b8">(${b.amount} P @${odds})</small></span>
+                        <b style="font-size:0.8rem; color: ${statusColor}">${statusText}</b>
                     </div>
                 </div>
             `;
@@ -188,7 +229,6 @@
         const amt = parseInt(document.getElementById(inputId).value);
         if(isNaN(amt) || amt < 100) return alert("最低預測額度為 100 P");
 
-        // ⭐️ 修正計算公式
         const profit = Math.round(amt * odds) - amt;
         if(!confirm(`即將支持：【${team}】\n投入金額：${amt} P (賠率 ${odds})\n\n🏆 若順利過盤：\n系統將自動退回本金 ${amt} P\n老闆將加發 ${profit} 元雲端開心卡！\n\n確定下注嗎？`)) return;
 
@@ -206,7 +246,7 @@
             await push(ref(db, `wbcBets`), {
                 uid: uid, matchId: matchId, matchTitle: matchTitle,
                 selectedTeam: team, amount: amt, odds: odds,
-                settled: false, win: false, time: serverTimestamp()
+                settled: false, cancelled: false, win: false, time: serverTimestamp()
             });
 
             alert("🎉 下注成功！注單已成立。");
