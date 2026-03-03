@@ -7,7 +7,7 @@
         body { font-family: 'PingFang TC', sans-serif; background: #0f172a; color: #eee; padding: 20px; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #334155; }
         h1, h2, h3 { color: #38bdf8; margin-top: 0; }
-        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; box-sizing: border-box; }
         .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: #3b82f6; color: #fff; }
@@ -20,20 +20,24 @@
         .match-item { background: #0f172a; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
         .match-info b { font-size: 1.1rem; color: #fff; }
         .match-info span { color: #f59e0b; margin: 0 10px; }
+        .odds-tag { background: #047857; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-left: 5px; }
     </style>
 </head>
 <body>
-    <h1>⚾ WBC 動態賽事與讓分管理</h1>
+    <h1>⚾ WBC 動態盤口與賠率管理</h1>
 
     <div class="card">
         <h3>➕ 新增今日賽事盤口</h3>
+        <p style="font-size:0.85rem; color:#94a3b8;">小提示：賠率包含本金。例如設定 1.75，玩家下注 100P，過盤將退回 100P本金 + 75元開心卡。</p>
         <div class="input-row">
             <div><label>隊伍 A 名稱</label><input type="text" id="tA" placeholder="例: 中華隊"></div>
-            <div><label>隊伍 A 讓分/受讓</label><input type="text" id="hA" placeholder="例: -1.5"></div>
+            <div><label>讓分/受讓</label><input type="text" id="hA" placeholder="例: -1.5"></div>
+            <div><label>賠率</label><input type="number" step="0.01" id="oA" placeholder="例: 1.85"></div>
         </div>
         <div class="input-row">
             <div><label>隊伍 B 名稱</label><input type="text" id="tB" placeholder="例: 日本隊"></div>
-            <div><label>隊伍 B 讓分/受讓</label><input type="text" id="hB" placeholder="例: +1.5"></div>
+            <div><label>讓分/受讓</label><input type="text" id="hB" placeholder="例: +1.5"></div>
+            <div><label>賠率</label><input type="number" step="0.01" id="oB" placeholder="例: 1.95"></div>
         </div>
         <button class="btn btn-primary" onclick="createMatch()">發佈賽事至大廳</button>
     </div>
@@ -45,9 +49,9 @@
 
     <div class="card">
         <h3>🎁 待發送「雲端開心卡」名單</h3>
-        <p style="font-size:0.85rem; color:#94a3b8;">當您結算賽事後，贏得開心卡的玩家會顯示在這裡。請依此名單操作 OPEN POINT 轉贈。</p>
+        <p style="font-size:0.85rem; color:#94a3b8;">結算後，系統已自動退還玩家本金。請依照下方「應發開心卡」的金額轉贈給玩家！</p>
         <table>
-            <thead><tr><th>賽事</th><th>玩家 UID</th><th>應轉贈面額</th><th>下注隊伍</th></tr></thead>
+            <thead><tr><th>賽事</th><th>玩家 UID</th><th>下注隊伍(賠率)</th><th>退還本金</th><th>應發開心卡 (利潤)</th></tr></thead>
             <tbody id="payoutTable"></tbody>
         </table>
     </div>
@@ -59,35 +63,34 @@
     const _c = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
     const app = initializeApp(_c); const db = getDatabase(app);
 
-    // 1. 新增賽事
     window.createMatch = async () => {
         const tA = document.getElementById('tA').value.trim();
         const hA = document.getElementById('hA').value.trim();
+        const oA = parseFloat(document.getElementById('oA').value);
         const tB = document.getElementById('tB').value.trim();
         const hB = document.getElementById('hB').value.trim();
+        const oB = parseFloat(document.getElementById('oB').value);
         
-        if(!tA || !tB) return alert("請填寫隊伍名稱！");
+        if(!tA || !tB || isNaN(oA) || isNaN(oB)) return alert("請填寫完整資訊 (包含名稱與賠率)！");
 
-        if(confirm(`即將發佈賽事：\n${tA} (${hA}) VS ${tB} (${hB})`)) {
+        if(confirm(`發佈確認：\n${tA} (${hA}) 賠率:${oA}\nVS\n${tB} (${hB}) 賠率:${oB}`)) {
             await push(ref(db, `wbcMatches`), {
-                teamA: tA, handicapA: hA,
-                teamB: tB, handicapB: hB,
-                status: 'open', // open: 可下注, locked: 封盤, settled: 已結算
+                teamA: tA, handicapA: hA, oddsA: oA,
+                teamB: tB, handicapB: hB, oddsB: oB,
+                status: 'open',
                 time: serverTimestamp()
             });
-            alert("賽事已發佈！玩家現在可以下注了。");
+            alert("賽事已發佈！");
             document.querySelectorAll('input').forEach(i => i.value = '');
         }
     };
 
-    // 2. 監聽賽事列表
     onValue(ref(db, `wbcMatches`), s => {
         const data = s.val() || {};
         const list = document.getElementById('matchList');
         list.innerHTML = '';
         Object.entries(data).reverse().forEach(([id, m]) => {
-            let btns = '';
-            let statusTag = '';
+            let btns = '', statusTag = '';
             
             if(m.status === 'open') {
                 statusTag = `<span style="color:#10b981">🟢 開放下注中</span>`;
@@ -105,9 +108,9 @@
             list.innerHTML += `
                 <div class="match-item">
                     <div class="match-info">
-                        <b>${m.teamA} <small>(${m.handicapA})</small></b> 
+                        <b>${m.teamA} <small>(${m.handicapA})</small><span class="odds-tag">${m.oddsA}</span></b> 
                         <span>VS</span> 
-                        <b>${m.teamB} <small>(${m.handicapB})</small></b>
+                        <b>${m.teamB} <small>(${m.handicapB})</small><span class="odds-tag">${m.oddsB}</span></b>
                         <div style="margin-top:5px; font-size:0.8rem;">狀態: ${statusTag}</div>
                     </div>
                     <div style="display:flex; gap:10px;">${btns}</div>
@@ -116,61 +119,52 @@
         });
     });
 
-    // 3. 封盤
     window.lockMatch = async (id) => {
-        if(confirm("確定要封盤嗎？封盤後玩家將無法再下注。")) {
-            await update(ref(db, `wbcMatches/${id}`), { status: 'locked' });
-        }
+        if(confirm("確定要封盤嗎？")) await update(ref(db, `wbcMatches/${id}`), { status: 'locked' });
     };
 
-    // 4. 結算派彩 (最核心)
     window.settleMatch = async (matchId, winnerTeam) => {
-        if(!confirm(`⚠️ 警告！\n確定宣佈【${winnerTeam}】贏得盤口嗎？\n系統將立刻退還 P 幣給押中的玩家，此操作無法復原！`)) return;
+        if(!confirm(`⚠️ 確定宣佈【${winnerTeam}】贏得盤口嗎？\n系統將立刻退還 P 幣(本金)給押中的玩家！`)) return;
 
-        // 取得該場比賽的所有下注紀錄
         const snap = await get(ref(db, `wbcBets`));
         const bets = snap.val() || {};
-        
-        let payoutCount = 0;
-        let payoutAmount = 0;
+        let count = 0;
 
         for (let key in bets) {
             const b = bets[key];
             if (b.matchId === matchId && !b.settled) {
                 const isWin = (b.selectedTeam === winnerTeam);
-                
                 if (isWin) {
-                    // 退還 P 幣 (本金)
+                    // 只退還本金 (P幣)
                     const uRef = ref(db, `users/${b.uid}/balance`);
                     const uSnap = await get(uRef);
                     await update(ref(db, `users/${b.uid}`), { balance: (uSnap.val() || 0) + b.amount });
-                    payoutCount++;
-                    payoutAmount += b.amount;
+                    count++;
                 }
-                
-                // 標記該筆注單已結算
                 await update(ref(db, `wbcBets/${key}`), { settled: true, win: isWin });
             }
         }
-
-        // 更新比賽狀態
         await update(ref(db, `wbcMatches/${matchId}`), { status: 'settled', winner: winnerTeam });
-        alert(`結算完成！\n共派發 ${payoutCount} 筆注單，總計退回 ${payoutAmount} P 幣！\n請至下方清單查看需發送的開心卡名單。`);
+        alert(`結算完成！\n已自動退還 ${count} 筆注單的本金。\n請至下方清單查看需手動發送的開心卡！`);
     };
 
-    // 5. 載入開心卡派發表
     onValue(ref(db, `wbcBets`), s => {
         const data = s.val() || {};
         const tbody = document.getElementById('payoutTable');
         tbody.innerHTML = '';
         Object.values(data).reverse().forEach(b => {
             if(b.settled && b.win) {
+                // 計算開心卡面額：本金 * (賠率 - 1)
+                const odds = b.odds || 2.0; // 防呆，舊紀錄沒賠率算2.0
+                const profit = Math.floor(b.amount * (odds - 1));
+                
                 tbody.innerHTML += `
                     <tr>
                         <td>${b.matchTitle}</td>
                         <td style="color:#38bdf8">${b.uid}</td>
-                        <td><b style="color:#10b981">${b.amount} 元</b></td>
-                        <td>${b.selectedTeam}</td>
+                        <td>${b.selectedTeam} <small>(賠率 ${odds})</small></td>
+                        <td>${b.amount} P</td>
+                        <td><b style="color:#10b981; font-size:1.1rem;">${profit} 元</b></td>
                     </tr>
                 `;
             }
