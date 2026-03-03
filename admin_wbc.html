@@ -6,7 +6,7 @@
     <style>
         body { font-family: 'PingFang TC', sans-serif; background: #0f172a; color: #eee; padding: 20px; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #334155; }
-        h1, h2, h3 { color: #38bdf8; margin-top: 0; }
+        h1, h2, h3 { color: #38bdf8; margin-top: 0; display: flex; align-items: center; gap: 10px; }
         .input-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; box-sizing: border-box; }
         .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
@@ -16,7 +16,7 @@
         .btn-warn { background: #f59e0b; color: #fff; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         th, td { padding: 12px; border-bottom: 1px solid #334155; text-align: left; }
-        th { color: #94a3b8; }
+        th { color: #94a3b8; background: #0f172a; }
         .match-item { background: #0f172a; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
         .match-info b { font-size: 1.1rem; color: #fff; }
         .match-info span { color: #f59e0b; margin: 0 10px; }
@@ -24,7 +24,7 @@
     </style>
 </head>
 <body>
-    <h1>⚾ WBC 動態盤口與賠率管理</h1>
+    <h1>⚾ WBC 動態盤口與注單管理</h1>
 
     <div class="card">
         <h3>➕ 新增今日賽事盤口</h3>
@@ -45,6 +45,15 @@
     <div class="card">
         <h3>🏟️ 目前賽事列表 (封盤與結算)</h3>
         <div id="matchList">載入中...</div>
+    </div>
+
+    <div class="card" style="border-color: #f59e0b;">
+        <h3 style="color: #f59e0b;">🧾 即時注單監控 (未開獎)</h3>
+        <p style="font-size:0.85rem; color:#94a3b8;">玩家剛下的注單會即時顯示在此。若有異常或玩家要求，可直接點擊「註銷退款」。</p>
+        <table>
+            <thead><tr><th>下注時間</th><th>賽事</th><th>玩家 UID</th><th>下注內容</th><th>下注金額</th><th>操作</th></tr></thead>
+            <tbody id="realtimeBetsTable"></tbody>
+        </table>
     </div>
 
     <div class="card">
@@ -132,10 +141,10 @@
 
         for (let key in bets) {
             const b = bets[key];
-            if (b.matchId === matchId && !b.settled) {
+            // 排除已被註銷的單
+            if (b.matchId === matchId && !b.settled && !b.cancelled) {
                 const isWin = (b.selectedTeam === winnerTeam);
                 if (isWin) {
-                    // 只退還本金 (P幣)
                     const uRef = ref(db, `users/${b.uid}/balance`);
                     const uSnap = await get(uRef);
                     await update(ref(db, `users/${b.uid}`), { balance: (uSnap.val() || 0) + b.amount });
@@ -148,28 +157,70 @@
         alert(`結算完成！\n已自動退還 ${count} 筆注單的本金。\n請至下方清單查看需手動發送的開心卡！`);
     };
 
+    // 監聽所有注單 (即時注單區 + 派彩區)
     onValue(ref(db, `wbcBets`), s => {
         const data = s.val() || {};
-        const tbody = document.getElementById('payoutTable');
-        tbody.innerHTML = '';
-        Object.values(data).reverse().forEach(b => {
-            if(b.settled && b.win) {
-                // ⭐️ 修正計算公式：用四捨五入計算總額後扣除本金
+        const tbodyRealtime = document.getElementById('realtimeBetsTable');
+        const tbodyPayout = document.getElementById('payoutTable');
+        
+        tbodyRealtime.innerHTML = '';
+        tbodyPayout.innerHTML = '';
+
+        const allBets = Object.entries(data).map(([key, val]) => ({id: key, ...val})).reverse();
+
+        allBets.forEach(b => {
+            // --- 派彩區邏輯 (贏錢且未被註銷) ---
+            if(b.settled && b.win && !b.cancelled) {
                 const odds = b.odds || 2.0; 
                 const profit = Math.round(b.amount * odds) - b.amount;
-                
-                tbody.innerHTML += `
+                tbodyPayout.innerHTML += `
                     <tr>
                         <td>${b.matchTitle}</td>
                         <td style="color:#38bdf8">${b.uid}</td>
-                        <td>${b.selectedTeam} <small>(賠率 ${odds})</small></td>
+                        <td>${b.selectedTeam} <small>(@${odds})</small></td>
                         <td>${b.amount} P</td>
                         <td><b style="color:#10b981; font-size:1.1rem;">${profit} 元</b></td>
                     </tr>
                 `;
             }
+
+            // --- 即時注單區邏輯 (還沒開獎、且未被註銷) ---
+            if(!b.settled && !b.cancelled) {
+                const d = new Date(b.time);
+                const timeStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                
+                tbodyRealtime.innerHTML += `
+                    <tr>
+                        <td style="color:#94a3b8">${timeStr}</td>
+                        <td>${b.matchTitle}</td>
+                        <td style="color:#38bdf8">${b.uid}</td>
+                        <td><b>${b.selectedTeam}</b> <small style="color:#10b981">(@${b.odds || 2.0})</small></td>
+                        <td>${b.amount} P</td>
+                        <td><button class="btn btn-danger" style="padding:6px 12px; font-size:0.8rem;" onclick="cancelBet('${b.id}', '${b.uid}', ${b.amount})">註銷退款</button></td>
+                    </tr>
+                `;
+            }
         });
     });
+
+    // 註銷注單
+    window.cancelBet = async (betId, uid, amount) => {
+        if(!confirm(`確定要註銷這筆注單嗎？\n系統將自動把 ${amount} P 幣退還給玩家！`)) return;
+        
+        try {
+            // 1. 退還本金
+            const uRef = ref(db, `users/${uid}/balance`);
+            const uSnap = await get(uRef);
+            await update(ref(db, `users/${uid}`), { balance: (uSnap.val() || 0) + amount });
+            
+            // 2. 標記為已註銷 (玩家前台會顯示已註銷並變灰)
+            await update(ref(db, `wbcBets/${betId}`), { cancelled: true, settled: true, win: false });
+            
+            alert("✅ 注單已註銷，本金已退還！");
+        } catch(e) {
+            alert("註銷失敗：" + e.message);
+        }
+    };
 </script>
 </body>
 </html>
