@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <title>WBC 賽事預測 | 夢工廠</title>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --p: #38bdf8; --win: #10b981; --lose: #ef4444; --card-color: #fca5a5; --wbc-coin: #818cf8; }
+        :root { --bg: #0f172a; --card: #1e293b; --p: #38bdf8; --win: #10b981; --lose: #ef4444; --wbc-coin: #818cf8; --gold: #f59e0b; }
         body { margin: 0; background: var(--bg); font-family: 'PingFang TC', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 50px; }
         .nav { width: 100%; padding: 15px 20px; background: rgba(0,0,0,0.8); display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .back-btn { color: #94a3b8; text-decoration: none; font-weight: bold; }
@@ -16,7 +16,7 @@
         .container { width: 94%; max-width: 500px; margin-top: 20px; }
         .header-title { font-size: 1.5rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(56,189,248,0.5); }
         
-        /* 轉換中心與洗碼量樣式 */
+        /* 轉換中心 */
         .exchange-card { background: #1e293b; border: 1px solid #334155; border-radius: 15px; padding: 15px; margin-bottom: 25px; text-align: center; }
         .exchange-title { font-size: 1.1rem; font-weight: 900; color: var(--wbc-coin); margin-bottom: 10px; }
         .exchange-input-row { display: flex; gap: 10px; justify-content: center; align-items: center; }
@@ -24,14 +24,19 @@
         .btn-exchange { border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; }
         .btn-exchange:active { transform: scale(0.95); }
         
-        .rollover-box { background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; margin-bottom: 15px; text-align: left; border: 1px solid #334155;}
-        .r-title { font-size: 0.8rem; color: #94a3b8; margin-bottom: 5px; display: flex; justify-content: space-between;}
-        .r-bar-bg { width: 100%; height: 6px; background: #334155; border-radius: 10px; overflow: hidden; margin-bottom: 5px;}
-        .r-bar-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #fca5a5); width: 0%; transition: width 0.5s;}
-        .r-status { font-size: 0.75rem; color: #fca5a5; font-weight: bold; text-align: right;}
+        /* 實體兌換商城 */
+        .shop-sec { margin-bottom: 30px; }
+        .shop-title { font-size: 1.1rem; color: var(--gold); font-weight: 900; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; display:flex; align-items:center; gap:8px;}
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .s-card { background: var(--card); border: 1px solid #334155; border-radius: 12px; overflow: hidden; text-align: center; display: flex; flex-direction: column; transition: 0.2s; }
+        .s-card:active { transform: scale(0.95); }
+        .s-img { width: 100%; aspect-ratio: 1/1; background: #0f172a; object-fit: cover; display:flex; align-items:center; justify-content:center; font-size: 2.5rem; border-bottom: 1px solid #334155;}
+        .s-info { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .s-name { font-size: 0.9rem; font-weight: bold; color: #fff; margin-bottom: 8px; line-height: 1.3;}
+        .s-price { color: var(--wbc-coin); font-weight: 900; font-size: 1rem; margin-bottom: 10px; }
+        .btn-buy { background: var(--wbc-coin); color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; width: 100%; cursor: pointer;}
 
         .rule-card { background: rgba(255,255,255,0.03); border: 1px solid #334155; border-radius: 15px; padding: 15px 20px; margin-bottom: 25px; font-size: 0.85rem; line-height: 1.6; color: #cbd5e1; }
-        .rule-highlight { color: #38bdf8; font-weight: bold; }
         
         .match-card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; position: relative; }
         .match-title-bar { background: rgba(56,189,248,0.15); color: #38bdf8; padding: 10px; border-radius: 10px; text-align: center; font-weight: 900; font-size: 1.05rem; margin-bottom: 15px; border: 1px solid rgba(56,189,248,0.3); }
@@ -91,46 +96,30 @@
             <div class="modal-body-scroll">
                 <h4 style="color:#ef4444; margin:0 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">⚠️ 總規則 (嚴禁賭博，純屬娛樂)</h4>
                 <ol>
-                    <li style="color:#ef4444; font-weight:bold;">本平台嚴禁任何非法賭博行為，各項賽事預測活動純屬娛樂與兌換商品卡性質。</li>
-                    <li style="color:#818cf8; font-weight:bold;">為區分商城系統，參與賽事預測需使用專屬【預測幣】。P幣可於財務中心 1:1 兌換入金 (⚠️ 注意：P幣轉換為預測幣後即視為消費，無法逆轉退回)。</li>
+                    <li style="color:#ef4444; font-weight:bold;">本平台嚴禁任何非法賭博行為，各項賽事預測活動純屬娛樂與積分兌換商品性質。</li>
+                    <li style="color:#818cf8; font-weight:bold;">參與賽事預測需使用專屬【預測幣】。P幣可於財務中心 1:1 兌換 (⚠️ 預測幣僅供兌換實體獎品，無法逆轉退回P幣或兌換現金)。</li>
                     <li style="color:#f59e0b; font-weight:bold;">預測過盤之利潤與退還本金，皆統一以【預測幣】派發至帳戶。</li>
-                    <li style="color:#10b981; font-weight:bold;">【提領規則】為防範洗分套利，累積有效下注量(洗碼量)必須達到『歷史總入金預測幣的 1 倍』，方可將預測幣申請提領為實體『開心卡點數』。</li>
                     <li>會員務必於開始遊戲前，詳細閱讀本網站所訂之各項規則，一經『同意』進入本遊戲進行時，即視為會員已接受所有規則。</li>
                     <li>所有賽事都必須在"預定日期"或“賽事主辦單位規定之法定時間”內進行，若該場賽事因故取消或中止，則該場賽事將視為“無效賽事” ，本網站將退回該賽事的所有遊戲單。</li>
-                    <li>比賽結果以各聯盟官方網站所公佈的結果為準。賽果均在賽事結束後判定，除非在個別體育規章有另註明，若開賽12小時後官網有賽果異動及爭議，本網站有權按原賽果計算。</li>
-                    <li>會員有責任在下單後，等待“送出完成”的視窗顯示與確定。並到「遊戲記錄」中確認該筆遊戲單是否成功，且應仔細核對該筆遊戲單之遊戲內容與遊戲金額。本網站僅以會員『遊戲記錄』的內容為計算結果之依據。</li>
+                    <li>比賽結果以各聯盟官方網站所公佈的結果為準。</li>
                     <li>本網站所有賽事的”賠率”或”盤分”，會隨時變動。您所遊戲的賠率及盤分，將以顯示於「遊戲記錄」中成功的遊戲單為計算結果之依據。</li>
                     <li>任何球賽如提前舉行，在球賽開打前，已接受的遊戲單均為“有效遊戲單” 。球賽開打後的遊戲單，一律將被視為“無效遊戲單”。</li>
-                    <li>本網站在公佈各種賽事盤分及賠率時，若出現任何的打字錯誤或非故意之人為疏失，本網站將保留刪除任何錯誤盤分及賠率遊戲單的權利，並將資訊公佈於「臨時公告」中，敬請註意。</li>
-                    <li>會員有責任確保自己的帳戶及登入資料的保密性，登入會員帳號後進行的任何網上遊戲，將被視為“有效遊戲單”。如果會員發現或懷疑自己的資料被盜用，請自行立即變更密碼，或告知本網站協助修改密碼（未變更密碼前所遊戲的遊戲單，亦視為有效）。</li>
-                    <li>若遭惡意入侵或發生不可抗拒之災害導致網站故障或資料遺失等情況，為確保各方真實利益，本網站將以備份資料為最後處理依據。</li>
                     <li>使用者有責任核對自己的帳戶額度，如對帳戶額度有任何疑問，請立即通知本網站。</li>
                     <li>比賽若延賽、裁定，或若經本網站取消、退回..等狀況，一律會在”遊戲記錄”內遊戲單欄位中的「詳情」寫明原因。</li>
-                    <li>本網站對於任何個人或團體使用外掛軟體程式，同時在同一項目遊戲相同內容的遊戲單，或經站方判定後，認為是以不正常遊戲方法所遊戲的遊戲單，對於此類遊戲單，本網站有權審核您的遊戲單，經審核後有保留或取消遊戲單的權利，若本站取消您的遊戲單，將會在比賽開始前退回您的注金，敬請注意。</li>
                     <li>若本網站因任何原因無法確認某個特定盤口的結果，則所有遊戲視為無效遊戲單，除非遊戲的結果已經可以確定。</li>
-                    <li>如果賽事的官方網站無法提供成績，或官方網站所發佈的成績明顯錯誤，本網站保留做決定/修正最終賽果的權利。</li>
-                    <li>賽事因故保留、取消、延期比賽或預定開賽時間12小時內聯盟沒有裁定比賽結果，則遊戲該場賽事之遊戲單視為“無效遊戲單”，本網站將退回注金。</li>
                     <li>過關遊戲單之獲利計算不包含本金。</li>
                     <li>比賽結果如與遊戲單之盤口相同，視為掉洞，未有輸贏，一律退回注金。</li>
-                    <li>如遊戲單審核中遇賠率更新，系統將自動以最新賠率接收遊戲單。</li>
                     <li>相關比賽數據、即時比分僅供參考，請以實際賽況為主，恕網站不負責任。</li>
-                    <li>所有賽果及遊戲單之認定皆以本網站所訂定之規則為準，如遇特殊狀況，本網站有權做最終決定。</li>
                     <li style="color:#fca5a5; font-weight:bold;">單筆下注限制：最低 100 預測幣，最高 10,000 預測幣。</li>
                 </ol>
 
                 <h4 style="color:#f59e0b; margin:25px 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">棒球一般規則</h4>
                 <ol>
                     <li>所有棒球遊戲之賽果認定皆以本網站訂定之規則為準。</li>
-                    <li>棒球遊戲之賽果依照各聯盟之裁定為最終賽果與賽事完賽認定。</li>
                     <li>棒球賽事因故保留、取消或延期比賽，則遊戲該場賽事之全場遊戲單視為“無效遊戲單”，本網站將退回注金。</li>
-                    <li>棒球賽事如遇該場賽事原訂投手無法上場，而更換新投手，該場賽事所有遊戲單視為“有效遊戲單”。</li>
                     <li>棒球全場遊戲為1~9局（含延長賽局），全場賽事必須打完1~9局（含延長賽局），所遊戲之遊戲單才算“有效遊戲單”，如遇全場比賽未滿九局時，發生突發因素如（下雨、下雪…等），經聯盟裁定勝負，則”讓分”、”大小”、”主客大小”之賽前、走地遊戲單均為“無效遊戲單”，僅”不讓分”、”走地不讓分”盤口之遊戲單仍然為“有效遊戲單”。但如比賽已打滿九局或進行至延長賽，若經聯盟裁定勝負，所有遊戲單均為”有效遊戲單“。</li>
                     <li>所有比賽如遇主客異動，所有遊戲單視為有效遊戲單。</li>
-                    <li>國際棒球比賽規則：<br>
-                        a.如遇主客場異動所有遊戲單視為有效遊戲單。<br>
-                        b.如遇比賽比分懸殊提前結束經主辦大會裁定勝負，該場所有遊戲單視為有效遊戲單，但因天候因素或其它突發因素而經主辦大會裁定勝負，則”不讓分”盤口之賽前、走地遊戲單視為有效，”讓分”、”大小”、”主客大小”盤口之賽前、走地遊戲單視為無效。<br>
-                        c.本賽事若採取突破僵局制，所有賽果裁定均依官網為準。
-                    </li>
+                    <li>國際棒球比賽規則：如遇比賽比分懸殊提前結束經主辦大會裁定勝負，該場所有遊戲單視為有效遊戲單，但因天候因素或其它突發因素而經主辦大會裁定勝負，則”不讓分”盤口之賽前、走地遊戲單視為有效，”讓分”、”大小”、”主客大小”盤口之賽前、走地遊戲單視為無效。本賽事若採取突破僵局制，所有賽果裁定均依官網為準。</li>
                 </ol>
 
                 <h4 style="color:#10b981; margin:25px 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">棒球單注規則與圖解範例</h4>
@@ -184,26 +173,58 @@
         <button class="btn btn-disabled" style="width:100%; padding:10px; font-size:0.9rem; margin-bottom:15px; color:#94a3b8; background:rgba(255,255,255,0.05);" onclick="openRules()">📖 點此查看詳細規則</button>
 
         <div class="exchange-card">
-            <div class="exchange-title">🔄 預測幣 財務中心</div>
-            
-            <div class="rollover-box">
-                <div class="r-title">
-                    <span>當前累積有效洗碼量</span>
-                    <span id="rolloverText">0 / 0</span>
-                </div>
-                <div class="r-bar-bg"><div class="r-bar-fill" id="rolloverBar"></div></div>
-                <div class="r-status" id="rolloverStatus">載入中...</div>
-            </div>
-
-            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-bottom: 12px; border-left: 3px solid var(--p);">
-                <div style="font-size: 0.85rem; color: var(--p); margin-bottom: 8px; font-weight:bold; text-align:left;">【入金】P幣 ➔ 預測幣 (1:1)</div>
+            <div class="exchange-title">🔄 取得 ⚾ 預測幣</div>
+            <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">將 P 幣兌換為預測幣後即可下注。<br>預測贏得的預測幣可至下方兌換實體大獎！</div>
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border-left: 3px solid var(--p);">
                 <div class="exchange-input-row">
                     <input type="number" id="exPtoWbc" class="exchange-input" placeholder="輸入P幣額度">
-                    <button class="btn-exchange" style="background:var(--p); color:#fff;" onclick="convertPtoWbc()">兌換入金</button>
+                    <button class="btn-exchange" style="background:var(--p); color:#fff;" onclick="convertPtoWbc()">兌換入金 (1:1)</button>
                 </div>
             </div>
+        </div>
+
+        <div class="shop-sec">
+            <div class="shop-title">🎁 戰利品兌換商城</div>
+            <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:15px;">使用累積的 ⚾ 預測幣兌換實體獎品，專人聯絡宅配到府！</div>
             
+            <div class="shop-grid">
+                <div class="s-card">
+                    <div class="s-img">📦</div>
+                    <div class="s-info">
+                        <div class="s-name">隨機動漫小盲盒<br><small style="color:#94a3b8">驚喜不間斷</small></div>
+                        <div class="s-price">500 預測幣</div>
+                        <button class="btn-buy" onclick="buyItem('隨機動漫小盲盒', 500)">點此兌換</button>
+                    </div>
+                </div>
+
+                <div class="s-card">
+                    <div class="s-img">🧸</div>
+                    <div class="s-info">
+                        <div class="s-name">熱門一番賞 (隨機)<br><small style="color:#94a3b8">保證有獎</small></div>
+                        <div class="s-price">2,500 預測幣</div>
+                        <button class="btn-buy" onclick="buyItem('熱門一番賞(隨機)', 2500)">點此兌換</button>
+                    </div>
+                </div>
+
+                <div class="s-card">
+                    <div class="s-img">🎧</div>
+                    <div class="s-info">
+                        <div class="s-name">Apple AirPods Pro<br><small style="color:#94a3b8">原廠盒裝</small></div>
+                        <div class="s-price">25,000 預測幣</div>
+                        <button class="btn-buy" onclick="buyItem('Apple AirPods Pro', 25000)">點此兌換</button>
+                    </div>
+                </div>
+
+                <div class="s-card">
+                    <div class="s-img">🎮</div>
+                    <div class="s-info">
+                        <div class="s-name">Nintendo Switch<br><small style="color:#94a3b8">OLED 台灣公司貨</small></div>
+                        <div class="s-price">90,000 預測幣</div>
+                        <button class="btn-buy" onclick="buyItem('Nintendo Switch OLED', 90000)">點此兌換</button>
+                    </div>
+                </div>
             </div>
+        </div>
 
         <div id="matchesContainer"><div style="text-align:center; padding:50px; color:#64748b;">載入今日賽事中...</div></div>
 
@@ -225,10 +246,10 @@
     let currentUserData = {};
 
     window.onload = () => {
-        if (!localStorage.getItem('wbc_rules_agreed_v10')) {
+        if (!localStorage.getItem('wbc_rules_agreed_v11')) {
             document.getElementById('rulesModal').style.display = 'flex';
             document.getElementById('agreeBtn').onclick = () => {
-                localStorage.setItem('wbc_rules_agreed_v10', 'true');
+                localStorage.setItem('wbc_rules_agreed_v11', 'true');
                 document.getElementById('rulesModal').style.display = 'none';
             };
         } else {
@@ -244,42 +265,14 @@
 
     onValue(ref(db, `users/${uid}`), s => {
         currentUserData = s.val() || {};
-        
         document.getElementById('uBal').innerText = (currentUserData.balance || 0).toLocaleString();
         document.getElementById('uWbc').innerText = (currentUserData.wbcCoin || 0).toLocaleString();
-
-        const totalTopup = currentUserData.wbcTotalTopup || 0; 
-        const totalRollover = currentUserData.wbcRollover || 0; 
-        const rolloverTarget = totalTopup * 1; 
-
-        const barEl = document.getElementById('rolloverBar');
-        const textEl = document.getElementById('rolloverText');
-        const statusEl = document.getElementById('rolloverStatus');
-
-        textEl.innerText = `${totalRollover.toLocaleString()} / ${rolloverTarget.toLocaleString()}`;
-        
-        if (rolloverTarget === 0) {
-            barEl.style.width = '100%';
-            statusEl.innerText = '無流水限制';
-            statusEl.style.color = '#10b981';
-        } else {
-            const percent = Math.min(100, Math.floor((totalRollover / rolloverTarget) * 100));
-            barEl.style.width = percent + '%';
-            if (totalRollover >= rolloverTarget) {
-                statusEl.innerText = '✅ 洗碼已達標！';
-                statusEl.style.color = '#10b981';
-            } else {
-                const lack = rolloverTarget - totalRollover;
-                statusEl.innerText = `❌ 洗碼量還差 ${lack.toLocaleString()} 預測幣`;
-                statusEl.style.color = '#fca5a5';
-            }
-        }
     });
 
     window.convertPtoWbc = async () => {
         const amt = parseInt(document.getElementById('exPtoWbc').value);
         if(isNaN(amt) || amt <= 0) return alert("請輸入正確兌換金額");
-        if(!confirm(`確定消耗 ${amt} P幣，兌換成 ${amt} 預測幣 嗎？\n⚠️ 兌換後將增加 ${amt * 1} 的洗碼量門檻。`)) return; 
+        if(!confirm(`確定消耗 ${amt} P幣，兌換成 ${amt} 預測幣 嗎？\n⚠️ 兌換後將無法轉回 P 幣。`)) return; 
 
         document.getElementById('loading').style.display = 'flex';
         try {
@@ -289,14 +282,42 @@
                 u.balance -= amt;
                 u.spending_counter = (u.spending_counter || 0) + amt; 
                 u.wbcCoin = (u.wbcCoin || 0) + amt;
-                u.wbcTotalTopup = (u.wbcTotalTopup || 0) + amt; 
                 return u;
             });
-            await push(ref(db, `users/${uid}/logs`), { game: `兌換WBC預測幣(入金)`, cost: amt, time: Date.now() });
+            await push(ref(db, `users/${uid}/logs`), { game: `兌換WBC預測幣`, cost: amt, time: Date.now() });
             alert(`✅ 兌換成功！獲得 ${amt} 預測幣！`);
             document.getElementById('exPtoWbc').value = '';
         } catch(e) {
             if(e === "nomoney") alert("P 幣餘額不足！"); else alert("發生錯誤：" + e);
+        } finally { document.getElementById('loading').style.display = 'none'; }
+    };
+
+    // ⭐️ 兌換商城商品的邏輯
+    window.buyItem = async (itemName, price) => {
+        if(!confirm(`即將使用 ${price} 預測幣\n兌換商品：【${itemName}】\n確定兌換嗎？`)) return;
+
+        document.getElementById('loading').style.display = 'flex';
+        try {
+            await runTransaction(ref(db, `users/${uid}`), (u) => {
+                if(!u) return;
+                if((u.wbcCoin || 0) < price) throw "nowbc";
+                u.wbcCoin -= price;
+                return u;
+            });
+            
+            // 將訂單寫入資料庫，讓老闆在後台看得到
+            await push(ref(db, `wbcOrders`), {
+                uid: uid,
+                item: itemName,
+                cost: price,
+                status: 'pending', // 待出貨
+                time: serverTimestamp()
+            });
+
+            alert(`🎉 兌換成功！\n您已成功兌換【${itemName}】，請截圖此畫面並聯繫官方客服安排寄送！`);
+        } catch(e) {
+            if(e === "nowbc") alert("預測幣餘額不足！請多多預測贏取獎勵！"); 
+            else alert("發生錯誤：" + e);
         } finally { document.getElementById('loading').style.display = 'none'; }
     };
 
@@ -392,7 +413,7 @@
         const typeName = betType === 'total' ? '大小分盤' : '讓分盤';
         const totalWin = Math.round(amt * odds);
         
-        if(!confirm(`【${typeName}確認】\n支持：${team} (盤口 ${handicap})\n投入：${amt} 預測幣 (賠率 ${odds})\n\n🏆 預估可贏回：${totalWin} 預測幣\n(將增加 ${amt} 點有效洗碼量)\n\n確定下注嗎？`)) return;
+        if(!confirm(`【${typeName}確認】\n支持：${team} (盤口 ${handicap})\n投入：${amt} 預測幣 (賠率 ${odds})\n\n🏆 預估可贏回：${totalWin} 預測幣\n\n確定下注嗎？`)) return;
 
         document.getElementById('loading').style.display = 'flex';
 
@@ -400,9 +421,7 @@
             await runTransaction(ref(db, `users/${uid}`), (u) => {
                 if(!u) return;
                 if((u.wbcCoin || 0) < amt) throw "nowbc";
-
                 u.wbcCoin -= amt;
-                u.wbcRollover = (u.wbcRollover || 0) + amt; 
                 return u;
             });
 
@@ -412,7 +431,7 @@
                 settled: false, cancelled: false, win: false, time: serverTimestamp()
             });
 
-            alert("🎉 下注成功！您的洗碼量已增加。");
+            alert("🎉 下注成功！祝您神預測！");
         } catch(e) {
             if(e === "nowbc") alert("預測幣餘額不足，請先在上方轉換中心使用 P幣 兌換！");
             else alert("發生錯誤：" + e);
