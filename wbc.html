@@ -95,7 +95,7 @@
                     <li style="color:#ef4444; font-weight:bold;">本平台嚴禁任何非法賭博行為，各項賽事預測活動純屬娛樂與兌換商品卡性質。</li>
                     <li style="color:#818cf8; font-weight:bold;">為區分商城系統，參與賽事預測需使用專屬【預測幣】。P幣可於財務中心 1:1 兌換入金 (⚠️ 注意：P幣轉換為預測幣後即視為消費，無法逆轉退回)。</li>
                     <li style="color:#f59e0b; font-weight:bold;">預測過盤之利潤與退還本金，皆統一以【預測幣】派發至帳戶。</li>
-                    <li style="color:#10b981; font-weight:bold;">【提領規則】為防範洗分套利，累積有效下注量(洗碼量)必須達到『歷史總入金預測幣的 2 倍』，方可將預測幣申請提領為實體『開心卡點數』。</li>
+                    <li style="color:#10b981; font-weight:bold;">【提領規則】為防範洗分套利，累積有效下注量(洗碼量)必須達到『歷史總入金預測幣的 1 倍』，方可將預測幣申請提領為實體『開心卡點數』。</li>
                     <li>會員務必於開始遊戲前，詳細閱讀本網站所訂之各項規則，一經『同意』進入本遊戲進行時，即視為會員已接受所有規則。</li>
                     <li>所有賽事都必須在"預定日期"或“賽事主辦單位規定之法定時間”內進行，若該場賽事因故取消或中止，則該場賽事將視為“無效賽事” ，本網站將退回該賽事的所有遊戲單。</li>
                     <li>比賽結果以各聯盟官方網站所公佈的結果為準。賽果均在賽事結束後判定，除非在個別體育規章有另註明，若開賽12小時後官網有賽果異動及爭議，本網站有權按原賽果計算。</li>
@@ -234,10 +234,10 @@
     let currentUserData = {};
 
     window.onload = () => {
-        if (!localStorage.getItem('wbc_rules_agreed_v9')) {
+        if (!localStorage.getItem('wbc_rules_agreed_v10')) {
             document.getElementById('rulesModal').style.display = 'flex';
             document.getElementById('agreeBtn').onclick = () => {
-                localStorage.setItem('wbc_rules_agreed_v9', 'true');
+                localStorage.setItem('wbc_rules_agreed_v10', 'true');
                 document.getElementById('rulesModal').style.display = 'none';
             };
         } else {
@@ -251,7 +251,7 @@
         document.getElementById('rulesModal').style.display = 'flex';
     };
 
-    // ⭐️ 監聽三個錢包並計算洗碼量
+    // ⭐️ 監聽三個錢包並計算洗碼量 (改為 1 倍洗碼量)
     onValue(ref(db, `users/${uid}`), s => {
         currentUserData = s.val() || {};
         
@@ -261,7 +261,7 @@
 
         const totalTopup = currentUserData.wbcTotalTopup || 0; 
         const totalRollover = currentUserData.wbcRollover || 0; 
-        const rolloverTarget = totalTopup * 2; 
+        const rolloverTarget = totalTopup * 1; // ⭐️ 改為 1倍水
 
         const barEl = document.getElementById('rolloverBar');
         const textEl = document.getElementById('rolloverText');
@@ -291,7 +291,7 @@
     window.convertPtoWbc = async () => {
         const amt = parseInt(document.getElementById('exPtoWbc').value);
         if(isNaN(amt) || amt <= 0) return alert("請輸入正確兌換金額");
-        if(!confirm(`確定消耗 ${amt} P幣，兌換成 ${amt} 預測幣 嗎？\n⚠️ 兌換後將增加 ${amt * 2} 的洗碼量門檻。`)) return;
+        if(!confirm(`確定消耗 ${amt} P幣，兌換成 ${amt} 預測幣 嗎？\n⚠️ 兌換後將增加 ${amt * 1} 的洗碼量門檻。`)) return; // 提示改為 1 倍
 
         document.getElementById('loading').style.display = 'flex';
         try {
@@ -312,15 +312,15 @@
         } finally { document.getElementById('loading').style.display = 'none'; }
     };
 
-    // ⭐️ 預測幣換開心卡 (洗碼限制)
+    // ⭐️ 預測幣換開心卡 (洗碼限制改為 1 倍)
     window.withdrawWbcToCard = async () => {
         const amt = parseInt(document.getElementById('exWbcToCard').value);
         if(isNaN(amt) || amt <= 0) return alert("請輸入正確提領金額");
         
         const totalTopup = currentUserData.wbcTotalTopup || 0;
         const totalRollover = currentUserData.wbcRollover || 0;
-        if (totalTopup > 0 && totalRollover < (totalTopup * 2)) {
-            return alert(`❌ 提領失敗！\n您的有效洗碼量不足。\n目標：${totalTopup * 2}\n當前：${totalRollover}\n請繼續下注達標後再試。`);
+        if (totalTopup > 0 && totalRollover < (totalTopup * 1)) { // ⭐️ 檢查改為 1 倍
+            return alert(`❌ 提領失敗！\n您的有效洗碼量不足。\n目標：${totalTopup * 1}\n當前：${totalRollover}\n請繼續下注達標後再試。`);
         }
 
         if(!confirm(`確定將 ${amt} 預測幣 提領為 ${amt} 開心卡點數 嗎？`)) return;
