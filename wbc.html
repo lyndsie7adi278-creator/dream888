@@ -7,11 +7,18 @@
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --p: #38bdf8; --win: #10b981; --lose: #ef4444; --card-color: #fca5a5; --wbc-coin: #818cf8; --gold: #f59e0b; }
         body { margin: 0; background: var(--bg); font-family: 'PingFang TC', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 50px; }
+        
+        /* 導覽列與右上角商城按鈕配置 */
         .nav { width: 100%; padding: 15px 20px; background: rgba(0,0,0,0.8); display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .back-btn { color: #94a3b8; text-decoration: none; font-weight: bold; }
-        .bal-badge { background: rgba(56,189,248,0.05); border: 1px solid #334155; padding: 5px 10px; border-radius: 50px; font-weight: 900; font-size: 0.85rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end;}
+        .nav-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .bal-badge { background: rgba(56,189,248,0.05); border: 1px solid #334155; padding: 5px 10px; border-radius: 50px; font-weight: 900; font-size: 0.85rem; display: flex; gap: 8px; align-items: center; justify-content: flex-end;}
         .p-badge { color: var(--p); }
         .wbc-badge { color: var(--wbc-coin); border-left: 1px solid #334155; padding-left: 8px; }
+        
+        /* ⭐️ 專為右上角設計的商城入口按鈕 */
+        .btn-shop-mini { background: linear-gradient(135deg, var(--gold), #d97706); color: #fff; text-decoration: none; padding: 4px 10px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; border: 1px solid #fcd34d; box-shadow: 0 2px 8px rgba(245,158,11,0.3); transition: 0.2s; display: flex; align-items: center; gap: 4px; }
+        .btn-shop-mini:active { transform: scale(0.95); }
         
         .container { width: 94%; max-width: 500px; margin-top: 20px; }
         .header-title { font-size: 1.5rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(56,189,248,0.5); }
@@ -23,10 +30,6 @@
         .exchange-input { width: 130px; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; text-align: center; font-weight: bold; }
         .btn-exchange { border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; }
         .btn-exchange:active { transform: scale(0.95); }
-        
-        /* ⭐️ 新增：前往商城的按鈕樣式 */
-        .btn-shop-link { display: block; width: 100%; background: linear-gradient(135deg, var(--gold), #d97706); color: #fff; text-align: center; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 1.1rem; text-decoration: none; margin-top: 15px; box-shadow: 0 5px 15px rgba(245,158,11,0.3); transition: 0.2s; border: 1px solid #fcd34d;}
-        .btn-shop-link:active { transform: scale(0.98); }
 
         .rule-card { background: rgba(255,255,255,0.03); border: 1px solid #334155; border-radius: 15px; padding: 15px 20px; margin-bottom: 25px; font-size: 0.85rem; line-height: 1.6; color: #cbd5e1; }
         
@@ -153,10 +156,13 @@
     <div id="loading"><div class="spinner"></div><div style="margin-top:15px; font-weight:bold;">處理中...</div></div>
 
     <div class="nav">
-        <a href="index.html" class="back-btn">⬅ 返回商城</a>
-        <div class="bal-badge">
-            <span class="p-badge" title="P幣餘額">P <span id="uBal">---</span></span>
-            <span class="wbc-badge" title="預測幣(專用)">⚾ <span id="uWbc">---</span></span>
+        <a href="index.html" class="back-btn">⬅ 返回大廳</a>
+        <div class="nav-right">
+            <div class="bal-badge">
+                <span class="p-badge" title="P幣餘額">P <span id="uBal">---</span></span>
+                <span class="wbc-badge" title="預測幣(專用)">⚾ <span id="uWbc">---</span></span>
+            </div>
+            <a href="wbc_shop.html" class="btn-shop-mini">🎁 前往戰利品商城</a>
         </div>
     </div>
 
@@ -166,15 +172,13 @@
 
         <div class="exchange-card">
             <div class="exchange-title">🔄 取得 ⚾ 預測幣</div>
-            <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">將 P 幣兌換為預測幣後即可下注。<br>贏得的預測幣可至「戰利品商城」兌換實體大獎！</div>
+            <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">將 P 幣兌換為預測幣後即可下注。<br>贏得的預測幣可至右上方「商城」兌換實體大獎！</div>
             <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border-left: 3px solid var(--p);">
                 <div class="exchange-input-row">
                     <input type="number" id="exPtoWbc" class="exchange-input" placeholder="輸入P幣額度">
                     <button class="btn-exchange" style="background:var(--p); color:#fff;" onclick="convertPtoWbc()">兌換入金 (1:1)</button>
                 </div>
             </div>
-            
-            <a href="wbc_shop.html" class="btn-shop-link">🎁 前往【戰利品商城】兌換獎品 ➔</a>
         </div>
 
         <div id="matchesContainer"><div style="text-align:center; padding:50px; color:#64748b;">載入今日賽事中...</div></div>
