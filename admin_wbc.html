@@ -33,7 +33,6 @@
         
         .card-payout-box { background: rgba(252,165,165,0.1); border: 1px solid #fca5a5; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* ⭐️ 新增商城與訂單的樣式 */
         .order-box { background: rgba(245,158,11,0.1); border: 1px solid #f59e0b; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .shop-item-box { background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     </style>
@@ -78,8 +77,8 @@
             <div><label style="color:#10b981">兌換價格 (預測幣)</label><input type="number" id="sPrice" placeholder="例: 500"></div>
         </div>
         <div class="full-row">
-            <label style="color:#10b981">Emoji 圖示 (用於前台顯示)</label>
-            <input type="text" id="sEmoji" placeholder="例: 📦 🧸 🎧 🎮" style="width: 100px;">
+            <label style="color:#10b981">商品圖片網址 (URL)</label>
+            <input type="text" id="sImgUrl" placeholder="請貼上圖片的網址 (例如: https://imgur.com/...)">
         </div>
         <button class="btn btn-success" style="width:100%; padding:10px;" onclick="addShopItem()">➕ 新增商品上架</button>
 
@@ -117,8 +116,8 @@
         <div id="matchList">載入中...</div>
     </div>
 
-    <div class="card" style="border-color: #f59e0b;">
-        <h3 style="color: #f59e0b;">🧾 即時注單監控 (未開獎)</h3>
+    <div class="card" style="border-color: #ef4444;">
+        <h3 style="color: #ef4444;">🧾 即時注單監控 (未開獎)</h3>
         <p style="font-size:0.85rem; color:#94a3b8;">若有異常或玩家要求，可直接點擊「註銷退還預測幣」。</p>
         <table>
             <thead><tr><th>下注時間</th><th>賽事</th><th>玩家 UID</th><th>類型</th><th>下注內容</th><th>投入預測幣</th><th>操作</th></tr></thead>
@@ -134,8 +133,6 @@
     const app = initializeApp(_c); const db = getDatabase(app);
 
     document.getElementById('repDate').value = new Date().toISOString().split('T')[0];
-
-    // ======== ⭐️ 新增：商城與訂單管理邏輯 ========
     
     // 監聽待處理訂單
     onValue(ref(db, `wbcOrders`), s => {
@@ -172,7 +169,7 @@
         alert("訂單已成功核銷！");
     };
 
-    // 監聽並管理商城商品
+    // ⭐️ 監聽並管理商城商品 (後台列表顯示圖片縮圖)
     onValue(ref(db, `wbcShopItems`), s => {
         const items = s.val() || {};
         const list = document.getElementById('shopItemList');
@@ -181,10 +178,14 @@
 
         Object.entries(items).forEach(([id, it]) => {
             hasItems = true;
+            const imgDisplay = it.imgUrl 
+                ? `<div style="width:50px; height:50px; border-radius:8px; background-image:url('${it.imgUrl}'); background-size:cover; background-position:center;"></div>` 
+                : `<div style="width:50px; height:50px; border-radius:8px; background:#0f172a; display:flex; align-items:center; justify-content:center; border:1px solid #334155;">無圖</div>`;
+
             list.innerHTML += `
                 <div class="shop-item-box">
-                    <div style="flex:1; display:flex; align-items:center; gap:10px;">
-                        <b style="font-size:1.5rem;">${it.emoji}</b>
+                    <div style="flex:1; display:flex; align-items:center; gap:15px;">
+                        ${imgDisplay}
                         <div>
                             <b style="color:#fff;">${it.name}</b> <small style="color:#94a3b8;">(${it.desc})</small><br>
                             <div style="display:flex; align-items:center; gap:5px; margin-top:5px;">
@@ -201,20 +202,22 @@
         if(!hasItems) list.innerHTML = '<div style="color:#64748b;">目前商城為空，請在上方新增商品！</div>';
     });
 
+    // ⭐️ 新增商品寫入圖片網址
     window.addShopItem = async () => {
         const name = document.getElementById('sName').value.trim();
         const desc = document.getElementById('sDesc').value.trim();
         const price = parseInt(document.getElementById('sPrice').value);
-        const emoji = document.getElementById('sEmoji').value.trim() || '🎁';
+        const imgUrl = document.getElementById('sImgUrl').value.trim();
 
         if(!name || isNaN(price)) return alert("請填寫商品名稱與價格！");
+        if(!imgUrl) if(!confirm("您沒有輸入圖片網址，商品前台將不會顯示圖片。確定要上架嗎？")) return;
 
-        await push(ref(db, `wbcShopItems`), { name, desc, price, emoji, active: true });
+        await push(ref(db, `wbcShopItems`), { name, desc, price, imgUrl, active: true });
         alert("商品上架成功！前台商城已自動更新。");
         document.getElementById('sName').value = '';
         document.getElementById('sDesc').value = '';
         document.getElementById('sPrice').value = '';
-        document.getElementById('sEmoji').value = '';
+        document.getElementById('sImgUrl').value = '';
     };
 
     window.updatePrice = async (id) => {
@@ -229,9 +232,7 @@
         await remove(ref(db, `wbcShopItems/${id}`));
     };
 
-
-    // ======== 以下為您原本的賽事與報表邏輯 (完全沒動) ========
-
+    // ======== 以下為原本的賽事與報表邏輯 (完全沒動) ========
     window.fetchReport = async (type) => {
         const snap = await get(ref(db, `wbcBets`));
         const bets = snap.val() || {};
