@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <title>WBC 賽事預測 | 夢工廠</title>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --p: #38bdf8; --win: #10b981; --lose: #ef4444; --wbc-coin: #818cf8; --gold: #f59e0b; }
+        :root { --bg: #0f172a; --card: #1e293b; --p: #38bdf8; --win: #10b981; --lose: #ef4444; --card-color: #fca5a5; --wbc-coin: #818cf8; --gold: #f59e0b; }
         body { margin: 0; background: var(--bg); font-family: 'PingFang TC', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 50px; }
         .nav { width: 100%; padding: 15px 20px; background: rgba(0,0,0,0.8); display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .back-btn { color: #94a3b8; text-decoration: none; font-weight: bold; }
@@ -24,17 +24,9 @@
         .btn-exchange { border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; }
         .btn-exchange:active { transform: scale(0.95); }
         
-        /* 實體兌換商城 */
-        .shop-sec { margin-bottom: 30px; }
-        .shop-title { font-size: 1.1rem; color: var(--gold); font-weight: 900; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; display:flex; align-items:center; gap:8px;}
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .s-card { background: var(--card); border: 1px solid #334155; border-radius: 12px; overflow: hidden; text-align: center; display: flex; flex-direction: column; transition: 0.2s; }
-        .s-card:active { transform: scale(0.95); }
-        .s-img { width: 100%; aspect-ratio: 1/1; background: #0f172a; object-fit: cover; display:flex; align-items:center; justify-content:center; font-size: 2.5rem; border-bottom: 1px solid #334155;}
-        .s-info { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .s-name { font-size: 0.9rem; font-weight: bold; color: #fff; margin-bottom: 8px; line-height: 1.3;}
-        .s-price { color: var(--wbc-coin); font-weight: 900; font-size: 1rem; margin-bottom: 10px; }
-        .btn-buy { background: var(--wbc-coin); color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; width: 100%; cursor: pointer;}
+        /* ⭐️ 新增：前往商城的按鈕樣式 */
+        .btn-shop-link { display: block; width: 100%; background: linear-gradient(135deg, var(--gold), #d97706); color: #fff; text-align: center; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 1.1rem; text-decoration: none; margin-top: 15px; box-shadow: 0 5px 15px rgba(245,158,11,0.3); transition: 0.2s; border: 1px solid #fcd34d;}
+        .btn-shop-link:active { transform: scale(0.98); }
 
         .rule-card { background: rgba(255,255,255,0.03); border: 1px solid #334155; border-radius: 15px; padding: 15px 20px; margin-bottom: 25px; font-size: 0.85rem; line-height: 1.6; color: #cbd5e1; }
         
@@ -174,56 +166,15 @@
 
         <div class="exchange-card">
             <div class="exchange-title">🔄 取得 ⚾ 預測幣</div>
-            <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">將 P 幣兌換為預測幣後即可下注。<br>預測贏得的預測幣可至下方兌換實體大獎！</div>
+            <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">將 P 幣兌換為預測幣後即可下注。<br>贏得的預測幣可至「戰利品商城」兌換實體大獎！</div>
             <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border-left: 3px solid var(--p);">
                 <div class="exchange-input-row">
                     <input type="number" id="exPtoWbc" class="exchange-input" placeholder="輸入P幣額度">
                     <button class="btn-exchange" style="background:var(--p); color:#fff;" onclick="convertPtoWbc()">兌換入金 (1:1)</button>
                 </div>
             </div>
-        </div>
-
-        <div class="shop-sec">
-            <div class="shop-title">🎁 戰利品兌換商城</div>
-            <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:15px;">使用累積的 ⚾ 預測幣兌換實體獎品，專人聯絡宅配到府！</div>
             
-            <div class="shop-grid">
-                <div class="s-card">
-                    <div class="s-img">📦</div>
-                    <div class="s-info">
-                        <div class="s-name">隨機動漫小盲盒<br><small style="color:#94a3b8">驚喜不間斷</small></div>
-                        <div class="s-price">500 預測幣</div>
-                        <button class="btn-buy" onclick="buyItem('隨機動漫小盲盒', 500)">點此兌換</button>
-                    </div>
-                </div>
-
-                <div class="s-card">
-                    <div class="s-img">🧸</div>
-                    <div class="s-info">
-                        <div class="s-name">熱門一番賞 (隨機)<br><small style="color:#94a3b8">保證有獎</small></div>
-                        <div class="s-price">2,500 預測幣</div>
-                        <button class="btn-buy" onclick="buyItem('熱門一番賞(隨機)', 2500)">點此兌換</button>
-                    </div>
-                </div>
-
-                <div class="s-card">
-                    <div class="s-img">🎧</div>
-                    <div class="s-info">
-                        <div class="s-name">Apple AirPods Pro<br><small style="color:#94a3b8">原廠盒裝</small></div>
-                        <div class="s-price">25,000 預測幣</div>
-                        <button class="btn-buy" onclick="buyItem('Apple AirPods Pro', 25000)">點此兌換</button>
-                    </div>
-                </div>
-
-                <div class="s-card">
-                    <div class="s-img">🎮</div>
-                    <div class="s-info">
-                        <div class="s-name">Nintendo Switch<br><small style="color:#94a3b8">OLED 台灣公司貨</small></div>
-                        <div class="s-price">90,000 預測幣</div>
-                        <button class="btn-buy" onclick="buyItem('Nintendo Switch OLED', 90000)">點此兌換</button>
-                    </div>
-                </div>
-            </div>
+            <a href="wbc_shop.html" class="btn-shop-link">🎁 前往【戰利品商城】兌換獎品 ➔</a>
         </div>
 
         <div id="matchesContainer"><div style="text-align:center; padding:50px; color:#64748b;">載入今日賽事中...</div></div>
@@ -246,10 +197,10 @@
     let currentUserData = {};
 
     window.onload = () => {
-        if (!localStorage.getItem('wbc_rules_agreed_v11')) {
+        if (!localStorage.getItem('wbc_rules_agreed_v12')) {
             document.getElementById('rulesModal').style.display = 'flex';
             document.getElementById('agreeBtn').onclick = () => {
-                localStorage.setItem('wbc_rules_agreed_v11', 'true');
+                localStorage.setItem('wbc_rules_agreed_v12', 'true');
                 document.getElementById('rulesModal').style.display = 'none';
             };
         } else {
@@ -289,35 +240,6 @@
             document.getElementById('exPtoWbc').value = '';
         } catch(e) {
             if(e === "nomoney") alert("P 幣餘額不足！"); else alert("發生錯誤：" + e);
-        } finally { document.getElementById('loading').style.display = 'none'; }
-    };
-
-    // ⭐️ 兌換商城商品的邏輯
-    window.buyItem = async (itemName, price) => {
-        if(!confirm(`即將使用 ${price} 預測幣\n兌換商品：【${itemName}】\n確定兌換嗎？`)) return;
-
-        document.getElementById('loading').style.display = 'flex';
-        try {
-            await runTransaction(ref(db, `users/${uid}`), (u) => {
-                if(!u) return;
-                if((u.wbcCoin || 0) < price) throw "nowbc";
-                u.wbcCoin -= price;
-                return u;
-            });
-            
-            // 將訂單寫入資料庫，讓老闆在後台看得到
-            await push(ref(db, `wbcOrders`), {
-                uid: uid,
-                item: itemName,
-                cost: price,
-                status: 'pending', // 待出貨
-                time: serverTimestamp()
-            });
-
-            alert(`🎉 兌換成功！\n您已成功兌換【${itemName}】，請截圖此畫面並聯繫官方客服安排寄送！`);
-        } catch(e) {
-            if(e === "nowbc") alert("預測幣餘額不足！請多多預測贏取獎勵！"); 
-            else alert("發生錯誤：" + e);
         } finally { document.getElementById('loading').style.display = 'none'; }
     };
 
