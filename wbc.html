@@ -5,29 +5,30 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <title>WBC 賽事預測 | 夢工廠</title>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --p: #38bdf8; --win: #10b981; --lose: #ef4444; --card-color: #fca5a5; }
+        :root { --bg: #0f172a; --card: #1e293b; --p: #38bdf8; --win: #10b981; --lose: #ef4444; --card-color: #fca5a5; --wbc-coin: #818cf8; }
         body { margin: 0; background: var(--bg); font-family: 'PingFang TC', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 50px; }
         .nav { width: 100%; padding: 15px 20px; background: rgba(0,0,0,0.8); display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .back-btn { color: #94a3b8; text-decoration: none; font-weight: bold; }
-        .bal-badge { background: rgba(56,189,248,0.1); border: 1px solid var(--p); padding: 5px 10px; border-radius: 50px; color: var(--p); font-weight: 900; font-size: 0.85rem; display: flex; gap: 8px; align-items: center; }
+        .bal-badge { background: rgba(56,189,248,0.05); border: 1px solid #334155; padding: 5px 10px; border-radius: 50px; font-weight: 900; font-size: 0.85rem; display: flex; gap: 8px; align-items: center; }
+        .p-badge { color: var(--p); }
+        .wbc-badge { color: var(--wbc-coin); border-left: 1px solid #334155; padding-left: 8px; }
         .card-badge { color: var(--card-color); border-left: 1px solid #334155; padding-left: 8px; }
         
         .container { width: 94%; max-width: 500px; margin-top: 20px; }
         .header-title { font-size: 1.5rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(56,189,248,0.5); }
         
         /* 轉換中心樣式 */
-        .exchange-card { background: linear-gradient(135deg, rgba(252,165,165,0.1), rgba(239,68,68,0.05)); border: 1px solid var(--card-color); border-radius: 15px; padding: 15px; margin-bottom: 25px; text-align: center; }
-        .exchange-title { font-size: 1rem; font-weight: 900; color: var(--card-color); margin-bottom: 10px; }
+        .exchange-card { background: #1e293b; border: 1px solid #334155; border-radius: 15px; padding: 15px; margin-bottom: 25px; text-align: center; }
+        .exchange-title { font-size: 1.1rem; font-weight: 900; color: var(--wbc-coin); margin-bottom: 10px; }
         .exchange-input-row { display: flex; gap: 10px; justify-content: center; align-items: center; }
-        .exchange-input { width: 120px; padding: 8px; border-radius: 8px; border: 1px solid var(--card-color); background: rgba(0,0,0,0.5); color: #fff; text-align: center; font-weight: bold; }
-        .btn-exchange { background: var(--card-color); color: #000; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .exchange-input { width: 130px; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; text-align: center; font-weight: bold; }
+        .btn-exchange { border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; }
         .btn-exchange:active { transform: scale(0.95); }
 
         .rule-card { background: rgba(255,255,255,0.03); border: 1px solid #334155; border-radius: 15px; padding: 15px 20px; margin-bottom: 25px; font-size: 0.85rem; line-height: 1.6; color: #cbd5e1; }
-        .rule-highlight { color: #38bdf8; font-weight: bold; }
         
         .match-card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; position: relative; }
-        .match-title-bar { background: rgba(56,189,248,0.15); color: #38bdf8; padding: 10px; border-radius: 10px; text-align: center; font-weight: 900; font-size: 1.05rem; margin-bottom: 15px; border: 1px solid rgba(56,189,248,0.3); }
+        .match-title-bar { background: rgba(129,140,248,0.15); color: var(--wbc-coin); padding: 10px; border-radius: 10px; text-align: center; font-weight: 900; font-size: 1.05rem; margin-bottom: 15px; border: 1px solid rgba(129,140,248,0.3); }
         .match-status { text-align: center; font-size: 0.8rem; font-weight: bold; padding: 5px; border-radius: 10px; margin-bottom: 15px; }
         .s-open { background: rgba(16,185,129,0.2); color: #10b981; }
         .s-locked { background: rgba(245,158,11,0.2); color: #f59e0b; }
@@ -42,7 +43,7 @@
         .bet-controls { background: #0f172a; padding: 15px; border-radius: 15px; border: 1px solid #334155; }
         .input-wrapper { display: flex; align-items: center; margin-bottom: 15px; }
         .input-wrapper span { padding-right: 10px; color: #94a3b8; font-size: 0.9rem; }
-        input[type="number"].bet-in { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: #fff; font-size: 1.1rem; text-align: center; font-weight: bold; }
+        input[type="number"].bet-in { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: var(--wbc-coin); font-size: 1.1rem; text-align: center; font-weight: bold; }
         
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .btn { padding: 12px; border-radius: 12px; border: none; font-weight: 900; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); line-height: 1.4; }
@@ -54,7 +55,7 @@
         .btn-disabled { background: #334155; color: #64748b; cursor: not-allowed; box-shadow: none; }
         
         .history-sec { margin-top: 30px; }
-        .h-title { font-size: 1.1rem; color: var(--p); font-weight: 900; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        .h-title { font-size: 1.1rem; color: var(--wbc-coin); font-weight: 900; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
         .h-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; font-size: 0.85rem; border-left: 4px solid #334155; }
         .h-card.win { border-left-color: var(--win); }
         .h-card.lose { border-left-color: var(--lose); }
@@ -62,69 +63,41 @@
         .h-body { display: flex; justify-content: space-between; align-items: center; }
         
         #loading { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999; align-items:center; justify-content:center; flex-direction:column; }
-        .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--p); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--wbc-coin); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .modal-body-scroll { max-height: 65vh; overflow-y: auto; -webkit-overflow-scrolling: touch; font-size: 0.85rem; line-height: 1.7; color: #cbd5e1; padding-right: 10px; margin-bottom: 20px; display: block; overscroll-behavior: contain; text-align: left; }
-        .modal-body-scroll::-webkit-scrollbar { width: 5px; }
-        .modal-body-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 5px; }
-        .bet-badge { background: rgba(56,189,248,0.15); color: var(--p); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; border: 1px solid rgba(56,189,248,0.3); }
+        .bet-badge { background: rgba(129,140,248,0.15); color: var(--wbc-coin); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; border: 1px solid rgba(129,140,248,0.3); }
         .type-badge { background: #334155; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; }
-        
-        ol { padding-left: 20px; margin-top: 5px; }
-        li { margin-bottom: 8px; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <div id="rulesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; padding: 15px;">
-        <div style="background:#1e293b; padding:20px; border-radius:15px; max-width:450px; width:100%; border:1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.8); position:relative; max-height: 90vh; display: flex; flex-direction: column;">
-            <h2 style="color:#38bdf8; margin-top:0; text-align:center; font-size:1.3rem;">📋 規則與免責聲明</h2>
+        <div style="background:#1e293b; padding:20px; border-radius:15px; max-width:450px; width:100%; border:1px solid #818cf8; box-shadow: 0 10px 30px rgba(0,0,0,0.8); position:relative; max-height: 90vh; display: flex; flex-direction: column;">
+            <h2 style="color:#818cf8; margin-top:0; text-align:center; font-size:1.3rem;">📋 規則與免責聲明</h2>
             
             <div class="modal-body-scroll">
                 <h4 style="color:#ef4444; margin:0 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">⚠️ 總規則 (嚴禁賭博，純屬娛樂)</h4>
                 <ol>
                     <li style="color:#fca5a5; font-weight:bold;">本平台嚴禁任何非法賭博行為，各項預測活動純屬娛樂性質。</li>
-                    <li>會員務必於開始遊戲前，詳細閱讀本網站所訂之各項規則，一經『同意』進入本遊戲進行時，即視為會員已接受所有規則。</li>
-                    <li>所有賽事都必須在"預定日期"或“賽事主辦單位規定之法定時間”內進行，若該場賽事因故取消或中止，則該場賽事將視為“無效賽事” ，本網站將退回該賽事的所有遊戲單。</li>
-                    <li>比賽結果以各聯盟官方網站所公佈的結果為準。賽果均在賽事結束後判定，除非在個別體育規章有另註明，若開賽12小時後官網有賽果異動及爭議，本網站有權按原賽果計算。</li>
-                    <li>會員有責任在下單後，等待“送出完成”的視窗顯示與確定。並到「遊戲記錄」中確認該筆遊戲單是否成功，且應仔細核對該筆遊戲單之遊戲內容與遊戲金額。本網站僅以會員『遊戲記錄』的內容為計算結果之依據。</li>
-                    <li>本網站所有賽事的”賠率”或”盤分”，會隨時變動。您所遊戲的賠率及盤分，將以顯示於「遊戲記錄」中成功的遊戲單為計算結果之依據。</li>
-                    <li>任何球賽如提前舉行，在球賽開打前，已接受的遊戲單均為“有效遊戲單” 。球賽開打後的遊戲單，一律將被視為“無效遊戲單”。</li>
-                    <li>本網站在公佈各種賽事盤分及賠率時，若出現任何的打字錯誤或非故意之人為疏失，本網站將保留刪除任何錯誤盤分及賠率遊戲單的權利，並將資訊公佈於「臨時公告」中，敬請註意。</li>
-                    <li>會員有責任確保自己的帳戶及登入資料的保密性，登入會員帳號後進行的任何網上遊戲，將被視為“有效遊戲單”。如果會員發現或懷疑自己的資料被盜用，請自行立即變更密碼，或告知本網站協助修改密碼（未變更密碼前所遊戲的遊戲單，亦視為有效）。</li>
-                    <li>若遭惡意入侵或發生不可抗拒之災害導致網站故障或資料遺失等情況，為確保各方真實利益，本網站將以備份資料為最後處理依據。</li>
-                    <li>使用者有責任核對自己的帳戶額度，如對帳戶額度有任何疑問，請立即通知本網站。</li>
-                    <li>比賽若延賽、裁定，或若經本網站取消、退回..等狀況，一律會在”遊戲記錄”內遊戲單欄位中的「詳情」寫明原因。</li>
-                    <li>本網站對於任何個人或團體使用外掛軟體程式，同時在同一項目遊戲相同內容的遊戲單，或經站方判定後，認為是以不正常遊戲方法所遊戲的遊戲單，對於此類遊戲單，本網站有權審核您的遊戲單，經審核後有保留或取消遊戲單的權利，若本站取消您的遊戲單，將會在比賽開始前退回您的注金，敬請注意。</li>
-                    <li>若本網站因任何原因無法確認某個特定盤口的結果，則所有遊戲視為無效遊戲單，除非遊戲的結果已經可以確定。</li>
-                    <li>如果賽事的官方網站無法提供成績，或官方網站所發佈的成績明顯錯誤，本網站保留做決定/修正最終賽果的權利。</li>
-                    <li>賽事因故保留、取消、延期比賽或預定開賽時間12小時內聯盟沒有裁定比賽結果，則遊戲該場賽事之遊戲單視為“無效遊戲單”，本網站將退回注金。</li>
+                    <li style="color:#818cf8; font-weight:bold;">為了區分商城系統，參與預測需使用專屬【預測幣】。P幣與開心卡點數皆可 1:1 兌換為預測幣 (注意：P幣轉換後無法逆轉退回)。</li>
+                    <li style="color:#10b981; font-weight:bold;">單筆下注限制：最低 100 預測幣，最高 10,000 預測幣。</li>
+                    <li>所有賽事都必須在預定時間內進行，取消或中止視為無效，退回預測幣。</li>
+                    <li>比賽結果以各聯盟官方網站公佈為準。</li>
                     <li>過關遊戲單之獲利計算不包含本金。</li>
-                    <li>比賽結果如與遊戲單之盤口相同，視為掉洞，未有輸贏，一律退回注金。</li>
-                    <li>如遊戲單審核中遇賠率更新，系統將自動以最新賠率接收遊戲單。</li>
-                    <li>相關比賽數據、即時比分僅供參考，請以實際賽況為主，恕網站不負責任。</li>
-                    <li>所有賽果及遊戲單之認定皆以本網站所訂定之規則為準，如遇特殊狀況，本網站有權做最終決定。</li>
-                    <li style="color:#fca5a5; font-weight:bold;">單筆下注限制：最低 100 P，最高 10,000 P。</li>
+                    <li>比賽結果如與遊戲單之盤口相同，視為掉洞平手，退回預測幣。</li>
                 </ol>
 
                 <h4 style="color:#f59e0b; margin:25px 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">棒球一般規則</h4>
                 <ol>
-                    <li>所有棒球遊戲之賽果認定皆以本網站訂定之規則為準。</li>
-                    <li>棒球遊戲之賽果依照各聯盟之裁定為最終賽果與賽事完賽認定。</li>
-                    <li>棒球賽事因故保留、取消或延期比賽，則遊戲該場賽事之全場遊戲單視為“無效遊戲單”，本網站將退回注金。</li>
-                    <li>棒球賽事如遇該場賽事原訂投手無法上場，而更換新投手，該場賽事所有遊戲單視為“有效遊戲單”。</li>
-                    <li>棒球全場遊戲為1~9局（含延長賽局），全場賽事必須打完1~9局（含延長賽局），所遊戲之遊戲單才算“有效遊戲單”，如遇全場比賽未滿九局時，發生突發因素如（下雨、下雪…等），經聯盟裁定勝負，則”讓分”、”大小”、”主客大小”之賽前、走地遊戲單均為“無效遊戲單”，僅”不讓分”、”走地不讓分”盤口之遊戲單仍然為“有效遊戲單”。但如比賽已打滿九局或進行至延長賽，若經聯盟裁定勝負，所有遊戲單均為”有效遊戲單“。</li>
-                    <li>所有比賽如遇主客異動，所有遊戲單視為有效遊戲單。</li>
-                    <li>國際棒球比賽規則：<br>
-                        a.如遇主客場異動所有遊戲單視為有效遊戲單。<br>
-                        b.如遇比賽比分懸殊提前結束經主辦大會裁定勝負，該場所有遊戲單視為有效遊戲單，但因天候因素或其它突發因素而經主辦大會裁定勝負，則”不讓分”盤口之賽前、走地遊戲單視為有效，”讓分”、”大小”、”主客大小”盤口之賽前、走地遊戲單視為無效。<br>
-                        c.本賽事若採取突破僵局制，所有賽果裁定均依官網為準。
-                    </li>
+                    <li>賽果依照各聯盟之裁定為最終賽果。全場賽事必須打完1~9局(含延長賽)。</li>
+                    <li>如遇突發因素未滿九局經裁定勝負，則「讓分」、「大小」盤口無效退款。</li>
+                    <li>國際賽：遇比分懸殊提前結束(扣倒)經大會裁定勝負，所有注單有效。若因天候裁定，則「讓分、大小」無效。</li>
                 </ol>
 
                 <h4 style="color:#10b981; margin:25px 0 5px 0; border-bottom: 1px solid #334155; padding-bottom:5px;">棒球單注規則與圖解範例</h4>
-                <p style="margin-top:5px; color:#cbd5e1; font-weight:bold;">成功過盤：退回下注本金，並額外獲得【開心卡點數】</p>
+                <p style="margin-top:5px; color:#cbd5e1; font-weight:bold;">成功過盤：退回下注本金(預測幣)，並額外獲得【開心卡點數】</p>
                 <p style="margin-top:5px; color:#cbd5e1;">開心卡點數計算 = 遊戲金額 * 賠率</p>
                 
                 <div style="background: rgba(0,0,0,0.3); border: 1px solid #38bdf8; border-radius: 10px; padding: 15px; margin-top: 10px;">
@@ -137,16 +110,16 @@
                     <div style="background: #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 3px solid #38bdf8;">
                         <div style="color: #38bdf8; font-weight: bold; margin-bottom: 5px;">🔹 讓分遊戲範例</div>
                         <div style="font-size: 0.85rem; color: #cbd5e1;">
-                            遊戲中華隊1,000P → <span style="color:#ef4444; font-weight:bold;">輸</span>，扣除1,000P本金<br><br>
-                            遊戲澳洲隊1,000P → <span style="color:#10b981; font-weight:bold;">贏</span>，退回1,000P本金，<br><span style="color:#fca5a5;">並獲得 900點 開心卡點數</span>
+                            遊戲中華隊1,000預測幣 → <span style="color:#ef4444; font-weight:bold;">輸</span>，扣除本金<br><br>
+                            遊戲澳洲隊1,000預測幣 → <span style="color:#10b981; font-weight:bold;">贏</span>，退回1,000預測幣，<br><span style="color:#fca5a5;">並獲得 1,900點 開心卡點數</span>
                         </div>
                     </div>
 
                     <div style="background: #1e293b; border-radius: 8px; padding: 12px; border-left: 3px solid #f59e0b;">
                         <div style="color: #f59e0b; font-weight: bold; margin-bottom: 5px;">🔸 大小遊戲範例</div>
                         <div style="font-size: 0.85rem; color: #cbd5e1;">
-                            遊戲大分1,000P → <span style="color:#10b981; font-weight:bold;">贏</span>，退回1,000P本金，<br><span style="color:#fca5a5;">並獲得 900點 開心卡點數</span><br><br>
-                            遊戲小分1,000P → <span style="color:#ef4444; font-weight:bold;">輸</span>，扣除1,000P本金
+                            遊戲大分1,000預測幣 → <span style="color:#10b981; font-weight:bold;">贏</span>，退回1,000預測幣，<br><span style="color:#fca5a5;">並獲得 1,900點 開心卡點數</span><br><br>
+                            遊戲小分1,000預測幣 → <span style="color:#ef4444; font-weight:bold;">輸</span>，扣除本金
                         </div>
                     </div>
                 </div>
@@ -164,8 +137,9 @@
     <div class="nav">
         <a href="index.html" class="back-btn">⬅ 返回大廳</a>
         <div class="bal-badge">
-            <span>P <span id="uBal">---</span></span>
-            <span class="card-badge">🎁 <span id="uCard">---</span></span>
+            <span class="p-badge" title="P幣餘額">P <span id="uBal">---</span></span>
+            <span class="wbc-badge" title="預測幣(專屬)">⚾ <span id="uWbc">---</span></span>
+            <span class="card-badge" title="待領開心卡點數">🎁 <span id="uCard">---</span></span>
         </div>
     </div>
 
@@ -174,11 +148,26 @@
         <button class="btn btn-disabled" style="width:100%; padding:10px; font-size:0.9rem; margin-bottom:15px; color:#94a3b8; background:rgba(255,255,255,0.05);" onclick="openRules()">📖 點此查看詳細規則</button>
 
         <div class="exchange-card">
-            <div class="exchange-title">🔄 開心卡點數 兌換 P幣</div>
-            <div style="font-size:0.8rem; color:#fca5a5; margin-bottom:10px;">不想等老闆發卡？直接 1:1 轉換成 P 幣繼續挑戰！</div>
-            <div class="exchange-input-row">
-                <input type="number" id="exAmount" class="exchange-input" placeholder="輸入兌換額">
-                <button class="btn-exchange" onclick="exchangeCardToP()">立即兌換</button>
+            <div class="exchange-title">🔄 預測幣 轉換所</div>
+            <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:15px; line-height: 1.6;">
+                參與賽事預測需使用專屬【⚾ 預測幣】。<br>
+                <span style="color:#ef4444;">⚠️ 注意：P幣兌換成預測幣後，無法逆轉退回。</span>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-bottom: 12px;">
+                <div style="font-size: 0.85rem; color: var(--p); margin-bottom: 8px; font-weight:bold;">用【P 幣】兌換 (1:1)</div>
+                <div class="exchange-input-row">
+                    <input type="number" id="exPtoWbc" class="exchange-input" placeholder="輸入 P 幣額度">
+                    <button class="btn-exchange" style="background:var(--p); color:#fff;" onclick="convertPtoWbc()">換成預測幣</button>
+                </div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
+                <div style="font-size: 0.85rem; color: var(--card-color); margin-bottom: 8px; font-weight:bold;">用【開心卡點數】兌換 (1:1)</div>
+                <div class="exchange-input-row">
+                    <input type="number" id="exCardToWbc" class="exchange-input" placeholder="輸入開心卡額度">
+                    <button class="btn-exchange" style="background:var(--card-color); color:#000;" onclick="convertCardToWbc()">換成預測幣</button>
+                </div>
             </div>
         </div>
 
@@ -192,7 +181,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, push, get, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, push, get, update, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const _c = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
     const app = initializeApp(_c); const db = getDatabase(app);
@@ -200,10 +189,10 @@
     if(!uid) { alert("請先登入！"); location.href='index.html'; }
 
     window.onload = () => {
-        if (!localStorage.getItem('wbc_rules_agreed_v5')) {
+        if (!localStorage.getItem('wbc_rules_agreed_v6')) {
             document.getElementById('rulesModal').style.display = 'flex';
             document.getElementById('agreeBtn').onclick = () => {
-                localStorage.setItem('wbc_rules_agreed_v5', 'true');
+                localStorage.setItem('wbc_rules_agreed_v6', 'true');
                 document.getElementById('rulesModal').style.display = 'none';
             };
         } else {
@@ -217,11 +206,59 @@
         document.getElementById('rulesModal').style.display = 'flex';
     };
 
+    // ⭐️ 監聽三個錢包的餘額
     onValue(ref(db, `users/${uid}`), s => {
         const u = s.val() || {};
         document.getElementById('uBal').innerText = (u.balance || 0).toLocaleString();
+        document.getElementById('uWbc').innerText = (u.wbcCoin || 0).toLocaleString();
         document.getElementById('uCard').innerText = (u.cardBalance || 0).toLocaleString();
     });
+
+    // P幣 換 預測幣 (視為消費P幣)
+    window.convertPtoWbc = async () => {
+        const amt = parseInt(document.getElementById('exPtoWbc').value);
+        if(isNaN(amt) || amt <= 0) return alert("請輸入正確兌換金額");
+        if(!confirm(`確定消耗 ${amt} P幣，兌換成 ${amt} 預測幣 嗎？\n(⚠️ 注意：兌換後無法換回 P幣)`)) return;
+
+        document.getElementById('loading').style.display = 'flex';
+        try {
+            await runTransaction(ref(db, `users/${uid}`), (u) => {
+                if(!u) return;
+                if((u.balance || 0) < amt) throw "nomoney";
+                u.balance -= amt;
+                u.spending_counter = (u.spending_counter || 0) + amt; // 這裡算老闆營收
+                u.wbcCoin = (u.wbcCoin || 0) + amt;
+                return u;
+            });
+            await push(ref(db, `users/${uid}/logs`), { game: `兌換WBC預測幣`, cost: amt, time: Date.now() });
+            alert(`✅ 兌換成功！獲得 ${amt} 預測幣！`);
+            document.getElementById('exPtoWbc').value = '';
+        } catch(e) {
+            if(e === "nomoney") alert("P 幣餘額不足！"); else alert("發生錯誤：" + e);
+        } finally { document.getElementById('loading').style.display = 'none'; }
+    };
+
+    // 開心卡 換 預測幣 (內部流轉，不扣P幣)
+    window.convertCardToWbc = async () => {
+        const amt = parseInt(document.getElementById('exCardToWbc').value);
+        if(isNaN(amt) || amt <= 0) return alert("請輸入正確兌換金額");
+        if(!confirm(`確定消耗 ${amt} 開心卡點數，兌換成 ${amt} 預測幣 嗎？`)) return;
+
+        document.getElementById('loading').style.display = 'flex';
+        try {
+            await runTransaction(ref(db, `users/${uid}`), (u) => {
+                if(!u) return;
+                if((u.cardBalance || 0) < amt) throw "nocard";
+                u.cardBalance -= amt;
+                u.wbcCoin = (u.wbcCoin || 0) + amt;
+                return u;
+            });
+            alert(`✅ 兌換成功！獲得 ${amt} 預測幣，可繼續下注！`);
+            document.getElementById('exCardToWbc').value = '';
+        } catch(e) {
+            if(e === "nocard") alert("開心卡點數餘額不足！"); else alert("發生錯誤：" + e);
+        } finally { document.getElementById('loading').style.display = 'none'; }
+    };
 
     onValue(ref(db, `wbcMatches`), s => {
         const matches = s.val() || {};
@@ -255,7 +292,7 @@
                     </div>
                     <div class="bet-controls">
                         <div class="input-wrapper">
-                            <span>單次投入 P 幣</span>
+                            <span>單次投入 ⚾ 預測幣</span>
                             <input type="number" class="bet-in" id="amt_${matchId}" value="100" min="100" max="10000" step="100" ${isOpen ? '' : 'disabled'}>
                         </div>
                         <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:5px;">🔹 讓分盤預測：</div>
@@ -284,9 +321,9 @@
             const hcText = b.handicap ? `<span class="bet-badge">${b.handicap}</span>` : '';
 
             if(b.cancelled) {
-                statusClass = 'wait'; statusText = '🔄 退款/掉洞 (已退本金)'; statusColor = '#94a3b8';
+                statusClass = 'wait'; statusText = '🔄 退款/掉洞 (退回預測幣)'; statusColor = '#94a3b8';
             } else if(b.settled) {
-                if(b.win) { statusClass = 'win'; statusText = `✅ 命中! (已退 ${b.amount}P, 得卡 ${profit}點)`; statusColor = '#10b981'; }
+                if(b.win) { statusClass = 'win'; statusText = `✅ 命中! (退${b.amount}幣, 得卡${profit}點)`; statusColor = '#10b981'; }
                 else { statusClass = 'lose'; statusText = '❌ 未命中'; statusColor = '#ef4444'; }
             }
 
@@ -298,7 +335,7 @@
                     <div class="h-header"><span>${b.matchTitle}</span> <span>${timeStr}</span></div>
                     <div class="h-body">
                         <span style="font-size:1rem; font-weight:bold; color:${b.cancelled ? '#64748b' : '#fff'};">
-                            ${typeLabel}${b.selectedTeam} ${hcText} <br><small style="color:#94a3b8">(${b.amount} P @${odds})</small>
+                            ${typeLabel}${b.selectedTeam} ${hcText} <br><small style="color:#94a3b8">(${b.amount} 預測幣 @${odds})</small>
                         </span>
                         <b style="font-size:0.8rem; color: ${statusColor}; text-align:right;">${statusText}</b>
                     </div>
@@ -310,26 +347,25 @@
 
     window.placeBet = async (matchId, matchTitle, team, handicap, odds, inputId, betType) => {
         const amt = parseInt(document.getElementById(inputId).value);
-        if(isNaN(amt) || amt < 100 || amt > 10000) return alert("預測額度限制為 100 ~ 10,000 P");
+        if(isNaN(amt) || amt < 100 || amt > 10000) return alert("預測額度限制為 100 ~ 10,000 預測幣");
 
         const typeName = betType === 'total' ? '大小分盤' : '讓分盤';
         const profit = Math.round(amt * odds) - amt;
         
-        if(!confirm(`【${typeName}確認】\n支持：${team} (盤口 ${handicap})\n投入金額：${amt} P (賠率 ${odds})\n\n🏆 若順利過盤：\n退回本金 ${amt} P\n獲得 ${profit} 點 開心卡點數！\n\n確定下注嗎？`)) return;
+        if(!confirm(`【${typeName}確認】\n支持：${team} (盤口 ${handicap})\n投入：${amt} 預測幣 (賠率 ${odds})\n\n🏆 若順利過盤：\n退回本金 ${amt} 預測幣\n獲得 ${profit} 點 開心卡點數！\n\n確定下注嗎？`)) return;
 
         document.getElementById('loading').style.display = 'flex';
 
         try {
-            const uRef = ref(db, `users/${uid}`);
-            const uSnap = await get(uRef);
-            const userData = uSnap.val();
+            await runTransaction(ref(db, `users/${uid}`), (u) => {
+                if(!u) return;
+                // ⭐️ 檢查並扣除「預測幣」而非 P幣
+                if((u.wbcCoin || 0) < amt) throw "nowbccoin";
+                u.wbcCoin -= amt;
+                return u;
+            });
 
-            if (!userData || (userData.balance || 0) < amt) throw new Error("nomoney");
-
-            await update(uRef, { balance: userData.balance - amt, spending_counter: (userData.spending_counter || 0) + amt });
-
-            await push(ref(db, `users/${uid}/logs`), { game: `WBC[${typeName}]: ${team} (${handicap})`, cost: amt, time: Date.now() });
-
+            // 注單寫入
             await push(ref(db, `wbcBets`), {
                 uid: uid, matchId: matchId, matchTitle: matchTitle,
                 selectedTeam: team, handicap: handicap, amount: amt, odds: odds, betType: betType,
@@ -338,39 +374,8 @@
 
             alert("🎉 下注成功！祝您幸運過盤。");
         } catch(e) {
-            if(e.message === "nomoney") alert("餘額不足，請先至大廳儲值！");
-            else alert("發生錯誤：" + e.message);
-        } finally {
-            document.getElementById('loading').style.display = 'none';
-        }
-    };
-
-    window.exchangeCardToP = async () => {
-        const amt = parseInt(document.getElementById('exAmount').value);
-        if(isNaN(amt) || amt <= 0) return alert("請輸入正確兌換金額");
-
-        document.getElementById('loading').style.display = 'flex';
-
-        try {
-            const uRef = ref(db, `users/${uid}`);
-            const uSnap = await get(uRef);
-            const uData = uSnap.val() || {};
-            const currentCard = uData.cardBalance || 0;
-
-            if (currentCard < amt) throw new Error("nocard");
-
-            await update(uRef, { 
-                cardBalance: currentCard - amt,
-                balance: (uData.balance || 0) + amt
-            });
-
-            await push(ref(db, `users/${uid}/logs`), { game: `開心卡兌換P幣`, cost: -amt, time: Date.now() });
-
-            alert(`✅ 兌換成功！已將 ${amt} 點開心卡轉換為 ${amt} P幣！`);
-            document.getElementById('exAmount').value = '';
-        } catch(e) {
-            if(e.message === "nocard") alert("開心卡點數餘額不足！");
-            else alert("發生錯誤：" + e.message);
+            if(e === "nowbccoin") alert("預測幣餘額不足，請先在上方轉換中心使用 P幣 兌換！");
+            else alert("發生錯誤：" + e);
         } finally {
             document.getElementById('loading').style.display = 'none';
         }
