@@ -32,6 +32,10 @@
         .action-row { display:flex; gap:10px; margin-top:10px; padding-top:10px; border-top:1px dashed #334155; align-items: center; flex-wrap: wrap; }
         
         .card-payout-box { background: rgba(252,165,165,0.1); border: 1px solid #fca5a5; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* ⭐️ 新增商城與訂單的樣式 */
+        .order-box { background: rgba(245,158,11,0.1); border: 1px solid #f59e0b; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .shop-item-box { background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
@@ -60,10 +64,27 @@
         </div>
     </div>
 
-    <div class="card" style="border-color: #fca5a5;">
-        <h3 style="color: #fca5a5;">🎁 玩家提領名單 (待轉贈開心卡)</h3>
-        <p style="font-size:0.85rem; color:#94a3b8;">這裡顯示的是玩家達標洗碼量後「申請提領的開心卡額度」。<br>您用 OPEN POINT 轉贈後，請點擊【核銷】扣除他的餘額。</p>
-        <div id="cardBalancesList"></div>
+    <div class="card" style="border-color: #f59e0b;">
+        <h3 style="color: #f59e0b;">📦 戰利品待出貨訂單</h3>
+        <p style="font-size:0.85rem; color:#94a3b8;">玩家在前台商城兌換的實體商品會顯示在這裡。<br>聯絡出貨後，請點擊「完成訂單」。</p>
+        <div id="ordersList">載入中...</div>
+    </div>
+
+    <div class="card" style="border-color: #10b981;">
+        <h3 style="color: #10b981;">🛒 戰利品商城管理 (上架/修改商品)</h3>
+        <div class="input-row">
+            <div><label style="color:#10b981">商品名稱</label><input type="text" id="sName" placeholder="例: 隨機動漫小盲盒"></div>
+            <div><label style="color:#10b981">商品描述</label><input type="text" id="sDesc" placeholder="例: 驚喜不間斷"></div>
+            <div><label style="color:#10b981">兌換價格 (預測幣)</label><input type="number" id="sPrice" placeholder="例: 500"></div>
+        </div>
+        <div class="full-row">
+            <label style="color:#10b981">Emoji 圖示 (用於前台顯示)</label>
+            <input type="text" id="sEmoji" placeholder="例: 📦 🧸 🎧 🎮" style="width: 100px;">
+        </div>
+        <button class="btn btn-success" style="width:100%; padding:10px;" onclick="addShopItem()">➕ 新增商品上架</button>
+
+        <h4 style="color:#94a3b8; margin-top:20px; border-bottom:1px solid #334155; padding-bottom:10px;">目前架上商品 (可修改價格或下架)：</h4>
+        <div id="shopItemList">載入中...</div>
     </div>
 
     <div class="card">
@@ -107,41 +128,109 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, get, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, onValue, get, update, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const _c = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
     const app = initializeApp(_c); const db = getDatabase(app);
 
     document.getElementById('repDate').value = new Date().toISOString().split('T')[0];
 
-    onValue(ref(db, `users`), s => {
-        const users = s.val() || {};
-        const list = document.getElementById('cardBalancesList');
+    // ======== ⭐️ 新增：商城與訂單管理邏輯 ========
+    
+    // 監聽待處理訂單
+    onValue(ref(db, `wbcOrders`), s => {
+        const orders = s.val() || {};
+        const list = document.getElementById('ordersList');
         list.innerHTML = '';
         let hasPending = false;
 
-        Object.entries(users).forEach(([uid, u]) => {
-            if (u.cardBalance && u.cardBalance > 0) {
+        Object.entries(orders).forEach(([id, o]) => {
+            if (o.status === 'pending') {
                 hasPending = true;
+                const d = new Date(o.time);
+                const timeStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                
                 list.innerHTML += `
-                    <div class="card-payout-box">
+                    <div class="order-box">
                         <div>
-                            <b style="color:#fff; font-size:1.1rem;">UID: ${uid}</b><br>
-                            <span style="color:#fca5a5; font-weight:bold;">提領總額: ${u.cardBalance} 元</span>
+                            <span style="color:#94a3b8; font-size:0.8rem;">${timeStr}</span><br>
+                            <b style="color:#fff; font-size:1.1rem;">UID: ${o.uid}</b><br>
+                            <span style="color:#f59e0b; font-weight:bold;">兌換商品: ${o.item}</span><br>
+                            <span style="color:#818cf8; font-size:0.85rem;">已扣除: ${o.cost} 預測幣</span>
                         </div>
-                        <button class="btn" style="background:#fca5a5; color:#000;" onclick="clearUserCard('${uid}', ${u.cardBalance})">已轉贈APP，核銷</button>
+                        <button class="btn btn-warn" onclick="completeOrder('${id}', '${o.uid}', '${o.item}')">✅ 聯絡並完成出貨</button>
                     </div>
                 `;
             }
         });
-        if(!hasPending) list.innerHTML = '<div style="color:#64748b;">目前無待發送的名單</div>';
+        if(!hasPending) list.innerHTML = '<div style="color:#64748b;">目前無待處理的兌換訂單</div>';
     });
 
-    window.clearUserCard = async (uid, amount) => {
-        if(!confirm(`確認已經使用 OPEN POINT APP 轉贈 ${amount} 元給該玩家了嗎？\n核銷後餘額將歸零！`)) return;
-        await update(ref(db, `users/${uid}`), { cardBalance: 0 });
-        alert("核銷成功！");
+    window.completeOrder = async (orderId, uid, item) => {
+        if(!confirm(`確認已經聯絡玩家 [${uid}] 並發送商品 [${item}] 了嗎？\n按下確定後訂單將標記為已完成！`)) return;
+        await update(ref(db, `wbcOrders/${orderId}`), { status: 'completed' });
+        alert("訂單已成功核銷！");
     };
+
+    // 監聽並管理商城商品
+    onValue(ref(db, `wbcShopItems`), s => {
+        const items = s.val() || {};
+        const list = document.getElementById('shopItemList');
+        list.innerHTML = '';
+        let hasItems = false;
+
+        Object.entries(items).forEach(([id, it]) => {
+            hasItems = true;
+            list.innerHTML += `
+                <div class="shop-item-box">
+                    <div style="flex:1; display:flex; align-items:center; gap:10px;">
+                        <b style="font-size:1.5rem;">${it.emoji}</b>
+                        <div>
+                            <b style="color:#fff;">${it.name}</b> <small style="color:#94a3b8;">(${it.desc})</small><br>
+                            <div style="display:flex; align-items:center; gap:5px; margin-top:5px;">
+                                <span style="color:#10b981; font-size:0.9rem;">價格:</span>
+                                <input type="number" id="editPrice_${id}" value="${it.price}" style="width:80px; padding:5px; margin:0;">
+                                <button class="btn btn-success" style="padding:5px 10px; font-size:0.8rem;" onclick="updatePrice('${id}')">更新</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" style="padding:10px 15px;" onclick="delShopItem('${id}')">🗑️ 刪除下架</button>
+                </div>
+            `;
+        });
+        if(!hasItems) list.innerHTML = '<div style="color:#64748b;">目前商城為空，請在上方新增商品！</div>';
+    });
+
+    window.addShopItem = async () => {
+        const name = document.getElementById('sName').value.trim();
+        const desc = document.getElementById('sDesc').value.trim();
+        const price = parseInt(document.getElementById('sPrice').value);
+        const emoji = document.getElementById('sEmoji').value.trim() || '🎁';
+
+        if(!name || isNaN(price)) return alert("請填寫商品名稱與價格！");
+
+        await push(ref(db, `wbcShopItems`), { name, desc, price, emoji, active: true });
+        alert("商品上架成功！前台商城已自動更新。");
+        document.getElementById('sName').value = '';
+        document.getElementById('sDesc').value = '';
+        document.getElementById('sPrice').value = '';
+        document.getElementById('sEmoji').value = '';
+    };
+
+    window.updatePrice = async (id) => {
+        const newPrice = parseInt(document.getElementById(`editPrice_${id}`).value);
+        if(isNaN(newPrice) || newPrice < 0) return alert("請輸入正確價格");
+        await update(ref(db, `wbcShopItems/${id}`), { price: newPrice });
+        alert("價格更新成功！");
+    };
+
+    window.delShopItem = async (id) => {
+        if(!confirm("確定要下架此商品嗎？前台將立即移除該商品。")) return;
+        await remove(ref(db, `wbcShopItems/${id}`));
+    };
+
+
+    // ======== 以下為您原本的賽事與報表邏輯 (完全沒動) ========
 
     window.fetchReport = async (type) => {
         const snap = await get(ref(db, `wbcBets`));
@@ -175,7 +264,7 @@
                 tRefund += b.amount;
             } else if(b.settled) {
                 if(b.win) {
-                    const profit = Math.round(b.amount * (b.odds || 2.0)); // 全額為預測幣
+                    const profit = Math.round(b.amount * (b.odds || 2.0)); 
                     stText = `<span style="color:#10b981">✅ 過盤 (共發 ${profit} 預測幣)</span>`;
                     tRefund += b.amount;
                     tCard += profit;
@@ -286,7 +375,6 @@
         if(confirm("確定要封盤嗎？封盤後玩家無法再下注。")) await update(ref(db, `wbcMatches/${id}`), { status: 'locked' });
     };
 
-    // ⭐️ 結算發放修正 (全部發成預測幣，由玩家自己去前台提領)
     window.settleMatch = async (matchId, winnerTeam, betType, isPush = false) => {
         const typeName = betType === 'handicap' ? '讓分盤' : '大小分盤';
         const msg = isPush 
@@ -316,7 +404,6 @@
                 } else {
                     const isWin = (b.selectedTeam === winnerTeam);
                     if (isWin) {
-                        // 全額以預測幣發放 = 本金 * 賠率
                         const totalWin = Math.round(b.amount * (b.odds || 2.0));
                         await update(uRef, { wbcCoin: (uData.wbcCoin || 0) + totalWin });
                         await push(ref(db, `users/${b.uid}/logs`), { game: `WBC派彩(過盤): ${winnerTeam}`, cost: -totalWin, time: Date.now() });
