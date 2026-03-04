@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>WBC 兌換商城 | 夢工廠</title>
+    <title>WBC 戰利品商城 | 夢工廠</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --p: #38bdf8; --wbc-coin: #818cf8; --gold: #f59e0b; }
         body { margin: 0; background: var(--bg); font-family: 'PingFang TC', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 50px; }
@@ -20,13 +20,16 @@
         
         .container { width: 94%; max-width: 500px; margin-top: 20px; }
         .header-title { font-size: 1.5rem; font-weight: 900; color: var(--gold); text-align: center; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(245,158,11,0.3); }
-        .header-sub { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 25px; }
+        .header-sub { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 10px; }
+        
+        /* ⭐️ 警告標語樣式 */
+        .warning-text { background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #fca5a5; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 25px; line-height: 1.4; }
 
-        /* ⭐️ 商品列表格 (圖片樣式更新) */
+        /* 商品列表格 */
         .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .s-card { background: var(--card); border: 1px solid #334155; border-radius: 12px; overflow: hidden; text-align: center; display: flex; flex-direction: column; transition: 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
         
-        /* 這裡改為使用背景圖片，讓圖片自動裁切填滿方格 */
+        /* 圖片區塊 */
         .s-img { width: 100%; aspect-ratio: 1/1; background-color: #0f172a; background-size: cover; background-position: center; background-repeat: no-repeat; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #475569;}
         
         .s-info { padding: 15px 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
@@ -65,6 +68,11 @@
     <div class="container">
         <div class="header-title">🎁 預測幣兌換商城</div>
         <div class="header-sub">使用賽事贏得的預測幣，兌換實體大獎！</div>
+        
+        <div class="warning-text">
+            ⚠️ 嚴禁直接將 P幣 兌換為預測幣後購買商品！<br>
+            未經賽事下注之預測幣，訂單將被取消並退回。
+        </div>
         
         <div class="shop-grid" id="shopContainer">
             <div style="grid-column: span 2; text-align: center; padding: 50px; color: #64748b;">連線載入商品中...</div>
