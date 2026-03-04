@@ -1,43 +1,45 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, push, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// 初始化 Firebase (請確認您的金鑰是否正確)
 const _c = { apiKey: atob("QUl6YVN5RFBHRUl3Q0t5WXh6NlRZZHhta3dBeElXamZRSThBd2Nv"), databaseURL: atob("aHR0cHM6Ly9kcmVhbTgtN2IxNjEtZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29t"), projectId: atob("ZHJlYW04LTdiMTYx"), appId: atob("MTo2MDYyMTg1MjI0Nzk6d2ViOjI3Mzc2NDNkYjNkZTczNWFmN2UyOWE=") };
 const app = initializeApp(_c); 
 const db = getDatabase(app);
 
-// 驗證登入
 const uid = localStorage.getItem('myScratchCode');
 if(!uid) { 
     alert("請先登入！"); 
     location.href = 'index.html'; 
 }
 
-// 監聽玩家預測幣餘額
+// 1. 監聽預測幣餘額
 onValue(ref(db, `users/${uid}`), snapshot => {
     const userData = snapshot.val() || {};
     document.getElementById('uWbc').innerText = (userData.wbcCoin || 0).toLocaleString();
 });
 
-// 監聽後台上架的商品並動態渲染
+// 2. ⭐️ 監聽上架商品 (支援圖片網址)
 onValue(ref(db, `wbcShopItems`), snapshot => {
     const items = snapshot.val() || {};
     const container = document.getElementById('shopContainer');
     container.innerHTML = '';
     let hasItems = false;
 
-    // 將物件轉為陣列，並依價格由低到高排序
     const sortedItems = Object.entries(items)
         .map(([id, data]) => ({ id, ...data }))
         .sort((a, b) => a.price - b.price);
 
     sortedItems.forEach(item => {
-        // 確認商品為上架狀態 (active)
         if(item.active !== false) {
             hasItems = true;
+            // 判斷：如果有 imgUrl 就設為背景圖，否則顯示預設文字或舊版 emoji
+            const imgStyle = item.imgUrl 
+                ? `background-image: url('${item.imgUrl}');` 
+                : ``;
+            const innerContent = item.imgUrl ? '' : (item.emoji || '🎁');
+
             container.innerHTML += `
                 <div class="s-card">
-                    <div class="s-img">${item.emoji || '🎁'}</div>
+                    <div class="s-img" style="${imgStyle}">${innerContent}</div>
                     <div class="s-info">
                         <div>
                             <div class="s-name">${item.name}</div>
@@ -58,14 +60,11 @@ onValue(ref(db, `wbcShopItems`), snapshot => {
     }
 });
 
-// ⭐️ 處理購買邏輯 (掛載到 window 以供 HTML 的 onclick 呼叫)
+// 3. 執行兌換購買
 window.buyShopItem = async (itemName, price) => {
     if(!confirm(`即將使用 ${price.toLocaleString()} 預測幣\n兌換商品：【${itemName}】\n\n確定要兌換嗎？`)) return;
-
     document.getElementById('loading').style.display = 'flex';
-    
     try {
-        // 1. 安全交易：扣除玩家預測幣
         await runTransaction(ref(db, `users/${uid}`), (user) => {
             if(!user) return;
             if((user.wbcCoin || 0) < price) throw "no_coin";
@@ -73,23 +72,62 @@ window.buyShopItem = async (itemName, price) => {
             return user;
         });
         
-        // 2. 建立待出貨訂單 (寫入 wbcOrders 讓老闆在後台看)
         await push(ref(db, `wbcOrders`), {
             uid: uid,
             item: itemName,
             cost: price,
-            status: 'pending', // 狀態設為待處理
+            status: 'pending', 
             time: serverTimestamp()
         });
 
-        alert(`🎉 兌換成功！\n您已成功兌換【${itemName}】。\n請截圖此畫面並聯絡官方客服安排寄送！`);
+        alert(`🎉 兌換成功！\n您已成功兌換【${itemName}】。\n請至右上角「紀錄」查看出貨狀態！`);
     } catch(error) {
-        if(error === "no_coin") {
-            alert("❌ 您的預測幣餘額不足！請先前往賽事中心預測贏取獎勵。");
-        } else {
-            alert("系統錯誤：" + error);
-        }
+        if(error === "no_coin") alert("❌ 您的預測幣餘額不足！請先前往賽事中心預測贏取獎勵。");
+        else alert("系統錯誤：" + error);
     } finally {
         document.getElementById('loading').style.display = 'none';
     }
+};
+
+// 4. 兌換紀錄功能
+window.openHistory = () => {
+    document.getElementById('historyModal').style.display = 'flex';
+    onValue(ref(db, `wbcOrders`), snapshot => {
+        const allOrders = snapshot.val() || {};
+        const listEl = document.getElementById('historyList');
+        listEl.innerHTML = '';
+        
+        const myOrders = Object.values(allOrders)
+            .filter(o => o.uid === uid)
+            .sort((a, b) => b.time - a.time);
+
+        if(myOrders.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">尚無兌換紀錄</div>';
+            return;
+        }
+
+        myOrders.forEach(o => {
+            const d = new Date(o.time);
+            const timeStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+            
+            const isCompleted = (o.status === 'completed');
+            const statusText = isCompleted ? '✅ 已出貨(完成)' : '⏳ 待出貨(處理中)';
+            const statusColor = isCompleted ? '#10b981' : '#f59e0b';
+
+            listEl.innerHTML += `
+                <div class="record-item">
+                    <div style="font-size:0.8rem; color:#94a3b8; display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span>${timeStr}</span>
+                        <span style="color:${statusColor}; font-weight:bold;">${statusText}</span>
+                    </div>
+                    <div style="color:#fff; font-weight:bold; font-size:1rem;">${o.item}</div>
+                    <div style="color:#818cf8; font-size:0.85rem; margin-top:5px;">消耗: ${o.cost.toLocaleString()} 預測幣</div>
+                </div>
+            `;
+        });
+    });
+};
+
+window.closeHistory = () => {
+    document.getElementById('historyModal').style.display = 'none';
 };
