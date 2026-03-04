@@ -420,24 +420,6 @@ function renderGrid(){
         
         grid.innerHTML = ''; 
 
-        // ⭐️ 加入 WBC 經典賽預測 按鈕
-        if (_cc === 'ALL') {
-            const wbcCard = document.createElement('div');
-            wbcCard.className = 'p-card';
-            wbcCard.style.border = '2px solid #003566';
-            wbcCard.style.background = 'linear-gradient(to bottom, #ffffff, #f0f8ff)';
-            wbcCard.onclick = () => location.href = 'wbc.html';
-            wbcCard.innerHTML = `
-                <img src="https://firebasestorage.googleapis.com/v0/b/dream8-7b161.firebasestorage.app/o/images%2Fe5f406a8b4b2b226af3d143acd0ade70f7be18b1.jpg?alt=media&token=a9e4d86d-d4a5-4d0a-b9f6-4102025a5ac0" class="p-img" style="object-fit: cover;">
-                <div class="p-info">
-                    <div class="p-name" style="color: #003566; font-size: 1.1rem; font-weight: 900;">⚾ WBC 經典賽預測</div>
-                    <div class="p-price-value" style="color: #e74c3c;">點我預測</div>
-                    <div class="free-tag" style="background:#f1c40f; color:#000;">預測贏開心卡！</div>
-                </div>
-            `;
-            grid.appendChild(wbcCard);
-        }
-
         if (_cc === 'ALL' && isLiveActive) {
             const f = document.createElement('div');
             f.className = 'p-card free-gift';
